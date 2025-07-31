@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QSIM → OpenQASM Export</title>
+</head>
+<body>
+  <h1>Convert Qiskit/Cirq to OpenQASM</h1>
+  <textarea id="code" rows="15" cols="70">
+// Example Qiskit
+from qiskit import QuantumCircuit
+qc = QuantumCircuit(2)
+qc.h(0)
+qc.cx(0, 1)
+qc.measure_all()
+  </textarea><br><br>
+  <button onclick="convert()">Convert to OpenQASM</button>
+  <h3>Output:</h3>
+  <pre id="output"></pre>
+  <script src="script.js"></script>
+</body>
+</html>
