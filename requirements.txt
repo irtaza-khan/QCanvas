@@ -1,0 +1,39 @@
+# Core quantum frameworks
+qiskit>=0.45.0
+qiskit-aer>=0.13.0
+qiskit-aer-gpu>=0.13.0
+cirq>=1.2.0
+amazon-braket-sdk>=1.50.0
+
+# High-performance computing libraries
+numpy>=1.24.0
+scipy>=1.10.0
+mkl>=2023.0.0
+cupy-cuda11x>=12.0.0
+numba>=0.58.0
+joblib>=1.3.0
+
+# Parallel processing and logging
+multiprocessing-logging>=0.3.4
+psutil>=5.9.0
+memory-profiler>=0.61.0
+
+# Visualization
+matplotlib>=3.7.0
+plotly>=5.15.0
+bokeh>=3.2.0
+
+# Web framework (for future web interface)
+fastapi>=0.100.0
+uvicorn>=0.23.0
+websockets>=11.0.0
+
+# Development and testing
+pytest>=7.4.0
+pytest-benchmark>=4.0.0
+black>=23.0.0
+mypy>=1.5.0
+
+# Optional GPU libraries
+pycuda>=2022.2.2
+opencl4py>=1.5.0
