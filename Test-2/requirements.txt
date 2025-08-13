@@ -1,0 +1,13 @@
+# Core quantum SDKs
+qiskit==0.46.0
+cirq==1.3.0
+pennylane==0.41.0
+
+# PennyLane ↔ Qiskit bridge
+pennylane-qiskit==0.41.0
+
+# Optional: QASM 2 → QASM 3 upgrade tool
+mpqp==0.1.0
+
+# Optional: QASM 3 parsing/validation (skip pytket-qasm for now)
+pytket==2.9.1
