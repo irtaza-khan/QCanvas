@@ -15,6 +15,8 @@ QCanvas is a modern, web-based quantum computing platform that bridges the gap b
 - **OpenQASM 3.0 Integration**: Standardized intermediate representation
 - **Extensible Architecture**: Plugin-based system for adding new frameworks
 
+> **Note**: The frontend React application is currently marked as TODO and needs to be implemented. The backend API and quantum processing components are fully functional and documented.
+
 ## 🏗️ Architecture
 
 ```
