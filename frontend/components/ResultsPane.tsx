@@ -44,7 +44,103 @@ interface ErrorEntry {
 }
 
 export default function ResultsPane() {
-  const { resultsCollapsed, toggleResults, compiledQasm, getActiveFile } = useFileStore()
+  const { resultsCollapsed, toggleResults, compiledQasm, getActiveFile, conversionStats } = useFileStore()
+  
+  // Helper function to get display stats from backend conversion stats
+  const getDisplayStats = () => {
+    if (!conversionStats) {
+      // Default empty stats when no conversion has been done
+      return {
+        compilation: {
+          status: 'pending',
+          time: '-',
+          originalGates: 0,
+          optimizedGates: 0,
+          reductionPercentage: 0,
+          circuitDepth: 0,
+          qubits: 0,
+          classicalBits: 0,
+          warnings: 0,
+          errors: 0
+        },
+        circuit: {
+          gates: {},
+          depth: 0,
+          width: 0,
+          complexity: 'Unknown',
+          entanglingGates: 0,
+          singleQubitGates: 0
+        },
+        execution: {
+          status: 'pending',
+          totalTime: '-',
+          simulationTime: '-',
+          postProcessingTime: '-',
+          shots: 0,
+          successfulShots: 0,
+          backend: 'N/A',
+          memoryUsage: '-',
+          cpuUsage: '-',
+          fidelity: 0
+        },
+        optimization: {
+          level: 0,
+          timeSpent: '-',
+          gatesReduced: 0,
+          depthReduced: 0,
+          techniques: [] as string[]
+        }
+      }
+    }
+
+    // Convert backend stats to display format
+    const gates = conversionStats.gates || {}
+    const totalGates = Object.values(gates).reduce((sum: number, count) => sum + (count || 0), 0)
+    const entanglingGates = ['cx', 'cnot', 'cz', 'swap', 'ccx'].reduce((sum, gate) => sum + (gates[gate] || 0), 0)
+    const singleQubitGates = totalGates - entanglingGates
+
+    return {
+      compilation: {
+        status: conversionStats.success ? 'success' : 'failed',
+        time: conversionStats.conversion_time || 'N/A',
+        originalGates: totalGates,
+        optimizedGates: totalGates, // Same for now
+        reductionPercentage: 0,
+        circuitDepth: conversionStats.depth || 0,
+        qubits: conversionStats.qubits || 0,
+        classicalBits: 0, // Not tracked yet
+        warnings: 0,
+        errors: conversionStats.error ? 1 : 0
+      },
+      circuit: {
+        gates: gates,
+        depth: conversionStats.depth || 0,
+        width: conversionStats.qubits || 0,
+        complexity: totalGates > 10 ? 'High' : totalGates > 5 ? 'Medium' : 'Low',
+        entanglingGates: entanglingGates,
+        singleQubitGates: singleQubitGates
+      },
+      execution: {
+        status: 'pending',
+        totalTime: '-',
+        simulationTime: '-',
+        postProcessingTime: '-',
+        shots: 0,
+        successfulShots: 0,
+        backend: 'N/A',
+        memoryUsage: '-',
+        cpuUsage: '-',
+        fidelity: 0
+      },
+      optimization: {
+        level: 0,
+        timeSpent: '-',
+        gatesReduced: 0,
+        depthReduced: 0,
+        techniques: [] as string[]
+      }
+    }
+  }
   const [activeTab, setActiveTab] = useState<'console' | 'output' | 'histogram' | 'qasm' | 'errors' | 'stats'>('console')
   const [logs, setLogs] = useState<LogEntry[]>([
     {
@@ -56,41 +152,12 @@ export default function ResultsPane() {
   ])
 
   // Mock errors data - in real app, this would come from actual code analysis
-  const [errors, setErrors] = useState<ErrorEntry[]>([
-    {
-      id: '1',
-      severity: 'error',
-      message: 'Undefined variable \'qc\' used before declaration',
-      line: 12,
-      column: 8,
-      file: 'main.py',
-      code: 'qc.h(0)',
-      suggestion: 'Make sure to define the quantum circuit before using it: qc = QuantumCircuit(2, 2)'
-    },
-    {
-      id: '2',
-      severity: 'warning',
-      message: 'Missing import statement for QuantumCircuit',
-      line: 1,
-      column: 1,
-      file: 'main.py',
-      code: 'from qiskit import QuantumCircuit',
-      suggestion: 'Add the import at the top of your file'
-    },
-    {
-      id: '3',
-      severity: 'info',
-      message: 'Consider using measure_all() for simpler measurement',
-      line: 15,
-      column: 5,
-      file: 'main.py',
-      code: 'qc.measure(qr, cr)',
-      suggestion: 'Use qc.measure_all() instead for cleaner code'
-    }
-  ])
+  // Errors disabled for now; will be implemented later
+  const [errors, setErrors] = useState<ErrorEntry[]>([])
 
-  // Mock statistics data - in real app, this would come from actual execution
-  const [executionStats, setExecutionStats] = useState({
+  // Get dynamic stats from backend conversion or use defaults
+  const executionStats = getDisplayStats()
+  const [legacyExecutionStats, setLegacyExecutionStats] = useState({
     compilation: {
       status: 'success',
       time: '142ms',
@@ -161,7 +228,7 @@ export default function ResultsPane() {
         addLog('info', `Execution time: ${quantumResults.execution_time}`)
         
         // Update execution stats with new data
-        setExecutionStats(prev => ({
+        setLegacyExecutionStats(prev => ({
           ...prev,
           execution: {
             ...prev.execution,
@@ -785,7 +852,7 @@ export default function ResultsPane() {
                     <div className="mt-3">
                       <h6 className="text-xs font-medium text-gray-400 mb-2">Techniques Used:</h6>
                       <div className="flex flex-wrap gap-1">
-                        {executionStats.optimization.techniques.map((technique, index) => (
+                        {executionStats.optimization.techniques.map((technique: string, index: number) => (
                           <span key={index} className="px-2 py-1 text-xs bg-quantum-blue-light/20 text-quantum-blue-light rounded">
                             {technique}
                           </span>

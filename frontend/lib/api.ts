@@ -1,6 +1,6 @@
 import { File, ApiResponse, CreateFileRequest, UpdateFileRequest } from '@/types'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'
 
 // Generic API helper
 async function apiRequest<T>(
@@ -73,8 +73,38 @@ export async function healthCheck(): Promise<ApiResponse<{ ok: boolean }>> {
   return apiRequest<{ ok: boolean }>('/api/health')
 }
 
-// Quantum execution API (for future use)
+// Quantum conversion API - connects to FastAPI backend
 export const quantumApi = {
+  // Convert quantum code to OpenQASM
+  async convertToQasm(code: string, framework: string, style: 'classic' | 'compact' = 'classic'): Promise<ApiResponse<any>> {
+    return apiRequest('/api/converter/convert', {
+      method: 'POST',
+      body: JSON.stringify({
+        code,
+        framework,
+        qasm_version: '3.0',
+        style,
+      }),
+    })
+  },
+
+  // Validate quantum code syntax
+  async validateCode(code: string, framework: string): Promise<ApiResponse<any>> {
+    return apiRequest('/api/converter/validate', {
+      method: 'POST',
+      body: JSON.stringify({
+        code,
+        framework,
+      }),
+    })
+  },
+
+  // Get supported frameworks
+  async getSupportedFrameworks(): Promise<ApiResponse<string[]>> {
+    return apiRequest('/api/converter/frameworks')
+  },
+
+  // Execute quantum code (legacy - for frontend server)
   async executeCode(code: string, framework: string, shots = 1024): Promise<ApiResponse<any>> {
     return apiRequest('/api/quantum/execute', {
       method: 'POST',
@@ -85,6 +115,23 @@ export const quantumApi = {
         backend: 'qasm_simulator',
       }),
     })
+  },
+
+  // Execute OpenQASM code via FastAPI backend
+  async executeQasm(qasm_code: string, backend = 'statevector', shots = 1024): Promise<ApiResponse<any>> {
+    return apiRequest('/api/simulator/execute', {
+      method: 'POST',
+      body: JSON.stringify({
+        qasm_code,
+        backend,
+        shots,
+      }),
+    })
+  },
+
+  // Get available backends
+  async getAvailableBackends(): Promise<ApiResponse<any>> {
+    return apiRequest('/api/simulator/backends')
   },
 }
 

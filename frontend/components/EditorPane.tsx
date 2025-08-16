@@ -253,7 +253,6 @@ export default function EditorPane() {
             detectIndentation: true,
             renderWhitespace: 'selection',
             renderControlCharacters: false,
-            renderIndentGuides: true,
             cursorBlinking: 'smooth',
             cursorSmoothCaretAnimation: 'on',
             smoothScrolling: true,

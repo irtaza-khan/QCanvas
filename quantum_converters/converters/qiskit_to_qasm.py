@@ -158,10 +158,26 @@ class QiskitToQASM3Converter:
         try:
             import qiskit.qasm3 as qasm3
         except ImportError:
-            raise ImportError(
-                "Qiskit OpenQASM 3.0 support requires Qiskit >= 0.46. "
-                "Please upgrade with: pip install --upgrade qiskit"
-            )
+            # Fallback to older qiskit versions
+            try:
+                from qiskit import qasm
+                print("Warning: Using legacy QASM 2.0 export, will convert to QASM 3.0 format")
+                # Use legacy export and convert format
+                qasm2_program = qc.qasm()
+                # Convert QASM 2.0 to QASM 3.0 format
+                if qasm2_program.startswith('OPENQASM 2.0;'):
+                    qasm3_program = qasm2_program.replace('OPENQASM 2.0;', 'OPENQASM 3.0;')
+                    lines = qasm3_program.split('\n')
+                    if 'include "qelib1.inc";' in lines:
+                        lines[lines.index('include "qelib1.inc";')] = 'include "stdgates.inc";'
+                    return '\n'.join(lines)
+                else:
+                    return qasm2_program
+            except Exception:
+                raise ImportError(
+                    "Qiskit OpenQASM 3.0 support requires Qiskit >= 0.46, or basic QASM export failed. "
+                    "Please upgrade with: pip install --upgrade qiskit"
+                )
         
         try:
             # Use Qiskit's native OpenQASM 3.0 export

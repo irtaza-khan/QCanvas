@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Search, Replace, X, ChevronDown, ChevronUp, MoreHorizontal, MatchCase, Regex, WholeWord } from 'lucide-react'
+import { Search, Replace, X, ChevronDown, ChevronUp, Regex, WholeWord } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import toast from 'react-hot-toast'
 
@@ -252,7 +252,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
     )
 
     if (matches.length > 0) {
-      const edits = matches.map(match => ({
+      const edits = matches.map((match: any) => ({
         range: match.range,
         text: replaceText,
         forceMoveMarkers: true

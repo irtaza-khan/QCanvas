@@ -3,11 +3,27 @@ import { devtools } from 'zustand/middleware'
 import { File, EditorState, SupportedLanguage, FILE_TEMPLATES, CompileOptions } from '@/types'
 import { generateId, getLanguageFromFilename } from './utils'
 
+// Conversion stats interface based on backend ConversionResult
+interface ConversionStats {
+  qubits?: number | null
+  gates?: { [gateName: string]: number } | null
+  depth?: number | null
+  conversion_time?: string | null
+  framework?: string
+  qasm_version?: string
+  success?: boolean
+  error?: string | null
+}
+
 interface FileStore extends EditorState {
+  // Additional state for conversion stats
+  conversionStats: ConversionStats | null
+  
   // Actions
   setActiveFile: (fileId: string | null) => void
   updateFileContent: (fileId: string, content: string) => void
   addFile: (name: string, content?: string) => File
+  addFileWithoutActivating: (name: string, content?: string) => File
   deleteFile: (fileId: string) => void
   renameFile: (fileId: string, newName: string) => void
   setTheme: (theme: 'light' | 'dark') => void
@@ -18,122 +34,69 @@ interface FileStore extends EditorState {
   getActiveFile: () => File | undefined
   setCompileOptions: (options: Partial<CompileOptions>) => void
   setCompiledQasm: (qasm: string | null) => void
+  setConversionStats: (stats: ConversionStats | null) => void
   compileActiveToQasm: () => string | null
 }
 
-// Mock initial files
+// Initial files sourced from tests/unit/test_converters
 const initialFiles: File[] = [
   {
     id: 'file-1',
-    name: 'main.qasm',
-    content: `// Bell State Creation
-OPENQASM 3.0;
-include "stdgates.inc";
-
-qubit[2] q;
-bit[2] c;
-
-h q[0];
-cx q[0], q[1];
-c = measure q;`,
-    language: 'qasm',
+    name: 'test_qiskit_converter.py',
+    content: `from qiskit import QuantumCircuit
+def get_circuit():
+    qc = QuantumCircuit(2, 2)
+    qc.h(0)
+    qc.cx(0, 1)
+    qc.measure([0, 1], [0, 1])
+    return qc
+`,
+    language: 'python',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    size: 150,
+    size: 0,
   },
   {
     id: 'file-2',
-    name: 'demo_qiskit.py',
-    content: `# Grover's Algorithm Implementation
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, execute, Aer
-import numpy as np
-
-# Create quantum circuit for Grover's algorithm
-def grovers_algorithm(target_state):
-    # Number of qubits
-    n = 2
-    
-    # Create quantum circuit
-    qc = QuantumCircuit(n, n)
-    
-    # Initialize superposition
-    qc.h(range(n))
-    
-    # Oracle for target state
-    if target_state == '11':
-        qc.cz(0, 1)
-    elif target_state == '10':
-        qc.x(1)
-        qc.cz(0, 1)
-        qc.x(1)
-    elif target_state == '01':
-        qc.x(0)
-        qc.cz(0, 1)
-        qc.x(0)
-    # '00' requires no oracle
-    
-    # Diffusion operator
-    qc.h(range(n))
-    qc.x(range(n))
-    qc.cz(0, 1)
-    qc.x(range(n))
-    qc.h(range(n))
-    
-    # Measure
-    qc.measure_all()
-    
-    return qc
-
-# Execute circuit
-circuit = grovers_algorithm('11')
-backend = Aer.get_backend('qasm_simulator')
-job = execute(circuit, backend, shots=1024)
-result = job.result()
-counts = result.get_counts(circuit)
-print("Grover's Algorithm Results:", counts)`,
+    name: 'test_cirq_converter.py',
+    content: `import cirq
+def get_circuit():
+    q0, q1 = cirq.LineQubit.range(2)
+    circuit = cirq.Circuit(
+        cirq.H(q0),
+        cirq.CNOT(q0, q1),
+        cirq.measure(q0, key="m0"),
+        cirq.measure(q1, key="m1")
+    )
+    return circuit
+`,
     language: 'python',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    size: 1250,
+    size: 0,
   },
   {
     id: 'file-3',
-    name: 'sample_pennylane.py',
-    content: `# Quantum Teleportation with PennyLane
-import pennylane as qml
+    name: 'test_pennylane_converter.py',
+    content: `import pennylane as qml
 import numpy as np
 
-# Create device
 dev = qml.device('default.qubit', wires=3)
 
 @qml.qnode(dev)
-def quantum_teleportation(state_prep_angle):
-    # Prepare the state to be teleported on qubit 0
-    qml.RY(state_prep_angle, wires=0)
-    
-    # Create Bell pair between qubits 1 and 2
-    qml.Hadamard(wires=1)
-    qml.CNOT(wires=[1, 2])
-    
-    # Bell measurement on qubits 0 and 1
-    qml.CNOT(wires=[0, 1])
+def circuit():
     qml.Hadamard(wires=0)
-    
-    # Conditional operations based on measurement results
-    # (In real quantum computing, these would be conditional)
-    # For simulation, we apply all possible corrections
-    
-    return qml.state()
-
-# Execute teleportation
-angle = np.pi / 4  # Prepare |+⟩ state
-final_state = quantum_teleportation(angle)
-print("Quantum Teleportation completed")
-print("Final state:", final_state)`,
+    qml.RX(np.pi/4, wires=0)
+    qml.RY(np.pi/2, wires=1)
+    qml.CNOT(wires=[0, 1])
+    qml.RZ(np.pi/3, wires=2)
+    qml.CZ(wires=[1, 2])
+    return qml.expval(qml.PauliZ(0))
+`,
     language: 'python',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    size: 980,
+    size: 0,
   },
 ]
 
@@ -147,6 +110,7 @@ export const useFileStore = create<FileStore>()(
       sidebarCollapsed: false,
       resultsCollapsed: false,
       compiledQasm: null,
+      conversionStats: null,
       compileOptions: {
         inputLanguage: 'qasm',
         resultFormat: 'json',
@@ -199,6 +163,32 @@ export const useFileStore = create<FileStore>()(
           }),
           false,
           'addFile'
+        )
+
+        return newFile
+      },
+
+      // Create a new file but keep the current active file unchanged
+      addFileWithoutActivating: (name, content) => {
+        const language = getLanguageFromFilename(name)
+        const defaultContent = content ?? FILE_TEMPLATES[language] ?? ''
+
+        const newFile: File = {
+          id: generateId(),
+          name,
+          content: defaultContent,
+          language,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          size: defaultContent.length,
+        }
+
+        set(
+          (state) => ({
+            files: [...state.files, newFile],
+          }),
+          false,
+          'addFileWithoutActivating'
         )
 
         return newFile
@@ -322,6 +312,10 @@ export const useFileStore = create<FileStore>()(
 
       setCompiledQasm: (qasm) => {
         set({ compiledQasm: qasm }, false, 'setCompiledQasm')
+      },
+
+      setConversionStats: (stats) => {
+        set({ conversionStats: stats }, false, 'setConversionStats')
       },
 
       compileActiveToQasm: () => {

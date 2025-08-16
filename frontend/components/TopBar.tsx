@@ -28,7 +28,7 @@ import {
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
-import { fileApi } from '@/lib/api'
+import { fileApi, quantumApi } from '@/lib/api'
 import { InputLanguage, ResultFormat } from '@/types'
 
 export default function TopBar() {
@@ -40,7 +40,7 @@ export default function TopBar() {
     getActiveFile, 
     updateFileContent 
   } = useFileStore()
-  const { setCompileOptions, compileActiveToQasm, setCompiledQasm } = useFileStore()
+  const { setCompileOptions, compileActiveToQasm, setCompiledQasm, setConversionStats } = useFileStore()
   
   const [isRunning, setIsRunning] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -99,27 +99,93 @@ export default function TopBar() {
       // Dispatch custom event for results panel
       window.dispatchEvent(new CustomEvent('circuit-execute'))
       
-      // Mock quantum execution
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      toast.loading('Running quantum circuit...', { id: 'execution' })
       
-      // Simulate different results based on file content
-      let mockResults = ''
-      if (activeFile.content.includes('Bell') || activeFile.content.includes('h q[0]')) {
-        mockResults = 'Bell State Results:\n{"00": 512, "11": 512}\nTotal shots: 1024\nExecution time: 2.1s'
-      } else if (activeFile.content.includes('Grover') || activeFile.content.includes('grovers')) {
-        mockResults = 'Grover\'s Algorithm Results:\n{"11": 769, "00": 85, "01": 85, "10": 85}\nTotal shots: 1024\nExecution time: 3.2s'
-      } else if (activeFile.content.includes('teleport')) {
-        mockResults = 'Quantum Teleportation Results:\nTeleportation fidelity: 99.8%\nExecution time: 1.8s'
+      // Determine if file is QASM or a framework code
+      const isQasmFile = activeFile.name.endsWith('.qasm') || activeFile.content.trim().startsWith('OPENQASM')
+      
+      if (isQasmFile) {
+        // Execute QASM directly
+        const result = await quantumApi.executeQasm(
+          activeFile.content,
+          'statevector', // Default backend
+          1024 // Default shots
+        )
+        
+        if (result.success && result.data?.success) {
+          const executionData = result.data.results
+          toast.success('QASM execution completed!', { id: 'execution' })
+          
+          // Log results for now (will be displayed in results panel)
+          console.log('QASM Execution Results:', executionData)
+          
+          // Display basic stats
+          if (executionData.counts) {
+            const totalCounts = Object.values(executionData.counts).reduce((a: any, b: any) => a + b, 0)
+            setTimeout(() => {
+              toast.success(`Executed with ${totalCounts} shots`, { duration: 3000 })
+            }, 1000)
+          }
+        } else {
+          const errorMsg = result.data?.error || result.error || 'QASM execution failed'
+          toast.error(`Execution failed: ${errorMsg}`, { id: 'execution' })
+        }
       } else {
-        mockResults = 'Quantum Circuit Results:\n{"0": 524, "1": 500}\nTotal shots: 1024\nExecution time: 1.5s'
+        // Convert framework code to QASM first, then execute
+        let framework = 'qiskit' // Default
+        
+        // Auto-detect framework
+        if (activeFile.content.includes('import cirq') || activeFile.content.includes('cirq.')) {
+          framework = 'cirq'
+        } else if (activeFile.content.includes('import pennylane') || activeFile.content.includes('qml.')) {
+          framework = 'pennylane'
+        } else if (activeFile.content.includes('import qiskit') || activeFile.content.includes('QuantumCircuit')) {
+          framework = 'qiskit'
+        }
+        
+        // First convert to QASM
+        const conversionResult = await quantumApi.convertToQasm(
+          activeFile.content,
+          framework,
+          'classic'
+        )
+        
+        if (conversionResult.success && conversionResult.data?.success) {
+          const qasmCode = conversionResult.data.qasm_code
+          
+          // Then execute the QASM
+          const executionResult = await quantumApi.executeQasm(
+            qasmCode,
+            'statevector',
+            1024
+          )
+          
+          if (executionResult.success && executionResult.data?.success) {
+            const executionData = executionResult.data.results
+            toast.success(`${framework} circuit executed successfully!`, { id: 'execution' })
+            
+            // Log results for now
+            console.log(`${framework} Execution Results:`, executionData)
+            
+            // Display stats
+            if (executionData.counts) {
+              const totalCounts = Object.values(executionData.counts).reduce((a: any, b: any) => a + b, 0)
+              setTimeout(() => {
+                toast.success(`Executed ${framework} circuit with ${totalCounts} shots`)
+              }, 1000)
+            }
+          } else {
+            const errorMsg = executionResult.data?.error || executionResult.error || 'Execution failed'
+            toast.error(`Execution failed: ${errorMsg}`, { id: 'execution' })
+          }
+        } else {
+          const errorMsg = conversionResult.data?.error || conversionResult.error || 'Conversion failed'
+          toast.error(`Conversion failed: ${errorMsg}`, { id: 'execution' })
+        }
       }
-      
-      toast.success('Circuit executed successfully!')
-      
-      // In a real app, this would update the results panel
-      console.log('Execution results:', mockResults)
     } catch (error) {
-      toast.error('Execution failed')
+      toast.error('Execution failed: Network error', { id: 'execution' })
+      console.error('Execution error:', error)
     } finally {
       setIsRunning(false)
     }
@@ -149,31 +215,91 @@ export default function TopBar() {
     }
   }
 
-  const handleConvertToQASM = () => {
+  const handleConvertToQASM = async () => {
     if (!activeFile) {
       toast.error('No file selected')
       return
     }
 
+    // Determine framework from the current language selection or file extension
+    let framework = inputLanguage
+    if (framework === 'qasm') {
+      // If input is already QASM, check file content or extension for hints
+      if (activeFile.content.includes('qiskit') || activeFile.name.includes('qiskit')) {
+        framework = 'qiskit'
+      } else if (activeFile.content.includes('cirq') || activeFile.name.includes('cirq')) {
+        framework = 'cirq'
+      } else if (activeFile.content.includes('pennylane') || activeFile.name.includes('pennylane')) {
+        framework = 'pennylane'
+      } else {
+        // Auto-detect based on imports
+        if (activeFile.content.includes('from qiskit') || activeFile.content.includes('import qiskit')) {
+          framework = 'qiskit'
+        } else if (activeFile.content.includes('import cirq') || activeFile.content.includes('cirq.')) {
+          framework = 'cirq'
+        } else if (activeFile.content.includes('import pennylane') || activeFile.content.includes('qml.')) {
+          framework = 'pennylane'
+        } else {
+          toast.error('Cannot determine framework. Please select input language manually.')
+          return
+        }
+      }
+    }
+
     setCompileOptions({ inputLanguage, resultFormat, style: resultStyle })
-    const qasm = compileActiveToQasm()
-    if (qasm) {
-      // Open or focus a QASM tab
+    
+    try {
+      toast.loading('Converting to OpenQASM...', { id: 'conversion' })
+      
+      const result = await quantumApi.convertToQasm(
+        activeFile.content, 
+        framework as string, 
+        resultStyle
+      )
+      
+      // Always assume success (no error handling as requested)
+      const qasm = result.data.qasm_code
+      const stats = result.data.conversion_stats
+      
+      // Store conversion stats from backend
+      if (stats) {
+        setConversionStats({
+          qubits: stats.qubits,
+          gates: stats.gates,
+          depth: stats.depth,
+          conversion_time: stats.conversion_time,
+          framework: result.data.framework,
+          qasm_version: result.data.qasm_version,
+          success: true,
+          error: null
+        })
+      }
+      
+      // Open or update a QASM file, but keep the current active file focused
       const newName = activeFile.name.replace(/\.[^.]+$/, '') + '.qasm'
       const existing = useFileStore.getState().files.find(f => f.name === newName)
       if (existing) {
         updateFileContent(existing.id, qasm)
-        useFileStore.getState().setActiveFile(existing.id)
       } else {
-        const created = useFileStore.getState().addFile(newName, qasm)
-        useFileStore.getState().setActiveFile(created.id)
+        // Create without switching active file
+        useFileStore.getState().addFileWithoutActivating(newName, qasm)
       }
       setCompiledQasm(qasm)
-      toast.success('Converted to OpenQASM 3.0')
+      
+      toast.success('Converted to OpenQASM 3.0', { id: 'conversion' })
+      
       // Focus QASM tab in results
       window.dispatchEvent(new CustomEvent('show-qasm'))
-    } else {
-      toast.error('Conversion failed')
+      
+      // Display conversion stats from backend
+      if (stats && stats.qubits) {
+        setTimeout(() => {
+          toast.success(`Circuit: ${stats.qubits} qubits, ${stats.depth || 'unknown'} depth`)
+        }, 1000)
+      }
+    } catch (error) {
+      // No error handling as requested - just log for debugging
+      console.log('Conversion request completed:', error)
     }
   }
 
