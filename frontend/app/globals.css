@@ -1,0 +1,914 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 9% 83%;
+    --primary-foreground: 240 9% 83%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+/* Custom scrollbars - Dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #3e3e42;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+/* Light theme scrollbars */
+.light ::-webkit-scrollbar-track {
+  background-color: #f5f5f5;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 4px;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+/* Ensure proper scrollbar behavior */
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* Responsive scrollbar for smaller screens */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+/* Monaco Editor overrides */
+.monaco-editor {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', monospace;
+}
+
+.monaco-editor .margin {
+  background-color: #252526;
+}
+
+/* Quantum theme utilities */
+.quantum-gradient {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}
+
+/* Ensure quantum gradient text works across browsers */
+.quantum-gradient.bg-clip-text {
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
+}
+
+.quantum-gradient-purple {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.quantum-gradient-teal {
+  background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+}
+
+.quantum-glass {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quantum-glass-dark {
+  backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* File tree styles */
+.file-tree {
+  user-select: none;
+}
+
+.file-tree-item {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.file-tree-item:hover {
+  background-color: #3e3e42;
+}
+
+.file-tree-item.active {
+  background-color: #007acc;
+  color: white;
+}
+
+/* Results panel */
+.results-panel {
+  background-color: #1e1e1e;
+  border-top: 1px solid #3e3e42;
+}
+
+.results-content {
+  padding: 1rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-size: 0.875rem;
+  color: #d4d4d4;
+}
+
+/* Toast customization */
+.toast-custom {
+  background-color: #252526;
+  border: 1px solid #3e3e42;
+  color: #d4d4d4;
+}
+
+/* Button variants */
+.btn-quantum {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  background: linear-gradient(to right, #1e3c72, #2a5298);
+  color: white;
+}
+
+.btn-quantum:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+
+.btn-quantum:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: scale(1);
+}
+
+.btn-ghost {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  color: #d4d4d4;
+}
+
+.btn-ghost:hover {
+  background-color: #3e3e42;
+  color: white;
+}
+
+/* Editor pane */
+.editor-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.editor-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 20rem;
+  background-color: #252526;
+  border-right: 1px solid #3e3e42;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 3rem;
+}
+
+/* TopBar */
+.topbar {
+  height: 3.5rem;
+  background-color: #252526;
+  border-bottom: 1px solid #3e3e42;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+/* Layout utilities */
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Focus styles */
+.focus-quantum:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.5);
+}
+
+/* Loading spinner */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark mode defaults */
+body {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+
+html {
+  color-scheme: dark;
+}
+
+/* Light mode overrides */
+.light body {
+  background-color: #ffffff;
+  color: #1f2937;
+}
+
+.light html {
+  color-scheme: light;
+}
+
+/* Light theme comprehensive overrides */
+.light .bg-editor-bg {
+  background-color: #ffffff !important;
+}
+
+.light .bg-editor-sidebar {
+  background-color: #f8fafc !important;
+}
+
+.light .border-editor-border {
+  border-color: #e2e8f0 !important;
+}
+
+.light .text-editor-text {
+  color: #64748b !important;
+}
+
+.light .quantum-glass-dark {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.light .hover\:bg-quantum-blue-light\/20:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Light theme backgrounds */
+.light .bg-gradient-to-br {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%) !important;
+}
+
+.light .bg-gradient-to-b {
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%) !important;
+}
+
+.light .bg-gradient-to-r {
+  background: linear-gradient(90deg, #f8fafc 0%, #e2e8f0 100%) !important;
+}
+
+/* Light theme text colors */
+.light .text-white {
+  color: #1e293b !important;
+}
+
+.light .text-gray-500 {
+  color: #64748b !important;
+}
+
+.light .text-gray-400 {
+  color: #94a3b8 !important;
+}
+
+.light .text-gray-300 {
+  color: #cbd5e1 !important;
+}
+
+/* Light theme specific backgrounds */
+.light .bg-black\/20 {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+.light .bg-editor-bg\/50 {
+  background-color: rgba(248, 250, 252, 0.5) !important;
+}
+
+.light .bg-editor-bg\/30 {
+  background-color: rgba(248, 250, 252, 0.3) !important;
+}
+
+/* Light theme borders */
+.light .border-t {
+  border-color: #e2e8f0 !important;
+}
+
+.light .border-b {
+  border-color: #e2e8f0 !important;
+}
+
+.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Light theme hover states */
+.light .hover\:text-white:hover {
+  color: #1e293b !important;
+}
+
+.light .hover\:bg-editor-border:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.light .hover\:bg-editor-border\/50:hover {
+  background-color: rgba(226, 232, 240, 0.5) !important;
+}
+
+/* Light theme buttons and interactive elements */
+.light .btn-ghost {
+  color: #475569 !important;
+}
+
+.light .btn-ghost:hover {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.light .bg-quantum-blue-light {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+/* Light theme for TopBar */
+.light .topbar {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Light theme for forms */
+.light input {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  color: #1f2937 !important;
+}
+
+.light input::placeholder {
+  color: #9ca3af !important;
+}
+
+.light select {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  color: #1f2937 !important;
+}
+
+/* Light theme for results panel */
+.light .results-panel {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Light theme for file tree */
+.light .file-tree-item:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.light .file-tree-item.active {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+/* Light theme for modals and overlays */
+.light .modal-backdrop {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.light .bg-black {
+  background-color: #ffffff !important;
+}
+
+.light .bg-opacity-50 {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Light theme for code blocks and pre elements */
+.light pre {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+.light code {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+/* Light theme for quantum gradient elements */
+.light .quantum-gradient {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+/* Light theme for gradient text - make it visible */
+.light .quantum-gradient.bg-clip-text {
+  background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-fill-color: transparent !important;
+}
+
+/* Light theme for regular gradient text */
+.light .gradient-text {
+  background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Light theme for editor accent colors */
+.light .bg-editor-accent {
+  background-color: #3b82f6 !important;
+}
+
+/* Light theme for quantum glass effect */
+.light .quantum-glass {
+  background: rgba(248, 250, 252, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Light theme for shadows */
+.light .shadow-xl,
+.light .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.light .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Light theme for status colors */
+.light .text-green-400 {
+  color: #16a34a !important;
+}
+
+.light .text-red-400 {
+  color: #dc2626 !important;
+}
+
+.light .text-yellow-400 {
+  color: #ca8a04 !important;
+}
+
+.light .text-blue-400 {
+  color: #2563eb !important;
+}
+
+.light .text-purple-400 {
+  color: #9333ea !important;
+}
+
+/* Light theme for background variants */
+.light .bg-gray-700 {
+  background-color: #e2e8f0 !important;
+}
+
+.light .bg-gray-900 {
+  background-color: #f1f5f9 !important;
+}
+
+/* Light theme for login and standalone pages */
+.light .min-h-screen {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%) !important;
+}
+
+/* Light theme for sticky elements */
+.light .sticky {
+  background-color: rgba(248, 250, 252, 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Light theme for loading states */
+.light .spinner {
+  border-color: #e2e8f0 !important;
+  border-top-color: #3b82f6 !important;
+}
+
+/* Light theme for tab navigation */
+.light .bg-editor-border {
+  background-color: #e2e8f0 !important;
+}
+
+/* Light theme for find/replace */
+.light .find-replace-container {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Resize cursor for drag handles */
+.cursor-row-resize {
+  cursor: row-resize;
+}
+
+/* Disable text selection during drag */
+.select-none {
+  user-select: none;
+}
+
+/* Drag handle styles */
+.drag-handle {
+  position: relative;
+}
+
+.drag-handle::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 5px;
+  cursor: row-resize;
+}
+
+/* Light theme for error displays */
+.light .bg-red-500\/10 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+.light .border-red-500\/20 {
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+.light .bg-yellow-500\/10 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+.light .border-yellow-500\/20 {
+  border-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+.light .bg-blue-500\/10 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.light .border-blue-500\/20 {
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.light .bg-blue-900\/20 {
+  background-color: rgba(30, 58, 138, 0.15) !important;
+}
+
+.light .border-blue-700\/30 {
+  border-color: rgba(29, 78, 216, 0.3) !important;
+}
+
+.light .bg-red-900\/20 {
+  background-color: rgba(127, 29, 29, 0.15) !important;
+}
+
+.light .bg-gray-900 {
+  background-color: #f1f5f9 !important;
+}
+
+.light .border-gray-700 {
+  border-color: #cbd5e1 !important;
+}
+
+.light .text-red-300 {
+  color: #dc2626 !important;
+}
+
+.light .text-blue-200 {
+  color: #1d4ed8 !important;
+}
+
+.light .text-blue-300 {
+  color: #2563eb !important;
+}
+
+/* Light theme for stats components */
+.light .bg-green-500\/10 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+}
+
+.light .border-green-500\/20 {
+  border-color: rgba(34, 197, 94, 0.2) !important;
+}
+
+.light .bg-purple-500\/10 {
+  background-color: rgba(168, 85, 247, 0.1) !important;
+}
+
+.light .border-purple-500\/20 {
+  border-color: rgba(168, 85, 247, 0.2) !important;
+}
+
+.light .text-green-300 {
+  color: #16a34a !important;
+}
+
+.light .text-purple-300 {
+  color: #9333ea !important;
+}
+
+.light .text-purple-400 {
+  color: #a855f7 !important;
+}
+
+.light .bg-quantum-blue-light\/20 {
+  background-color: rgba(96, 165, 250, 0.2) !important;
+}
+
+.light .text-quantum-blue-light {
+  color: #3b82f6 !important;
+}
+
+/* Additional color variables for new features */
+.editor-bg {
+  background-color: #1e1e1e;
+}
+
+.editor-sidebar {
+  background-color: #252526;
+}
+
+.editor-border {
+  border-color: #3e3e42;
+}
+
+.editor-text {
+  color: #d4d4d4;
+}
+
+.quantum-blue-light {
+  color: #60a5fa;
+}
+
+/* Enhanced animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: transform 0.2s ease-in-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Glass morphism effects */
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-effect-dark {
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced shadows */
+.shadow-quantum {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-quantum-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Enhanced button states */
+.btn-quantum:active {
+  transform: scale(0.98);
+}
+
+.btn-ghost:active {
+  transform: scale(0.98);
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Enhanced form elements */
+.input-enhanced {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #3e3e42;
+}
+
+.input-enhanced:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+/* Status indicators */
+.status-online {
+  background-color: #10b981;
+}
+
+.status-offline {
+  background-color: #ef4444;
+}
+
+.status-warning {
+  background-color: #f59e0b;
+}
+
+/* Enhanced tooltips */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1f2937;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 1000;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    position: absolute;
+    z-index: 50;
+  }
+  
+  .sidebar.collapsed {
+    width: 3rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

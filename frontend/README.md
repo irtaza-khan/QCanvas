@@ -1,70 +1,142 @@
-# QCanvas Frontend
+# QCanvas - Quantum Code Editor
 
-## Status: TODO 🚧
+A Next.js 14 quantum circuit code editor with TypeScript, App Router, and Tailwind CSS.
 
-The frontend React application for QCanvas is currently under development and marked as TODO.
+## Features
 
-## Planned Features
+- 🚀 **Next.js 14** with App Router
+- 📝 **Monaco Editor** for quantum code editing
+- 🗂️ **File Management** with Zustand state management
+- 🎨 **Tailwind CSS** with quantum-themed design
+- 📱 **Responsive** desktop-first layout
+- 🔐 **Mock Authentication** system ready for integration
 
-- **Circuit Editor**: Interactive quantum circuit editor with drag-and-drop interface
-- **Framework Converter**: Real-time conversion between quantum frameworks
-- **Quantum Simulator**: Visual quantum circuit simulation with multiple backends
-- **Results Visualization**: Interactive visualization of quantum states and measurement results
-- **Real-time Updates**: WebSocket integration for live updates during conversion and simulation
-- **Responsive Design**: Mobile-first responsive design for all devices
+## Tech Stack
 
-## Technology Stack
+- **Framework**: Next.js 14 + TypeScript
+- **Styling**: Tailwind CSS
+- **Editor**: Monaco Editor
+- **State**: Zustand
+- **UI**: Custom components with Lucide icons
+- **Notifications**: React Hot Toast
 
-- **React 18**: Modern React with hooks and functional components
-- **TypeScript**: Type-safe JavaScript development
-- **WebSocket**: Real-time communication with backend
-- **Monaco Editor**: Code editor with syntax highlighting
-- **D3.js**: Data visualization for quantum states
-- **Tailwind CSS**: Utility-first CSS framework
+## Getting Started
 
-## Development Setup
+### Prerequisites
 
-Once development begins:
+- Node.js 18+ 
+- npm or yarn
 
+### Installation
+
+1. Clone the repository:
 ```bash
-cd frontend
+git clone <your-repo>
+cd qcanvas-nextjs
+```
+
+2. Install dependencies:
+```bash
 npm install
-npm start
 ```
 
-## Architecture
-
-The frontend will follow a component-based architecture:
-
-```
-src/
-├── components/           # Reusable UI components
-│   ├── common/          # Common components (Header, Footer, etc.)
-│   ├── converter/       # Circuit conversion components
-│   ├── editor/          # Code editor components
-│   └── simulator/       # Quantum simulator components
-├── pages/               # Page-level components
-├── context/             # React context for state management
-├── hooks/               # Custom React hooks
-├── services/            # API service layer
-├── utils/               # Utility functions
-└── styles/              # CSS and styling
+3. Copy environment variables:
+```bash
+cp .env.example .env.local
 ```
 
-## Backend Integration
+4. Start the development server:
+```bash
+npm run dev
+```
 
-The frontend will integrate with the QCanvas backend API:
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-- **REST API**: For circuit conversion and simulation
-- **WebSocket**: For real-time updates and progress tracking
-- **Health Checks**: For monitoring backend status
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run type-check` - Run TypeScript checks
+
+## Project Structure
+
+```
+app/
+  (auth)/login/page.tsx          # Login page
+  (app)/                         # Protected app routes
+    layout.tsx                   # App layout with TopBar/Sidebar
+    page.tsx                     # Main editor page
+  api/                           # API routes
+    health/route.ts              # Health check
+    files/route.ts               # File CRUD operations
+    files/[id]/route.ts          # Individual file operations
+  globals.css                    # Global styles
+  layout.tsx                     # Root layout
+components/                      # Reusable components
+  TopBar.tsx                     # Action buttons and theme toggle
+  Sidebar.tsx                    # File tree and management
+  EditorPane.tsx                 # Monaco editor integration
+  ResultsPane.tsx                # Console-like results panel
+lib/                            # Utilities
+  store.ts                       # Zustand state management
+  api.ts                         # API helper functions
+  utils.ts                       # Utility functions
+types/
+  index.ts                       # TypeScript type definitions
+```
+
+## Features Overview
+
+### File Management
+- Create, edit, delete, and rename quantum code files
+- Support for multiple file types (Python, QASM, etc.)
+- File tree navigation in sidebar
+
+### Code Editor
+- Monaco Editor with syntax highlighting
+- Quantum code editing support
+- Auto-save functionality
+- Keyboard shortcuts (Ctrl/Cmd+S to save)
+
+### Mock API
+All API endpoints return mock data for development:
+- `GET /api/files` - List all files
+- `GET /api/files/[id]` - Get specific file
+- `POST /api/files` - Create new file
+- `PUT /api/files/[id]` - Update file content
+- `GET /api/health` - Health check
+
+### Authentication (Mock)
+- Login page with email/password form
+- Protected routes (UI-only protection)
+- Ready for NextAuth integration
+
+## Development Notes
+
+- **Mock Data**: All file operations use mock data stored in Zustand
+- **No Database**: Everything is in-memory for now
+- **No Real Auth**: Login is UI-only, ready for backend integration
+- **Responsive**: Desktop-first design, mobile-friendly
+- **Type Safe**: Full TypeScript coverage
+
+## Next Steps
+
+This scaffold is ready for:
+1. FastAPI backend integration
+2. Real authentication with NextAuth
+3. Database persistence
+4. Quantum execution engine
+5. Real-time collaboration
 
 ## Contributing
 
-When frontend development begins, please refer to the main [Contributing Guide](../docs/developer/contributing.md) for development guidelines.
+1. Follow the existing code structure
+2. Use TypeScript for all new code
+3. Follow the component patterns in `/components`
+4. Test mock APIs before real backend integration
 
-## Documentation
+## License
 
-- [API Documentation](../docs/api/)
-- [User Guide](../docs/user-guide/)
-- [Developer Guide](../docs/developer/)
+MIT License - see LICENSE file for details.
