@@ -61,25 +61,49 @@ class QiskitToQASM3Converter:
         except Exception as e:
             raise RuntimeError(f"Failed to execute Qiskit source code: {str(e)}")
         
-        # Extract the get_circuit function
+        # Prefer a get_circuit() function if present
         get_circuit = namespace.get("get_circuit")
-        if not callable(get_circuit):
-            raise ValueError(
-                "Qiskit source code must define a callable function 'get_circuit()' "
-                "that returns a qiskit.QuantumCircuit object"
-            )
-        
+        if callable(get_circuit):
+            try:
+                circuit = get_circuit()
+                if isinstance(circuit, QuantumCircuit):
+                    return circuit
+            except Exception as e:
+                # If explicit getter exists but fails, surface the error
+                raise RuntimeError(f"Failed to execute get_circuit() function: {str(e)}")
+
+        # Fallback: search for any QuantumCircuit instances created by the code
         try:
-            # Execute the function to get the circuit
-            circuit = get_circuit()
-        except Exception as e:
-            raise RuntimeError(f"Failed to execute get_circuit() function: {str(e)}")
-        
-        # Validate that we got a QuantumCircuit
-        if not isinstance(circuit, QuantumCircuit):
-            raise ValueError("get_circuit() must return a valid qiskit.QuantumCircuit object")
-        
-        return circuit
+            for name, obj in namespace.items():
+                if isinstance(obj, QuantumCircuit):
+                    return obj
+        except Exception:
+            pass
+
+        # Secondary fallback: try calling simple factory functions with no parameters
+        # or with a single integer parameter commonly named n or n_qubits
+        for name, obj in namespace.items():
+            if callable(obj) and name.startswith(("create_", "build_", "make_")):
+                try:
+                    # Try no-arg call
+                    maybe_circuit = obj()  # type: ignore
+                    if isinstance(maybe_circuit, QuantumCircuit):
+                        return maybe_circuit
+                except TypeError:
+                    # Try with common integer default, e.g., 2 or 4 qubits
+                    for trial_n in (2, 3, 4):
+                        try:
+                            maybe_circuit = obj(trial_n)
+                            if isinstance(maybe_circuit, QuantumCircuit):
+                                return maybe_circuit
+                        except Exception:
+                            continue
+                except Exception:
+                    continue
+
+        raise ValueError(
+            "Could not locate a QuantumCircuit. Define get_circuit() or assign the circuit to a variable."
+        )
     
     def _analyze_qiskit_circuit(self, qc: 'QuantumCircuit') -> ConversionStats:
         """

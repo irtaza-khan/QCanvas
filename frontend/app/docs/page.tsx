@@ -52,7 +52,12 @@ export default function DocsPage() {
                   </div>
                   <h4 className="text-white font-medium">Qiskit</h4>
                 </div>
-                <p className="text-editor-text text-sm">IBM's quantum computing framework with comprehensive tools for circuit design and execution.</p>
+                <p className="text-editor-text text-sm mb-2">IBM's quantum computing framework with comprehensive tools for circuit design and execution.</p>
+                <ul className="text-xs text-gray-400 space-y-1">
+                  <li>• Full quantum circuit support</li>
+                  <li>• Advanced optimization</li>
+                  <li>• IBM Quantum backends</li>
+                </ul>
               </div>
               <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
                 <div className="flex items-center mb-2">
@@ -61,7 +66,12 @@ export default function DocsPage() {
                   </div>
                   <h4 className="text-white font-medium">Cirq</h4>
                 </div>
-                <p className="text-editor-text text-sm">Google's quantum computing framework focused on near-term quantum computers and algorithms.</p>
+                <p className="text-editor-text text-sm mb-2">Google's quantum computing framework focused on near-term quantum computers and algorithms.</p>
+                <ul className="text-xs text-gray-400 space-y-1">
+                  <li>• Near-term quantum algorithms</li>
+                  <li>• Noise modeling</li>
+                  <li>• Google Quantum AI integration</li>
+                </ul>
               </div>
               <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
                 <div className="flex items-center mb-2">
@@ -70,7 +80,12 @@ export default function DocsPage() {
                   </div>
                   <h4 className="text-white font-medium">PennyLane</h4>
                 </div>
-                <p className="text-editor-text text-sm">Xanadu's quantum machine learning framework for variational quantum algorithms.</p>
+                <p className="text-editor-text text-sm mb-2">Xanadu's quantum machine learning framework for variational quantum algorithms.</p>
+                <ul className="text-xs text-gray-400 space-y-1">
+                  <li>• Quantum machine learning</li>
+                  <li>• Variational algorithms</li>
+                  <li>• Hybrid quantum-classical</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -334,6 +349,96 @@ export default function DocsPage() {
       )
     },
     {
+      id: 'best-practices',
+      title: 'Best Practices',
+      icon: <BookOpen className="w-5 h-5" />,
+      content: (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-4">Code Organization</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
+                <h4 className="text-white font-medium mb-3">File Structure</h4>
+                <ul className="text-editor-text space-y-2 text-sm">
+                  <li>• Use descriptive file names</li>
+                  <li>• Organize circuits by functionality</li>
+                  <li>• Keep imports at the top</li>
+                  <li>• Use consistent naming conventions</li>
+                </ul>
+              </div>
+              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
+                <h4 className="text-white font-medium mb-3">Circuit Design</h4>
+                <ul className="text-editor-text space-y-2 text-sm">
+                  <li>• Start with simple circuits</li>
+                  <li>• Use meaningful variable names</li>
+                  <li>• Add comments for complex operations</li>
+                  <li>• Test incrementally</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-4">Performance Optimization</h3>
+            <div className="space-y-4">
+              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
+                <h4 className="text-white font-medium mb-3">Circuit Optimization</h4>
+                <div className="text-editor-text space-y-3">
+                  <p>Choose the right optimization level for your needs:</p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-editor-bg rounded p-3 border border-editor-border">
+                      <h5 className="text-white font-medium mb-2">Level 0-1: Development</h5>
+                      <p className="text-sm">Fast conversion, minimal optimization. Good for testing and debugging.</p>
+                    </div>
+                    <div className="bg-editor-bg rounded p-3 border border-editor-border">
+                      <h5 className="text-white font-medium mb-2">Level 2-3: Production</h5>
+                      <p className="text-sm">Maximum optimization, best performance. Use for final circuits.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-4">Common Patterns</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
+                <h4 className="text-white font-medium mb-3">Entanglement Patterns</h4>
+                <div className="bg-editor-bg rounded p-3 border border-editor-border">
+                  <pre className="text-xs text-editor-text">
+{`# Bell State
+qc.h(0)
+qc.cx(0, 1)
+
+# GHZ State  
+qc.h(0)
+for i in range(1, n):
+    qc.cx(0, i)`}
+                  </pre>
+                </div>
+              </div>
+              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
+                <h4 className="text-white font-medium mb-3">Measurement Patterns</h4>
+                <div className="bg-editor-bg rounded p-3 border border-editor-border">
+                  <pre className="text-xs text-editor-text">
+{`# Single qubit
+qc.measure(0, 0)
+
+# Multiple qubits
+qc.measure([0,1,2], [0,1,2])
+
+# All qubits
+qc.measure_all()`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'troubleshooting',
       title: 'Troubleshooting',
       icon: <Settings className="w-5 h-5" />,
@@ -440,7 +545,8 @@ export default function DocsPage() {
               </button>
             </div>
             <p className="text-xl text-editor-text max-w-3xl mx-auto">
-              Comprehensive guide to using QCanvas for quantum circuit conversion, simulation, and visualization.
+              Comprehensive guide to using QCanvas for quantum circuit conversion, simulation, and visualization. 
+              Learn how to leverage the power of quantum computing across multiple frameworks.
             </p>
           </div>
         </div>

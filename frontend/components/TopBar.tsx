@@ -257,7 +257,12 @@ export default function TopBar() {
         resultStyle
       )
       
-      // Always assume success (no error handling as requested)
+      if (!result.success || !result.data?.success) {
+        const msg = result.data?.error || result.error || 'Conversion failed'
+        toast.error(msg, { id: 'conversion' })
+        return
+      }
+
       const qasm = result.data.qasm_code
       const stats = result.data.conversion_stats
       

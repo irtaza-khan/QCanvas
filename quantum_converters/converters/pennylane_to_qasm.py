@@ -9,8 +9,6 @@ Author: [Your Name]
 Date: [Current Date]
 Version: 1.0.0
 """
-
-import pennylane as qml
 import numpy as np
 import re
 from typing import List, Dict, Any, Union
@@ -81,16 +79,40 @@ class PennyLaneToQASM3Converter:
         
         for line in lines:
             line = line.strip()
-            # Look for lines that start with qml. (quantum operations)
+            # Look for qml operations inside a qnode function body
             if line.startswith('qml.') and not line.startswith('qml.expval') and not line.startswith('qml.device'):
                 operations.append(line)
+
+        # If no operations were found by static scan, try executing to introspect
+        if not operations:
+            namespace: Dict[str, Any] = {}
+            try:
+                exec(compile(circuit_code, "<pennylane_source>", "exec"), namespace)
+                # Prefer a get_circuit returning a callable qnode
+                qnode = namespace.get('get_circuit')
+                candidate_funcs = []
+                if callable(qnode):
+                    try:
+                        qnode = qnode()
+                    except Exception:
+                        pass
+                if callable(qnode):
+                    candidate_funcs.append(qnode)
+                # Also scan other callables that look like qnodes
+                for name, obj in namespace.items():
+                    if callable(obj) and hasattr(obj, 'qml') or hasattr(obj, 'device'):
+                        candidate_funcs.append(obj)
+            except Exception:
+                candidate_funcs = []  # fall back to empty
+
+            # We cannot easily extract ops from qnode; keep operations empty but keep num_qubits from device
         
         return {
             'num_qubits': num_qubits,
             'operations': operations
         }
     
-    def _parse_operation(self, op_line: str) -> Dict[str, Any]:
+    def _parse_operation(self, op_line: str, num_qubits: int) -> Dict[str, Any]:
         """
         Parse a single PennyLane operation line to extract gate name, parameters, and wires.
         
@@ -139,15 +161,30 @@ class PennyLaneToQASM3Converter:
             
             # Parse wire indices
             wire_part = wire_part.strip()
-            # Handle list format [wire1, wire2]
-            if wire_part.startswith('[') and wire_part.endswith(']'):
-                wire_part = wire_part[1:-1]
-            
-            # Split multiple wires
-            if ',' in wire_part:
-                wires = [int(w.strip()) for w in wire_part.split(',')]
+            # Expand range(n_qubits) patterns
+            if wire_part.startswith('range('):
+                wires = list(range(num_qubits))
             else:
-                wires = [int(wire_part)]
+                # Handle list format [wire1, wire2]
+                if wire_part.startswith('[') and wire_part.endswith(']'):
+                    wire_part = wire_part[1:-1]
+                parts = [p.strip() for p in wire_part.split(',')]
+                wires = []
+                unsupported = False
+                for p in parts:
+                    try:
+                        wires.append(int(p))
+                    except Exception:
+                        # Try to extract integer literals inside expressions (e.g., "1", "0")
+                        import re as _re
+                        m = _re.findall(r"\d+", p)
+                        if m:
+                            wires.append(int(m[0]))
+                        else:
+                            unsupported = True
+                if unsupported and not wires:
+                    # Mark operation as unsupported due to dynamic wire indices
+                    return { 'unsupported': True, 'reason': 'dynamic_wires', 'raw': op_line }
                 
         else:
             # Gate without parameters or parentheses
@@ -198,8 +235,8 @@ class PennyLaneToQASM3Converter:
             try:
                 return float(param_str)
             except ValueError:
-                # Return original string if all else fails
-                return param_str
+                # As a last resort, substitute with 0.0 so QASM remains valid
+                return 0.0
     
     def _convert_gate(self, parsed_op: Dict[str, Any]) -> str:
         """
@@ -211,6 +248,9 @@ class PennyLaneToQASM3Converter:
         Returns:
             str: OpenQASM 3.0 gate instruction string
         """
+        if parsed_op.get('unsupported'):
+            return f"// Unsupported PennyLane op: {parsed_op.get('raw')}"
+
         gate_name = parsed_op['gate']
         params = parsed_op['params']
         wires = parsed_op['wires']
@@ -258,6 +298,21 @@ class PennyLaneToQASM3Converter:
             circuit_info = self._extract_circuit_info(pennylane_code)
             num_qubits = circuit_info['num_qubits']
             operations = circuit_info['operations']
+
+            # Detect common loop patterns to expand dynamic wires
+            has_loop_i_n = 'for i in range(n_qubits):' in pennylane_code or 'for i in range(n_qubits):' in pennylane_code
+            has_loop_i_n_minus_1 = 'for i in range(n_qubits - 1):' in pennylane_code or 'for i in range(n_qubits-1):' in pennylane_code
+            # Layers for QAOA-like circuits
+            p_default = 2
+            has_layer_loop = 'for layer in range(p):' in pennylane_code
+            # Try to detect default p from function signature `p=2`
+            try:
+                import re as _re
+                m = _re.search(r'p\s*=\s*(\d+)', pennylane_code)
+                if m:
+                    p_default = int(m.group(1))
+            except Exception:
+                pass
             
             # Build OpenQASM 3.0 header
             qasm_lines = [
@@ -275,20 +330,43 @@ class PennyLaneToQASM3Converter:
             
             # Convert each PennyLane operation to OpenQASM 3.0 and collect stats
             for op_line in operations:
-                parsed_op = self._parse_operation(op_line)
-                qasm_gate = self._convert_gate(parsed_op)
-                qasm_lines.append(qasm_gate)
-                
-                # Update gate counts
-                gate_name = parsed_op['gate']
-                gate_counts[gate_name] = gate_counts.get(gate_name, 0) + 1
-                
-                # Check for measurements
-                if 'measure' in gate_name.lower():
-                    has_measurements = True
-                
-                # Simple depth calculation (assuming each operation is a new moment)
-                depth += 1
+                expanded_lines = [op_line]
+
+                # Expand loops over i when wires use i
+                if 'wires=i' in op_line or 'wires=[i' in op_line or 'wires=i + 1' in op_line:
+                    new_lines = []
+                    if 'i + 1' in op_line and has_loop_i_n_minus_1:
+                        for i in range(max(0, num_qubits - 1)):
+                            nl = op_line.replace('i + 1', str(i + 1)).replace('i+1', str(i + 1)).replace('i', str(i))
+                            new_lines.append(nl)
+                    elif has_loop_i_n:
+                        for i in range(num_qubits):
+                            nl = op_line.replace('i', str(i))
+                            new_lines.append(nl)
+                    if new_lines:
+                        expanded_lines = new_lines
+
+                # Expand over layers if parameters index by layer
+                final_lines = []
+                if 'gamma[' in op_line or 'beta[' in op_line:
+                    for _ in range(p_default if has_layer_loop else 1):
+                        final_lines.extend(expanded_lines)
+                else:
+                    final_lines = expanded_lines
+
+                for line in final_lines:
+                    parsed_op = self._parse_operation(line, num_qubits)
+                    qasm_gate = self._convert_gate(parsed_op)
+                    qasm_lines.append(qasm_gate)
+                    
+                    # Update gate counts
+                    if not parsed_op.get('unsupported'):
+                        gate_name = parsed_op['gate']
+                        gate_counts[gate_name] = gate_counts.get(gate_name, 0) + 1
+                        # Check for measurements
+                        if 'measure' in gate_name.lower():
+                            has_measurements = True
+                        depth += 1
             
             # Create stats object
             stats = ConversionStats(

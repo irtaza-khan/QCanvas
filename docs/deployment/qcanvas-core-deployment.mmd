@@ -1,0 +1,143 @@
+graph TB
+    %% External Layer
+    subgraph "External Layer"
+        U[👥 Users]
+        CDN[🌐 CDN]
+    end
+
+    %% Load Balancer
+    subgraph "Load Balancing"
+        LB[⚖️ Nginx Load Balancer<br/>SSL Termination]
+    end
+
+    %% Frontend Layer
+    subgraph "Frontend Layer - Next.js"
+        FE1[🖥️ Next.js Instance 1]
+        FE2[🖥️ Next.js Instance 2]
+        FE3[🖥️ Next.js Instance 3]
+        SSR[📄 SSR/SSG]
+        API_ROUTES[🛣️ API Routes]
+    end
+
+    %% Backend Layer
+    subgraph "Backend Layer - FastAPI"
+        BE1[⚡ FastAPI Instance 1]
+        BE2[⚡ FastAPI Instance 2]
+        BE3[⚡ FastAPI Instance 3]
+        WS[🔌 WebSocket Manager]
+    end
+
+    %% Quantum Processing
+    subgraph "Quantum Processing"
+        QC[🔄 Quantum Converters<br/>Cirq, Qiskit, PennyLane]
+        QS[🌊 Quantum Simulators<br/>Statevector, Density Matrix, Stabilizer]
+        QASM[📝 OpenQASM 3.0 Generator]
+    end
+
+    %% Data Layer
+    subgraph "Data Layer"
+        PG[🗄️ PostgreSQL<br/>Master-Slave Replication]
+        REDIS[⚡ Redis Cluster<br/>Caching & Sessions]
+        FS[📁 File Storage<br/>Circuit Files]
+    end
+
+    %% Monitoring
+    subgraph "Monitoring & Observability"
+        PROM[📊 Prometheus]
+        GRAFANA[📈 Grafana Dashboard]
+        ALERT[🚨 AlertManager]
+    end
+
+    %% Security
+    subgraph "Security"
+        AUTH[🔐 JWT Authentication]
+        RATE[⏱️ Rate Limiting]
+        WAF[🛡️ Web Application Firewall]
+    end
+
+    %% Container Orchestration
+    subgraph "Container Orchestration"
+        DOCKER[🐳 Docker Swarm/K8s]
+        REGISTRY[📦 Container Registry]
+    end
+
+    %% User Flow
+    U --> CDN
+    CDN --> LB
+    LB --> FE1
+    LB --> FE2
+    LB --> FE3
+
+    %% Frontend to Backend
+    FE1 --> BE1
+    FE2 --> BE2
+    FE3 --> BE3
+    FE1 --> WS
+    FE2 --> WS
+    FE3 --> WS
+
+    %% Backend to Quantum Processing
+    BE1 --> QC
+    BE2 --> QC
+    BE3 --> QC
+    BE1 --> QS
+    BE2 --> QS
+    BE3 --> QS
+    QC --> QASM
+    QS --> QASM
+
+    %% Backend to Data
+    BE1 --> PG
+    BE2 --> PG
+    BE3 --> PG
+    BE1 --> REDIS
+    BE2 --> REDIS
+    BE3 --> REDIS
+    BE1 --> FS
+    BE2 --> FS
+    BE3 --> FS
+
+    %% Monitoring
+    PROM --> BE1
+    PROM --> BE2
+    PROM --> BE3
+    PROM --> FE1
+    PROM --> FE2
+    PROM --> FE3
+    PROM --> PG
+    PROM --> REDIS
+    GRAFANA --> PROM
+    ALERT --> PROM
+
+    %% Security
+    LB --> WAF
+    LB --> RATE
+    BE1 --> AUTH
+    BE2 --> AUTH
+    BE3 --> AUTH
+
+    %% Container Management
+    DOCKER --> FE1
+    DOCKER --> FE2
+    DOCKER --> FE3
+    DOCKER --> BE1
+    DOCKER --> BE2
+    DOCKER --> BE3
+    REGISTRY --> DOCKER
+
+    %% Styling
+    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    classDef backend fill:#f3e5f5,stroke:#4a148c,stroke-width:3px
+    classDef quantum fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px
+    classDef data fill:#fff3e0,stroke:#e65100,stroke-width:3px
+    classDef monitoring fill:#fce4ec,stroke:#880e4f,stroke-width:3px
+    classDef security fill:#ffebee,stroke:#c62828,stroke-width:3px
+    classDef orchestration fill:#e0f2f1,stroke:#00695c,stroke-width:3px
+
+    class FE1,FE2,FE3,SSR,API_ROUTES frontend
+    class BE1,BE2,BE3,WS backend
+    class QC,QS,QASM quantum
+    class PG,REDIS,FS data
+    class PROM,GRAFANA,ALERT monitoring
+    class AUTH,RATE,WAF security
+    class DOCKER,REGISTRY orchestration

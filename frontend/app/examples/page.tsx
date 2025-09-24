@@ -48,6 +48,109 @@ print(qc)`,
     tags: ['entanglement', 'bell-state', 'hadamard', 'cnot']
   },
   {
+    id: 'grover-qiskit',
+    title: "Grover's Search (Qiskit)",
+    description: 'A minimal Grover iteration on 2 qubits using a hard-coded oracle.',
+    framework: 'qiskit',
+    difficulty: 'advanced',
+    category: 'Quantum Algorithms',
+    code: `from qiskit import QuantumCircuit
+
+def grover_oracle(qc: QuantumCircuit):
+    # Mark state |11>
+    qc.cz(0, 1)
+
+def diffusion(qc: QuantumCircuit):
+    qc.h([0,1])
+    qc.x([0,1])
+    qc.h(1)
+    qc.cx(0,1)
+    qc.h(1)
+    qc.x([0,1])
+    qc.h([0,1])
+
+def create_grover():
+    qc = QuantumCircuit(2, 2)
+    qc.h([0,1])
+    grover_oracle(qc)
+    diffusion(qc)
+    qc.measure([0,1],[0,1])
+    return qc
+
+qc = create_grover()
+print(qc)`,
+    tags: ['grover', 'oracle', 'diffusion']
+  },
+  {
+    id: 'qft-cirq',
+    title: 'QFT (Cirq)',
+    description: 'Quantum Fourier Transform implemented with Cirq.',
+    framework: 'cirq',
+    difficulty: 'advanced',
+    category: 'Quantum Algorithms',
+    code: `import cirq, numpy as np
+
+def qft(qubits):
+    circuit = cirq.Circuit()
+    n = len(qubits)
+    for i in range(n):
+        circuit.append(cirq.H(qubits[i]))
+        for j in range(i+1, n):
+            angle = np.pi / (2 ** (j - i))
+            circuit.append(cirq.CZ(qubits[j], qubits[i]) ** (angle/np.pi))
+    # swap
+    for i in range(n//2):
+        circuit.append(cirq.SWAP(qubits[i], qubits[n-1-i]))
+    return circuit
+
+q0, q1, q2 = cirq.LineQubit.range(3)
+circuit = qft([q0,q1,q2])
+print(circuit)`,
+    tags: ['qft', 'fourier']
+  },
+  {
+    id: 'vqe-pennylane-simple',
+    title: 'VQE Simple (PennyLane)',
+    description: 'A two-qubit ansatz with ZZ and XX expectation.',
+    framework: 'pennylane',
+    difficulty: 'intermediate',
+    category: 'Variational Algorithms',
+    code: `import pennylane as qml, numpy as np
+
+dev = qml.device('default.qubit', wires=2)
+
+@qml.qnode(dev)
+def ansatz(theta):
+    qml.RY(theta, wires=0)
+    qml.CNOT(wires=[0,1])
+    return qml.expval(qml.PauliZ(0) @ qml.PauliZ(1)) + qml.expval(qml.PauliX(0) @ qml.PauliX(1))
+
+val = ansatz(np.pi/4)
+print(val)`,
+    tags: ['vqe', 'variational']
+  },
+  {
+    id: 'random-circuit-qiskit',
+    title: 'Random Param Circuit (Qiskit)',
+    description: 'A small random parameterized circuit for testing converters.',
+    framework: 'qiskit',
+    difficulty: 'intermediate',
+    category: 'Basic Circuits',
+    code: `from qiskit import QuantumCircuit
+import numpy as np
+
+qc = QuantumCircuit(3,3)
+qc.ry(np.pi/3, 0)
+qc.rz(0.7, 1)
+qc.rx(1.2, 2)
+qc.cx(0,1)
+qc.cz(1,2)
+qc.swap(0,2)
+qc.measure([0,1,2],[0,1,2])
+print(qc)`,
+    tags: ['random', 'param']
+  },
+  {
     id: 'bell-state-cirq',
     title: 'Bell State (Cirq)',
     description: 'Create a Bell state using Cirq - demonstrating quantum entanglement.',
@@ -388,6 +491,177 @@ print(f"Input: {inputs}")
 print(f"Weights shape: {weights.shape}")
 print(f"Output: {result}")`,
     tags: ['quantum-ml', 'neural-network', 'classification', 'variational', 'layers']
+  },
+  {
+    id: 'deutsch-jozsa-algorithm',
+    title: 'Deutsch-Jozsa Algorithm',
+    description: 'Demonstrates quantum advantage over classical algorithms for function evaluation.',
+    framework: 'qiskit',
+    difficulty: 'advanced',
+    category: 'Quantum Algorithms',
+    code: `from qiskit import QuantumCircuit, Aer, execute
+from qiskit.visualization import plot_histogram
+import numpy as np
+
+def create_deutsch_jozsa_circuit(n_qubits, oracle_type='constant'):
+    """
+    Create Deutsch-Jozsa circuit for n-qubit function evaluation
+    oracle_type: 'constant' or 'balanced'
+    """
+    qc = QuantumCircuit(n_qubits + 1, n_qubits)
+    
+    # Initialize ancilla qubit to |1⟩
+    qc.x(n_qubits)
+    
+    # Apply Hadamard gates to all qubits
+    for i in range(n_qubits + 1):
+        qc.h(i)
+    
+    # Apply oracle (function evaluation)
+    if oracle_type == 'balanced':
+        # Balanced function: f(x) = x_0 ⊕ x_1 ⊕ ... ⊕ x_{n-1}
+        for i in range(n_qubits):
+            qc.cx(i, n_qubits)
+    # For constant function, no additional gates needed
+    
+    # Apply Hadamard gates to first n qubits
+    for i in range(n_qubits):
+        qc.h(i)
+    
+    # Measure first n qubits
+    qc.measure(range(n_qubits), range(n_qubits))
+    
+    return qc
+
+# Create and run Deutsch-Jozsa circuit
+n = 3  # Number of input qubits
+qc_balanced = create_deutsch_jozsa_circuit(n, 'balanced')
+qc_constant = create_deutsch_jozsa_circuit(n, 'constant')
+
+print("Deutsch-Jozsa Algorithm:")
+print("Balanced function circuit:")
+print(qc_balanced)
+print("\nConstant function circuit:")
+print(qc_constant)`,
+    tags: ['deutsch-jozsa', 'quantum-advantage', 'oracle', 'algorithm']
+  },
+  {
+    id: 'quantum-key-distribution',
+    title: 'BB84 Quantum Key Distribution',
+    description: 'Implement the BB84 protocol for secure quantum key distribution.',
+    framework: 'cirq',
+    difficulty: 'advanced',
+    category: 'Quantum Algorithms',
+    code: `import cirq
+import numpy as np
+
+def bb84_protocol(n_bits=10):
+    """
+    Simulate BB84 quantum key distribution protocol
+    """
+    # Alice's random bits and bases
+    alice_bits = np.random.randint(2, size=n_bits)
+    alice_bases = np.random.randint(2, size=n_bits)
+    
+    # Bob's random bases
+    bob_bases = np.random.randint(2, size=n_bits)
+    
+    # Create qubits
+    qubits = [cirq.LineQubit(i) for i in range(n_bits)]
+    
+    # Alice prepares qubits
+    circuit = cirq.Circuit()
+    for i in range(n_bits):
+        if alice_bits[i] == 1:
+            circuit.append(cirq.X(qubits[i]))
+        if alice_bases[i] == 1:
+            circuit.append(cirq.H(qubits[i]))
+    
+    # Bob measures qubits
+    for i in range(n_bits):
+        if bob_bases[i] == 1:
+            circuit.append(cirq.H(qubits[i]))
+        circuit.append(cirq.measure(qubits[i], key=f'bob_{i}'))
+    
+    # Simulate the circuit
+    simulator = cirq.Simulator()
+    result = simulator.run(circuit, repetitions=1)
+    
+    # Extract Bob's results
+    bob_results = []
+    for i in range(n_bits):
+        bob_results.append(result.measurements[f'bob_{i}'][0][0])
+    
+    # Sifted key (where bases match)
+    sifted_key = []
+    for i in range(n_bits):
+        if alice_bases[i] == bob_bases[i]:
+            sifted_key.append(bob_results[i])
+    
+    return {
+        'alice_bits': alice_bits,
+        'alice_bases': alice_bases,
+        'bob_bases': bob_bases,
+        'bob_results': bob_results,
+        'sifted_key': sifted_key
+    }
+
+# Run BB84 protocol
+bb84_result = bb84_protocol(10)
+print("BB84 Quantum Key Distribution:")
+print(f"Alice's bits: {bb84_result['alice_bits']}")
+print(f"Alice's bases: {bb84_result['alice_bases']}")
+print(f"Bob's bases: {bb84_result['bob_bases']}")
+print(f"Bob's results: {bb84_result['bob_results']}")
+print(f"Sifted key: {bb84_result['sifted_key']}")`,
+    tags: ['bb84', 'quantum-cryptography', 'key-distribution', 'security']
+  },
+  {
+    id: 'quantum-phase-estimation',
+    title: 'Quantum Phase Estimation',
+    description: 'Estimate the phase of an eigenvalue using quantum phase estimation algorithm.',
+    framework: 'qiskit',
+    difficulty: 'advanced',
+    category: 'Quantum Algorithms',
+    code: `from qiskit import QuantumCircuit, Aer, execute
+from qiskit.circuit.library import QFT
+import numpy as np
+
+def create_phase_estimation_circuit(n_counting_qubits, phase_angle):
+    """
+    Create quantum phase estimation circuit
+    """
+    n = n_counting_qubits
+    qc = QuantumCircuit(n + 1, n)
+    
+    # Initialize counting qubits
+    for i in range(n):
+        qc.h(i)
+    
+    # Apply controlled-U operations
+    # For this example, U = |1⟩⟨1| + e^(iφ)|0⟩⟨0|
+    for i in range(n):
+        angle = phase_angle * (2 ** (n - i - 1))
+        qc.cp(angle, i, n)
+    
+    # Apply inverse QFT
+    qc.append(QFT(n).inverse(), range(n))
+    
+    # Measure counting qubits
+    qc.measure(range(n), range(n))
+    
+    return qc
+
+# Create phase estimation circuit
+n_counting = 3
+phase = np.pi / 4  # Target phase to estimate
+qc = create_phase_estimation_circuit(n_counting, phase)
+
+print("Quantum Phase Estimation:")
+print(f"Target phase: {phase / np.pi}π")
+print("Circuit:")
+print(qc)`,
+    tags: ['phase-estimation', 'qft', 'eigenvalue', 'shor']
   }
 ]
 

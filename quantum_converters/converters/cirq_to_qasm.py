@@ -59,25 +59,39 @@ class CirqToQASM3Converter:
         except Exception as e:
             raise RuntimeError(f"Failed to execute Cirq source code: {str(e)}")
         
-        # Extract the get_circuit function
+        # Prefer a get_circuit() function if present
         get_circuit = namespace.get("get_circuit")
-        if not callable(get_circuit):
-            raise ValueError(
-                "Cirq source code must define a callable function 'get_circuit()' "
-                "that returns a cirq.Circuit object"
-            )
-        
+        if callable(get_circuit):
+            try:
+                circuit = get_circuit()
+                if hasattr(circuit, 'all_qubits') and hasattr(circuit, 'moments'):
+                    return circuit
+            except Exception as e:
+                raise RuntimeError(f"Failed to execute get_circuit() function: {str(e)}")
+
+        # Fallback: search for any cirq.Circuit instances created by the code
         try:
-            # Execute the function to get the circuit
-            circuit = get_circuit()
-        except Exception as e:
-            raise RuntimeError(f"Failed to execute get_circuit() function: {str(e)}")
-        
-        # Validate that we got a Circuit
-        if not hasattr(circuit, 'all_qubits') or not hasattr(circuit, 'moments'):
-            raise ValueError("get_circuit() must return a valid cirq.Circuit object")
-        
-        return circuit
+            import cirq as _cirq
+            for name, obj in namespace.items():
+                if isinstance(obj, _cirq.Circuit):
+                    return obj
+        except Exception:
+            pass
+
+        # Secondary fallback: try calling simple factory functions
+        for name, obj in namespace.items():
+            if callable(obj) and name.startswith(("create_", "build_", "make_")):
+                try:
+                    maybe_circuit = obj()  # type: ignore
+                    import cirq as _cirq
+                    if isinstance(maybe_circuit, _cirq.Circuit):
+                        return maybe_circuit
+                except Exception:
+                    continue
+
+        raise ValueError(
+            "Could not locate a cirq.Circuit. Define get_circuit() or assign the circuit to a variable."
+        )
     
     def _analyze_cirq_circuit(self, circuit: 'Circuit') -> ConversionStats:
         """

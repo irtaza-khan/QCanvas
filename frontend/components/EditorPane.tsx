@@ -25,7 +25,7 @@ export default function EditorPane() {
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor
 
-    // Configure Monaco Editor
+    // Configure Monaco Editor themes
     monaco.editor.defineTheme('quantum-dark', {
       base: 'vs-dark',
       inherit: true,
@@ -48,7 +48,31 @@ export default function EditorPane() {
       },
     })
 
-    monaco.editor.setTheme('quantum-dark')
+    monaco.editor.defineTheme('quantum-light', {
+      base: 'vs',
+      inherit: true,
+      rules: [
+        { token: 'comment', foreground: '6B7280' },
+        { token: 'keyword', foreground: '7C3AED' },
+        { token: 'string', foreground: '059669' },
+        { token: 'number', foreground: 'DC2626' },
+        { token: 'operator', foreground: '1F2937' },
+        { token: 'identifier', foreground: '1F2937' },
+      ],
+      colors: {
+        'editor.background': '#ffffff',
+        'editor.foreground': '#1f2937',
+        'editor.lineHighlightBackground': '#f8fafc',
+        'editor.selectionBackground': '#dbeafe',
+        'editor.inactiveSelectionBackground': '#f1f5f9',
+        'editorCursor.foreground': '#1f2937',
+        'editorWhitespace.foreground': '#e5e7eb',
+      },
+    })
+
+    // Set theme based on current theme
+    const currentTheme = document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark'
+    monaco.editor.setTheme(currentTheme)
 
     // Add keyboard shortcuts
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
@@ -236,11 +260,11 @@ export default function EditorPane() {
           onChange={handleEditorChange}
           onMount={handleEditorDidMount}
           options={{
-            theme: 'quantum-dark',
+            theme: document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark',
             fontSize: 14,
             fontFamily: 'JetBrains Mono, Fira Code, Monaco, Consolas, monospace',
             lineNumbers: 'on',
-            rulers: [80, 120],
+            rulers: [],
             wordWrap: 'on',
             minimap: {
               enabled: true,

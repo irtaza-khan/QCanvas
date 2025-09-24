@@ -1,0 +1,68 @@
+[33mcommit 3dd3683a897c3e9d4063fe052a7e993d9d703554[m
+Author: Irtaza Khan <muhammadirtazakhan2003@gmail.com>
+Date:   Sun Aug 17 14:51:03 2025 +0500
+
+    Updated gitignore
+
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex f795227..f8bbf9f 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -1,4 +1,6 @@[m
+[32m+[m[32m# -------------------------[m
+ # Python[m
+[32m+[m[32m# -------------------------[m
+ __pycache__/[m
+ *.py[cod][m
+ *$py.class[m
+[36m@@ -7,22 +9,47 @@[m [m__pycache__/[m
+ env/[m
+ venv/[m
+ ENV/[m
+[32m+[m[32m*.egg-info/[m
+[32m+[m[32mdist/[m
+[32m+[m[32mbuild/[m
+ [m
+[31m-# Node[m
+[32m+[m[32m# -------------------------[m
+[32m+[m[32m# Node / Next.js[m
+[32m+[m[32m# -------------------------[m
+ node_modules/[m
+ npm-debug.log*[m
+[32m+[m[32myarn-debug.log*[m
+[32m+[m[32myarn-error.log*[m
+[32m+[m[32m.pnp[m
+[32m+[m[32m.pnp.js[m
+[32m+[m
+[32m+[m[32m# Next.js build output[m
+[32m+[m[32m.next/[m
+[32m+[m[32mout/[m
+ build/[m
+[32m+[m
+[32m+[m[32m# Local env files[m
+ .env.local[m
+[32m+[m[32m.env.development.local[m
+[32m+[m[32m.env.test.local[m
+[32m+[m[32m.env.production.local[m
+[32m+[m[32m.env[m
+ [m
+[31m-# IDE[m
+[32m+[m[32m# -------------------------[m
+[32m+[m[32m# IDE / Editor[m
+[32m+[m[32m# -------------------------[m
+ .vscode/[m
+ .idea/[m
+ *.swp[m
+ [m
+[32m+[m[32m# -------------------------[m
+ # OS[m
+[32m+[m[32m# -------------------------[m
+ .DS_Store[m
+[32m+[m[32mThumbs.db[m
+ [m
+[32m+[m[32m# -------------------------[m
+ # Project specific[m
+[32m+[m[32m# -------------------------[m
+ *.qasm[m
+ logs/[m
+[31m-.env[m
