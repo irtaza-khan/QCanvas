@@ -1,0 +1,45 @@
+# QCanvas Project Intelligence (.cursorrules)
+
+## Read This First
+- Always read ALL Memory Bank files at the start of each task.
+- Treat `docs/project-scope.md` as the authoritative scope and exclusions.
+- Keep Memory Bank and rules aligned with scope; remove anything out-of-scope.
+
+## Scope Anchors
+- Frameworks: Qiskit, Cirq, PennyLane
+- IR: OpenQASM 3.0 (focus on Iteration I; Iteration II planned)
+- UI: Next.js Web IDE with visualization and results
+- Backend: FastAPI REST + WebSocket, OpenQASM conversion, simulation API
+
+## Explicit Exclusions
+- Pulse/OpenPulse, calibration, waveforms, frames, ports
+- Circuit timing (delay, duration literals, box)
+- Hardware-specific extensions and extern functions
+- Memory management and quantum error correction
+
+## Architecture Patterns
+- Hybrid architecture (Next.js + FastAPI); WebSocket for long ops
+- Shared TypeScript types; Pydantic models align with frontend interfaces
+- Converter pattern (parsers → QASM generator → converters)
+- Strategy pattern for simulation backends
+
+## Development Workflow
+- Use todos for multi-step tasks; one active in_progress at a time
+- Update todos after each successful step
+- Prefer editing existing files; keep diffs minimal and readable
+- Maintain type hints (Python) and TypeScript types across services
+
+## Documentation Discipline
+- Update `memory-bank/activeContext.md` after significant changes
+- Keep `memory-bank/systemPatterns.md` in sync with actual architecture
+- Record progress in `memory-bank/progress.md` at milestones
+
+## Testing & Quality
+- Write tests for new functionality (unit/integration/e2e as appropriate)
+- Enforce linting and type checks (PEP 8, ESLint/TS)
+- Prioritize clear, educational code and error messages
+
+## Links
+- Project Scope: `docs/project-scope.md`
+- System Patterns: `memory-bank/systemPatterns.md`
+- Active Context: `memory-bank/activeContext.md`

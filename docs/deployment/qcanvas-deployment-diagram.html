@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCanvas Deployment Architecture Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+        }
+        
+        .diagram-container {
+            padding: 30px;
+            background: white;
+        }
+        
+        .mermaid {
+            text-align: center;
+        }
+        
+        .legend {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .legend h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 2px solid;
+        }
+        
+        .frontend { background: #e1f5fe; border-color: #01579b; }
+        .backend { background: #f3e5f5; border-color: #4a148c; }
+        .quantum { background: #e8f5e8; border-color: #1b5e20; }
+        .data { background: #fff3e0; border-color: #e65100; }
+        .monitoring { background: #fce4ec; border-color: #880e4f; }
+        .security { background: #ffebee; border-color: #c62828; }
+        .orchestration { background: #e0f2f1; border-color: #00695c; }
+        .cicd { background: #f1f8e9; border-color: #33691e; }
+        .network { background: #f5f5f5; border-color: #424242; }
+        
+        .info-panel {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .info-panel h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2196f3;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+        }
+        
+        .footer a {
+            color: #74b9ff;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .legend-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 QCanvas Deployment Architecture</h1>
+            <p>Quantum Unified Simulator - Complete System Deployment Diagram</p>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" onclick="toggleFullscreen()">🔍 Fullscreen</button>
+            <button class="btn btn-secondary" onclick="downloadSVG()">📥 Download SVG</button>
+            <button class="btn btn-success" onclick="resetZoom()">🔄 Reset Zoom</button>
+            <a href="deployment-diagram.md" class="btn btn-primary" target="_blank">📖 Documentation</a>
+        </div>
+        
+        <div class="diagram-container">
+            <div class="mermaid">
+                graph TB
+                    %% External Layer
+                    subgraph "External Layer"
+                        U[👥 Users]
+                        API[🔌 External APIs]
+                        CDN[🌐 CDN]
+                    end
+
+                    %% Load Balancer and Reverse Proxy
+                    subgraph "Load Balancing Layer"
+                        LB[⚖️ Load Balancer<br/>Nginx/HAProxy]
+                        SSL[🔒 SSL Termination]
+                    end
+
+                    %% Frontend Layer
+                    subgraph "Frontend Layer"
+                        subgraph "Next.js Application"
+                            FE1[🖥️ Next.js Instance 1<br/>Port: 3000]
+                            FE2[🖥️ Next.js Instance 2<br/>Port: 3000]
+                            FE3[🖥️ Next.js Instance 3<br/>Port: 3000]
+                        end
+                        
+                        subgraph "Frontend Services"
+                            SSR[📄 Server-Side Rendering]
+                            SSG[📦 Static Site Generation]
+                            API_ROUTES[🛣️ Next.js API Routes]
+                        end
+                    end
+
+                    %% Backend Layer
+                    subgraph "Backend Layer"
+                        subgraph "FastAPI Application"
+                            BE1[⚡ FastAPI Instance 1<br/>Port: 8000]
+                            BE2[⚡ FastAPI Instance 2<br/>Port: 8000]
+                            BE3[⚡ FastAPI Instance 3<br/>Port: 8000]
+                        end
+                        
+                        subgraph "WebSocket Services"
+                            WS1[🔌 WebSocket Manager 1]
+                            WS2[🔌 WebSocket Manager 2]
+                            WS3[🔌 WebSocket Manager 3]
+                        end
+                    end
+
+                    %% Quantum Processing Layer
+                    subgraph "Quantum Processing Layer"
+                        subgraph "Quantum Converters"
+                            QC_CIRQ[🔄 Cirq Converter]
+                            QC_QISKIT[🔄 Qiskit Converter]
+                            QC_PENNYLANE[🔄 PennyLane Converter]
+                        end
+                        
+                        subgraph "Quantum Simulators"
+                            QS_STATEVECTOR[🌊 Statevector Backend]
+                            QS_DENSITY[🌊 Density Matrix Backend]
+                            QS_STABILIZER[🌊 Stabilizer Backend]
+                        end
+                        
+                        subgraph "Circuit Processing"
+                            QASM[📝 OpenQASM 3.0 Generator]
+                            OPT[⚙️ Circuit Optimizer]
+                            VAL[✅ Circuit Validator]
+                        end
+                    end
+
+                    %% Data Layer
+                    subgraph "Data Layer"
+                        subgraph "Primary Database"
+                            PG_MASTER[🗄️ PostgreSQL Master<br/>Port: 5432]
+                            PG_SLAVE1[🗄️ PostgreSQL Slave 1]
+                            PG_SLAVE2[🗄️ PostgreSQL Slave 2]
+                        end
+                        
+                        subgraph "Caching Layer"
+                            REDIS_MASTER[⚡ Redis Master<br/>Port: 6379]
+                            REDIS_SLAVE1[⚡ Redis Slave 1]
+                            REDIS_SLAVE2[⚡ Redis Slave 2]
+                        end
+                        
+                        subgraph "File Storage"
+                            FS[📁 File System<br/>Circuit Files]
+                            S3[☁️ S3 Compatible Storage<br/>Backups & Assets]
+                        end
+                    end
+
+                    %% Monitoring and Observability
+                    subgraph "Monitoring Layer"
+                        subgraph "Metrics Collection"
+                            PROM[📊 Prometheus<br/>Port: 9090]
+                            NODE_EXP[📈 Node Exporter]
+                            PG_EXP[📈 PostgreSQL Exporter]
+                            REDIS_EXP[📈 Redis Exporter]
+                        end
+                        
+                        subgraph "Visualization"
+                            GRAFANA[📈 Grafana<br/>Port: 3001]
+                            DASH[📊 Custom Dashboards]
+                        end
+                        
+                        subgraph "Logging"
+                            LOKI[📝 Loki]
+                            ELK[📝 ELK Stack]
+                        end
+                        
+                        subgraph "Alerting"
+                            ALERT[🚨 AlertManager]
+                            PAGER[📱 PagerDuty/Slack]
+                        end
+                    end
+
+                    %% Security Layer
+                    subgraph "Security Layer"
+                        subgraph "Authentication"
+                            AUTH[🔐 JWT Auth Service]
+                            RBAC[👤 Role-Based Access Control]
+                        end
+                        
+                        subgraph "Security Services"
+                            RATE[⏱️ Rate Limiting]
+                            CORS[🌐 CORS Handler]
+                            WAF[🛡️ Web Application Firewall]
+                        end
+                    end
+
+                    %% Container Orchestration
+                    subgraph "Container Orchestration"
+                        subgraph "Docker Swarm/Kubernetes"
+                            SWARM[🐳 Docker Swarm Manager]
+                            WORKER1[🐳 Worker Node 1]
+                            WORKER2[🐳 Worker Node 2]
+                            WORKER3[🐳 Worker Node 3]
+                        end
+                        
+                        subgraph "Service Discovery"
+                            CONSUL[🔍 Consul/etcd]
+                            DNS[🌐 DNS Service]
+                        end
+                    end
+
+                    %% CI/CD Pipeline
+                    subgraph "CI/CD Pipeline"
+                        subgraph "Source Control"
+                            GIT[📚 Git Repository]
+                            WEBHOOK[🔗 Webhooks]
+                        end
+                        
+                        subgraph "Build & Test"
+                            CI[🔄 CI Pipeline<br/>GitHub Actions]
+                            BUILD[🏗️ Docker Build]
+                            TEST[🧪 Automated Tests]
+                        end
+                        
+                        subgraph "Deployment"
+                            REGISTRY[📦 Container Registry]
+                            DEPLOY[🚀 Deployment Service]
+                            ROLLBACK[↩️ Rollback Service]
+                        end
+                    end
+
+                    %% Network Configuration
+                    subgraph "Network Layer"
+                        subgraph "Internal Network"
+                            INT_NET[🌐 Internal Network<br/>10.0.0.0/16]
+                        end
+                        
+                        subgraph "External Network"
+                            EXT_NET[🌐 External Network<br/>Public Internet]
+                        end
+                        
+                        subgraph "Database Network"
+                            DB_NET[🌐 Database Network<br/>10.0.1.0/24]
+                        end
+                    end
+
+                    %% Connection Flows
+                    U --> CDN
+                    CDN --> LB
+                    LB --> SSL
+                    SSL --> FE1
+                    SSL --> FE2
+                    SSL --> FE3
+
+                    FE1 --> API_ROUTES
+                    FE2 --> API_ROUTES
+                    FE3 --> API_ROUTES
+
+                    FE1 --> BE1
+                    FE2 --> BE2
+                    FE3 --> BE3
+
+                    FE1 --> WS1
+                    FE2 --> WS2
+                    FE3 --> WS3
+
+                    BE1 --> QC_CIRQ
+                    BE1 --> QC_QISKIT
+                    BE1 --> QC_PENNYLANE
+                    BE2 --> QC_CIRQ
+                    BE2 --> QC_QISKIT
+                    BE2 --> QC_PENNYLANE
+                    BE3 --> QC_CIRQ
+                    BE3 --> QC_QISKIT
+                    BE3 --> QC_PENNYLANE
+
+                    QC_CIRQ --> QASM
+                    QC_QISKIT --> QASM
+                    QC_PENNYLANE --> QASM
+
+                    QASM --> QS_STATEVECTOR
+                    QASM --> QS_DENSITY
+                    QASM --> QS_STABILIZER
+
+                    BE1 --> PG_MASTER
+                    BE2 --> PG_MASTER
+                    BE3 --> PG_MASTER
+
+                    PG_MASTER --> PG_SLAVE1
+                    PG_MASTER --> PG_SLAVE2
+
+                    BE1 --> REDIS_MASTER
+                    BE2 --> REDIS_MASTER
+                    BE3 --> REDIS_MASTER
+
+                    REDIS_MASTER --> REDIS_SLAVE1
+                    REDIS_MASTER --> REDIS_SLAVE2
+
+                    BE1 --> FS
+                    BE2 --> FS
+                    BE3 --> FS
+
+                    FS --> S3
+
+                    %% Monitoring connections
+                    PROM --> NODE_EXP
+                    PROM --> PG_EXP
+                    PROM --> REDIS_EXP
+                    PROM --> BE1
+                    PROM --> BE2
+                    PROM --> BE3
+                    PROM --> FE1
+                    PROM --> FE2
+                    PROM --> FE3
+
+                    GRAFANA --> PROM
+                    GRAFANA --> DASH
+
+                    ALERT --> PROM
+                    ALERT --> PAGER
+
+                    %% Security connections
+                    LB --> RATE
+                    LB --> CORS
+                    LB --> WAF
+
+                    BE1 --> AUTH
+                    BE2 --> AUTH
+                    BE3 --> AUTH
+
+                    AUTH --> RBAC
+
+                    %% Container orchestration
+                    SWARM --> WORKER1
+                    SWARM --> WORKER2
+                    SWARM --> WORKER3
+
+                    WORKER1 --> FE1
+                    WORKER1 --> BE1
+                    WORKER2 --> FE2
+                    WORKER2 --> BE2
+                    WORKER3 --> FE3
+                    WORKER3 --> BE3
+
+                    %% CI/CD connections
+                    GIT --> WEBHOOK
+                    WEBHOOK --> CI
+                    CI --> BUILD
+                    CI --> TEST
+                    BUILD --> REGISTRY
+                    REGISTRY --> DEPLOY
+                    DEPLOY --> SWARM
+
+                    %% Network connections
+                    EXT_NET --> LB
+                    LB --> INT_NET
+                    INT_NET --> DB_NET
+                    DB_NET --> PG_MASTER
+                    DB_NET --> REDIS_MASTER
+
+                    %% Styling
+                    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+                    classDef backend fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+                    classDef quantum fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+                    classDef data fill:#fff3e0,stroke:#e65100,stroke-width:2px
+                    classDef monitoring fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+                    classDef security fill:#ffebee,stroke:#c62828,stroke-width:2px
+                    classDef orchestration fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+                    classDef cicd fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+                    classDef network fill:#f5f5f5,stroke:#424242,stroke-width:2px
+
+                    class FE1,FE2,FE3,SSR,SSG,API_ROUTES frontend
+                    class BE1,BE2,BE3,WS1,WS2,WS3 backend
+                    class QC_CIRQ,QC_QISKIT,QC_PENNYLANE,QS_STATEVECTOR,QS_DENSITY,QS_STABILIZER,QASM,OPT,VAL quantum
+                    class PG_MASTER,PG_SLAVE1,PG_SLAVE2,REDIS_MASTER,REDIS_SLAVE1,REDIS_SLAVE2,FS,S3 data
+                    class PROM,NODE_EXP,PG_EXP,REDIS_EXP,GRAFANA,DASH,LOKI,ELK,ALERT,PAGER monitoring
+                    class AUTH,RBAC,RATE,CORS,WAF security
+                    class SWARM,WORKER1,WORKER2,WORKER3,CONSUL,DNS orchestration
+                    class GIT,WEBHOOK,CI,BUILD,TEST,REGISTRY,DEPLOY,ROLLBACK cicd
+                    class INT_NET,EXT_NET,DB_NET network
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h3>🎨 Component Legend</h3>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <div class="legend-color frontend"></div>
+                    <span><strong>Frontend Layer</strong> - Next.js UI Components</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color backend"></div>
+                    <span><strong>Backend Layer</strong> - FastAPI Services</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color quantum"></div>
+                    <span><strong>Quantum Processing</strong> - Converters & Simulators</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color data"></div>
+                    <span><strong>Data Layer</strong> - Databases & Storage</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color monitoring"></div>
+                    <span><strong>Monitoring</strong> - Observability Stack</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color security"></div>
+                    <span><strong>Security</strong> - Auth & Protection</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color orchestration"></div>
+                    <span><strong>Orchestration</strong> - Container Management</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color cicd"></div>
+                    <span><strong>CI/CD</strong> - Deployment Pipeline</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color network"></div>
+                    <span><strong>Network</strong> - Network Configuration</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h3>📊 System Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">3+</div>
+                    <div class="stat-label">Frontend Instances</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">3+</div>
+                    <div class="stat-label">Backend Instances</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Quantum Frameworks</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Simulation Backends</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Ports Used</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">99.9%</div>
+                    <div class="stat-label">Uptime Target</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>🚀 <strong>QCanvas</strong> - Quantum Unified Simulator | Generated on <span id="currentDate"></span></p>
+            <p>📖 <a href="deployment-diagram.md">Complete Documentation</a> | 🔧 <a href="docker.md">Docker Guide</a> | 🏭 <a href="production.md">Production Guide</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#2c3e50',
+                primaryBorderColor: '#4a148c',
+                lineColor: '#666',
+                secondaryColor: '#f8f9fa',
+                tertiaryColor: '#e3f2fd'
+            }
+        });
+
+        // Set current date
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+
+        // Fullscreen functionality
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log('Error attempting to enable fullscreen:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Download SVG functionality
+        function downloadSVG() {
+            const svgElement = document.querySelector('.mermaid svg');
+            if (svgElement) {
+                const svgData = new XMLSerializer().serializeToString(svgElement);
+                const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                const svgUrl = URL.createObjectURL(svgBlob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = svgUrl;
+                downloadLink.download = 'qcanvas-deployment-diagram.svg';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            }
+        }
+
+        // Reset zoom functionality
+        function resetZoom() {
+            const svgElement = document.querySelector('.mermaid svg');
+            if (svgElement) {
+                svgElement.style.transform = 'scale(1)';
+                svgElement.style.transformOrigin = 'center';
+            }
+        }
+
+        // Add zoom functionality with mouse wheel
+        document.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                const svgElement = document.querySelector('.mermaid svg');
+                if (svgElement) {
+                    const currentScale = parseFloat(svgElement.style.transform.replace('scale(', '').replace(')', '')) || 1;
+                    const newScale = e.deltaY > 0 ? currentScale * 0.9 : currentScale * 1.1;
+                    svgElement.style.transform = `scale(${Math.max(0.1, Math.min(5, newScale))})`;
+                    svgElement.style.transformOrigin = 'center';
+                }
+            }
+        });
+
+        // Add click to zoom functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.mermaid svg')) {
+                const svgElement = document.querySelector('.mermaid svg');
+                if (svgElement) {
+                    const currentScale = parseFloat(svgElement.style.transform.replace('scale(', '').replace(')', '')) || 1;
+                    const newScale = currentScale === 1 ? 1.5 : 1;
+                    svgElement.style.transform = `scale(${newScale})`;
+                    svgElement.style.transformOrigin = 'center';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

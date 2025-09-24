@@ -1,0 +1,31 @@
+# TODO: Add Python dependencies
+# Quantum Computing Framework Dependencies
+cirq>=1.2.0
+qiskit>=0.45.0
+pennylane>=0.32.0
+
+# Backend Framework Dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=12.0
+pydantic>=2.5.0
+
+# Database Dependencies
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+
+# Utility Dependencies
+numpy>=1.24.0
+scipy>=1.11.0
+matplotlib>=3.7.0
+networkx>=3.2.0
+
+# Development Dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.7.0
+
+# Optional: For enhanced quantum simulation
+qiskit-aer>=0.13.0
