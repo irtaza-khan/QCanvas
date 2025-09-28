@@ -5,8 +5,8 @@ import { Editor } from '@monaco-editor/react'
 import { FileIcon, Code2 } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import { debounce } from '@/lib/utils'
-import toast from 'react-hot-toast'
 import FindReplace from './FindReplace'
+import CircuitVisualization from './CircuitVisualization'
 
 export default function EditorPane() {
   const { getActiveFile, updateFileContent } = useFileStore()
@@ -14,6 +14,45 @@ export default function EditorPane() {
   const activeFile = getActiveFile()
   const [showFindReplace, setShowFindReplace] = useState(false)
   const [findReplaceMode, setFindReplaceMode] = useState<'find' | 'replace'>('find')
+  const [showCircuitVisualization, setShowCircuitVisualization] = useState(false)
+
+  // Simple circuit parsing for demonstration
+  const parseCircuitFromCode = (code: string) => {
+    if (!code) return []
+    
+    const gates = []
+    const lines = code.split('\n')
+    let qubitIndex = 0
+    
+    for (const line of lines) {
+      // Simple Qiskit gate detection
+      if (line.includes('.h(')) {
+        const match = line.match(/\.h\((\d+)\)/)
+        if (match) gates.push({ type: 'h', qubit: parseInt(match[1]) })
+      }
+      if (line.includes('.x(')) {
+        const match = line.match(/\.x\((\d+)\)/)
+        if (match) gates.push({ type: 'x', qubit: parseInt(match[1]) })
+      }
+      if (line.includes('.cx(')) {
+        const match = line.match(/\.cx\((\d+),\s*(\d+)\)/)
+        if (match) gates.push({ type: 'cx', control: parseInt(match[1]), target: parseInt(match[2]), qubit: parseInt(match[1]) })
+      }
+      
+      // Simple Cirq gate detection
+      if (line.includes('cirq.H(')) {
+        gates.push({ type: 'h', qubit: qubitIndex++ })
+      }
+      if (line.includes('cirq.X(')) {
+        gates.push({ type: 'x', qubit: qubitIndex++ })
+      }
+      if (line.includes('cirq.CNOT(')) {
+        gates.push({ type: 'cx', control: 0, target: 1, qubit: 0 })
+      }
+    }
+    
+    return gates
+  }
 
   // Debounced content update to avoid too frequent updates
   const debouncedUpdate = useRef(
@@ -233,7 +272,7 @@ export default function EditorPane() {
   return (
     <div className="editor-pane">
       {/* Editor Header */}
-      <div className="h-12 bg-editor-sidebar border-b border-editor-border flex items-center px-4">
+      <div className="h-12 bg-editor-sidebar border-b border-editor-border flex items-center justify-between px-4">
         <div className="flex items-center space-x-2">
           <Code2 className="w-4 h-4 text-editor-text" />
           <span className="text-sm font-medium text-white">{activeFile.name}</span>
@@ -241,6 +280,19 @@ export default function EditorPane() {
             {activeFile.language}
           </span>
         </div>
+        
+        {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
+          <button
+            onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
+            className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              showCircuitVisualization
+                ? 'bg-quantum-blue-light text-white'
+                : 'text-editor-text hover:bg-editor-border'
+            }`}
+          >
+            Circuit View
+          </button>
+        )}
       </div>
 
       {/* Find and Replace */}
@@ -250,6 +302,18 @@ export default function EditorPane() {
         mode={findReplaceMode}
         editorRef={editorRef}
       />
+
+      {/* Circuit Visualization */}
+      {showCircuitVisualization && (
+        <div className="h-48 bg-editor-bg border-b border-editor-border p-4 overflow-hidden">
+          <h4 className="text-sm font-medium text-white mb-3">Circuit Visualization</h4>
+          <CircuitVisualization
+            gates={parseCircuitFromCode(activeFile.content)}
+            qubits={Math.max(2, parseCircuitFromCode(activeFile.content).reduce((max, gate) => Math.max(max, gate.qubit + 1), 0))}
+            className="h-32"
+          />
+        </div>
+      )}
 
       {/* Monaco Editor */}
       <div className="flex-1 overflow-hidden">

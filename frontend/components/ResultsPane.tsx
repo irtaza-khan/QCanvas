@@ -9,21 +9,37 @@ import {
   Trash2,
   Copy,
   Download,
-  Play,
   FileCode2,
   AlertCircle,
   AlertTriangle,
   XCircle,
   CheckCircle,
   Activity,
-  Clock,
   Cpu,
   Zap,
-  TrendingUp,
-  Database
+  TrendingUp
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js'
+import { Bar } from 'react-chartjs-2'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+)
 
 interface LogEntry {
   id: string
@@ -527,31 +543,66 @@ export default function ResultsPane() {
             <div>
               <h4 className="text-sm font-medium text-white mb-4">Measurement Results</h4>
               
-              {/* Histogram Bars */}
-              <div className="space-y-2">
-                {Object.entries(quantumResults.counts).map(([state, count]) => {
-                  const percentage = (count / quantumResults.shots) * 100
-                  const barWidth = percentage
-                  
-                  return (
-                    <div key={state} className="flex items-center space-x-3">
-                      <span className="text-sm font-mono text-white min-w-[30px]">
-                        |{state}⟩
-                      </span>
-                      <div className="flex-1 relative">
-                        <div className="h-6 bg-editor-border rounded-full overflow-hidden">
-                          <div
-                            className="h-full quantum-gradient rounded-full transition-all duration-500"
-                            style={{ width: `${barWidth}%` }}
-                          />
-                        </div>
-                        <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
-                          {count} ({percentage.toFixed(1)}%)
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })}
+              {/* Chart.js Histogram */}
+              <div className="h-64 mb-4">
+                <Bar
+                  data={{
+                    labels: Object.keys(quantumResults.counts).map(state => `|${state}⟩`),
+                    datasets: [
+                      {
+                        label: 'Measurement Counts',
+                        data: Object.values(quantumResults.counts),
+                        backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                      title: {
+                        display: false,
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => {
+                            const count = context.parsed.y
+                            const percentage = ((count / quantumResults.shots) * 100).toFixed(1)
+                            return `${count} (${percentage}%)`
+                          },
+                        },
+                      },
+                    },
+                    scales: {
+                      x: {
+                        grid: {
+                          color: 'rgba(255, 255, 255, 0.1)',
+                        },
+                        ticks: {
+                          color: 'rgba(255, 255, 255, 0.8)',
+                          font: {
+                            family: 'monospace',
+                          },
+                        },
+                      },
+                      y: {
+                        grid: {
+                          color: 'rgba(255, 255, 255, 0.1)',
+                        },
+                        ticks: {
+                          color: 'rgba(255, 255, 255, 0.8)',
+                        },
+                        beginAtZero: true,
+                      },
+                    },
+                  }}
+                />
               </div>
               
               <div className="mt-4 pt-4 border-t border-editor-border">
