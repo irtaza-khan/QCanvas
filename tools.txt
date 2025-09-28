@@ -1,0 +1,14 @@
+TypeScript
+React 18
+Tailwind CSS
+Monaco Editor
+D3.js
+Chart.js
+
+FastAPI
+Uvicorn (Web Server)
+Pydantic (Data Validation)
+PostgreSQL
+SQLAlchemy
+Alembic (DB Schema Handler)
+Redis (Cache)

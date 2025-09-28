@@ -23,7 +23,7 @@ python -m venv qcanvas_env
 qcanvas_env\Scripts\activate
 
 # Activate (macOS/Linux)
-source qcanvas_env/bin/activate
+source qasm_env/bin/activate
 ```
 
 Install Python packages:
