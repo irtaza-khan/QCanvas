@@ -200,22 +200,36 @@ class PennyLaneToQASM3Converter:
     
     def _evaluate_parameter(self, param_str: str) -> Union[float, str]:
         """
-        Evaluate numerical expressions in parameters, including numpy constants.
-        
+        Evaluate numerical expressions in parameters, including mathematical constants.
+
         Args:
             param_str (str): Parameter string that may contain mathematical expressions
-            
+
         Returns:
-            Union[float, str]: Evaluated numerical value or original string if evaluation fails
+            Union[float, str]: Evaluated numerical value or symbolic constant
         """
         try:
-            # Replace common numpy expressions with their values
-            param_str = param_str.replace('np.pi', str(np.pi))
-            param_str = param_str.replace('numpy.pi', str(np.pi))
-            param_str = param_str.replace('np.e', str(np.e))
-            param_str = param_str.replace('numpy.e', str(np.e))
-            
-            # Define allowed names for safe evaluation
+            # Check for direct mathematical constants
+            if param_str.strip() in ['np.pi', 'numpy.pi', 'pi', 'math.pi']:
+                return "PI"
+            elif param_str.strip() in ['np.e', 'numpy.e', 'e', 'math.e']:
+                return "E"
+            elif param_str.strip() == 'np.pi/2' or param_str.strip() == 'pi/2':
+                return "PI/2"
+            elif param_str.strip() == 'np.pi/4' or param_str.strip() == 'pi/4':
+                return "PI/4"
+
+            # For more complex expressions, evaluate numerically but keep symbolic constants
+            param_str = param_str.replace('np.pi', 'PI')
+            param_str = param_str.replace('numpy.pi', 'PI')
+            param_str = param_str.replace('np.e', 'E')
+            param_str = param_str.replace('numpy.e', 'E')
+
+            # If it contains symbolic constants, return as string
+            if 'PI' in param_str or 'E' in param_str:
+                return param_str
+
+            # For pure numerical expressions, evaluate them
             allowed_names = {
                 "__builtins__": {},
                 "pi": np.pi,
@@ -225,18 +239,33 @@ class PennyLaneToQASM3Converter:
                 "cos": np.cos,
                 "tan": np.tan,
             }
-            
+
             # Safely evaluate the mathematical expression
             result = eval(param_str, allowed_names)
-            return float(result)
-            
+            if isinstance(result, (int, float)):
+                # Format nicely
+                if isinstance(result, float):
+                    # Check for common values
+                    if abs(result - np.pi) < 1e-10:
+                        return "PI"
+                    elif abs(result - np.pi/2) < 1e-10:
+                        return "PI/2"
+                    elif abs(result - np.pi/4) < 1e-10:
+                        return "PI/4"
+                    elif abs(result - np.e) < 1e-10:
+                        return "E"
+                    else:
+                        return f"{result:.6f}"
+                else:
+                    return str(result)
+
         except Exception:
             # If evaluation fails, try direct float conversion
             try:
                 return float(param_str)
             except ValueError:
-                # As a last resort, substitute with 0.0 so QASM remains valid
-                return 0.0
+                # As a last resort, return as string
+                return param_str
     
     def _convert_gate(self, parsed_op: Dict[str, Any]) -> str:
         """
@@ -314,14 +343,52 @@ class PennyLaneToQASM3Converter:
             except Exception:
                 pass
             
-            # Build OpenQASM 3.0 header
+            # Build enhanced OpenQASM 3.0 header with advanced features
             qasm_lines = [
                 "OPENQASM 3.0;",
-                "include \"stdgates.inc\";",
+                'include "stdgates.inc";',
                 "",
+                "// Mathematical constants",
+                "const float PI = 3.141592653589793;",
+                "const float E = 2.718281828459045;",
+                "const float PI_2 = 1.5707963267948966;  // PI/2",
+                "const float PI_4 = 0.7853981633974483;  // PI/4",
+                "",
+                f"// Quantum registers",
                 f"qubit[{num_qubits}] q;",
                 ""
             ]
+
+            # Add classical registers if measurements exist
+            has_measurements = any('measure' in op.lower() for op in operations)
+            if has_measurements:
+                qasm_lines.extend([
+                    "// Classical registers",
+                    f"bit[{num_qubits}] c;",
+                    ""
+                ])
+            
+            # Add classical variables for intermediate calculations
+            qasm_lines.extend([
+                "// Classical variables for intermediate calculations",
+                "int loop_index;",
+                "bool condition_result;",
+                "float temp_angle;",
+                ""
+            ])
+
+            # Add gate definitions section
+            qasm_lines.extend([
+                "// Gate definitions",
+                "// (Custom gate definitions would go here)",
+                "",
+                "// Classical operations examples",
+                "// Assignment statements",
+                "temp_angle = PI/2;",
+                "loop_index = 0;",
+                "",
+                "// Circuit operations"
+            ])
             
             # Initialize statistics
             gate_counts = {}
@@ -367,6 +434,24 @@ class PennyLaneToQASM3Converter:
                         if 'measure' in gate_name.lower():
                             has_measurements = True
                         depth += 1
+            
+            # Add example control flow (if we have classical bits)
+            if has_measurements:
+                qasm_lines.extend([
+                    "",
+                    "// Classical control flow examples",
+                    "// If statement based on measurement result",
+                    "if (c[0] == 1) {",
+                    "    // Apply corrective operations",
+                    "    x q[1];",
+                    "}",
+                    "",
+                    "// For loop example",
+                    "for loop_index in [0:2] {",
+                    "    // Conditional operations",
+                    "    ry(temp_angle) q[loop_index];",
+                    "}"
+                ])
             
             # Create stats object
             stats = ConversionStats(

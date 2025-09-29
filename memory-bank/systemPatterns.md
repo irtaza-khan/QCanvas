@@ -30,13 +30,13 @@ See `docs/project-scope.md` for authoritative scope and exclusions.
 - TypeScript enables shared types across both services
 - Each framework handles what it does best
 
-### OpenQASM 3.0 as Intermediate Representation
-**Decision**: Use OpenQASM 3.0 as universal intermediate format
+### OpenQASM 3.0 as Target Format
+**Decision**: Generate OpenQASM 3.0 as the final output format
 **Rationale**:
 - Industry standard for quantum circuit representation
-- Enables framework-agnostic processing
+- Enables standardized quantum circuit interchange
 - Supports major quantum gates and operations needed for our scope
-- Provides clear conversion path between frameworks
+- Focus on compilation to OpenQASM 3.0 rather than framework conversion
 
 ### WebSocket for Real-time Updates
 **Decision**: Implement WebSocket for long-running operations

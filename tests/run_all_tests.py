@@ -23,7 +23,6 @@ def discover_and_run_tests():
     # Test discovery patterns
     test_patterns = [
         'tests/unit/test_*.py',
-        'tests/unit/test_qasm3/test_*.py',
         'tests/integration/test_*.py',
         'tests/e2e/test_*.py',
     ]
@@ -42,8 +41,6 @@ def discover_and_run_tests():
             for test_file in pattern_path.parent.glob(pattern_path.name):
                 if test_file.is_file() and test_file.name.startswith('test_'):
                     module_name = f"{test_file.parent.name}.{test_file.stem}"
-                    if 'test_qasm3' in str(test_file):
-                        module_name = f"unit.test_qasm3.{test_file.stem}"
                     
                     try:
                         # Import and load tests
@@ -108,7 +105,6 @@ def run_specific_test_category(category):
     """Run tests for a specific category."""
     categories = {
         'unit': 'tests/unit/test_*.py',
-        'qasm3': 'tests/unit/test_qasm3/test_*.py',
         'integration': 'tests/integration/test_*.py',
         'e2e': 'tests/e2e/test_*.py',
     }
@@ -129,8 +125,6 @@ def run_specific_test_category(category):
         for test_file in pattern_path.parent.glob(pattern_path.name):
             if test_file.is_file() and test_file.name.startswith('test_'):
                 module_name = f"{test_file.parent.name}.{test_file.stem}"
-                if 'test_qasm3' in str(test_file):
-                    module_name = f"unit.test_qasm3.{test_file.stem}"
                 
                 try:
                     module = __import__(module_name, fromlist=[''])

@@ -10,22 +10,15 @@ tests/
 ├── conftest.py                  # Pytest configuration and fixtures
 ├── run_all_tests.py            # Comprehensive test runner
 ├── unit/                       # Unit tests
-│   ├── test_qasm3/            # OpenQASM 3.0 compiler tests
-│   │   ├── test_lexer.py      # Lexer tests
-│   │   ├── test_parser.py     # Parser tests
-│   │   ├── test_type_system.py # Type system tests
-│   │   ├── test_codegen.py    # Code generator tests
-│   │   ├── test_edge_cases.py # Edge case tests
-│   │   └── test_error_handling.py # Error handling tests
 │   ├── test_converters/       # Converter tests
-│   │   ├── test_qasm3_converter.py # OpenQASM 3.0 converter tests
 │   │   └── test_framework_converters.py # Framework converter tests
 │   ├── test_simulator/        # Quantum simulator tests
 │   │   └── test_quantum_simulator.py # Simulator backend tests
 │   └── test_api/              # API tests
 │       └── test_api_routes.py # API route tests
 ├── integration/               # Integration tests
-│   └── test_qasm3_integration.py # OpenQASM 3.0 integration tests
+│   ├── test_api_integration.py # API integration tests
+│   └── test_full_conversion.py # Full conversion workflow tests
 ├── e2e/                       # End-to-end tests
 │   └── test_complete_workflow.py # Complete workflow tests
 └── fixtures/                  # Test fixtures and data
@@ -45,11 +38,10 @@ python run_tests.py
 python run_tests.py --category unit
 python run_tests.py --category integration
 python run_tests.py --category e2e
-python run_tests.py --category qasm3
 
 # Run specific test files
-python run_tests.py --tests tests/unit/test_qasm3/test_lexer.py
-python run_tests.py --tests tests/unit/test_qasm3/
+python run_tests.py --tests tests/unit/test_converters/test_qiskit_converter.py
+python run_tests.py --tests tests/unit/test_converters/
 
 # Run with options
 python run_tests.py --verbosity 2 --failfast
@@ -74,8 +66,8 @@ python tests/run_all_tests.py e2e
 python -m unittest discover tests
 
 # Run specific test modules
-python -m unittest tests.unit.test_qasm3.test_lexer
-python -m unittest tests.unit.test_qasm3.test_parser
+python -m unittest tests.unit.test_converters.test_qiskit_converter
+python -m unittest tests.unit.test_converters.test_cirq_converter
 
 # Run with verbose output
 python -m unittest discover tests -v
@@ -97,23 +89,14 @@ pytest tests/e2e/ -m e2e
 
 # Run with markers
 pytest tests/ -m "not slow"
-pytest tests/ -m qasm3
+pytest tests/ -m "unit and not slow"
 ```
 
 ## Test Categories
 
 ### Unit Tests (`tests/unit/`)
 
-- **OpenQASM 3.0 Compiler Tests** (`test_qasm3/`)
-  - `test_lexer.py`: Tests for lexical analysis
-  - `test_parser.py`: Tests for parsing and AST generation
-  - `test_type_system.py`: Tests for semantic analysis and type checking
-  - `test_codegen.py`: Tests for code generation
-  - `test_edge_cases.py`: Tests for edge cases and tricky scenarios
-  - `test_error_handling.py`: Tests for error handling and validation
-
 - **Converter Tests** (`test_converters/`)
-  - `test_qasm3_converter.py`: Tests for OpenQASM 3.0 converter integration
   - `test_framework_converters.py`: Tests for framework converters (Qiskit, Cirq, PennyLane)
 
 - **Simulator Tests** (`test_simulator/`)
@@ -124,7 +107,8 @@ pytest tests/ -m qasm3
 
 ### Integration Tests (`tests/integration/`)
 
-- `test_qasm3_integration.py`: Tests for complete OpenQASM 3.0 compilation workflow
+- `test_api_integration.py`: Tests for API integration and data flow
+- `test_full_conversion.py`: Tests for complete conversion workflow
 
 ### End-to-End Tests (`tests/e2e/`)
 
@@ -168,14 +152,16 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from quantum_converters.qasm3 import OpenQASM3Compiler
+# Import your test dependencies here
+# from your_module import YourClass
 
 class TestNewFeature(unittest.TestCase):
     """Test new feature functionality."""
-    
+
     def setUp(self):
         """Set up test fixtures."""
-        self.compiler = OpenQASM3Compiler()
+        # Initialize your test fixtures here
+        pass
     
     def test_basic_functionality(self):
         """Test basic functionality."""
@@ -205,7 +191,8 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from quantum_converters.qasm3 import OpenQASM3Compiler
+# Import your test dependencies here
+# from your_module import YourClass
 
 class TestFeatureIntegration(unittest.TestCase):
     """Test feature integration."""
@@ -256,7 +243,6 @@ The `conftest.py` file provides:
 - `@pytest.mark.integration`: Integration tests
 - `@pytest.mark.e2e`: End-to-end tests
 - `@pytest.mark.slow`: Slow-running tests
-- `@pytest.mark.qasm3`: OpenQASM 3.0 specific tests
 
 ### Test Data
 
@@ -337,13 +323,13 @@ python run_tests.py --verbosity 2
 
 ```bash
 # Run specific test with verbose output
-python -m unittest tests.unit.test_qasm3.test_lexer -v
+python -m unittest tests.unit.test_converters.test_qiskit_converter -v
 
 # Run with debug output
-python -m unittest tests.unit.test_qasm3.test_lexer -v -s
+python -m unittest tests.unit.test_converters.test_qiskit_converter -v -s
 
 # Run single test method
-python -m unittest tests.unit.test_qasm3.test_lexer.TestOpenQASM3Lexer.test_version_control
+python -m unittest tests.unit.test_converters.test_qiskit_converter.TestQiskitConverter.test_basic_conversion
 ```
 
 ### Test Coverage

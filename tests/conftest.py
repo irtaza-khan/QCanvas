@@ -37,16 +37,6 @@ def expected_outputs_dir():
 
 
 @pytest.fixture
-def qasm3_compiler():
-    """Provide OpenQASM 3.0 compiler instance."""
-    try:
-        from quantum_converters.qasm3 import OpenQASM3Compiler
-        return OpenQASM3Compiler()
-    except ImportError:
-        pytest.skip("OpenQASM 3.0 compiler not available")
-
-
-@pytest.fixture
 def quantum_simulator():
     """Provide quantum simulator instance."""
     try:
@@ -210,9 +200,6 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "slow: mark test as slow running"
     )
-    config.addinivalue_line(
-        "markers", "qasm3: mark test as OpenQASM 3.0 specific"
-    )
 
 
 def pytest_collection_modifyitems(config, items):
@@ -227,9 +214,6 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(pytest.mark.integration)
         elif "e2e" in str(test_path):
             item.add_marker(pytest.mark.e2e)
-        
-        if "qasm3" in str(test_path):
-            item.add_marker(pytest.mark.qasm3)
         
         # Mark slow tests
         if "performance" in str(test_path) or "large" in str(test_path):

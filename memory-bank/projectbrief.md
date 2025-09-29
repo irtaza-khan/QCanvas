@@ -8,16 +8,17 @@ QCanvas is a Quantum Unified Simulator - a comprehensive platform that bridges t
 ## Core Requirements
 
 ### Primary Goals
-1. **Framework Unification**: Enable seamless conversion between Cirq, Qiskit, and PennyLane
-2. **Real-time Simulation**: Provide instant quantum circuit execution and visualization
+1. **OpenQASM 3.0 Compilation**: Convert Cirq, Qiskit, and PennyLane code to OpenQASM 3.0 format
+2. **Web Platform**: Provide a web-based IDE for quantum circuit editing and OpenQASM 3.0 generation
 3. **Educational Platform**: Create an accessible learning environment for quantum computing
 4. **Production Ready**: Build a scalable, monitored, and secure platform
 
 ### Key Features
-- Multi-framework circuit conversion (Cirq ↔ Qiskit ↔ PennyLane)
-- Real-time quantum simulation with multiple backends
-- Interactive visualization of quantum states and circuits
-- WebSocket-based real-time updates
+- OpenQASM 3.0 code generation from Cirq, Qiskit, and PennyLane
+- Web-based IDE with syntax highlighting for quantum frameworks
+- OpenQASM 3.0 output validation and formatting
+- Real-time code conversion and preview
+- Educational examples and tutorials
 - Comprehensive API with automatic documentation
 - Docker-based deployment with monitoring
 

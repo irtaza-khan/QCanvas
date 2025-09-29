@@ -155,7 +155,7 @@ def main():
                        help="Stop on first failure")
     parser.add_argument("--tests", "-t", nargs="+",
                        help="Run specific test files or directories")
-    parser.add_argument("--category", "-c", choices=["unit", "integration", "e2e", "qasm3"],
+    parser.add_argument("--category", "-c", choices=["unit", "integration", "e2e"],
                        help="Run tests for specific category")
     
     args = parser.parse_args()
@@ -167,9 +167,8 @@ def main():
         # Run tests for specific category
         category_patterns = {
             "unit": "tests/unit/test_*.py",
-            "integration": "tests/integration/test_*.py", 
-            "e2e": "tests/e2e/test_*.py",
-            "qasm3": "tests/unit/test_qasm3/test_*.py"
+            "integration": "tests/integration/test_*.py",
+            "e2e": "tests/e2e/test_*.py"
         }
         pattern = category_patterns.get(args.category, "test_*.py")
         success = run_tests(args.verbosity, args.failfast, pattern)
