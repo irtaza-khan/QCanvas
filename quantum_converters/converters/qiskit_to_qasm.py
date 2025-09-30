@@ -5,15 +5,17 @@ This module provides functionality to convert Qiskit quantum circuits
 to OpenQASM 3.0 format. It serves as an intermediate representation (IR) 
 converter for unified quantum simulators.
 
-Author: [Your Name]
-Date: [Current Date]
-Version: 1.0.0
+Author: QCanvas Team
+Date: 2025-09-30
+Version: 2.0.0 - Integrated with QASM3Builder
 """
 
 import inspect
 from typing import Dict, Any, Optional, Union
 from qiskit import QuantumCircuit
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
+from quantum_converters.base.qasm3_builder import QASM3Builder
+from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
 
 class QiskitToQASM3Converter:
     """
@@ -168,6 +170,7 @@ class QiskitToQASM3Converter:
     def _convert_to_qasm3(self, qc: 'QuantumCircuit') -> str:
         """
         Convert Qiskit QuantumCircuit to enhanced OpenQASM 3.0 string with advanced features.
+        Now uses QASM3Builder for proper code generation.
 
         Args:
             qc: Qiskit QuantumCircuit object
@@ -182,86 +185,72 @@ class QiskitToQASM3Converter:
         try:
             import numpy as np
             from qiskit.circuit import Parameter, ParameterVector
-            from qiskit.circuit.library import RXGate, RYGate, RZGate, UGate
         except ImportError:
             raise ImportError("Qiskit is required for conversion")
 
-        lines = []
-        lines.append("OPENQASM 3.0;")
-        lines.append('include "stdgates.inc";')
-        lines.append("")
+        # Initialize the QASM3 builder
+        builder = QASM3Builder()
+        gate_lib = QASM3GateLibrary()
 
-        # Add mathematical constants
-        lines.append("// Mathematical constants")
-        lines.append("const float PI = 3.141592653589793;")
-        lines.append("const float E = 2.718281828459045;")
-        lines.append("const float PI_2 = 1.5707963267948966;  // PI/2")
-        lines.append("const float PI_4 = 0.7853981633974483;  // PI/4")
-        lines.append("")
-
-        # Declare quantum and classical registers
+        # Get circuit dimensions
         num_qubits = qc.num_qubits
         num_clbits = qc.num_clbits
 
-        lines.append(f"// Quantum and classical registers")
-        lines.append(f"qubit[{num_qubits}] q;")
-        if num_clbits > 0:
-            lines.append(f"bit[{num_clbits}] c;")
-        lines.append("")
+        # Build standard prelude with all registers and variables
+        builder.build_standard_prelude(
+            num_qubits=num_qubits,
+            num_clbits=num_clbits,
+            include_vars=True
+        )
 
-        # Add variable declarations and constants
+        # Add circuit parameters if any
         if qc.parameters:
-            lines.append("// Circuit parameters")
+            builder.add_section_comment("Circuit parameters")
             for param in qc.parameters:
                 if isinstance(param, Parameter):
-                    lines.append(f"float {param.name};")
-            lines.append("")
-        
-        # Add classical variables for intermediate calculations
-        lines.append("// Classical variables for intermediate calculations")
-        lines.append("int loop_index;")
-        lines.append("bool condition_result;")
-        lines.append("float temp_angle;")
-        lines.append("")
+                    builder.declare_variable(param.name, 'float')
+            builder.add_blank_line()
 
-        # Add gate definitions for custom gates
-        lines.append("// Gate definitions")
+        # Extract and define custom gates
         custom_gates = self._extract_custom_gates(qc)
-        for gate_def in custom_gates:
-            lines.append(gate_def)
-        lines.append("")
+        if custom_gates:
+            builder.add_section_comment("Custom gate definitions")
+            for gate_def in custom_gates:
+                builder.lines.append(gate_def)
+            builder.add_blank_line()
 
-        # Add example classical instructions (Iteration I features)
-        lines.append("// Classical operations examples")
-        lines.append("// Assignment statements")
-        lines.append("temp_angle = PI/2;")
-        lines.append("loop_index = 0;")
-        lines.append("")
+        # Add example classical operations
+        builder.add_section_comment("Classical operations")
+        builder.add_assignment("temp_angle", "PI_2")
+        builder.add_assignment("loop_index", "0")
+        builder.add_blank_line()
         
         # Convert circuit instructions
-        lines.append("// Circuit operations")
-        for instruction, qargs, cargs in qc.data:
-            qasm_line = self._convert_instruction_to_qasm3(instruction, qargs, cargs, qc)
-            if qasm_line:
-                lines.append(qasm_line)
+        builder.add_section_comment("Circuit operations")
+        for circuit_instruction in qc.data:
+            # Use modern Qiskit 1.2+ named attributes
+            instruction = circuit_instruction.operation
+            qargs = circuit_instruction.qubits
+            cargs = circuit_instruction.clbits
+            self._add_qiskit_operation(builder, instruction, qargs, cargs, qc)
         
         # Add example control flow (if we have classical bits)
         if num_clbits > 0:
-            lines.append("")
-            lines.append("// Classical control flow examples")
-            lines.append("// If statement based on measurement result")
-            lines.append("if (c[0] == 1) {")
-            lines.append("    // Apply corrective operations")
-            lines.append("    x q[1];")
-            lines.append("}")
-            lines.append("")
-            lines.append("// For loop example")
-            lines.append("for loop_index in [0:2] {")
-            lines.append("    // Conditional operations")
-            lines.append("    ry(temp_angle) q[loop_index];")
-            lines.append("}")
+            builder.add_blank_line()
+            builder.add_section_comment("Classical control flow examples")
+            builder.add_if_statement(
+                "c[0] == 1", 
+                ["x q[1];"],
+                else_body=None
+            )
+            builder.add_blank_line()
+            builder.add_for_loop(
+                "loop_index", 
+                "[0:2]", 
+                ["ry(temp_angle) q[loop_index];"]
+            )
 
-        return '\n'.join(lines)
+        return builder.get_code()
 
     def _extract_custom_gates(self, qc: 'QuantumCircuit') -> list:
         """Extract custom gate definitions from the circuit."""
@@ -270,122 +259,63 @@ class QiskitToQASM3Converter:
         # you'd need to analyze the circuit for custom gate definitions
         return custom_gates
 
-    def _convert_instruction_to_qasm3(self, instruction, qargs, cargs, qc) -> str:
-        """Convert a single Qiskit instruction to OpenQASM 3.0."""
+    def _add_qiskit_operation(self, builder: QASM3Builder, instruction, qargs, cargs, qc):
+        """Add a Qiskit operation to the QASM builder."""
+        import numpy as np
+        
         gate_name = instruction.name.lower()
 
-        # Get qubit indices
+        # Get qubit and clbit indices
         qubit_indices = [qc.qubits.index(q) for q in qargs]
+        qubits_str = [f"q[{i}]" for i in qubit_indices]
         clbit_indices = [qc.clbits.index(c) for c in cargs] if cargs else []
 
+        # Detect gate modifiers
+        modifiers = {}
+        
+        # Check for inverse gates (gates ending with 'dg')
+        if gate_name.endswith('dg'):
+            modifiers['inv'] = True
+            # Remove 'dg' suffix to get base gate
+            base_gate = gate_name[:-2]  # sdg -> s, tdg -> t
+            gate_name = base_gate
+
         # Handle different gate types
-        if gate_name == 'h':
-            return f"h q[{qubit_indices[0]}];"
-        elif gate_name == 'x':
-            return f"x q[{qubit_indices[0]}];"
-        elif gate_name == 'y':
-            return f"y q[{qubit_indices[0]}];"
-        elif gate_name == 'z':
-            return f"z q[{qubit_indices[0]}];"
-        elif gate_name == 's':
-            return f"s q[{qubit_indices[0]}];"
-        elif gate_name == 't':
-            return f"t q[{qubit_indices[0]}];"
-        elif gate_name == 'cx' or gate_name == 'cnot':
-            return f"cx q[{qubit_indices[0]}], q[{qubit_indices[1]}];"
-        elif gate_name == 'cz':
-            return f"cz q[{qubit_indices[0]}], q[{qubit_indices[1]}];"
-        elif gate_name == 'swap':
-            return f"swap q[{qubit_indices[0]}], q[{qubit_indices[1]}];"
-        elif gate_name == 'rx':
-            param = self._format_parameter(instruction.params[0])
-            return f"rx({param}) q[{qubit_indices[0]}];"
-        elif gate_name == 'ry':
-            param = self._format_parameter(instruction.params[0])
-            return f"ry({param}) q[{qubit_indices[0]}];"
-        elif gate_name == 'rz':
-            param = self._format_parameter(instruction.params[0])
-            return f"rz({param}) q[{qubit_indices[0]}];"
-        elif gate_name == 'p':
-            param = self._format_parameter(instruction.params[0])
-            return f"p({param}) q[{qubit_indices[0]}];"
+        if gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'id', 'i']:
+            builder.apply_gate(gate_name, qubits_str, modifiers=modifiers if modifiers else None)
+        elif gate_name in ['rx', 'ry', 'rz', 'p']:
+            param = builder.format_parameter(instruction.params[0])
+            builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
         elif gate_name == 'u':
-            theta = self._format_parameter(instruction.params[0])
-            phi = self._format_parameter(instruction.params[1])
-            lam = self._format_parameter(instruction.params[2])
-            return f"u({theta}, {phi}, {lam}) q[{qubit_indices[0]}];"
-        elif gate_name == 'measure':
-            return f"measure q[{qubit_indices[0]}] -> c[{clbit_indices[0]}];"
-        elif gate_name == 'reset':
-            return f"reset q[{qubit_indices[0]}];"
-        elif gate_name == 'barrier':
-            if qubit_indices:
-                qubits_str = ', '.join([f'q[{i}]' for i in qubit_indices])
-                return f"barrier {qubits_str};"
-            else:
-                return f"barrier q;"  # Barrier on all qubits
+            theta = builder.format_parameter(instruction.params[0])
+            phi = builder.format_parameter(instruction.params[1])
+            lam = builder.format_parameter(instruction.params[2])
+            builder.apply_gate('u', qubits_str, parameters=[theta, phi, lam], modifiers=modifiers if modifiers else None)
+        elif gate_name in ['cx', 'cnot', 'cz', 'cy', 'ch', 'swap']:
+            builder.apply_gate('cx' if gate_name == 'cnot' else gate_name, qubits_str, modifiers=modifiers if modifiers else None)
         elif gate_name == 'cp':
-            param = self._format_parameter(instruction.params[0])
-            return f"cp({param}) q[{qubit_indices[0]}], q[{qubit_indices[1]}];"
+            param = builder.format_parameter(instruction.params[0])
+            builder.apply_gate('cp', qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
+        elif gate_name in ['crx', 'cry', 'crz']:
+            param = builder.format_parameter(instruction.params[0])
+            builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
         elif gate_name == 'gphase':
-            # Global phase gate - OpenQASM 3.0 Iteration I feature
-            param = self._format_parameter(instruction.params[0])
-            return f"gphase({param});"
-        elif gate_name == 'ccx' or gate_name == 'toffoli':
-            # Toffoli gate (controlled-controlled-X)
-            return f"ccx q[{qubit_indices[0]}], q[{qubit_indices[1]}], q[{qubit_indices[2]}];"
+            param = builder.format_parameter(instruction.params[0])
+            builder.apply_gate('gphase', [], parameters=[param])
+        elif gate_name in ['ccx', 'toffoli']:
+            builder.apply_gate('ccx', qubits_str, modifiers=modifiers if modifiers else None)
         elif gate_name == 'ccz':
-            # Controlled-controlled-Z gate
-            return f"ccz q[{qubit_indices[0]}], q[{qubit_indices[1]}], q[{qubit_indices[2]}];"
-        elif gate_name == 'cswap' or gate_name == 'fredkin':
-            # Fredkin gate (controlled-SWAP)
-            return f"cswap q[{qubit_indices[0]}], q[{qubit_indices[1]}], q[{qubit_indices[2]}];"
-        elif gate_name in ['id', 'i']:
-            # Identity gate
-            return f"id q[{qubit_indices[0]}];"
-        elif gate_name == 'sx':
-            # Square root of X gate
-            return f"sx q[{qubit_indices[0]}];"
-        elif gate_name == 'sxdg':
-            # Inverse square root of X gate
-            return f"sxdg q[{qubit_indices[0]}];"
-        elif gate_name == 'sdg':
-            # Inverse S gate
-            return f"sdg q[{qubit_indices[0]}];"
-        elif gate_name == 'tdg':
-            # Inverse T gate
-            return f"tdg q[{qubit_indices[0]}];"
+            builder.apply_gate('ccz', qubits_str, modifiers=modifiers if modifiers else None)
+        elif gate_name in ['cswap', 'fredkin']:
+            builder.apply_gate('cswap', qubits_str, modifiers=modifiers if modifiers else None)
+        elif gate_name == 'measure':
+            builder.add_measurement(qubits_str[0], f"c[{clbit_indices[0]}]")
+        elif gate_name == 'reset':
+            builder.add_reset(qubits_str[0])
+        elif gate_name == 'barrier':
+            builder.add_barrier(qubits_str if qubits_str else None)
         else:
-            # For unknown gates, try to represent them generically
-            return f"// Unsupported gate: {gate_name}"
-
-    def _format_parameter(self, param) -> str:
-        """Format a parameter for OpenQASM 3.0 output."""
-        import numpy as np
-
-        if isinstance(param, (int, float)):
-            # Convert numpy types to Python types
-            if hasattr(param, 'item'):
-                param = param.item()
-
-            # Format floats nicely
-            if isinstance(param, float):
-                # Check for common mathematical constants
-                if abs(param - np.pi) < 1e-10:
-                    return "PI"
-                elif abs(param - np.pi/2) < 1e-10:
-                    return "PI/2"
-                elif abs(param - np.pi/4) < 1e-10:
-                    return "PI/4"
-                elif abs(param - np.e) < 1e-10:
-                    return "E"
-                else:
-                    return f"{param:.6f}"
-            else:
-                return str(param)
-        else:
-            # For symbolic parameters
-            return str(param)
+            builder.add_comment(f"Unsupported gate: {gate_name}")
     
     def convert(self, qiskit_source: str) -> ConversionResult:
         """

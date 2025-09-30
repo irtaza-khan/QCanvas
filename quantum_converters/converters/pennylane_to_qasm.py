@@ -5,14 +5,16 @@ This module provides functionality to convert PennyLane quantum circuits
 containing basic gates to OpenQASM 3.0 format. It serves as an intermediate 
 representation (IR) converter for unified quantum simulators.
 
-Author: [Your Name]
-Date: [Current Date]
-Version: 1.0.0
+Author: QCanvas Team
+Date: 2025-09-30
+Version: 2.0.0 - Integrated with QASM3Builder
 """
 import numpy as np
 import re
 from typing import List, Dict, Any, Union
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
+from quantum_converters.base.qasm3_builder import QASM3Builder
+from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
 
 class PennyLaneToQASM3Converter:
     """
@@ -309,6 +311,37 @@ class PennyLaneToQASM3Converter:
         
         return f"{qasm_gate}{param_str} {wire_str};"
     
+    def _add_pennylane_operation(self, builder: QASM3Builder, parsed_op: Dict[str, Any]):
+        """Add a PennyLane operation to the QASM builder."""
+        if parsed_op.get('unsupported'):
+            builder.add_comment(f"Unsupported PennyLane op: {parsed_op.get('raw')}")
+            return
+
+        gate_name = parsed_op['gate']
+        params = parsed_op['params']
+        wires = parsed_op['wires']
+        
+        # Check if gate is supported
+        if gate_name not in self.gate_mapping:
+            builder.add_comment(f"Unsupported gate: {gate_name}")
+            return
+        
+        qasm_gate = self.gate_mapping[gate_name]
+        qubits_str = [f"q[{w}]" for w in wires]
+        
+        # Handle parameterized gates
+        if params:
+            evaluated_params = []
+            for param in params:
+                if isinstance(param, str):
+                    evaluated_params.append(builder.format_parameter(self._evaluate_parameter(param)))
+                else:
+                    evaluated_params.append(builder.format_parameter(param))
+            
+            builder.apply_gate(qasm_gate, qubits_str, parameters=evaluated_params)
+        else:
+            builder.apply_gate(qasm_gate, qubits_str)
+    
     def convert(self, pennylane_code: str) -> ConversionResult:
         """
         Convert PennyLane quantum circuit code to OpenQASM 3.0 format with statistics.
@@ -343,52 +376,33 @@ class PennyLaneToQASM3Converter:
             except Exception:
                 pass
             
-            # Build enhanced OpenQASM 3.0 header with advanced features
-            qasm_lines = [
-                "OPENQASM 3.0;",
-                'include "stdgates.inc";',
-                "",
-                "// Mathematical constants",
-                "const float PI = 3.141592653589793;",
-                "const float E = 2.718281828459045;",
-                "const float PI_2 = 1.5707963267948966;  // PI/2",
-                "const float PI_4 = 0.7853981633974483;  // PI/4",
-                "",
-                f"// Quantum registers",
-                f"qubit[{num_qubits}] q;",
-                ""
-            ]
+            # Initialize the QASM3 builder
+            builder = QASM3Builder()
+            gate_lib = QASM3GateLibrary()
 
-            # Add classical registers if measurements exist
+            # Check if measurements exist
             has_measurements = any('measure' in op.lower() for op in operations)
-            if has_measurements:
-                qasm_lines.extend([
-                    "// Classical registers",
-                    f"bit[{num_qubits}] c;",
-                    ""
-                ])
+            num_clbits = num_qubits if has_measurements else 0
             
-            # Add classical variables for intermediate calculations
-            qasm_lines.extend([
-                "// Classical variables for intermediate calculations",
-                "int loop_index;",
-                "bool condition_result;",
-                "float temp_angle;",
-                ""
-            ])
+            # Build standard prelude with all registers and variables
+            builder.build_standard_prelude(
+                num_qubits=num_qubits,
+                num_clbits=num_clbits,
+                include_vars=True
+            )
 
             # Add gate definitions section
-            qasm_lines.extend([
-                "// Gate definitions",
-                "// (Custom gate definitions would go here)",
-                "",
-                "// Classical operations examples",
-                "// Assignment statements",
-                "temp_angle = PI/2;",
-                "loop_index = 0;",
-                "",
-                "// Circuit operations"
-            ])
+            builder.add_section_comment("Gate definitions")
+            builder.add_comment("(Custom gate definitions would go here)")
+            builder.add_blank_line()
+
+            # Add classical operations
+            builder.add_section_comment("Classical operations")
+            builder.add_assignment("temp_angle", "PI_2")
+            builder.add_assignment("loop_index", "0")
+            builder.add_blank_line()
+            
+            builder.add_section_comment("Circuit operations")
             
             # Initialize statistics
             gate_counts = {}
@@ -423,8 +437,7 @@ class PennyLaneToQASM3Converter:
 
                 for line in final_lines:
                     parsed_op = self._parse_operation(line, num_qubits)
-                    qasm_gate = self._convert_gate(parsed_op)
-                    qasm_lines.append(qasm_gate)
+                    self._add_pennylane_operation(builder, parsed_op)
                     
                     # Update gate counts
                     if not parsed_op.get('unsupported'):
@@ -437,21 +450,19 @@ class PennyLaneToQASM3Converter:
             
             # Add example control flow (if we have classical bits)
             if has_measurements:
-                qasm_lines.extend([
-                    "",
-                    "// Classical control flow examples",
-                    "// If statement based on measurement result",
-                    "if (c[0] == 1) {",
-                    "    // Apply corrective operations",
-                    "    x q[1];",
-                    "}",
-                    "",
-                    "// For loop example",
-                    "for loop_index in [0:2] {",
-                    "    // Conditional operations",
-                    "    ry(temp_angle) q[loop_index];",
-                    "}"
-                ])
+                builder.add_blank_line()
+                builder.add_section_comment("Classical control flow examples")
+                builder.add_if_statement(
+                    "c[0] == 1", 
+                    ["x q[1];"],
+                    else_body=None
+                )
+                builder.add_blank_line()
+                builder.add_for_loop(
+                    "loop_index", 
+                    "[0:2]", 
+                    ["ry(temp_angle) q[loop_index];"]
+                )
             
             # Create stats object
             stats = ConversionStats(
@@ -464,7 +475,7 @@ class PennyLaneToQASM3Converter:
             
             # Create and return the result object
             return ConversionResult(
-                qasm_code='\n'.join(qasm_lines),
+                qasm_code=builder.get_code(),
                 stats=stats
             )
             
