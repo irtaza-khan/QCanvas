@@ -601,7 +601,7 @@ copy environment.env .env
 # Edit .env in the root qcanvas directory with your settings
 
 # Start backend (from project root)
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
 # In a new terminal, start frontend (from project root)
 cd frontend
