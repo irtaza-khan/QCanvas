@@ -397,6 +397,8 @@ class QASM3Builder:
                     return "PI_2"
                 elif abs(param - np.pi/4) < 1e-10:
                     return "PI_4"
+                elif abs(param - np.pi/8) < 1e-10:
+                    return "PI/8"
                 elif abs(param - 2*np.pi) < 1e-10:
                     return "TAU"
                 elif abs(param - np.e) < 1e-10:
@@ -461,7 +463,8 @@ class QASM3Builder:
         return None, None
         
     def build_standard_prelude(self, num_qubits: int, num_clbits: int = 0,
-                               include_vars: bool = True):
+                               include_vars: bool = True,
+                               include_constants: bool = True):
         """
         Build a standard OpenQASM 3.0 prelude with common setup.
         
@@ -473,8 +476,9 @@ class QASM3Builder:
         # Header
         self.initialize_header()
         
-        # Mathematical constants
-        self.add_mathematical_constants()
+        # Mathematical constants (optional)
+        if include_constants:
+            self.add_mathematical_constants()
         
         # Quantum registers
         self.add_section_comment("Quantum and classical registers")
