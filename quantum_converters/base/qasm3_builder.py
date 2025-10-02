@@ -246,25 +246,7 @@ class QASM3Builder:
                 - pow: Power to raise gate to
         """
         # Build modifier string
-        modifier_str = ""
-        if modifiers:
-            if 'inv' in modifiers and modifiers['inv']:
-                modifier_str += "inv @ "
-                
-            if 'ctrl' in modifiers:
-                ctrl = modifiers['ctrl']
-                if isinstance(ctrl, int):
-                    if ctrl == 1:
-                        modifier_str += "ctrl @ "
-                    else:
-                        modifier_str += f"ctrl({ctrl}) @ "
-                elif isinstance(ctrl, list):
-                    # Explicit control qubits
-                    modifier_str += f"ctrl({len(ctrl)}) @ "
-                    
-            if 'pow' in modifiers:
-                power = modifiers['pow']
-                modifier_str += f"pow({power}) @ "
+        modifier_str = self._build_modifier_str(modifiers)
                 
         # Build parameter string
         param_str = ""
@@ -277,6 +259,25 @@ class QASM3Builder:
         # Complete gate application
         gate_app = f"{modifier_str}{gate_name}{param_str} {qubit_str};"
         self.lines.append(gate_app)
+
+    def _build_modifier_str(self, modifiers: Optional[Dict[str, Any]]) -> str:
+        """
+        Build the OpenQASM modifier prefix string from a modifiers dict.
+        """
+        if not modifiers:
+            return ""
+        parts: List[str] = []
+        if modifiers.get('inv'):
+            parts.append("inv")
+        if 'ctrl' in modifiers:
+            ctrl = modifiers['ctrl']
+            if isinstance(ctrl, int):
+                parts.append("ctrl" if ctrl == 1 else f"ctrl({ctrl})")
+            elif isinstance(ctrl, list):
+                parts.append(f"ctrl({len(ctrl)})")
+        if 'pow' in modifiers:
+            parts.append(f"pow({modifiers['pow']})")
+        return (" @ ".join(parts) + " @ ") if parts else ""
         
     def apply_gate_broadcast(self, gate_name: str, qubit_array: str,
                             parameters: Optional[List[str]] = None):
@@ -371,6 +372,26 @@ class QASM3Builder:
             self.lines.append(f"    {stmt}")
         self.lines.append("}")
         
+    def _format_float_constant(self, value: float) -> Optional[str]:
+        """
+        Return a symbolic name if the float matches a well-known constant, else None.
+        """
+        if abs(value - np.pi) < 1e-10:
+            return "PI"
+        if abs(value - np.pi/2) < 1e-10:
+            return "PI_2"
+        if abs(value - np.pi/4) < 1e-10:
+            return "PI_4"
+        if abs(value - 2*np.pi) < 1e-10:
+            return "TAU"
+        if abs(value - np.e) < 1e-10:
+            return "E"
+        if abs(value - np.sqrt(2)) < 1e-10:
+            return "SQRT2"
+        if abs(value - 1/np.sqrt(2)) < 1e-10:
+            return "SQRT1_2"
+        return None
+
     def format_parameter(self, param: Any) -> str:
         """
         Format a parameter value for OpenQASM output.
@@ -385,10 +406,9 @@ class QASM3Builder:
             return param
             
         if isinstance(param, (int, float)):
-            # Handle numpy types
+            # Handle numpy scalar types
             if hasattr(param, 'item'):
                 param = param.item()
-                
             if isinstance(param, float):
                 # Check for common constants
                 if abs(param - np.pi) < 1e-10:
@@ -444,7 +464,7 @@ class QASM3Builder:
         """
         # OpenQASM identifiers must start with letter or underscore
         # and contain only letters, digits, and underscores
-        pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*$'
+        pattern = r'^[A-Za-z_]\w*$'
         return bool(re.match(pattern, name))
         
     def parse_slice(self, slice_str: str) -> Tuple[Optional[int], Optional[int]]:
@@ -461,6 +481,27 @@ class QASM3Builder:
         if match:
             return int(match.group(1)), int(match.group(2))
         return None, None
+        
+    def concatenate_registers(self, target_name: str, parts: List[str]):
+        """
+        Concatenate qubit or bit register slices into an alias using ++.
+
+        Example: concatenate_registers("q_all", ["q1", "q2[0:2]"]) ->
+        let q_all = (q1 ++ q2[0:2]);
+        """
+        if not parts:
+            return
+        concat_expr = " ++ ".join(parts)
+        self.lines.append(f"let {target_name} = ({concat_expr});")
+
+    def concatenate_arrays(self, target_name: str, arrays: List[str]):
+        """
+        Concatenate classical arrays into a new array alias using ++.
+        """
+        if not arrays:
+            return
+        concat_expr = " ++ ".join(arrays)
+        self.lines.append(f"let {target_name} = ({concat_expr});")
         
     def build_standard_prelude(self, num_qubits: int, num_clbits: int = 0,
                                include_vars: bool = True,
@@ -497,3 +538,27 @@ class QASM3Builder:
             self.declare_variable('counter', 'uint')
             
         self.add_blank_line()
+
+    def add_input_directive(self, name: str, type_: str, size: Optional[int] = None):
+        """
+        Add an input directive.
+
+        Args:
+            name: Identifier name
+            type_: Data type (bit, int, uint, float, angle, bool)
+            size: Optional array size (for bit[n], int[m], etc.)
+        """
+        decl = f"{type_}[{size}] {name}" if size is not None else f"{type_} {name}"
+        self.lines.append(f"input {decl};")
+
+    def add_output_directive(self, name: str, type_: str, size: Optional[int] = None):
+        """
+        Add an output directive.
+
+        Args:
+            name: Identifier name
+            type_: Data type (bit, int, uint, float, angle, bool)
+            size: Optional array size (for bit[n], int[m], etc.)
+        """
+        decl = f"{type_}[{size}] {name}" if size is not None else f"{type_} {name}"
+        self.lines.append(f"output {decl};")

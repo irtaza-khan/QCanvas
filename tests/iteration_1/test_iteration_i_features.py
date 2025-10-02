@@ -149,7 +149,7 @@ class TestTypesAndCasting:
         """Test float literals"""
         parser = QASM3ExpressionParser()
         value, type_ = parser.parse_literal("3.14")
-        assert value == 3.14
+        assert abs(value - 3.14) < 1e-9
         assert type_ == "float"
         
     def test_literals_boolean(self):
@@ -183,18 +183,21 @@ class TestTypesAndCasting:
         
     def test_register_concatenation(self):
         """Test register concatenation"""
-        # This should be supported in the builder
         builder = QASM3Builder()
         builder.declare_qubit_register("q1", 2)
         builder.declare_qubit_register("q2", 2)
-        # Concatenation would be: q1 ++ q2 or similar syntax
-        # This is a placeholder test
-        pytest.skip("Register concatenation not yet fully implemented")
+        builder.concatenate_registers("q_all", ["q1", "q2[0:2]"])
+        code = builder.get_code()
+        assert "let q_all = (q1 ++ q2[0:2]);" in code
         
     def test_array_concatenation(self):
         """Test array concatenation"""
-        # This should be supported in expressions
-        pytest.skip("Array concatenation not yet fully implemented")
+        builder = QASM3Builder()
+        builder.declare_variable("a", "int", size=2)
+        builder.declare_variable("b", "int", size=3)
+        builder.concatenate_arrays("ab", ["a", "b"]) 
+        code = builder.get_code()
+        assert "let ab = (a ++ b);" in code
 
 
 class TestGatesAndModifiers:
@@ -242,7 +245,6 @@ class TestGatesAndModifiers:
         """Test ctrl@ modifier"""
         builder = QASM3Builder()
         builder.declare_qubit_register("q", 3)
-        modifier = GateModifier(ctrl_qubits=1)
         builder.apply_gate("x", ["q[1]", "q[2]"], modifiers={'ctrl': 1})
         code = builder.get_code()
         # Should generate controlled-X
@@ -399,6 +401,32 @@ class TestStandardLibraryAndBuiltins:
         assert "TAU" in builder.math_constants
 
 
+class TestInputOutputDirectives:
+    def test_input_output_scalars(self):
+        from quantum_converters.base.qasm3_builder import QASM3Builder
+
+        builder = QASM3Builder()
+        builder.initialize_header()
+        builder.add_input_directive("a", "int")
+        builder.add_output_directive("b", "float")
+
+        code = builder.get_code()
+        assert "input int a;" in code
+        assert "output float b;" in code
+
+    def test_input_output_arrays(self):
+        from quantum_converters.base.qasm3_builder import QASM3Builder
+
+        builder = QASM3Builder()
+        builder.initialize_header()
+        builder.add_input_directive("bits", "bit", size=4)
+        builder.add_output_directive("vals", "int", size=8)
+
+        code = builder.get_code()
+        assert "input bit[4] bits;" in code
+        assert "output int[8] vals;" in code
+
+
 class TestMissingFeatures:
     """Tests that SHOULD FAIL for features not yet implemented"""
     
@@ -406,7 +434,6 @@ class TestMissingFeatures:
     def test_physical_qubits_excluded(self):
         """Physical qubits are explicitly excluded"""
         # This should not be supported
-        builder = QASM3Builder()
         # Attempting to use physical qubits should fail
         assert False, "Physical qubits are excluded from Iteration I"
         
