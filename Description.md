@@ -581,24 +581,31 @@ ws.onmessage = (event) => {
 
 **1. Local Development:**
 ```bash
-# Clone repository
+**1. Local Development:**
+
+```bash
+# Clone the repository
 git clone https://github.com/your-username/qcanvas.git
 cd qcanvas
 
-# Install dependencies
+# Install Python backend dependencies
 pip install -r requirements.txt
-cd frontend && npm install
 
-# Set up environment
-cp environment.env .env
-# Edit .env with your settings
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
 
-# Start services
-# Terminal 1: Backend
-uvicorn backend.app.main:app --reload
+# Set up environment variables for the backend
+copy environment.env .env
+# Edit .env in the root qcanvas directory with your settings
 
-# Terminal 2: Frontend
-cd frontend && npm start
+# Start backend (from project root)
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+
+# In a new terminal, start frontend (from project root)
+cd frontend
+npm run dev
 ```
 
 **2. Docker Development:**
