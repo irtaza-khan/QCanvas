@@ -16,6 +16,7 @@ from qiskit import QuantumCircuit
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
+from quantum_converters.parsers.qiskit_parser import QiskitASTParser
 
 class QiskitToQASM3Converter:
     """
@@ -206,8 +207,8 @@ class QiskitToQASM3Converter:
         builder.build_standard_prelude(
             num_qubits=num_qubits,
             num_clbits=num_clbits,
-            include_vars=has_advanced_features,
-            include_constants=has_advanced_features
+            include_vars=False,
+            include_constants=False
         )
 
         # Add circuit parameters if any
@@ -308,7 +309,11 @@ class QiskitToQASM3Converter:
     
     def convert(self, qiskit_source: str) -> ConversionResult:
         """
-        Convert Qiskit source code to OpenQASM 3.0 format.
+        Convert Qiskit source code to OpenQASM 3.0 format using AST-based parsing.
+        
+        This method now uses AST parsing instead of dynamic execution for improved
+        security and reliability. It parses the source code to extract circuit operations
+        without executing potentially unsafe code.
         
         Args:
             qiskit_source (str): Complete Qiskit source code defining get_circuit() function
@@ -335,14 +340,15 @@ class QiskitToQASM3Converter:
             >>> result = converter.convert(source)
             >>> print(f"Circuit has {result.stats.n_qubits} qubits and depth {result.stats.depth}")
         """
-        # Execute source code and extract circuit
-        qc = self._execute_qiskit_source(qiskit_source)
+        # Parse source code using AST parser (secure, no execution)
+        parser = QiskitASTParser()
+        circuit_ast = parser.parse(qiskit_source)
         
-        # Analyze the circuit
-        stats = self._analyze_qiskit_circuit(qc)
+        # Analyze the parsed circuit AST
+        stats = self._analyze_circuit_ast(circuit_ast)
         
-        # Convert to OpenQASM 3.0
-        qasm3_program = self._convert_to_qasm3(qc)
+        # Convert AST to OpenQASM 3.0
+        qasm3_program = self._convert_ast_to_qasm3(circuit_ast)
         
         return ConversionResult(qasm_code=qasm3_program, stats=stats)
 

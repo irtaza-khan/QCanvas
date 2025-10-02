@@ -20,7 +20,7 @@ except ImportError as e:
     print(f"Import error: ConversionResult unavailable: {e}")
 
 try:
-    from quantum_converters.converters.qiskit_to_qasm import convert_qiskit_to_qasm3 as _qiskit_convert
+    from quantum_converters.converters.qiskit_to_qasm_new import convert_qiskit_to_qasm3 as _qiskit_convert
     convert_qiskit_to_qasm3 = _qiskit_convert
     print("✓ Qiskit converter available")
 except ImportError as e:
