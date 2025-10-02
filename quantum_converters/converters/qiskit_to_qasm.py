@@ -196,11 +196,18 @@ class QiskitToQASM3Converter:
         num_qubits = qc.num_qubits
         num_clbits = qc.num_clbits
 
-        # Build standard prelude with all registers and variables
+        # Build standard prelude - include constants/vars for advanced features
+        # Check if circuit has parameters or complex features
+        has_parameters = bool(qc.parameters)
+        has_measurements = any(instr.operation.name == 'measure' for instr in qc.data)
+        has_advanced_ops = any(instr.operation.name in ['barrier', 'reset'] for instr in qc.data)
+        has_advanced_features = has_parameters or has_advanced_ops or has_measurements
+        
         builder.build_standard_prelude(
             num_qubits=num_qubits,
             num_clbits=num_clbits,
-            include_vars=True
+            include_vars=has_advanced_features,
+            include_constants=has_advanced_features
         )
 
         # Add circuit parameters if any
@@ -219,11 +226,7 @@ class QiskitToQASM3Converter:
                 builder.lines.append(gate_def)
             builder.add_blank_line()
 
-        # Add example classical operations
-        builder.add_section_comment("Classical operations")
-        builder.add_assignment("temp_angle", "PI_2")
-        builder.add_assignment("loop_index", "0")
-        builder.add_blank_line()
+        # No extra classical operations for minimal translation
         
         # Convert circuit instructions
         builder.add_section_comment("Circuit operations")
@@ -234,21 +237,7 @@ class QiskitToQASM3Converter:
             cargs = circuit_instruction.clbits
             self._add_qiskit_operation(builder, instruction, qargs, cargs, qc)
         
-        # Add example control flow (if we have classical bits)
-        if num_clbits > 0:
-            builder.add_blank_line()
-            builder.add_section_comment("Classical control flow examples")
-            builder.add_if_statement(
-                "c[0] == 1", 
-                ["x q[1];"],
-                else_body=None
-            )
-            builder.add_blank_line()
-            builder.add_for_loop(
-                "loop_index", 
-                "[0:2]", 
-                ["ry(temp_angle) q[loop_index];"]
-            )
+        # No demo control flow; emit only operations present in the source circuit
 
         return builder.get_code()
 
