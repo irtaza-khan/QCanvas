@@ -574,7 +574,7 @@ export default function ResultsPane() {
                           label: (context) => {
                             const count = context.parsed.y
                             const percentage = ((count / quantumResults.shots) * 100).toFixed(1)
-                            return `${count} (${percentage}%)`
+                            return `${count} ("${percentage}"%)`
                           },
                         },
                       },
@@ -621,7 +621,7 @@ export default function ResultsPane() {
             {!compiledQasm ? (
               <div className="text-center py-8 text-gray-500">
                 <FileCode2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No compiled OpenQASM yet. Use "Compile to QASM" in the top bar.</p>
+                <p className="text-sm">No compiled OpenQASM yet. Use &quot;Compile to QASM&quot; in the top bar.</p>
               </div>
             ) : (
               <div className="bg-editor-bg border border-editor-border rounded p-3">

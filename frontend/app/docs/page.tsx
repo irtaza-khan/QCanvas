@@ -52,7 +52,7 @@ export default function DocsPage() {
                   </div>
                   <h4 className="text-white font-medium">Qiskit</h4>
                 </div>
-                <p className="text-editor-text text-sm mb-2">IBM's quantum computing framework with comprehensive tools for circuit design and execution.</p>
+                <p className="text-editor-text text-sm mb-2">IBM&apos;s quantum computing framework with comprehensive tools for circuit design and execution.</p>
                 <ul className="text-xs text-gray-400 space-y-1">
                   <li>• Full quantum circuit support</li>
                   <li>• Advanced optimization</li>
@@ -66,7 +66,7 @@ export default function DocsPage() {
                   </div>
                   <h4 className="text-white font-medium">Cirq</h4>
                 </div>
-                <p className="text-editor-text text-sm mb-2">Google's quantum computing framework focused on near-term quantum computers and algorithms.</p>
+                <p className="text-editor-text text-sm mb-2">Google&apos;s quantum computing framework focused on near-term quantum computers and algorithms.</p>
                 <ul className="text-xs text-gray-400 space-y-1">
                   <li>• Near-term quantum algorithms</li>
                   <li>• Noise modeling</li>
@@ -80,7 +80,7 @@ export default function DocsPage() {
                   </div>
                   <h4 className="text-white font-medium">PennyLane</h4>
                 </div>
-                <p className="text-editor-text text-sm mb-2">Xanadu's quantum machine learning framework for variational quantum algorithms.</p>
+                <p className="text-editor-text text-sm mb-2">Xanadu&apos;s quantum machine learning framework for variational quantum algorithms.</p>
                 <ul className="text-xs text-gray-400 space-y-1">
                   <li>• Quantum machine learning</li>
                   <li>• Variational algorithms</li>
@@ -452,7 +452,7 @@ qc.measure_all()`}
                 <h4 className="text-white font-medium text-lg mb-3">Conversion Errors</h4>
                 <div className="text-editor-text space-y-3">
                   <p><strong>Problem:</strong> Circuit conversion fails with syntax errors</p>
-                  <p><strong>Solution:</strong> Check that your source code follows the framework's syntax. Ensure all imports are included and variables are properly defined.</p>
+                  <p><strong>Solution:</strong> Check that your source code follows the framework&apos;s syntax. Ensure all imports are included and variables are properly defined.</p>
                   <div className="bg-editor-bg rounded p-3 border border-editor-border">
                     <p className="text-sm"><strong>Example:</strong> Make sure to import required modules:</p>
                     <pre className="text-xs text-editor-text mt-2">from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister</pre>

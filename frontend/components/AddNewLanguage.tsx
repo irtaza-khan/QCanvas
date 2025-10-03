@@ -236,7 +236,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-2">Language Information</h3>
                       <p className="text-gray-300 text-sm">
-                        Tell us about the quantum programming language you'd like to add to Q-Canvas.
+                        Tell us about the quantum programming language you&apos;d like to add to Q-Canvas.
                       </p>
                     </div>
 
@@ -442,16 +442,16 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                 <div>
                   <h3 className="text-2xl font-bold text-white mb-2">Request Submitted Successfully!</h3>
                   <p className="text-gray-300 max-w-md mx-auto">
-                    Your {formData.languageName} converter has been submitted to our administrators for review. 
-                    You'll be notified once it's been processed.
+                    Your {formData.languageName} converter has been submitted to our administrators for review.
+                    You&apos;ll be notified once it&apos;s been processed.
                   </p>
                 </div>
                 <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg max-w-md mx-auto">
                   <h4 className="font-medium text-blue-200 mb-2">What happens next?</h4>
                   <ul className="text-sm text-blue-100 text-left space-y-1">
                     <li>• Our team will review your converter code</li>
-                    <li>• We'll test it against our quality standards</li>
-                    <li>• You'll receive feedback within 3-5 business days</li>
+                    <li>• We&apos;ll test it against our quality standards</li>
+                    <li>• You&apos;ll receive feedback within 3-5 business days</li>
                     <li>• Once approved, it will be integrated into Q-Canvas</li>
                   </ul>
                 </div>
@@ -492,8 +492,8 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
 
                 <div className="mt-6 p-3 bg-gradient-to-r from-quantum-blue-dark/50 to-quantum-purple-dark/50 rounded-lg border border-white/10">
                   <p className="text-xs text-gray-300">
-                    <strong className="text-white">Example:</strong> For a language called "MyFramework", 
-                    create <code className="text-quantum-blue-light">myframework_to_qasm.py</code> with 
+                    <strong className="text-white">Example:</strong> For a language called &quot;MyFramework&quot;,
+                    create <code className="text-quantum-blue-light">myframework_to_qasm.py</code> with
                     function <code className="text-quantum-blue-light">convert_myframework_to_qasm3()</code>
                   </p>
                 </div>
