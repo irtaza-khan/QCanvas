@@ -13,13 +13,13 @@ Version: 1.0.0
 import ast
 import re
 import logging
+from config.config import VERBOSE, vprint
 from typing import List, Dict, Any, Optional, Set
 from quantum_converters.base.circuit_ast import (
     CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode
 )
 
-# VERBOSE flag for debugging AST parsing
-VERBOSE = True
+# VERBOSE is imported from config.config
 
 
 class QiskitASTVisitor(ast.NodeVisitor):
@@ -45,8 +45,12 @@ class QiskitASTVisitor(ast.NodeVisitor):
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Handle variable assignments, particularly QuantumCircuit creation."""
+        if VERBOSE:
+            vprint("[QiskitASTVisitor] visit_Assign: inspecting assignment node")
         # Check if assigning a QuantumCircuit
         if isinstance(node.value, ast.Call) and self._is_quantum_circuit_call(node.value):
+            if VERBOSE:
+                vprint("[QiskitASTVisitor] Detected QuantumCircuit constructor")
             # Extract circuit dimensions from arguments
             self._extract_circuit_dimensions(node.value)
             # Track the variable name
@@ -57,12 +61,16 @@ class QiskitASTVisitor(ast.NodeVisitor):
 
         # Check for method calls on circuit variables
         elif isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Attribute):
+            if VERBOSE:
+                vprint("[QiskitASTVisitor] Assignment invokes method; treating as circuit operation if applicable")
             self._handle_circuit_method_call(node.value)
 
         self.generic_visit(node)
 
     def visit_Expr(self, node: ast.Expr) -> None:
         """Handle expression statements, typically method calls."""
+        if VERBOSE:
+            vprint("[QiskitASTVisitor] visit_Expr: inspecting expression node")
         if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Attribute):
             self._handle_circuit_method_call(node.value)
         self.generic_visit(node)
@@ -100,72 +108,146 @@ class QiskitASTVisitor(ast.NodeVisitor):
         # Check if the method is called on a circuit variable
         if isinstance(node.func.value, ast.Name) and node.func.value.id in self.circuit_vars:
             method_name = node.func.attr
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Circuit method call detected: {method_name}")
+                # Raw AST dumps for traceability
+                try:
+                    args_dump = [ast.dump(a, include_attributes=False) for a in node.args]
+                except Exception:
+                    args_dump = [str(a) for a in node.args]
+                kw_dump = {}
+                for kw in node.keywords:
+                    try:
+                        kw_dump[kw.arg] = ast.dump(kw.value, include_attributes=False)
+                    except Exception:
+                        kw_dump[kw.arg] = str(kw.value)
+                vprint(f"[QiskitASTVisitor]   raw.args={args_dump}")
+                vprint(f"[QiskitASTVisitor]   raw.keywords={kw_dump}")
             self._parse_gate_operation(method_name, node.args, node.keywords)
 
     def _parse_gate_operation(self, method_name: str, args: List[ast.expr], keywords: List[ast.keyword]) -> None:
         """Parse a gate operation and add it to operations list."""
         # Handle different gate types
+        if VERBOSE:
+            vprint(f"[QiskitASTVisitor] Parsing operation: {method_name}")
+            vprint(f"[QiskitASTVisitor]   args_count={len(args)} kw_count={len(keywords)}")
+
+        # Route to appropriate handler
         if method_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'id', 'i']:
-            # Single-qubit gates
-            if args:
-                qubit = self._extract_qubit_index(args[0])
-                self.operations.append(GateNode(name=method_name, qubits=[qubit]))
-
+            self._handle_single_qubit_gate(method_name, args)
         elif method_name in ['cx', 'cnot', 'cz', 'cy', 'ch', 'swap']:
-            # Two-qubit gates
-            if len(args) >= 2:
-                qubit1 = self._extract_qubit_index(args[0])
-                qubit2 = self._extract_qubit_index(args[1])
-                gate_name = 'cx' if method_name == 'cnot' else method_name
-                self.operations.append(GateNode(name=gate_name, qubits=[qubit1, qubit2]))
-
+            self._handle_two_qubit_gate(method_name, args)
         elif method_name in ['rx', 'ry', 'rz', 'p']:
-            # Parameterized single-qubit gates
-            if len(args) >= 2:
-                qubit = self._extract_qubit_index(args[0])
-                param = self._extract_parameter(args[1])
-                self.operations.append(GateNode(
-                    name=method_name,
-                    qubits=[qubit],
-                    parameters=[param]
-                ))
-
+            self._handle_parameterized_single_qubit_gate(method_name, args)
         elif method_name == 'u':
-            # Universal gate
-            if len(args) >= 4:
-                qubit = self._extract_qubit_index(args[0])
-                params = [self._extract_parameter(arg) for arg in args[1:4]]
-                self.operations.append(GateNode(
-                    name='u',
-                    qubits=[qubit],
-                    parameters=params
-                ))
-
+            self._handle_universal_gate(args)
         elif method_name == 'measure':
-            # Measurement operation
-            if len(args) >= 2:
+            self._handle_measurement_qiskit(args)
+        elif method_name == 'reset':
+            self._handle_reset_qiskit(args)
+        elif method_name == 'barrier':
+            self._handle_barrier_qiskit(args)
+
+    def _handle_single_qubit_gate(self, method_name: str, args: List[ast.expr]) -> None:
+        """Handle single-qubit gates without parameters."""
+        if args:
+            qubit = self._extract_qubit_index(args[0])
+            self.operations.append(GateNode(name=method_name, qubits=[qubit]))
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Added single-qubit gate {method_name} on q[{qubit}]")
+
+    def _handle_two_qubit_gate(self, method_name: str, args: List[ast.expr]) -> None:
+        """Handle two-qubit gates."""
+        if len(args) >= 2:
+            if VERBOSE:
+                vprint("[QiskitASTVisitor]   rule=two_qubit_gate -> extract_qubit_index(args[0,1])")
+            qubit1 = self._extract_qubit_index(args[0])
+            qubit2 = self._extract_qubit_index(args[1])
+            gate_name = 'cx' if method_name == 'cnot' else method_name
+            self.operations.append(GateNode(name=gate_name, qubits=[qubit1, qubit2]))
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Added two-qubit gate {gate_name} on q[{qubit1}], q[{qubit2}]")
+
+    def _handle_parameterized_single_qubit_gate(self, method_name: str, args: List[ast.expr]) -> None:
+        """Handle parameterized single-qubit gates."""
+        if len(args) >= 2:
+            if VERBOSE:
+                vprint("[QiskitASTVisitor]   rule=rotation_gate -> extract_qubit_index(args[0]); extract_parameter(args[1])")
+            qubit = self._extract_qubit_index(args[0])
+            param = self._extract_parameter(args[1])
+            self.operations.append(GateNode(
+                name=method_name,
+                qubits=[qubit],
+                parameters=[param]
+            ))
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Added rotation {method_name}({param}) on q[{qubit}]")
+
+    def _handle_universal_gate(self, args: List[ast.expr]) -> None:
+        """Handle universal U gate."""
+        if len(args) >= 4:
+            if VERBOSE:
+                vprint("[QiskitASTVisitor]   rule=u_gate -> extract_qubit_index(args[0]); extract parameters args[1:4]")
+            qubit = self._extract_qubit_index(args[0])
+            params = [self._extract_parameter(arg) for arg in args[1:4]]
+            self.operations.append(GateNode(
+                name='u',
+                qubits=[qubit],
+                parameters=params
+            ))
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Added u gate{tuple(params)} on q[{qubit}]")
+
+    def _handle_measurement_qiskit(self, args: List[ast.expr]) -> None:
+        """Handle measurement operations in Qiskit."""
+        if len(args) >= 2:
+            if VERBOSE:
+                vprint("[QiskitASTVisitor]   rule=measure -> support list and single indices")
+
+            # Support both single indices and list pairs
+            if isinstance(args[0], ast.List) and isinstance(args[1], ast.List):
+                qubits = [self._extract_qubit_index(item) for item in args[0].elts]
+                clbits = [self._extract_clbit_index(item) for item in args[1].elts]
+                for q, c in zip(qubits, clbits):
+                    self.operations.append(MeasurementNode(qubit=q, clbit=c))
+                    if VERBOSE:
+                        vprint(f"[QiskitASTVisitor] Added measure q[{q}] -> c[{c}]")
+            else:
                 qubit = self._extract_qubit_index(args[0])
                 clbit = self._extract_clbit_index(args[1])
                 self.operations.append(MeasurementNode(qubit=qubit, clbit=clbit))
+                if VERBOSE:
+                    vprint(f"[QiskitASTVisitor] Added measure q[{qubit}] -> c[{clbit}]")
 
-        elif method_name == 'reset':
-            # Reset operation
-            if args:
-                qubit = self._extract_qubit_index(args[0])
-                self.operations.append(ResetNode(qubit=qubit))
+    def _handle_reset_qiskit(self, args: List[ast.expr]) -> None:
+        """Handle reset operations in Qiskit."""
+        if args:
+            if VERBOSE:
+                vprint("[QiskitASTVisitor]   rule=reset -> extract_qubit_index(args[0])")
+            qubit = self._extract_qubit_index(args[0])
+            self.operations.append(ResetNode(qubit=qubit))
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Added reset q[{qubit}]")
 
-        elif method_name == 'barrier':
-            # Barrier operation
-            qubits = []
-            if args:
-                if isinstance(args[0], ast.List):
-                    qubits = [self._extract_qubit_index(item) for item in args[0].elts]
-                else:
-                    qubits = [self._extract_qubit_index(args[0])]
-            self.operations.append(BarrierNode(qubits=qubits))
+    def _handle_barrier_qiskit(self, args: List[ast.expr]) -> None:
+        """Handle barrier operations in Qiskit."""
+        qubits = []
+        if args:
+            if isinstance(args[0], ast.List):
+                qubits = [self._extract_qubit_index(item) for item in args[0].elts]
+            else:
+                qubits = [self._extract_qubit_index(args[0])]
+        self.operations.append(BarrierNode(qubits=qubits))
+        if VERBOSE:
+            vprint(f"[QiskitASTVisitor] Added barrier on {qubits if qubits else 'all qubits'}")
 
     def _extract_qubit_index(self, node: ast.expr) -> int:
         """Extract qubit index from AST node."""
+        if VERBOSE:
+            try:
+                vprint(f"[QiskitASTVisitor]   _extract_qubit_index node={ast.dump(node, include_attributes=False)}")
+            except Exception:
+                vprint("[QiskitASTVisitor]   _extract_qubit_index node=<dump failed>")
         if isinstance(node, ast.Num):
             return node.n
         elif isinstance(node, ast.Constant):  # Python 3.8+
@@ -177,10 +259,20 @@ class QiskitASTVisitor(ast.NodeVisitor):
 
     def _extract_clbit_index(self, node: ast.expr) -> int:
         """Extract classical bit index from AST node."""
+        if VERBOSE:
+            try:
+                vprint(f"[QiskitASTVisitor]   _extract_clbit_index node={ast.dump(node, include_attributes=False)}")
+            except Exception:
+                vprint("[QiskitASTVisitor]   _extract_clbit_index node=<dump failed>")
         return self._extract_qubit_index(node)  # Same logic
 
     def _extract_parameter(self, node: ast.expr) -> Any:
         """Extract parameter value or name from AST node."""
+        if VERBOSE:
+            try:
+                vprint(f"[QiskitASTVisitor]   _extract_parameter node={ast.dump(node, include_attributes=False)}")
+            except Exception:
+                vprint("[QiskitASTVisitor]   _extract_parameter node=<dump failed>")
         if isinstance(node, ast.Num):
             return node.n
         elif isinstance(node, ast.Constant):
@@ -199,6 +291,11 @@ class QiskitASTVisitor(ast.NodeVisitor):
         """Extract mathematical expression as string."""
         # For simplicity, return a placeholder
         # In a full implementation, you'd parse the expression
+        if VERBOSE:
+            try:
+                vprint(f"[QiskitASTVisitor]   _extract_expression node={ast.dump(node, include_attributes=False)}")
+            except Exception:
+                vprint("[QiskitASTVisitor]   _extract_expression node=<dump failed>")
         return "expr"
 
 
@@ -238,10 +335,10 @@ class QiskitASTParser:
             # Parse the source code into AST
             tree = ast.parse(source_code)
             if VERBOSE:
-                logging.info("VERBOSE: Successfully parsed source code into AST")
+                vprint("[QiskitASTParser] Parsed source code into AST")
         except SyntaxError as e:
             if VERBOSE:
-                logging.info(f"VERBOSE: Syntax error during AST parsing: {e}")
+                vprint(f"[QiskitASTParser] Syntax error during AST parsing: {e}")
             raise ValueError(f"Invalid Python syntax in source code: {e}")
 
         # Reset visitor state
@@ -251,9 +348,9 @@ class QiskitASTParser:
         self.visitor.visit(tree)
 
         if VERBOSE:
-            logging.info(f"VERBOSE: Found {len(self.visitor.operations)} operations")
-            logging.info(f"VERBOSE: Circuit has {self.visitor.qubits} qubits and {self.visitor.clbits} clbits")
-            logging.info(f"VERBOSE: Parameters found: {list(self.visitor.parameters)}")
+            vprint(f"[QiskitASTParser] Found operations: {len(self.visitor.operations)}")
+            vprint(f"[QiskitASTParser] Qubits: {self.visitor.qubits}, Clbits: {self.visitor.clbits}")
+            vprint(f"[QiskitASTParser] Parameters: {list(self.visitor.parameters)}")
 
         # Validate that we found a circuit
         if not self.visitor.operations:
@@ -268,7 +365,7 @@ class QiskitASTParser:
         )
 
         if VERBOSE:
-            logging.info("VERBOSE: Successfully created CircuitAST representation")
+            vprint("[QiskitASTParser] Built CircuitAST")
 
         return circuit_ast
 
