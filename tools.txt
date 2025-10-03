@@ -1,14 +1,47 @@
-TypeScript
-React 18
-Tailwind CSS
-Monaco Editor
-D3.js
-Chart.js
+Frontend:
+    Next.js (React Framework)
+    React 18
+    TypeScript
+    Tailwind CSS
+    Monaco Editor (@monaco-editor/react)
+    D3.js (Data Visualization)
+    Chart.js (Charts & Graphs)
+    Lucide React (Icons)
+    Zustand (State Management)
+    React Hot Toast (Notifications)
+    Zod (Schema Validation)
+    Vite (Build Tool & Dev Server)
+    ESLint (Code Linting)
+    PostCSS (CSS Processing)
+    Autoprefixer (CSS Vendor Prefixes)
+    Concurrently (Process Runner)
 
-FastAPI
-Uvicorn (Web Server)
-Pydantic (Data Validation)
-PostgreSQL
-SQLAlchemy
-Alembic (DB Schema Handler)
-Redis (Cache)
+Backend:
+    FastAPI (Web Framework)
+    Uvicorn (ASGI Web Server)
+    Pydantic (Data Validation)
+    WebSockets (Real-time Communication)
+    Cirq (Quantum Computing Framework)
+    Qiskit (Quantum Computing Framework)
+    PennyLane (Quantum Computing Framework)
+    NumPy (Numerical Computing)
+    SciPy (Scientific Computing)
+    Matplotlib (Plotting & Visualization)
+    NetworkX (Graph Theory)
+    Qiskit Aer (Quantum Circuit Simulation)
+
+Database:
+    PostgreSQL (Primary Database)
+    SQLAlchemy (ORM)
+    Alembic (Database Migrations)
+    Redis (Cache & Session Store)
+
+Development & Testing:
+    pytest (Testing Framework)
+    pytest-asyncio (Async Testing)
+    Black (Code Formatting)
+    Flake8 (Code Linting)
+    MyPy (Type Checking)
+    Node.js (>=18.0.0)
+    npm (>=8.0.0)
+    Python (>=3.8)
