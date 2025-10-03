@@ -15,6 +15,10 @@ from typing import Dict, Any, Optional, Union, List
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
+from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode
+from quantum_converters.parsers.cirq_parser import CirqASTParser
+from config.config import VERBOSE, vprint
+import time
 
 # Import Circuit only when needed to avoid dependency issues
 try:
@@ -41,33 +45,54 @@ class CirqToQASM3Converter:
     def _execute_cirq_source(self, source: str) -> 'Circuit':
         """
         Execute Cirq source code and extract the quantum circuit.
-        
+
         Args:
             source (str): Cirq source code defining a get_circuit() function
-            
+
         Returns:
             Circuit: The extracted Cirq quantum circuit
-            
+
         Raises:
             ValueError: If source code doesn't define get_circuit() function
             ImportError: If Cirq is not available
             RuntimeError: If circuit execution fails
         """
+        self._ensure_cirq_available()
+
+        namespace = self._execute_source_code(source)
+
+        # Try different strategies to extract the circuit
+        circuit = (
+            self._try_get_circuit_function(namespace) or
+            self._try_find_circuit_instance(namespace) or
+            self._try_factory_functions(namespace)
+        )
+
+        if circuit is None:
+            raise ValueError(
+                "Could not locate a cirq.Circuit. Define get_circuit() or assign the circuit to a variable."
+            )
+
+        return circuit
+
+    def _ensure_cirq_available(self) -> None:
+        """Ensure Cirq is available, raising ImportError if not."""
         try:
-            import cirq
+            import cirq  # noqa: F401
         except ImportError:
             raise ImportError("Cirq is required but not installed. Please install with: pip install cirq")
-        
-        # Create isolated namespace for executing user code
+
+    def _execute_source_code(self, source: str) -> dict:
+        """Execute the source code in an isolated namespace."""
         namespace = {}
-        
         try:
-            # Execute the source code in the isolated namespace
             exec(compile(source, "<cirq_source>", "exec"), namespace)
         except Exception as e:
             raise RuntimeError(f"Failed to execute Cirq source code: {str(e)}")
-        
-        # Prefer a get_circuit() function if present
+        return namespace
+
+    def _try_get_circuit_function(self, namespace: dict) -> Optional['Circuit']:
+        """Try to get circuit from get_circuit() function."""
         get_circuit = namespace.get("get_circuit")
         if callable(get_circuit):
             try:
@@ -76,8 +101,10 @@ class CirqToQASM3Converter:
                     return circuit
             except Exception as e:
                 raise RuntimeError(f"Failed to execute get_circuit() function: {str(e)}")
+        return None
 
-        # Fallback: search for any cirq.Circuit instances created by the code
+    def _try_find_circuit_instance(self, namespace: dict) -> Optional['Circuit']:
+        """Try to find a Circuit instance in the namespace."""
         try:
             import cirq as _cirq
             for name, obj in namespace.items():
@@ -85,21 +112,21 @@ class CirqToQASM3Converter:
                     return obj
         except Exception:
             pass
+        return None
 
-        # Secondary fallback: try calling simple factory functions
+    def _try_factory_functions(self, namespace: dict) -> Optional['Circuit']:
+        """Try calling factory functions that might create circuits."""
+        import cirq as _cirq
+
         for name, obj in namespace.items():
             if callable(obj) and name.startswith(("create_", "build_", "make_")):
                 try:
                     maybe_circuit = obj()  # type: ignore
-                    import cirq as _cirq
                     if isinstance(maybe_circuit, _cirq.Circuit):
                         return maybe_circuit
                 except Exception:
                     continue
-
-        raise ValueError(
-            "Could not locate a cirq.Circuit. Define get_circuit() or assign the circuit to a variable."
-        )
+        return None
     
     def _analyze_cirq_circuit(self, circuit: 'Circuit') -> ConversionStats:
         """
@@ -153,7 +180,7 @@ class CirqToQASM3Converter:
                 has_measurements=has_measurements
             )
             
-        except Exception as e:
+        except Exception:
             # Return minimal stats if analysis fails
             return ConversionStats(
                 n_qubits=0,
@@ -178,32 +205,53 @@ class CirqToQASM3Converter:
             ImportError: If Cirq dependencies are missing
             RuntimeError: If conversion fails
         """
+        self._ensure_dependencies_available()
+
+        if VERBOSE:
+            vprint("[CirqToQASM3Converter] Building prelude")
+        t0 = time.time()
+
+        builder = QASM3Builder()
+        qubit_map = self._create_qubit_mapping(circuit)
+        has_measurements = self._detect_measurements(circuit)
+
+        self._build_prelude(builder, len(qubit_map), has_measurements)
+        self._add_custom_gates(builder, circuit)
+        self._convert_operations(builder, circuit, qubit_map)
+
+        code = builder.get_code()
+        self._log_conversion_complete(code, t0)
+        return code
+
+    def _ensure_dependencies_available(self) -> None:
+        """Ensure required dependencies are available."""
         try:
-            import cirq
-            import numpy as np
+            import cirq  # noqa: F401
+            import numpy as np  # noqa: F401
         except ImportError:
             raise ImportError("Cirq is required for conversion")
 
-        # Initialize the QASM3 builder
-        builder = QASM3Builder()
-        gate_lib = QASM3GateLibrary()
-
-        # Get all qubits and determine circuit size
+    def _create_qubit_mapping(self, circuit: 'Circuit') -> dict:
+        """Create a mapping from qubits to indices."""
         all_qubits = list(circuit.all_qubits())
-        num_qubits = len(all_qubits)
-        
-        # Create qubit mapping
-        qubit_map = {qubit: i for i, qubit in enumerate(sorted(all_qubits, key=str))}
+        if VERBOSE:
+            vprint(f"[CirqToQASM3Converter] Circuit qubits detected: {len(all_qubits)}")
+        return {qubit: i for i, qubit in enumerate(sorted(all_qubits, key=str))}
 
-        # Check for measurements
-        has_measurements = any(
-            any(hasattr(op.gate, '_measurement_key') or 
-                str(type(op.gate).__name__) == 'MeasurementGate' 
-                for op in moment)
+    def _detect_measurements(self, circuit: 'Circuit') -> bool:
+        """Detect if the circuit contains measurement operations."""
+        return any(
+            any(self._is_measurement_operation(op) for op in moment)
             for moment in circuit
         )
 
-        # Build standard prelude with all registers and variables
+    def _is_measurement_operation(self, operation) -> bool:
+        """Check if an operation is a measurement."""
+        return (hasattr(operation.gate, '_measurement_key') or
+                str(type(operation.gate).__name__) == 'MeasurementGate')
+
+    def _build_prelude(self, builder: QASM3Builder, num_qubits: int, has_measurements: bool) -> None:
+        """Build the QASM prelude with appropriate registers."""
         builder.build_standard_prelude(
             num_qubits=num_qubits,
             num_clbits=num_qubits if has_measurements else 0,
@@ -211,7 +259,8 @@ class CirqToQASM3Converter:
             include_constants=False
         )
 
-        # Extract and define custom gates
+    def _add_custom_gates(self, builder: QASM3Builder, circuit: 'Circuit') -> None:
+        """Add custom gate definitions if any exist."""
         custom_gates = self._extract_custom_gates(circuit)
         if custom_gates:
             builder.add_section_comment("Custom gate definitions")
@@ -219,13 +268,23 @@ class CirqToQASM3Converter:
                 builder.lines.append(gate_def)
             builder.add_blank_line()
 
-        # Convert circuit operations
+    def _convert_operations(self, builder: QASM3Builder, circuit: 'Circuit', qubit_map: dict) -> None:
+        """Convert circuit operations to QASM."""
         builder.add_section_comment("Circuit operations")
+        if VERBOSE:
+            vprint("[CirqToQASM3Converter] Emitting operations")
+
         for moment in circuit:
             for operation in moment:
+                if VERBOSE:
+                    vprint(f"[CirqToQASM3Converter] Op: {type(operation.gate).__name__} on {[str(q) for q in operation.qubits]}")
                 self._add_cirq_operation(builder, operation, qubit_map)
 
-        return builder.get_code()
+    def _log_conversion_complete(self, code: str, start_time: float) -> None:
+        """Log completion of conversion."""
+        if VERBOSE:
+            vprint("[CirqToQASM3Converter] QASM generated, length:", len(code))
+            vprint(f"[CirqToQASM3Converter] Build done in {(time.time()-start_time)*1000:.1f} ms")
 
     def _extract_custom_gates(self, circuit: 'Circuit') -> list:
         """Extract custom gate definitions from the circuit."""
@@ -342,6 +401,67 @@ class CirqToQASM3Converter:
         else:
             builder.add_comment(f"Unsupported gate: {type(gate).__name__}")
         
+    def _analyze_circuit_ast(self, circuit_ast: CircuitAST) -> ConversionStats:
+        try:
+            return ConversionStats(
+                n_qubits=circuit_ast.qubits,
+                depth=circuit_ast.get_depth(),
+                n_moments=circuit_ast.get_depth(),
+                gate_counts=circuit_ast.get_gate_count(),
+                has_measurements=circuit_ast.has_measurements(),
+            )
+        except Exception:
+            return ConversionStats(n_qubits=0, depth=None, n_moments=None, gate_counts=None, has_measurements=False)
+
+    def _add_ast_operation(self, builder: QASM3Builder, operation):
+        if isinstance(operation, GateNode):
+            gate_name = operation.name
+            qubits_str = [f"q[{i}]" for i in operation.qubits]
+            modifiers = operation.modifiers if operation.modifiers else None
+            if gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id']:
+                builder.apply_gate(gate_name, qubits_str, modifiers=modifiers)
+            elif gate_name in ['rx', 'ry', 'rz']:
+                if operation.parameters:
+                    param = builder.format_parameter(operation.parameters[0])
+                    builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers)
+                else:
+                    builder.add_comment(f"Parameterized gate {gate_name} missing parameter")
+            elif gate_name in ['cx', 'cnot', 'cz', 'cy', 'ch', 'swap']:
+                builder.apply_gate('cx' if gate_name == 'cnot' else gate_name, qubits_str, modifiers=modifiers)
+            elif gate_name == 'gphase':
+                if operation.parameters:
+                    param = builder.format_parameter(operation.parameters[0])
+                    builder.apply_gate('gphase', [], parameters=[param])
+            else:
+                builder.add_comment(f"Unsupported gate: {gate_name}")
+        elif isinstance(operation, MeasurementNode):
+            builder.add_measurement(f"q[{operation.qubit}]", f"c[{operation.clbit}]")
+        elif isinstance(operation, ResetNode):
+            builder.add_reset(f"q[{operation.qubit}]")
+        elif isinstance(operation, BarrierNode):
+            if operation.qubits:
+                builder.add_barrier([f"q[{i}]" for i in operation.qubits])
+            else:
+                builder.add_barrier(None)
+
+    def _convert_ast_to_qasm3(self, circuit_ast: CircuitAST) -> str:
+        builder = QASM3Builder()
+        builder.build_standard_prelude(
+            num_qubits=circuit_ast.qubits,
+            num_clbits=circuit_ast.clbits,
+            include_vars=False,
+            include_constants=False,
+        )
+        if circuit_ast.parameters:
+            builder.add_section_comment("Circuit parameters")
+            for param_name in circuit_ast.parameters:
+                builder.declare_variable(param_name, 'float')
+            builder.add_blank_line()
+        builder.add_section_comment("Circuit operations")
+        for op in circuit_ast.operations:
+            self._add_ast_operation(builder, op)
+        return builder.get_code()
+
     def convert(self, cirq_source: str) -> ConversionResult:
         """
         Convert Cirq source code to OpenQASM 3.0 format.
@@ -374,15 +494,24 @@ class CirqToQASM3Converter:
             >>> result = converter.convert(source)
             >>> print(f"Circuit has {result.stats.n_qubits} qubits and {result.stats.depth} moments")
         """
-        # Execute source code and extract circuit
+        # Try AST-based path first (secure, no execution)
+        try:
+            if VERBOSE:
+                vprint("[CirqToQASM3Converter] Attempt AST-based conversion")
+            parser = CirqASTParser()
+            circuit_ast = parser.parse(cirq_source)
+            stats = self._analyze_circuit_ast(circuit_ast)
+            qasm3_program = self._convert_ast_to_qasm3(circuit_ast)
+            return ConversionResult(qasm_code=qasm3_program, stats=stats)
+        except Exception:
+            pass
+
+        # Fallback: execute source to obtain cirq.Circuit
+        if VERBOSE:
+            vprint("[CirqToQASM3Converter] AST failed, fallback to runtime execution path")
         circuit = self._execute_cirq_source(cirq_source)
-        
-        # Analyze the circuit
         stats = self._analyze_cirq_circuit(circuit)
-        
-        # Convert to OpenQASM 3.0
         qasm3_program = self._convert_to_qasm3(circuit)
-        
         return ConversionResult(qasm_code=qasm3_program, stats=stats)
 
 

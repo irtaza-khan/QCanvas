@@ -15,7 +15,10 @@ from typing import Dict, Any, Optional, Union
 from qiskit import QuantumCircuit
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
-from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
+from config.config import VERBOSE, vprint
+from quantum_converters.base.circuit_ast import GateNode, MeasurementNode, ResetNode, BarrierNode
+import time
+from quantum_converters.base.qasm3_gates import QASM3GateLibrary
 from quantum_converters.parsers.qiskit_parser import QiskitASTParser
 
 class QiskitToQASM3Converter:
@@ -38,33 +41,56 @@ class QiskitToQASM3Converter:
     def _execute_qiskit_source(self, source: str) -> 'QuantumCircuit':
         """
         Execute Qiskit source code and extract the quantum circuit.
-        
+
         Args:
             source (str): Qiskit source code defining a get_circuit() function
-            
+
         Returns:
             QuantumCircuit: The extracted Qiskit quantum circuit
-            
+
         Raises:
             ValueError: If source code doesn't define get_circuit() function
             ImportError: If Qiskit is not available
             RuntimeError: If circuit execution fails
         """
+        self._ensure_qiskit_available()
+
+        namespace = self._execute_source_code(source)
+
+        # Try different strategies to extract the circuit
+        circuit = (
+            self._try_get_circuit_function(namespace) or
+            self._try_find_circuit_instance(namespace) or
+            self._try_factory_functions(namespace)
+        )
+
+        if circuit is None:
+            raise ValueError(
+                "Could not locate a QuantumCircuit. Define get_circuit() or assign the circuit to a variable."
+            )
+
+        return circuit
+
+    def _ensure_qiskit_available(self) -> None:
+        """Ensure Qiskit is available, raising ImportError if not."""
         try:
-            from qiskit import QuantumCircuit
+            import qiskit  # noqa: F401
         except ImportError:
             raise ImportError("Qiskit is required but not installed. Please install with: pip install qiskit")
-        
-        # Create isolated namespace for executing user code
+
+    def _execute_source_code(self, source: str) -> dict:
+        """Execute the source code in an isolated namespace."""
         namespace = {}
-        
         try:
-            # Execute the source code in the isolated namespace
             exec(compile(source, "<qiskit_source>", "exec"), namespace)
         except Exception as e:
             raise RuntimeError(f"Failed to execute Qiskit source code: {str(e)}")
-        
-        # Prefer a get_circuit() function if present
+        return namespace
+
+    def _try_get_circuit_function(self, namespace: dict) -> Optional['QuantumCircuit']:
+        """Try to get circuit from get_circuit() function."""
+        from qiskit import QuantumCircuit
+
         get_circuit = namespace.get("get_circuit")
         if callable(get_circuit):
             try:
@@ -72,19 +98,25 @@ class QiskitToQASM3Converter:
                 if isinstance(circuit, QuantumCircuit):
                     return circuit
             except Exception as e:
-                # If explicit getter exists but fails, surface the error
                 raise RuntimeError(f"Failed to execute get_circuit() function: {str(e)}")
+        return None
 
-        # Fallback: search for any QuantumCircuit instances created by the code
+    def _try_find_circuit_instance(self, namespace: dict) -> Optional['QuantumCircuit']:
+        """Try to find a QuantumCircuit instance in the namespace."""
+        from qiskit import QuantumCircuit
+
         try:
             for name, obj in namespace.items():
                 if isinstance(obj, QuantumCircuit):
                     return obj
         except Exception:
             pass
+        return None
 
-        # Secondary fallback: try calling simple factory functions with no parameters
-        # or with a single integer parameter commonly named n or n_qubits
+    def _try_factory_functions(self, namespace: dict) -> Optional['QuantumCircuit']:
+        """Try calling factory functions that might create circuits."""
+        from qiskit import QuantumCircuit
+
         for name, obj in namespace.items():
             if callable(obj) and name.startswith(("create_", "build_", "make_")):
                 try:
@@ -103,10 +135,7 @@ class QiskitToQASM3Converter:
                             continue
                 except Exception:
                     continue
-
-        raise ValueError(
-            "Could not locate a QuantumCircuit. Define get_circuit() or assign the circuit to a variable."
-        )
+        return None
     
     def _analyze_qiskit_circuit(self, qc: 'QuantumCircuit') -> ConversionStats:
         """
@@ -130,11 +159,7 @@ class QiskitToQASM3Converter:
             except Exception:
                 depth = None
             
-            # Check for parameters
-            try:
-                has_parameters = bool(getattr(qc, "parameters", []))
-            except Exception:
-                has_parameters = False
+            # Check for parameters (not used in return, but kept for potential future use)
             
             # Get basis gates and count them
             try:
@@ -158,7 +183,7 @@ class QiskitToQASM3Converter:
                 has_measurements=has_measurements
             )
             
-        except Exception as e:
+        except Exception:
             # Return minimal stats if analysis fails
             return ConversionStats(
                 n_qubits=0,
@@ -190,19 +215,15 @@ class QiskitToQASM3Converter:
             raise ImportError("Qiskit is required for conversion")
 
         # Initialize the QASM3 builder
+        if VERBOSE:
+            vprint("[QiskitToQASM3Converter] Building prelude")
         builder = QASM3Builder()
-        gate_lib = QASM3GateLibrary()
 
         # Get circuit dimensions
         num_qubits = qc.num_qubits
         num_clbits = qc.num_clbits
 
         # Build standard prelude - include constants/vars for advanced features
-        # Check if circuit has parameters or complex features
-        has_parameters = bool(qc.parameters)
-        has_measurements = any(instr.operation.name == 'measure' for instr in qc.data)
-        has_advanced_ops = any(instr.operation.name in ['barrier', 'reset'] for instr in qc.data)
-        has_advanced_features = has_parameters or has_advanced_ops or has_measurements
         
         builder.build_standard_prelude(
             num_qubits=num_qubits,
@@ -231,6 +252,8 @@ class QiskitToQASM3Converter:
         
         # Convert circuit instructions
         builder.add_section_comment("Circuit operations")
+        if VERBOSE:
+            vprint("[QiskitToQASM3Converter] Emitting operations")
         for circuit_instruction in qc.data:
             # Use modern Qiskit 1.2+ named attributes
             instruction = circuit_instruction.operation
@@ -240,9 +263,12 @@ class QiskitToQASM3Converter:
         
         # No demo control flow; emit only operations present in the source circuit
 
-        return builder.get_code()
+        code = builder.get_code()
+        if VERBOSE:
+            vprint("[QiskitToQASM3Converter] QASM generated, length:", len(code))
+        return code
 
-    def _extract_custom_gates(self, qc: 'QuantumCircuit') -> list:
+    def _extract_custom_gates(self, _qc: 'QuantumCircuit') -> list:
         """Extract custom gate definitions from the circuit."""
         custom_gates = []
         # This is a simplified implementation - in a full implementation,
@@ -252,7 +278,7 @@ class QiskitToQASM3Converter:
     def _add_qiskit_operation(self, builder: QASM3Builder, instruction, qargs, cargs, qc):
         """Add a Qiskit operation to the QASM builder."""
         import numpy as np
-        
+
         gate_name = instruction.name.lower()
 
         # Get qubit and clbit indices
@@ -261,52 +287,205 @@ class QiskitToQASM3Converter:
         clbit_indices = [qc.clbits.index(c) for c in cargs] if cargs else []
 
         # Detect gate modifiers
+        modifiers = self._detect_gate_modifiers(gate_name)
+
+        # Route to appropriate handler based on gate type
+        if gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'id', 'i']:
+            self._handle_single_qubit_gate(builder, gate_name, qubits_str, modifiers)
+        elif gate_name in ['rx', 'ry', 'rz', 'p']:
+            self._handle_parameterized_single_qubit_gate(builder, gate_name, instruction, qubits_str, modifiers)
+        elif gate_name == 'u':
+            self._handle_universal_gate(builder, instruction, qubits_str, modifiers)
+        elif gate_name in ['cx', 'cnot', 'cz', 'cy', 'ch', 'swap']:
+            self._handle_two_qubit_gate(builder, gate_name, qubits_str, modifiers)
+        elif gate_name in ['cp', 'crx', 'cry', 'crz']:
+            self._handle_controlled_parametric_gate(builder, gate_name, instruction, qubits_str, modifiers)
+        elif gate_name == 'gphase':
+            self._handle_global_phase(builder, instruction)
+        elif gate_name in ['ccx', 'toffoli']:
+            self._handle_toffoli_gate(builder, qubits_str, modifiers)
+        elif gate_name == 'ccz':
+            self._handle_ccz_gate(builder, qubits_str, modifiers)
+        elif gate_name in ['cswap', 'fredkin']:
+            self._handle_fredkin_gate(builder, qubits_str, modifiers)
+        elif gate_name == 'measure':
+            self._handle_measurement(builder, qubits_str, clbit_indices)
+        elif gate_name == 'reset':
+            self._handle_reset(builder, qubits_str)
+        elif gate_name == 'barrier':
+            self._handle_barrier(builder, qubits_str)
+        else:
+            builder.add_comment(f"Unsupported gate: {gate_name}")
+
+    def _detect_gate_modifiers(self, gate_name: str) -> dict:
+        """Detect gate modifiers from gate name."""
         modifiers = {}
-        
+
         # Check for inverse gates (gates ending with 'dg')
         if gate_name.endswith('dg'):
             modifiers['inv'] = True
-            # Remove 'dg' suffix to get base gate
-            base_gate = gate_name[:-2]  # sdg -> s, tdg -> t
-            gate_name = base_gate
+            gate_name = gate_name[:-2]  # Remove 'dg' suffix
 
-        # Handle different gate types
-        if gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'id', 'i']:
-            builder.apply_gate(gate_name, qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['rx', 'ry', 'rz', 'p']:
-            param = builder.format_parameter(instruction.params[0])
-            builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
-        elif gate_name == 'u':
-            theta = builder.format_parameter(instruction.params[0])
-            phi = builder.format_parameter(instruction.params[1])
-            lam = builder.format_parameter(instruction.params[2])
-            builder.apply_gate('u', qubits_str, parameters=[theta, phi, lam], modifiers=modifiers if modifiers else None)
-        elif gate_name in ['cx', 'cnot', 'cz', 'cy', 'ch', 'swap']:
-            builder.apply_gate('cx' if gate_name == 'cnot' else gate_name, qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name == 'cp':
-            param = builder.format_parameter(instruction.params[0])
-            builder.apply_gate('cp', qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
-        elif gate_name in ['crx', 'cry', 'crz']:
-            param = builder.format_parameter(instruction.params[0])
-            builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
-        elif gate_name == 'gphase':
-            param = builder.format_parameter(instruction.params[0])
-            builder.apply_gate('gphase', [], parameters=[param])
-        elif gate_name in ['ccx', 'toffoli']:
-            builder.apply_gate('ccx', qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name == 'ccz':
-            builder.apply_gate('ccz', qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['cswap', 'fredkin']:
-            builder.apply_gate('cswap', qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name == 'measure':
+        return modifiers
+
+    def _handle_single_qubit_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list, modifiers: dict):
+        """Handle single-qubit gates without parameters."""
+        builder.apply_gate(gate_name, qubits_str, modifiers=modifiers if modifiers else None)
+
+    def _handle_parameterized_single_qubit_gate(self, builder: QASM3Builder, gate_name: str, instruction, qubits_str: list, modifiers: dict):
+        """Handle parameterized single-qubit gates."""
+        param = builder.format_parameter(instruction.params[0])
+        builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
+
+    def _handle_universal_gate(self, builder: QASM3Builder, instruction, qubits_str: list, modifiers: dict):
+        """Handle universal U gate."""
+        theta = builder.format_parameter(instruction.params[0])
+        phi = builder.format_parameter(instruction.params[1])
+        lam = builder.format_parameter(instruction.params[2])
+        builder.apply_gate('u', qubits_str, parameters=[theta, phi, lam], modifiers=modifiers if modifiers else None)
+
+    def _handle_two_qubit_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list, modifiers: dict):
+        """Handle two-qubit gates."""
+        actual_gate = 'cx' if gate_name == 'cnot' else gate_name
+        builder.apply_gate(actual_gate, qubits_str, modifiers=modifiers if modifiers else None)
+
+    def _handle_controlled_parametric_gate(self, builder: QASM3Builder, gate_name: str, instruction, qubits_str: list, modifiers: dict):
+        """Handle controlled parametric gates."""
+        param = builder.format_parameter(instruction.params[0])
+        builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
+
+    def _handle_global_phase(self, builder: QASM3Builder, instruction):
+        """Handle global phase gate."""
+        param = builder.format_parameter(instruction.params[0])
+        builder.apply_gate('gphase', [], parameters=[param])
+
+    def _handle_toffoli_gate(self, builder: QASM3Builder, qubits_str: list, modifiers: dict):
+        """Handle Toffoli gate."""
+        builder.apply_gate('ccx', qubits_str, modifiers=modifiers if modifiers else None)
+
+    def _handle_ccz_gate(self, builder: QASM3Builder, qubits_str: list, modifiers: dict):
+        """Handle CCZ gate."""
+        builder.apply_gate('ccz', qubits_str, modifiers=modifiers if modifiers else None)
+
+    def _handle_fredkin_gate(self, builder: QASM3Builder, qubits_str: list, modifiers: dict):
+        """Handle Fredkin gate."""
+        builder.apply_gate('cswap', qubits_str, modifiers=modifiers if modifiers else None)
+
+    def _handle_measurement(self, builder: QASM3Builder, qubits_str: list, clbit_indices: list):
+        """Handle measurement operations."""
+        if clbit_indices:
             builder.add_measurement(qubits_str[0], f"c[{clbit_indices[0]}]")
-        elif gate_name == 'reset':
-            builder.add_reset(qubits_str[0])
-        elif gate_name == 'barrier':
-            builder.add_barrier(qubits_str if qubits_str else None)
-        else:
-            builder.add_comment(f"Unsupported gate: {gate_name}")
+
+    def _handle_reset(self, builder: QASM3Builder, qubits_str: list):
+        """Handle reset operations."""
+        builder.add_reset(qubits_str[0])
+
+    def _handle_barrier(self, builder: QASM3Builder, qubits_str: list):
+        """Handle barrier operations."""
+        builder.add_barrier(qubits_str if qubits_str else None)
     
+    def _analyze_circuit_ast(self, circuit_ast) -> ConversionStats:
+        try:
+            return ConversionStats(
+                n_qubits=circuit_ast.qubits,
+                depth=circuit_ast.get_depth(),
+                n_moments=circuit_ast.get_depth(),
+                gate_counts=circuit_ast.get_gate_count(),
+                has_measurements=circuit_ast.has_measurements(),
+            )
+        except Exception:
+            return ConversionStats(n_qubits=0, depth=None, n_moments=None, gate_counts=None, has_measurements=False)
+
+    def _convert_ast_to_qasm3(self, circuit_ast) -> str:
+        t0 = time.time()
+        builder = QASM3Builder()
+
+        self._build_ast_prelude(builder, circuit_ast)
+        self._convert_ast_operations(builder, circuit_ast)
+
+        code = builder.get_code()
+        self._log_ast_conversion_complete(code, t0)
+        return code
+
+    def _build_ast_prelude(self, builder: QASM3Builder, circuit_ast) -> None:
+        """Build the QASM prelude for AST conversion."""
+        builder.build_standard_prelude(
+            num_qubits=circuit_ast.qubits,
+            num_clbits=circuit_ast.clbits,
+            include_vars=False,
+            include_constants=False,
+        )
+
+        if circuit_ast.parameters:
+            builder.add_section_comment("Circuit parameters")
+            for param_name in circuit_ast.parameters:
+                builder.declare_variable(param_name, 'float')
+            builder.add_blank_line()
+
+    def _convert_ast_operations(self, builder: QASM3Builder, circuit_ast) -> None:
+        """Convert AST operations to QASM."""
+        builder.add_section_comment("Circuit operations")
+
+        for idx, op in enumerate(circuit_ast.operations):
+            if isinstance(op, GateNode):
+                self._convert_gate_node(builder, idx, op)
+            elif isinstance(op, MeasurementNode):
+                self._convert_measurement_node(builder, idx, op)
+            elif isinstance(op, ResetNode):
+                self._convert_reset_node(builder, idx, op)
+            elif isinstance(op, BarrierNode):
+                self._convert_barrier_node(builder, idx, op)
+            else:
+                builder.add_comment("Unsupported AST operation")
+
+    def _convert_gate_node(self, builder: QASM3Builder, idx: int, op: GateNode) -> None:
+        """Convert a gate node to QASM."""
+        qubits_str = [f"q[{i}]" for i in op.qubits]
+        name = op.name
+
+        if VERBOSE:
+            vprint(f"[QiskitToQASM3Converter] [{idx}] GateNode name={name} qubits={op.qubits} params={op.parameters} modifiers={getattr(op, 'modifiers', None)}")
+
+        if name in ['h','x','y','z','s','t','sx','id','i','swap','cx','cz','ccx']:
+            actual_name = 'cx' if name == 'cnot' else name
+            builder.apply_gate(actual_name, qubits_str)
+        elif name in ['rx','ry','rz','p','u']:
+            raw_params = (op.parameters or [])
+            params = [builder.format_parameter(p) for p in raw_params]
+            if VERBOSE:
+                vprint(f"[QiskitToQASM3Converter]     params_raw={raw_params} params_fmt={params}")
+            builder.apply_gate(name, qubits_str, parameters=params)
+        else:
+            builder.add_comment(f"Unsupported gate: {name}")
+
+    def _convert_measurement_node(self, builder: QASM3Builder, idx: int, op: MeasurementNode) -> None:
+        """Convert a measurement node to QASM."""
+        if VERBOSE:
+            vprint(f"[QiskitToQASM3Converter] [{idx}] Measurement q[{op.qubit}] -> c[{op.clbit}]")
+        builder.add_measurement(f"q[{op.qubit}]", f"c[{op.clbit}]")
+
+    def _convert_reset_node(self, builder: QASM3Builder, idx: int, op: ResetNode) -> None:
+        """Convert a reset node to QASM."""
+        if VERBOSE:
+            vprint(f"[QiskitToQASM3Converter] [{idx}] Reset q[{op.qubit}]")
+        builder.add_reset(f"q[{op.qubit}]")
+
+    def _convert_barrier_node(self, builder: QASM3Builder, idx: int, op: BarrierNode) -> None:
+        """Convert a barrier node to QASM."""
+        if op.qubits:
+            if VERBOSE:
+                vprint(f"[QiskitToQASM3Converter] [{idx}] Barrier on {op.qubits}")
+            builder.add_barrier([f"q[{i}]" for i in op.qubits])
+        else:
+            if VERBOSE:
+                vprint(f"[QiskitToQASM3Converter] [{idx}] Barrier on all qubits")
+            builder.add_barrier(None)
+
+    def _log_ast_conversion_complete(self, code: str, start_time: float) -> None:
+        """Log completion of AST conversion."""
+        if VERBOSE:
+            vprint(f"[QiskitToQASM3Converter] Build done in {(time.time()-start_time)*1000:.1f} ms")
+
     def convert(self, qiskit_source: str) -> ConversionResult:
         """
         Convert Qiskit source code to OpenQASM 3.0 format using AST-based parsing.
@@ -340,16 +519,30 @@ class QiskitToQASM3Converter:
             >>> result = converter.convert(source)
             >>> print(f"Circuit has {result.stats.n_qubits} qubits and depth {result.stats.depth}")
         """
-        # Parse source code using AST parser (secure, no execution)
-        parser = QiskitASTParser()
-        circuit_ast = parser.parse(qiskit_source)
-        
-        # Analyze the parsed circuit AST
-        stats = self._analyze_circuit_ast(circuit_ast)
-        
-        # Convert AST to OpenQASM 3.0
-        qasm3_program = self._convert_ast_to_qasm3(circuit_ast)
-        
+        # Try AST-based conversion first
+        if VERBOSE:
+            vprint("[QiskitToQASM3Converter] Attempt AST-based conversion")
+        try:
+            parser = QiskitASTParser()
+            t_parse = time.time()
+            circuit_ast = parser.parse(qiskit_source)
+            if VERBOSE:
+                vprint(f"[QiskitToQASM3Converter] AST parsed in {(time.time()-t_parse)*1000:.1f} ms")
+            t_ana = time.time()
+            stats = self._analyze_circuit_ast(circuit_ast)
+            if VERBOSE:
+                vprint(f"[QiskitToQASM3Converter] AST analyzed in {(time.time()-t_ana)*1000:.1f} ms")
+            qasm3_program = self._convert_ast_to_qasm3(circuit_ast)
+            return ConversionResult(qasm_code=qasm3_program, stats=stats)
+        except Exception:
+            pass
+
+        # Fallback: execute and use runtime circuit to QASM
+        if VERBOSE:
+            vprint("[QiskitToQASM3Converter] AST failed, fallback to runtime execution path")
+        qc = self._execute_qiskit_source(qiskit_source)
+        stats = self._analyze_qiskit_circuit(qc)
+        qasm3_program = self._convert_to_qasm3(qc)
         return ConversionResult(qasm_code=qasm3_program, stats=stats)
 
 

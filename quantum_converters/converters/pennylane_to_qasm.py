@@ -11,10 +11,14 @@ Version: 2.0.0 - Integrated with QASM3Builder
 """
 import numpy as np
 import re
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
+from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode
+from quantum_converters.parsers.pennylane_parser import PennyLaneASTParser
+from config.config import VERBOSE, vprint
+import time
 
 class PennyLaneToQASM3Converter:
     """
@@ -342,6 +346,62 @@ class PennyLaneToQASM3Converter:
         else:
             builder.apply_gate(qasm_gate, qubits_str)
     
+    # ===== AST-based path (primary) =====
+    def _analyze_circuit_ast(self, circuit_ast: CircuitAST) -> ConversionStats:
+        try:
+            return ConversionStats(
+                n_qubits=circuit_ast.qubits,
+                depth=circuit_ast.get_depth(),
+                n_moments=circuit_ast.get_depth(),
+                gate_counts=circuit_ast.get_gate_count(),
+                has_measurements=circuit_ast.has_measurements()
+            )
+        except Exception:
+            return ConversionStats(n_qubits=0, depth=None, n_moments=None, gate_counts=None, has_measurements=False)
+
+    def _add_ast_operation(self, builder: QASM3Builder, operation):
+        if isinstance(operation, GateNode):
+            qubits_str = [f"q[{i}]" for i in operation.qubits]
+            modifiers = operation.modifiers if operation.modifiers else None
+            name = operation.name
+            if name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id', 'swap', 'cx', 'cz', 'ccx']:
+                builder.apply_gate(name, qubits_str, modifiers=modifiers)
+            elif name in ['rx', 'ry', 'rz', 'p']:
+                if operation.parameters:
+                    param = builder.format_parameter(operation.parameters[0])
+                    builder.apply_gate(name, qubits_str, parameters=[param], modifiers=modifiers)
+                else:
+                    builder.add_comment(f"Parameterized gate {name} missing parameter")
+            else:
+                builder.add_comment(f"Unsupported gate: {name}")
+        elif isinstance(operation, MeasurementNode):
+            builder.add_measurement(f"q[{operation.qubit}]", f"c[{operation.clbit}]")
+        elif isinstance(operation, ResetNode):
+            builder.add_reset(f"q[{operation.qubit}]")
+        elif isinstance(operation, BarrierNode):
+            if operation.qubits:
+                builder.add_barrier([f"q[{i}]" for i in operation.qubits])
+            else:
+                builder.add_barrier(None)
+
+    def _convert_ast_to_qasm3(self, circuit_ast: CircuitAST) -> str:
+        builder = QASM3Builder()
+        builder.build_standard_prelude(
+            num_qubits=circuit_ast.qubits,
+            num_clbits=circuit_ast.clbits,
+            include_vars=False,
+            include_constants=False
+        )
+        if circuit_ast.parameters:
+            builder.add_section_comment("Circuit parameters")
+            for param_name in circuit_ast.parameters:
+                builder.declare_variable(param_name, 'float')
+            builder.add_blank_line()
+        builder.add_section_comment("Circuit operations")
+        for op in circuit_ast.operations:
+            self._add_ast_operation(builder, op)
+        return builder.get_code()
+
     def convert(self, pennylane_code: str) -> ConversionResult:
         """
         Convert PennyLane quantum circuit code to OpenQASM 3.0 format with statistics.
@@ -355,30 +415,29 @@ class PennyLaneToQASM3Converter:
         Raises:
             ValueError: If the input code cannot be parsed or contains unsupported operations
         """
+        # First try AST-based conversion (preferred)
+        ast_result = self._try_ast_conversion(pennylane_code)
+        if ast_result is not None:
+            return ast_result
+
         try:
-            # Extract circuit information from PennyLane code
+            # Legacy path: Extract circuit information from PennyLane code
             circuit_info = self._extract_circuit_info(pennylane_code)
             num_qubits = circuit_info['num_qubits']
             operations = circuit_info['operations']
 
             # Detect common loop patterns to expand dynamic wires
-            has_loop_i_n = 'for i in range(n_qubits):' in pennylane_code or 'for i in range(n_qubits):' in pennylane_code
-            has_loop_i_n_minus_1 = 'for i in range(n_qubits - 1):' in pennylane_code or 'for i in range(n_qubits-1):' in pennylane_code
-            # Layers for QAOA-like circuits
-            p_default = 2
-            has_layer_loop = 'for layer in range(p):' in pennylane_code
-            # Try to detect default p from function signature `p=2`
-            try:
-                import re as _re
-                m = _re.search(r'p\s*=\s*(\d+)', pennylane_code)
-                if m:
-                    p_default = int(m.group(1))
-            except Exception:
-                pass
+            loop_info = self._detect_loop_patterns(pennylane_code)
+            has_loop_i_n = loop_info['has_loop_i_n']
+            has_loop_i_n_minus_1 = loop_info['has_loop_i_n_minus_1']
+            has_layer_loop = loop_info['has_layer_loop']
+            p_default = loop_info['p_default']
             
             # Initialize the QASM3 builder
+            if VERBOSE:
+                vprint("[PennyLaneToQASM3Converter] Legacy path: building prelude and emitting operations")
+            t0 = time.time()
             builder = QASM3Builder()
-            gate_lib = QASM3GateLibrary()
 
             # Check if measurements exist
             has_measurements = any('measure' in op.lower() for op in operations)
@@ -411,6 +470,8 @@ class PennyLaneToQASM3Converter:
             
             # Convert each PennyLane operation to OpenQASM 3.0 and collect stats
             for op_line in operations:
+                if VERBOSE:
+                    vprint(f"[PennyLaneToQASM3Converter] Processing line: {op_line}")
                 expanded_lines = [op_line]
 
                 # Expand loops over i when wires use i
@@ -436,6 +497,8 @@ class PennyLaneToQASM3Converter:
                     final_lines = expanded_lines
 
                 for line in final_lines:
+                    if VERBOSE:
+                        vprint(f"[PennyLaneToQASM3Converter] Emitting op from: {line}")
                     parsed_op = self._parse_operation(line, num_qubits)
                     self._add_pennylane_operation(builder, parsed_op)
                     
@@ -474,13 +537,55 @@ class PennyLaneToQASM3Converter:
             )
             
             # Create and return the result object
+            code = builder.get_code()
+            if VERBOSE:
+                vprint("[PennyLaneToQASM3Converter] QASM generated (legacy), length:", len(code))
+                vprint(f"[PennyLaneToQASM3Converter] Legacy build done in {(time.time()-t0)*1000:.1f} ms")
             return ConversionResult(
-                qasm_code=builder.get_code(),
+                qasm_code=code,
                 stats=stats
             )
             
         except Exception as e:
             raise ValueError(f"Failed to convert PennyLane code to OpenQASM 3.0: {str(e)}")
+
+    def _try_ast_conversion(self, pennylane_code: str) -> Optional[ConversionResult]:
+        """Try AST-based conversion, return None if it fails."""
+        try:
+            if VERBOSE:
+                vprint("[PennyLaneToQASM3Converter] Attempt AST-based conversion")
+            parser = PennyLaneASTParser()
+            t_parse = time.time()
+            circuit_ast = parser.parse(pennylane_code)
+            if VERBOSE:
+                vprint(f"[PennyLaneToQASM3Converter] AST parsed in {(time.time()-t_parse)*1000:.1f} ms; analyzing AST")
+            t_ana = time.time()
+            stats = self._analyze_circuit_ast(circuit_ast)
+            if VERBOSE:
+                vprint(f"[PennyLaneToQASM3Converter] AST analyzed in {(time.time()-t_ana)*1000:.1f} ms")
+            qasm = self._convert_ast_to_qasm3(circuit_ast)
+            return ConversionResult(qasm_code=qasm, stats=stats)
+        except Exception:
+            return None
+
+    def _detect_loop_patterns(self, pennylane_code: str) -> dict:
+        """Detect common loop patterns in the code."""
+        p_default = self._extract_default_p(pennylane_code)
+        return {
+            'has_loop_i_n': 'for i in range(n_qubits):' in pennylane_code or 'for i in range(n_qubits):' in pennylane_code,
+            'has_loop_i_n_minus_1': 'for i in range(n_qubits - 1):' in pennylane_code or 'for i in range(n_qubits-1):' in pennylane_code,
+            'has_layer_loop': 'for layer in range(p):' in pennylane_code,
+            'p_default': p_default
+        }
+
+    def _extract_default_p(self, pennylane_code: str) -> int:
+        """Extract default p value from function signature."""
+        try:
+            import re as _re
+            m = _re.search(r'p\s*=\s*(\d+)', pennylane_code)
+            return int(m.group(1)) if m else 2
+        except Exception:
+            return 2
 
 
 # Public API function for easy module usage
