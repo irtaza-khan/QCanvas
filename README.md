@@ -20,7 +20,7 @@ QCanvas is a modern, web-based quantum computing platform that bridges the gap b
 
 ```
 QCanvas/
-├── frontend/          # Next.js-based web interface (UI, routing, simple operations)
+├── frontend/           # Next.js-based web interface (UI, routing, simple operations)
 ├── backend/           # FastAPI REST API and WebSocket server (complex simulations)
 ├── quantum_converters/ # Framework conversion modules
 ├── quantum_simulator/  # Quantum simulation engine
