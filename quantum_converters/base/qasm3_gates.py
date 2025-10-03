@@ -14,7 +14,7 @@ Date: 2025-09-30
 Version: 1.0.0
 """
 
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any, Tuple, Union
 from dataclasses import dataclass
 import numpy as np
 
@@ -171,47 +171,59 @@ class QASM3GateLibrary:
     def format_parameter(self, param: Any) -> str:
         """
         Format a gate parameter value.
-        
+
         Args:
             param: Parameter value
-            
+
         Returns:
             Formatted parameter string
         """
         if isinstance(param, str):
             return param
-            
+
         if isinstance(param, (int, float)):
-            # Handle numpy types
-            if hasattr(param, 'item'):
-                param = param.item()
-                
-            if isinstance(param, float):
-                # Check for common constants
-                if abs(param - np.pi) < 1e-10:
-                    return "PI"
-                elif abs(param - np.pi/2) < 1e-10:
-                    return "PI_2"
-                elif abs(param - np.pi/4) < 1e-10:
-                    return "PI_4"
-                elif abs(param - 2*np.pi) < 1e-10:
-                    return "TAU"
-                elif abs(param - np.e) < 1e-10:
-                    return "E"
-                elif abs(param - 3*np.pi/4) < 1e-10:
-                    return "3*PI_4"
-                elif abs(param - np.pi/3) < 1e-10:
-                    return "PI/3"
-                elif abs(param - np.pi/6) < 1e-10:
-                    return "PI/6"
-                elif abs(param) < 1e-10:
-                    return "0"
-                else:
-                    return f"{param:.10g}"
-            else:
-                return str(param)
-        
+            return self._format_numeric_parameter(param)
+
         return str(param)
+
+    def _format_numeric_parameter(self, param: Union[int, float]) -> str:
+        """Format numeric parameters, handling numpy types and constants."""
+        # Handle numpy types
+        if hasattr(param, 'item'):
+            param = param.item()
+
+        if isinstance(param, float):
+            return self._format_float_parameter(param)
+        else:
+            return str(param)
+
+    def _format_float_parameter(self, param: float) -> str:
+        """Format float parameters, checking for common mathematical constants."""
+        constant_name = self._identify_mathematical_constant(param)
+        if constant_name:
+            return constant_name
+
+        return f"{param:.10g}"
+
+    def _identify_mathematical_constant(self, value: float) -> Optional[str]:
+        """Identify common mathematical constants and return their QASM names."""
+        constants = [
+            (np.pi, "PI"),
+            (np.pi/2, "PI_2"),
+            (np.pi/4, "PI_4"),
+            (2*np.pi, "TAU"),
+            (np.e, "E"),
+            (3*np.pi/4, "3*PI_4"),
+            (np.pi/3, "PI/3"),
+            (np.pi/6, "PI/6"),
+            (0, "0"),
+        ]
+
+        for constant_value, constant_name in constants:
+            if abs(value - constant_value) < 1e-10:
+                return constant_name
+
+        return None
         
     def is_standard_gate(self, gate_name: str) -> bool:
         """Check if a gate is a standard gate."""
