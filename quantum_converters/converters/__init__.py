@@ -7,7 +7,7 @@ except ImportError:
     convert_qiskit_to_qasm3 = None
 
 try:
-    from .cirq_to_qasm import convert_cirq_to_qasm3
+    from .cirq_to_qasm_new import convert_cirq_to_qasm3
 except ImportError:
     convert_cirq_to_qasm3 = None
 
