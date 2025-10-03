@@ -207,7 +207,8 @@ class CirqToQASM3Converter:
         builder.build_standard_prelude(
             num_qubits=num_qubits,
             num_clbits=num_qubits if has_measurements else 0,
-            include_vars=True
+            include_vars=False,
+            include_constants=False
         )
 
         # Extract and define custom gates
@@ -218,33 +219,11 @@ class CirqToQASM3Converter:
                 builder.lines.append(gate_def)
             builder.add_blank_line()
 
-        # Add example classical operations
-        builder.add_section_comment("Classical operations")
-        builder.add_assignment("temp_angle", "PI_2")
-        builder.add_assignment("loop_index", "0")
-        builder.add_blank_line()
-        
         # Convert circuit operations
         builder.add_section_comment("Circuit operations")
         for moment in circuit:
             for operation in moment:
                 self._add_cirq_operation(builder, operation, qubit_map)
-        
-        # Add example control flow (if we have classical bits)
-        if has_measurements:
-            builder.add_blank_line()
-            builder.add_section_comment("Classical control flow examples")
-            builder.add_if_statement(
-                "c[0] == 1", 
-                ["x q[1];"],
-                else_body=None
-            )
-            builder.add_blank_line()
-            builder.add_for_loop(
-                "loop_index", 
-                "[0:2]", 
-                ["ry(temp_angle) q[loop_index];"]
-            )
 
         return builder.get_code()
 
