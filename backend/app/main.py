@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     try:
         from quantum_converters.converters.cirq_to_qasm import convert_cirq_to_qasm3
         from quantum_converters.converters.pennylane_to_qasm import convert_pennylane_to_qasm3
-        from quantum_converters.converters.qiskit_to_qasm_new import convert_qiskit_to_qasm3
+        from quantum_converters.converters.qiskit_to_qasm import convert_qiskit_to_qasm3
         print("✓ All converter modules imported successfully")
     except ImportError as e:
         print(f"✗ Import error: {e}")
