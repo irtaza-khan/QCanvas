@@ -26,10 +26,11 @@ try:
 except ImportError as e:
     print(f"Qiskit converter import error: {e}")
 
+# Removed exec-based cirq_to_qasm import to disable fallback
 try:
-    from quantum_converters.converters.cirq_to_qasm import convert_cirq_to_qasm3 as _cirq_convert
+    from quantum_converters.converters.cirq_to_qasm_new import convert_cirq_to_qasm3 as _cirq_convert
     convert_cirq_to_qasm3 = _cirq_convert
-    print("✓ Cirq converter available")
+    print("✓ Cirq converter available (AST-based only)")
 except ImportError as e:
     print(f"Cirq converter import error: {e}")
 
@@ -78,15 +79,13 @@ class ConversionService:
             stats = None
             
             if converter_func is None:
-                # Use fallback conversion if user's converter is not available
-                print(f"User's {framework} converter not available, using fallback")
-                qasm_code = self._fallback_conversion(code, framework)
-                # Generate basic stats for fallback
-                stats = {
-                    "qubits": self._count_qubits(qasm_code) if qasm_code else None,
-                    "gates": self._count_gates(qasm_code) if qasm_code else None,
-                    "depth": None,
-                    "conversion_time": None
+                # No fallback conversion, return error directly
+                return {
+                    "success": False,
+                    "error": f"No converter available for framework: {framework}",
+                    "framework": framework,
+                    "qasm_code": None,
+                    "conversion_stats": None
                 }
             else:
                 # Use user's actual converter
@@ -117,13 +116,13 @@ class ConversionService:
                         }
                 except Exception as converter_error:
                     print(f"Error in {framework} converter: {str(converter_error)}")
-                    # Fall back to basic template rather than failing the whole request
-                    qasm_code = self._fallback_conversion(code, framework)
-                    stats = {
-                        "qubits": self._count_qubits(qasm_code) if qasm_code else None,
-                        "gates": self._count_gates(qasm_code) if qasm_code else None,
-                        "depth": None,
-                        "conversion_time": None
+                    # No fallback conversion, return error
+                    return {
+                        "success": False,
+                        "error": f"Conversion error: {str(converter_error)}",
+                        "framework": framework,
+                        "qasm_code": None,
+                        "conversion_stats": None
                     }
             
             # Check if conversion was successful
@@ -159,15 +158,13 @@ class ConversionService:
             }
     
     def _fallback_conversion(self, code: str, framework: str) -> str:
-        """Fallback conversion when user's converters are not available"""
+        """Fallback conversion removed for Cirq as per user request"""
         if framework == "qiskit":
             return self._basic_qiskit_conversion(code)
-        elif framework == "cirq":
-            return self._basic_cirq_conversion(code)
         elif framework == "pennylane":
             return self._basic_pennylane_conversion(code)
         else:
-            raise ValueError(f"Unsupported framework: {framework}")
+            raise ValueError(f"Unsupported framework or fallback removed: {framework}")
     
     def _basic_qiskit_conversion(self, code: str) -> str:
         """Heuristic Qiskit-to-QASM conversion without importing qiskit."""
