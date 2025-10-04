@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { ArrowLeft, Copy, Play, Code, Zap, BookOpen, Cpu, BarChart3, Moon, Sun } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
+import { Copy, Play, Code, Moon, Sun, Menu, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
 
@@ -675,6 +676,17 @@ export default function ExamplesPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const { theme, toggleTheme } = useFileStore()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const filteredExamples = examples.filter(example => {
     const matchesCategory = selectedCategory === 'all' || example.category === selectedCategory
@@ -711,41 +723,146 @@ export default function ExamplesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg flex flex-col overflow-x-hidden">
-      {/* Header */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-quantum-blue-light opacity-10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 opacity-10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-        
-        <div className="relative z-10 px-4 py-8">
-          <Link 
-            href="/login" 
-            className="inline-flex items-center text-editor-text hover:text-white transition-colors mb-8"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Login
-          </Link>
-          
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl">
-              <Code className="w-12 h-12 text-white" />
-            </div>
-            <h1 className="text-5xl font-bold text-white mb-4">
-              Quantum <span className="quantum-gradient bg-clip-text text-transparent">Examples</span>
-            </h1>
-            <div className="flex justify-center mb-4">
-              <button onClick={toggleTheme} className="btn-ghost p-2 hover:bg-quantum-blue-light/20 rounded-lg" title="Toggle theme">
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
+      {/* Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-black/80 backdrop-blur-lg border-b border-white/10' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <Link href="/" className="flex items-center space-x-2 group">
+              <div className="relative">
+                <Image
+                  src="/QCanvas-logo-Black.svg"
+                  alt="QCanvas Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain block dark:hidden transition-all duration-300 hover:scale-110 animate-pulse"
+                  priority
+                />
+                <Image
+                  src="/QCanvas-logo-White.svg"
+                  alt="QCanvas Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain hidden dark:block transition-all duration-300 hover:scale-110 animate-pulse"
+                  priority
+                />
+              </div>
+              <span className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent transition-all duration-200">
+                QCanvas
+              </span>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-editor-text hover:text-white transition-colors duration-200">
+                Home
+              </Link>
+              <Link href="/examples" className="text-white font-medium underline decoration-quantum-blue-light decoration-2 underline-offset-4">
+                Examples
+              </Link>
+              <Link href="/docs" className="text-editor-text hover:text-white transition-colors duration-200">
+                Documentation
+              </Link>
+              <Link href="/about" className="text-editor-text hover:text-white transition-colors duration-200">
+                About
+              </Link>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg bg-editor-bg/50 border border-editor-border hover:border-quantum-blue-light transition-colors duration-200"
+                title="Toggle theme"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5 text-editor-text" /> : <Moon className="w-5 h-5 text-editor-text" />}
               </button>
+
+              {/* Auth Buttons */}
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/login"
+                  className="text-editor-text hover:text-white transition-colors duration-200 font-medium"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/login"
+                  className="btn-quantum text-sm px-4 py-2"
+                >
+                  Get Started
+                </Link>
+              </div>
             </div>
-            <p className="text-xl text-editor-text max-w-3xl mx-auto">
-              Explore quantum computing examples across different frameworks. Copy, modify, and run these circuits in QCanvas.
-            </p>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-lg bg-editor-bg/50 border border-editor-border"
+            >
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden bg-black/95 backdrop-blur-lg border-t border-white/10">
+              <div className="px-4 py-4 space-y-4">
+                <Link href="/" className="block text-editor-text hover:text-white transition-colors duration-200">
+                  Home
+                </Link>
+                <Link href="/examples" className="block text-white font-medium transition-colors duration-200">
+                  Examples
+                </Link>
+                <Link href="/docs" className="block text-editor-text hover:text-white transition-colors duration-200">
+                  Documentation
+                </Link>
+                <Link href="/about" className="block text-editor-text hover:text-white transition-colors duration-200">
+                  About
+                </Link>
+
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                  <button
+                    onClick={toggleTheme}
+                    className="flex items-center space-x-2 text-editor-text hover:text-white transition-colors duration-200"
+                  >
+                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    <span>Theme</span>
+                  </button>
+                  <div className="flex space-x-3">
+                    <Link href="/login" className="text-editor-text hover:text-white transition-colors duration-200">
+                      Sign In
+                    </Link>
+                    <Link href="/login" className="btn-quantum text-sm px-3 py-1">
+                      Get Started
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 pt-20">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-quantum-blue-light opacity-10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 opacity-10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500 opacity-5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+
+        <div className="text-center max-w-6xl mx-auto relative z-10">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl">
+            <Code className="w-12 h-12 text-white" />
+          </div>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            Quantum <span className="quantum-gradient bg-clip-text text-transparent">Examples</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed">
+            Explore quantum computing examples across different frameworks. Copy, modify, and run these circuits in QCanvas.
+          </p>
+        </div>
+      </section>
 
       {/* Filters */}
       <main className="px-4 py-8 flex-1 overflow-y-auto">
@@ -754,8 +871,9 @@ export default function ExamplesPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div>
-                <label className="block text-sm font-medium text-editor-text mb-2">Search</label>
+                <label htmlFor="search-input" className="block text-sm font-medium text-editor-text mb-2">Search</label>
                 <input
+                  id="search-input"
                   type="text"
                   placeholder="Search examples..."
                   value={searchTerm}
@@ -766,8 +884,9 @@ export default function ExamplesPage() {
 
               {/* Category Filter */}
               <div>
-                <label className="block text-sm font-medium text-editor-text mb-2">Category</label>
+                <label htmlFor="category-select" className="block text-sm font-medium text-editor-text mb-2">Category</label>
                 <select
+                  id="category-select"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg focus-quantum text-white"
@@ -781,8 +900,9 @@ export default function ExamplesPage() {
 
               {/* Framework Filter */}
               <div>
-                <label className="block text-sm font-medium text-editor-text mb-2">Framework</label>
+                <label htmlFor="framework-select" className="block text-sm font-medium text-editor-text mb-2">Framework</label>
                 <select
+                  id="framework-select"
                   value={selectedFramework}
                   onChange={(e) => setSelectedFramework(e.target.value)}
                   className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg focus-quantum text-white"
@@ -796,8 +916,9 @@ export default function ExamplesPage() {
 
               {/* Difficulty Filter */}
               <div>
-                <label className="block text-sm font-medium text-editor-text mb-2">Difficulty</label>
+                <label htmlFor="difficulty-select" className="block text-sm font-medium text-editor-text mb-2">Difficulty</label>
                 <select
+                  id="difficulty-select"
                   value={selectedDifficulty}
                   onChange={(e) => setSelectedDifficulty(e.target.value)}
                   className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg focus-quantum text-white"

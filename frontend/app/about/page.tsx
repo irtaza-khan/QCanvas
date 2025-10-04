@@ -1,48 +1,168 @@
 'use client'
 
-import { ArrowLeft, Zap, Code, Cpu, BarChart3, Users, Github, Mail, Globe, BookOpen, Moon, Sun } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
+import { Zap, Code, Cpu, BarChart3, Users, Github, Mail, Globe, BookOpen, Moon, Sun, Menu, X } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
+import { config, getCopyrightText } from '@/lib/config'
 
 export default function AboutPage() {
   const { theme, toggleTheme } = useFileStore()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg overflow-x-hidden">
-      {/* Header */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-quantum-blue-light opacity-10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 opacity-10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-        
-        <div className="relative z-10 px-4 py-8">
-          <Link 
-            href="/login" 
-            className="inline-flex items-center text-editor-text hover:text-white transition-colors mb-8"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Login
-          </Link>
-          
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl">
-              <Zap className="w-12 h-12 text-white" />
-            </div>
-            <h1 className="text-5xl font-bold text-white mb-4">
-              About <span className="quantum-gradient bg-clip-text text-transparent">QCanvas</span>
-            </h1>
-            <div className="flex justify-center mb-4">
-              <button onClick={toggleTheme} className="btn-ghost p-2 hover:bg-quantum-blue-light/20 rounded-lg" title="Toggle theme">
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
+      {/* Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-black/80 backdrop-blur-lg border-b border-white/10' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <Link href="/" className="flex items-center space-x-2 group">
+              <div className="relative">
+                <Image
+                  src="/QCanvas-logo-Black.svg"
+                  alt="QCanvas Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain block dark:hidden transition-all duration-300 hover:scale-110 animate-pulse"
+                  priority
+                />
+                <Image
+                  src="/QCanvas-logo-White.svg"
+                  alt="QCanvas Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain hidden dark:block transition-all duration-300 hover:scale-110 animate-pulse"
+                  priority
+                />
+              </div>
+              <span className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent transition-all duration-200">
+                QCanvas
+              </span>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-editor-text hover:text-white transition-colors duration-200">
+                Home
+              </Link>
+              <Link href="/examples" className="text-editor-text hover:text-white transition-colors duration-200">
+                Examples
+              </Link>
+              <Link href="/docs" className="text-editor-text hover:text-white transition-colors duration-200">
+                Documentation
+              </Link>
+              <Link href="/about" className="text-white font-medium underline decoration-quantum-blue-light decoration-2 underline-offset-4">
+                About
+              </Link>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg bg-editor-bg/50 border border-editor-border hover:border-quantum-blue-light transition-colors duration-200"
+                title="Toggle theme"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5 text-editor-text" /> : <Moon className="w-5 h-5 text-editor-text" />}
               </button>
+
+              {/* Auth Buttons */}
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/login"
+                  className="text-editor-text hover:text-white transition-colors duration-200 font-medium"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/login"
+                  className="btn-quantum text-sm px-4 py-2"
+                >
+                  Get Started
+                </Link>
+              </div>
             </div>
-            <p className="text-xl text-editor-text max-w-3xl mx-auto">
-              A modern quantum computing platform that bridges the gap between different quantum frameworks, 
-              enabling seamless conversion, simulation, and visualization of quantum circuits.
-            </p>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-lg bg-editor-bg/50 border border-editor-border"
+            >
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden bg-black/95 backdrop-blur-lg border-t border-white/10">
+              <div className="px-4 py-4 space-y-4">
+                <Link href="/" className="block text-editor-text hover:text-white transition-colors duration-200">
+                  Home
+                </Link>
+                <Link href="/examples" className="block text-editor-text hover:text-white transition-colors duration-200">
+                  Examples
+                </Link>
+                <Link href="/docs" className="block text-editor-text hover:text-white transition-colors duration-200">
+                  Documentation
+                </Link>
+                <Link href="/about" className="block text-white font-medium transition-colors duration-200">
+                  About
+                </Link>
+
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                  <button
+                    onClick={toggleTheme}
+                    className="flex items-center space-x-2 text-editor-text hover:text-white transition-colors duration-200"
+                  >
+                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    <span>Theme</span>
+                  </button>
+                  <div className="flex space-x-3">
+                    <Link href="/login" className="text-editor-text hover:text-white transition-colors duration-200">
+                      Sign In
+                    </Link>
+                    <Link href="/login" className="btn-quantum text-sm px-3 py-1">
+                      Get Started
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 pt-20">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-quantum-blue-light opacity-10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 opacity-10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500 opacity-5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+
+        <div className="text-center max-w-6xl mx-auto relative z-10">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl">
+            <Zap className="w-12 h-12 text-white" />
+          </div>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            About <span className="quantum-gradient bg-clip-text text-transparent">QCanvas</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed">
+            A modern quantum computing platform that bridges the gap between different quantum frameworks,
+            enabling seamless conversion, simulation, and visualization of quantum circuits.
+          </p>
+        </div>
+      </section>
 
       {/* Features Section */}
       <main className="px-4 py-16">
@@ -172,58 +292,56 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold text-white text-center mb-12">Our Team</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center">
-              <div className="w-24 h-24 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users className="w-12 h-12 text-white" />
+            {config.team.map((member) => (
+              <div key={member.profile} className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center">
+                <div className="w-24 h-24 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Users className="w-12 h-12 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">{member.name}</h3>
+                <p className="text-editor-text mb-2">{member.role}</p>
+                <p className="text-xs text-gray-400 mb-4">{member.profile}</p>
+                <div className="flex justify-center space-x-4">
+                  {member.github && (
+                    <a href={member.github} target="_blank" rel="noopener noreferrer" className="text-editor-text hover:text-white transition-colors">
+                      <Github className="w-5 h-5" />
+                    </a>
+                  )}
+                  {member.email && (
+                    <a href={`mailto:${member.email}`} className="text-editor-text hover:text-white transition-colors">
+                      <Mail className="w-5 h-5" />
+                    </a>
+                  )}
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Development Team</h3>
-              <p className="text-editor-text mb-4">
-                Passionate developers working on quantum computing tools and education.
-              </p>
-              <div className="flex justify-center space-x-4">
-                <a href="https://github.com" className="text-editor-text hover:text-white transition-colors">
-                  <Github className="w-5 h-5" />
-                </a>
-                <a href="mailto:team@qcanvas.dev" className="text-editor-text hover:text-white transition-colors">
-                  <Mail className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center">
-              <div className="w-24 h-24 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6">
-                <BookOpen className="w-12 h-12 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Research Team</h3>
-              <p className="text-editor-text mb-4">
-                Quantum computing researchers and educators advancing the field.
-              </p>
-              <div className="flex justify-center space-x-4">
-                <a href="https://github.com" className="text-editor-text hover:text-white transition-colors">
-                  <Github className="w-5 h-5" />
-                </a>
-                <a href="mailto:research@qcanvas.dev" className="text-editor-text hover:text-white transition-colors">
-                  <Mail className="w-5 h-5" />
-                </a>
-              </div>
+      {/* University Section */}
+      <div className="px-4 py-16 bg-gradient-to-b from-transparent to-editor-bg/20">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-white mb-8">Built at</h2>
+          <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10">
+            <div className="text-4xl font-bold quantum-gradient bg-clip-text text-transparent mb-2">
+              {config.university.name}
             </div>
+            <p className="text-xl text-editor-text">{config.university.location}</p>
+            <p className="text-editor-text mt-4">{config.university.department}</p>
+          </div>
 
-            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center">
-              <div className="w-24 h-24 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6">
-                <Globe className="w-12 h-12 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Community</h3>
-              <p className="text-editor-text mb-4">
-                Open source contributors and quantum computing enthusiasts worldwide.
-              </p>
-              <div className="flex justify-center space-x-4">
-                <a href="https://github.com" className="text-editor-text hover:text-white transition-colors">
-                  <Github className="w-5 h-5" />
-                </a>
-                <a href="mailto:community@qcanvas.dev" className="text-editor-text hover:text-white transition-colors">
-                  <Mail className="w-5 h-5" />
-                </a>
-              </div>
+          <div className="mt-12">
+            <h3 className="text-2xl font-semibold text-white mb-6">Project Supervisors</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {config.supervisors.map((supervisor) => (
+                <div key={supervisor.name} className="quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border border-white/10">
+                  <h4 className="text-lg font-semibold text-white mb-2">{supervisor.name}</h4>
+                  <p className="text-editor-text">{supervisor.role}</p>
+                  <a href={`mailto:${supervisor.email}`} className="text-quantum-blue-light hover:text-white transition-colors mt-2 inline-block">
+                    {supervisor.email}
+                  </a>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -233,20 +351,25 @@ export default function AboutPage() {
       <footer className="px-4 py-8 border-t border-editor-border">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-editor-text">
-            © 2024 QCanvas. Built with ❤️ for the quantum computing community.
+            {getCopyrightText()}
           </p>
           <div className="flex justify-center space-x-6 mt-4">
-            <a href="mailto:team@qcanvas.dev" className="text-editor-text hover:text-white transition-colors">
-              Contact Team
-            </a>
-            <a href="mailto:research@qcanvas.dev" className="text-editor-text hover:text-white transition-colors">
-              Research
-            </a>
-            <a href="https://github.com" className="text-editor-text hover:text-white transition-colors">
+            {config.footer.support.map((link) => (
+              <a
+                key={link.email || link.name}
+                href={link.email ? `mailto:${link.email}` : '#'}
+                className="text-editor-text hover:text-white transition-colors"
+              >
+                {link.name}
+              </a>
+            ))}
+            <a
+              href={config.social.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-editor-text hover:text-white transition-colors"
+            >
               GitHub
-            </a>
-            <a href="mailto:community@qcanvas.dev" className="text-editor-text hover:text-white transition-colors">
-              Community
             </a>
           </div>
         </div>
