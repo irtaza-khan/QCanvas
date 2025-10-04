@@ -1,91 +1,124 @@
 'use client'
 
-import { useState } from 'react'
-import { Moon, Sun } from 'lucide-react'
-import { useFileStore } from '@/lib/store'
-import { ArrowLeft, BookOpen, Code, Cpu, BarChart3, Zap, Users, Github, Mail, Globe, FileText, Settings, Play, Download } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
+import {
+  Moon, Sun, Menu, X, BookOpen, Code, Cpu, BarChart3, Zap, Settings, Play,
+  ChevronRight, Star, Atom, Sparkles, Lightbulb,
+  ArrowRight, CheckCircle, Info, Database,
+  Layers, Terminal, FileText, Shield, Cloud, Server,
+  Monitor, Wrench, Target, Rocket, Clock, TrendingUp, GitBranch
+} from 'lucide-react'
+import { useFileStore } from '@/lib/store'
+import { config, getCopyrightText } from '@/lib/config'
 
 interface DocSection {
   id: string
   title: string
+  subtitle?: string
   icon: React.ReactNode
+  badge?: string
   content: React.ReactNode
+  category?: string
 }
 
 export default function DocsPage() {
-  const [activeSection, setActiveSection] = useState('getting-started')
+  const [activeSection, setActiveSection] = useState('overview')
+  const [isVisible, setIsVisible] = useState(false)
   const { theme, toggleTheme } = useFileStore()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    setIsVisible(true)
+    const handleScroll = () => setScrollY(window.scrollY)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+      setActiveSection(sectionId)
+    }
+    setIsMenuOpen(false)
+  }
 
   const sections: DocSection[] = [
     {
-      id: 'getting-started',
-      title: 'Getting Started',
-      icon: <Play className="w-5 h-5" />,
+      id: 'overview',
+      title: 'Overview',
+      subtitle: 'Introduction to QCanvas',
+      icon: <Info className="w-5 h-5" />,
+      badge: 'Essential',
+      category: 'Getting Started',
       content: (
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Welcome to QCanvas</h3>
-            <p className="text-editor-text mb-4">
-              QCanvas is a modern quantum computing platform that enables seamless conversion between different quantum frameworks, 
-              real-time simulation, and visualization of quantum circuits.
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full quantum-gradient mb-6 shadow-2xl">
+              <Atom className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              <span className="quantum-gradient bg-clip-text text-transparent">Welcome to QCanvas</span>
+            </h2>
+            <p className="text-xl text-editor-text max-w-3xl mx-auto leading-relaxed">
+              {config.project.description}
             </p>
-            <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
-              <h4 className="text-white font-medium mb-2">Quick Start Steps:</h4>
-              <ol className="text-editor-text space-y-2 list-decimal list-inside">
-                <li>Sign in to your QCanvas account</li>
-                <li>Choose your source framework (Qiskit, Cirq, or PennyLane)</li>
-                <li>Paste your quantum circuit code</li>
-                <li>Select target framework for conversion</li>
-                <li>Run simulation and view results</li>
-              </ol>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
+              <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Code className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Framework Conversion</h3>
+              <p className="text-editor-text text-sm">Convert between Qiskit, Cirq, and PennyLane seamlessly</p>
+            </div>
+            <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
+              <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Play className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Real-time Simulation</h3>
+              <p className="text-editor-text text-sm">Execute quantum circuits with multiple backends</p>
+            </div>
+            <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
+              <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Interactive Visualization</h3>
+              <p className="text-editor-text text-sm">Visualize quantum states and measurement results</p>
+            </div>
+            <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
+              <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Educational Platform</h3>
+              <p className="text-editor-text text-sm">Learn quantum computing through guided examples</p>
             </div>
           </div>
 
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Supported Frameworks</h3>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
-                <div className="flex items-center mb-2">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
-                    <Code className="w-4 h-4 text-white" />
-                  </div>
-                  <h4 className="text-white font-medium">Qiskit</h4>
-                </div>
-                <p className="text-editor-text text-sm mb-2">IBM&apos;s quantum computing framework with comprehensive tools for circuit design and execution.</p>
-                <ul className="text-xs text-gray-400 space-y-1">
-                  <li>• Full quantum circuit support</li>
-                  <li>• Advanced optimization</li>
-                  <li>• IBM Quantum backends</li>
-                </ul>
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <Rocket className="w-6 h-6 mr-3 text-quantum-blue-light" />
+              Project Mission
+            </h3>
+            <p className="text-editor-text text-lg leading-relaxed mb-6">
+              QCanvas addresses the critical standardization gap in multi-framework quantum programming by providing a universal intermediary that translates quantum circuits into the standardized OpenQASM 3.0 intermediate representation. This enables seamless integration, comparison, and execution of quantum circuits across different hardware platforms and software ecosystems.
+            </p>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-2">Unification</div>
+                <p className="text-editor-text text-sm">Bridge the gap between quantum frameworks</p>
               </div>
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
-                <div className="flex items-center mb-2">
-                  <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
-                    <Code className="w-4 h-4 text-white" />
-                  </div>
-                  <h4 className="text-white font-medium">Cirq</h4>
-                </div>
-                <p className="text-editor-text text-sm mb-2">Google&apos;s quantum computing framework focused on near-term quantum computers and algorithms.</p>
-                <ul className="text-xs text-gray-400 space-y-1">
-                  <li>• Near-term quantum algorithms</li>
-                  <li>• Noise modeling</li>
-                  <li>• Google Quantum AI integration</li>
-                </ul>
+              <div className="text-center">
+                <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-2">Accessibility</div>
+                <p className="text-editor-text text-sm">Make quantum computing approachable for all</p>
               </div>
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
-                <div className="flex items-center mb-2">
-                  <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
-                    <Code className="w-4 h-4 text-white" />
-                  </div>
-                  <h4 className="text-white font-medium">PennyLane</h4>
-                </div>
-                <p className="text-editor-text text-sm mb-2">Xanadu&apos;s quantum machine learning framework for variational quantum algorithms.</p>
-                <ul className="text-xs text-gray-400 space-y-1">
-                  <li>• Quantum machine learning</li>
-                  <li>• Variational algorithms</li>
-                  <li>• Hybrid quantum-classical</li>
-                </ul>
+              <div className="text-center">
+                <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-2">Innovation</div>
+                <p className="text-editor-text text-sm">Accelerate quantum software development</p>
               </div>
             </div>
           </div>
@@ -93,62 +126,183 @@ export default function DocsPage() {
       )
     },
     {
-      id: 'api-reference',
-      title: 'API Reference',
-      icon: <Code className="w-5 h-5" />,
+      id: 'getting-started',
+      title: 'Getting Started',
+      subtitle: 'Quick start guide',
+      icon: <Play className="w-5 h-5" />,
+      badge: 'Beginner',
+      category: 'Getting Started',
       content: (
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Conversion API</h3>
-            <div className="bg-editor-bg rounded-lg p-4 border border-editor-border mb-4">
-              <h4 className="text-white font-medium mb-2">POST /api/convert</h4>
-              <p className="text-editor-text text-sm mb-3">Convert quantum circuits between frameworks</p>
-              <pre className="text-xs text-editor-text overflow-x-auto">
-{`{
-  "source_framework": "qiskit",
-  "target_framework": "cirq", 
-  "source_code": "your_quantum_circuit_code",
-  "optimization_level": 1
-}`}
-              </pre>
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
+              <Play className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">
+              <span className="quantum-gradient bg-clip-text text-transparent">Your First Steps</span>
+            </h2>
+            <p className="text-lg text-editor-text max-w-2xl mx-auto">
+              Get up and running with QCanvas in minutes. Learn the basics and start building quantum circuits.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="quantum-glass-dark rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <Target className="w-5 h-5 mr-2 text-quantum-blue-light" />
+                Quick Start Guide
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-quantum-blue-light/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-sm font-bold text-quantum-blue-light">1</span>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-medium mb-1">Access QCanvas</h4>
+                    <p className="text-editor-text text-sm">Navigate to the web application and create your account</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-sm font-bold text-purple-400">2</span>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-medium mb-1">Choose Framework</h4>
+                    <p className="text-editor-text text-sm">Select your preferred quantum framework (Qiskit, Cirq, PennyLane)</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-teal-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-sm font-bold text-teal-400">3</span>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-medium mb-1">Create Circuit</h4>
+                    <p className="text-editor-text text-sm">Write or paste your quantum circuit code</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-sm font-bold text-green-400">4</span>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-medium mb-1">Convert & Simulate</h4>
+                    <p className="text-editor-text text-sm">Convert between frameworks and run simulations</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="quantum-glass-dark rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <Lightbulb className="w-5 h-5 mr-2 text-yellow-400" />
+                First Example
+              </h3>
+              <div className="bg-editor-bg rounded-lg p-4 border border-editor-border mb-4">
+                <h4 className="text-white font-medium mb-3">Bell State Circuit</h4>
+                <pre className="text-xs text-editor-text overflow-x-auto">
+{`# Qiskit Bell State
+from qiskit import QuantumCircuit
+
+qc = QuantumCircuit(2, 2)
+qc.h(0)      # Hadamard on qubit 0
+qc.cx(0, 1)  # CNOT gate
+qc.measure_all()
+
+print(qc)`}
+                </pre>
+              </div>
+              <p className="text-editor-text text-sm">
+                This creates a quantum entanglement between two qubits, producing the famous Bell state |Φ⁺⟩ = (|00⟩ + |11⟩)/√2
+              </p>
             </div>
           </div>
 
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Simulation API</h3>
-            <div className="bg-editor-bg rounded-lg p-4 border border-editor-border mb-4">
-              <h4 className="text-white font-medium mb-2">POST /api/simulate</h4>
-              <p className="text-editor-text text-sm mb-3">Simulate quantum circuits</p>
-              <pre className="text-xs text-editor-text overflow-x-auto">
-{`{
-  "qasm_code": "your_openqasm_code",
-  "backend": "statevector",
-  "shots": 1000,
-  "noise_model": null,
-  "optimization_level": 1
-}`}
-              </pre>
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6">Supported Frameworks</h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center group hover:scale-105 transition-transform duration-300">
+                <div className="w-16 h-16 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-500/30 transition-colors duration-300">
+                  <Code className="w-8 h-8 text-blue-400" />
+                </div>
+                <h4 className="text-xl font-semibold text-white mb-2">Qiskit</h4>
+                <p className="text-editor-text text-sm mb-3">IBM's comprehensive quantum computing framework</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">Circuit Design</span>
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">IBM Quantum</span>
+                </div>
+              </div>
+              <div className="text-center group hover:scale-105 transition-transform duration-300">
+                <div className="w-16 h-16 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-500/30 transition-colors duration-300">
+                  <Code className="w-8 h-8 text-purple-400" />
+                </div>
+                <h4 className="text-xl font-semibold text-white mb-2">Cirq</h4>
+                <p className="text-editor-text text-sm mb-3">Google's framework for near-term quantum devices</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">Noise Modeling</span>
+                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">Google AI</span>
+                </div>
+              </div>
+              <div className="text-center group hover:scale-105 transition-transform duration-300">
+                <div className="w-16 h-16 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-500/30 transition-colors duration-300">
+                  <Code className="w-8 h-8 text-green-400" />
+                </div>
+                <h4 className="text-xl font-semibold text-white mb-2">PennyLane</h4>
+                <p className="text-editor-text text-sm mb-3">Xanadu's quantum machine learning framework</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">ML Integration</span>
+                  <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">Variational</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Available Backends</h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
-                <h4 className="text-white font-medium mb-2">Statevector Backend</h4>
-                <p className="text-editor-text text-sm">Perfect simulation with full quantum state representation. Best for small circuits and exact results.</p>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="quantum-glass-dark rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2 text-green-400" />
+                Learning Path
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Basic quantum gates and circuits</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Framework conversion concepts</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Advanced algorithms and optimization</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Noise modeling and error correction</span>
+                </div>
               </div>
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
-                <h4 className="text-white font-medium mb-2">Density Matrix Backend</h4>
-                <p className="text-editor-text text-sm">Supports noise modeling and mixed states. Good for realistic quantum computer simulation.</p>
-              </div>
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
-                <h4 className="text-white font-medium mb-2">Stabilizer Backend</h4>
-                <p className="text-editor-text text-sm">Efficient simulation for Clifford circuits. Scales well with circuit size.</p>
-              </div>
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
-                <h4 className="text-white font-medium mb-2">Noise Models</h4>
-                <p className="text-editor-text text-sm">Support for depolarizing, bit-flip, phase-flip, and amplitude damping noise.</p>
+            </div>
+
+            <div className="quantum-glass-dark rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <Wrench className="w-5 h-5 mr-2 text-orange-400" />
+                Resources
+              </h3>
+              <div className="space-y-3">
+                <Link href="/examples" className="flex items-center space-x-3 text-editor-text hover:text-white transition-colors group">
+                  <Play className="w-4 h-4 group-hover:text-quantum-blue-light" />
+                  <span className="text-sm">Interactive Examples</span>
+                  <ChevronRight className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link href="/docs" className="flex items-center space-x-3 text-editor-text hover:text-white transition-colors group">
+                  <FileText className="w-4 h-4 group-hover:text-quantum-blue-light" />
+                  <span className="text-sm">Complete Documentation</span>
+                  <ChevronRight className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <a href={config.social.github} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-3 text-editor-text hover:text-white transition-colors group">
+                  <GitBranch className="w-4 h-4 group-hover:text-quantum-blue-light" />
+                  <span className="text-sm">Source Code</span>
+                  <ChevronRight className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" />
+                </a>
               </div>
             </div>
           </div>
@@ -158,455 +312,768 @@ export default function DocsPage() {
     {
       id: 'features',
       title: 'Features',
+      subtitle: 'Platform capabilities',
       icon: <Zap className="w-5 h-5" />,
+      badge: 'Complete',
+      category: 'Platform',
       content: (
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Core Features</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                    <Code className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="text-white font-medium text-lg">Framework Conversion</h4>
-                </div>
-                <ul className="text-editor-text space-y-2">
-                  <li>• Convert between Qiskit, Cirq, and PennyLane</li>
-                  <li>• Automatic OpenQASM 3.0 generation</li>
-                  <li>• Circuit optimization levels 0-3</li>
-                  <li>• Gate fusion and dead code elimination</li>
-                </ul>
-              </div>
-
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                    <Cpu className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="text-white font-medium text-lg">Quantum Simulation</h4>
-                </div>
-                <ul className="text-editor-text space-y-2">
-                  <li>• Multiple simulation backends</li>
-                  <li>• Configurable shot counts</li>
-                  <li>• Noise modeling support</li>
-                  <li>• Real-time execution</li>
-                </ul>
-              </div>
-
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                    <BarChart3 className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="text-white font-medium text-lg">Visualization</h4>
-                </div>
-                <ul className="text-editor-text space-y-2">
-                  <li>• Circuit diagrams</li>
-                  <li>• Measurement histograms</li>
-                  <li>• State vector plots</li>
-                  <li>• Interactive charts</li>
-                </ul>
-              </div>
-
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                    <Settings className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="text-white font-medium text-lg">Advanced Features</h4>
-                </div>
-                <ul className="text-editor-text space-y-2">
-                  <li>• File management system</li>
-                  <li>• Keyboard shortcuts</li>
-                  <li>• Auto-save functionality</li>
-                  <li>• Export capabilities</li>
-                </ul>
-              </div>
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
+              <Zap className="w-8 h-8 text-white" />
             </div>
+            <h2 className="text-3xl font-bold mb-4">
+              <span className="quantum-gradient bg-clip-text text-transparent">Powerful Features</span>
+            </h2>
+            <p className="text-lg text-editor-text max-w-2xl mx-auto">
+              Comprehensive quantum computing tools for conversion, simulation, and visualization
+            </p>
           </div>
 
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Optimization Levels</h3>
-            <div className="grid md:grid-cols-4 gap-4">
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10 text-center">
-                <div className="w-12 h-12 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-white font-bold">0</span>
-                </div>
-                <h4 className="text-white font-medium mb-2">Level 0</h4>
-                <p className="text-editor-text text-sm">No optimization, direct conversion</p>
-              </div>
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10 text-center">
-                <div className="w-12 h-12 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-white font-bold">1</span>
-                </div>
-                <h4 className="text-white font-medium mb-2">Level 1</h4>
-                <p className="text-editor-text text-sm">Basic gate fusion and simplification</p>
-              </div>
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10 text-center">
-                <div className="w-12 h-12 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-white font-bold">2</span>
-                </div>
-                <h4 className="text-white font-medium mb-2">Level 2</h4>
-                <p className="text-editor-text text-sm">Advanced optimization and dead code elimination</p>
-              </div>
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10 text-center">
-                <div className="w-12 h-12 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-white font-bold">3</span>
-                </div>
-                <h4 className="text-white font-medium mb-2">Level 3</h4>
-                <p className="text-editor-text text-sm">Maximum optimization with custom algorithms</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: 'tutorials',
-      title: 'Tutorials',
-      icon: <BookOpen className="w-5 h-5" />,
-      content: (
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Step-by-Step Tutorials</h3>
-            
-            <div className="space-y-4">
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium text-lg mb-3">Tutorial 1: Your First Quantum Circuit</h4>
-                <div className="text-editor-text space-y-3">
-                  <p>Learn how to create and convert your first quantum circuit using QCanvas.</p>
-                  <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                    <h5 className="text-white font-medium mb-2">Steps:</h5>
-                    <ol className="space-y-1 text-sm">
-                      <li>1. Open QCanvas and sign in</li>
-                      <li>2. Create a new file with Qiskit Bell state code</li>
-                      <li>3. Convert to Cirq format</li>
-                      <li>4. Run simulation and view results</li>
-                    </ol>
-                  </div>
-                </div>
-              </div>
-
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium text-lg mb-3">Tutorial 2: Advanced Optimization</h4>
-                <div className="text-editor-text space-y-3">
-                  <p>Explore different optimization levels and their effects on circuit performance.</p>
-                  <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                    <h5 className="text-white font-medium mb-2">Steps:</h5>
-                    <ol className="space-y-1 text-sm">
-                      <li>1. Create a complex quantum circuit</li>
-                      <li>2. Test conversion with different optimization levels</li>
-                      <li>3. Compare circuit depth and gate counts</li>
-                      <li>4. Analyze performance improvements</li>
-                    </ol>
-                  </div>
-                </div>
-              </div>
-
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium text-lg mb-3">Tutorial 3: Noise Simulation</h4>
-                <div className="text-editor-text space-y-3">
-                  <p>Learn how to simulate quantum circuits with realistic noise models.</p>
-                  <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                    <h5 className="text-white font-medium mb-2">Steps:</h5>
-                    <ol className="space-y-1 text-sm">
-                      <li>1. Create a quantum circuit</li>
-                      <li>2. Select density matrix backend</li>
-                      <li>3. Configure noise parameters</li>
-                      <li>4. Compare results with and without noise</li>
-                    </ol>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Best Practices</h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
-                <h4 className="text-white font-medium mb-2">Code Organization</h4>
-                <ul className="text-editor-text text-sm space-y-1">
-                  <li>• Use descriptive variable names</li>
-                  <li>• Add comments for complex operations</li>
-                  <li>• Break large circuits into functions</li>
-                  <li>• Test with small examples first</li>
-                </ul>
-              </div>
-              <div className="quantum-glass-dark rounded-lg p-4 border border-white/10">
-                <h4 className="text-white font-medium mb-2">Performance Tips</h4>
-                <ul className="text-editor-text text-sm space-y-1">
-                  <li>• Choose appropriate optimization level</li>
-                  <li>• Use suitable backend for your circuit</li>
-                  <li>• Consider circuit depth and width</li>
-                  <li>• Monitor execution time</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: 'best-practices',
-      title: 'Best Practices',
-      icon: <BookOpen className="w-5 h-5" />,
-      content: (
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Code Organization</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-3">File Structure</h4>
-                <ul className="text-editor-text space-y-2 text-sm">
-                  <li>• Use descriptive file names</li>
-                  <li>• Organize circuits by functionality</li>
-                  <li>• Keep imports at the top</li>
-                  <li>• Use consistent naming conventions</li>
-                </ul>
-              </div>
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-3">Circuit Design</h4>
-                <ul className="text-editor-text space-y-2 text-sm">
-                  <li>• Start with simple circuits</li>
-                  <li>• Use meaningful variable names</li>
-                  <li>• Add comments for complex operations</li>
-                  <li>• Test incrementally</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Performance Optimization</h3>
-            <div className="space-y-4">
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-3">Circuit Optimization</h4>
-                <div className="text-editor-text space-y-3">
-                  <p>Choose the right optimization level for your needs:</p>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                      <h5 className="text-white font-medium mb-2">Level 0-1: Development</h5>
-                      <p className="text-sm">Fast conversion, minimal optimization. Good for testing and debugging.</p>
-                    </div>
-                    <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                      <h5 className="text-white font-medium mb-2">Level 2-3: Production</h5>
-                      <p className="text-sm">Maximum optimization, best performance. Use for final circuits.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Common Patterns</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-3">Entanglement Patterns</h4>
-                <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                  <pre className="text-xs text-editor-text">
-{`# Bell State
-qc.h(0)
-qc.cx(0, 1)
-
-# GHZ State  
-qc.h(0)
-for i in range(1, n):
-    qc.cx(0, i)`}
-                  </pre>
-                </div>
-              </div>
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-3">Measurement Patterns</h4>
-                <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                  <pre className="text-xs text-editor-text">
-{`# Single qubit
-qc.measure(0, 0)
-
-# Multiple qubits
-qc.measure([0,1,2], [0,1,2])
-
-# All qubits
-qc.measure_all()`}
-                  </pre>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: 'troubleshooting',
-      title: 'Troubleshooting',
-      icon: <Settings className="w-5 h-5" />,
-      content: (
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Common Issues</h3>
-            
-            <div className="space-y-4">
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium text-lg mb-3">Conversion Errors</h4>
-                <div className="text-editor-text space-y-3">
-                  <p><strong>Problem:</strong> Circuit conversion fails with syntax errors</p>
-                  <p><strong>Solution:</strong> Check that your source code follows the framework&apos;s syntax. Ensure all imports are included and variables are properly defined.</p>
-                  <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                    <p className="text-sm"><strong>Example:</strong> Make sure to import required modules:</p>
-                    <pre className="text-xs text-editor-text mt-2">from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister</pre>
-                  </div>
-                </div>
-              </div>
-
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium text-lg mb-3">Simulation Timeouts</h4>
-                <div className="text-editor-text space-y-3">
-                  <p><strong>Problem:</strong> Large circuits take too long to simulate</p>
-                  <p><strong>Solution:</strong> Use optimization levels 1-3, reduce shot count, or switch to stabilizer backend for Clifford circuits.</p>
-                  <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                    <p className="text-sm"><strong>Tip:</strong> Start with smaller circuits and gradually increase complexity.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="quantum-glass-dark rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium text-lg mb-3">Memory Issues</h4>
-                <div className="text-editor-text space-y-3">
-                  <p><strong>Problem:</strong> Out of memory errors with large circuits</p>
-                  <p><strong>Solution:</strong> Use density matrix or stabilizer backends instead of statevector for large circuits.</p>
-                  <div className="bg-editor-bg rounded p-3 border border-editor-border">
-                    <p className="text-sm"><strong>Note:</strong> Statevector backend requires 2^n complex numbers for n qubits.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Error Codes</h3>
-            <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-white font-medium mb-2">Conversion Errors</h4>
-                  <ul className="text-editor-text text-sm space-y-1">
-                    <li><strong>E001:</strong> Invalid source framework</li>
-                    <li><strong>E002:</strong> Syntax error in source code</li>
-                    <li><strong>E003:</strong> Unsupported gate or operation</li>
-                    <li><strong>E004:</strong> Target framework not supported</li>
-                  </ul>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
+                  <Code className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h4 className="text-white font-medium mb-2">Simulation Errors</h4>
-                  <ul className="text-editor-text text-sm space-y-1">
-                    <li><strong>E101:</strong> Invalid QASM syntax</li>
-                    <li><strong>E102:</strong> Backend not available</li>
-                    <li><strong>E103:</strong> Memory limit exceeded</li>
-                    <li><strong>E104:</strong> Timeout error</li>
-                  </ul>
+                  <h3 className="text-xl font-semibold text-white">Framework Conversion</h3>
+                  <p className="text-editor-text text-sm">Convert between Qiskit, Cirq, and PennyLane</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">AST-based parsing and intelligent gate mapping</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">OpenQASM 3.0 as universal intermediate representation</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Circuit optimization levels 0-3</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Validation and error reporting</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
+                  <Play className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-white">Quantum Simulation</h3>
+                  <p className="text-editor-text text-sm">Multiple backends for accurate simulation</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Statevector backend for exact simulation</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Density matrix backend for noise modeling</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Stabilizer backend for Clifford circuits</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Configurable shot counts (1-10,000)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
+                  <BarChart3 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-white">Visualization</h3>
+                  <p className="text-editor-text text-sm">Interactive charts and circuit diagrams</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Real-time circuit visualization</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Histogram plots for measurement results</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">State vector and probability displays</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Export capabilities (JSON, CSV, PNG)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
+                  <BookOpen className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-white">Educational Tools</h3>
+                  <p className="text-editor-text text-sm">Learning resources and guided examples</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Pre-built example circuits</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Framework comparison tutorials</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Interactive learning modules</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Beginner to advanced difficulty levels</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <Settings className="w-6 h-6 mr-3 text-quantum-blue-light" />
+              Advanced Features
+            </h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Terminal className="w-6 h-6 text-orange-400" />
+                </div>
+                <h4 className="text-lg font-semibold text-white mb-2">Web IDE</h4>
+                <p className="text-editor-text text-sm">Professional code editor with syntax highlighting and IntelliSense</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-pink-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Shield className="w-6 h-6 text-pink-400" />
+                </div>
+                <h4 className="text-lg font-semibold text-white mb-2">Security</h4>
+                <p className="text-editor-text text-sm">Input validation, rate limiting, and secure API endpoints</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Cloud className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h4 className="text-lg font-semibold text-white mb-2">Scalability</h4>
+                <p className="text-editor-text text-sm">Docker deployment, load balancing, and high availability</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'architecture',
+      title: 'Architecture',
+      subtitle: 'System design',
+      icon: <Layers className="w-5 h-5" />,
+      badge: 'Technical',
+      category: 'Technical',
+      content: (
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
+              <Layers className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">
+              <span className="quantum-gradient bg-clip-text text-transparent">System Architecture</span>
+            </h2>
+            <p className="text-lg text-editor-text max-w-2xl mx-auto">
+              Modern, scalable architecture designed for quantum computing workflows
+            </p>
+          </div>
+
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6">High-Level Architecture</h3>
+            <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <pre className="text-xs text-editor-text overflow-x-auto">
+{`Frontend (Next.js)          Backend (FastAPI)          Quantum Processing
+├── React Components     ├── REST API Layer       ├── Quantum Converters
+├── Code Editor          ├── WebSocket Manager    ├── Quantum Simulator
+├── Visualization        ├── Service Layer        └── Circuit Optimizers
+└── Real-time Updates    └── Database Layer`}
+              </pre>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="quantum-glass-dark rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <Monitor className="w-5 h-5 mr-2 text-blue-400" />
+                Frontend Layer
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Next.js 14 with App Router</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">React 18 with TypeScript</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Monaco Editor integration</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Real-time WebSocket updates</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="quantum-glass-dark rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <Server className="w-5 h-5 mr-2 text-purple-400" />
+                Backend Layer
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">FastAPI with async support</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">PostgreSQL with SQLAlchemy</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Redis caching layer</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-editor-text text-sm">Pydantic data validation</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6">Data Flow Architecture</h3>
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-lg font-semibold text-white mb-3">Circuit Conversion Flow</h4>
+                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                  <div className="flex items-center space-x-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                      <span className="text-editor-text">User Input</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+                      <span className="text-editor-text">API Request</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="text-editor-text">Framework Parser</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
+                      <span className="text-editor-text">OpenQASM 3.0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-semibold text-white mb-3">Simulation Flow</h4>
+                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                  <div className="flex items-center space-x-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-teal-400 rounded-full"></div>
+                      <span className="text-editor-text">QASM Code</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-cyan-400 rounded-full"></div>
+                      <span className="text-editor-text">Backend Selection</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-pink-400 rounded-full"></div>
+                      <span className="text-editor-text">Circuit Execution</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                      <span className="text-editor-text">Results</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )
-    }
+    },
+    {
+      id: 'api',
+      title: 'API Reference',
+      subtitle: 'Technical documentation',
+      icon: <Terminal className="w-5 h-5" />,
+      badge: 'Reference',
+      category: 'Technical',
+      content: (
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
+              <Terminal className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">
+              <span className="quantum-gradient bg-clip-text text-transparent">API Reference</span>
+            </h2>
+            <p className="text-lg text-editor-text max-w-2xl mx-auto">
+              Complete REST API documentation for QCanvas platform integration
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="quantum-glass-dark rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <Code className="w-5 h-5 mr-2 text-blue-400" />
+                Conversion API
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-white font-medium">POST /api/convert</span>
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
+                  </div>
+                  <p className="text-editor-text text-sm mb-3">Convert quantum circuits between frameworks</p>
+                  <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 p-2 rounded">
+{`{
+  "source_framework": "qiskit",
+  "target_framework": "cirq",
+  "source_code": "your_circuit_code",
+  "optimization_level": 1
+}`}
+                  </pre>
+                </div>
+
+                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-white font-medium">GET /api/convert/frameworks</span>
+                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Info</span>
+                  </div>
+                  <p className="text-editor-text text-sm">Get supported frameworks and versions</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="quantum-glass-dark rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <Play className="w-5 h-5 mr-2 text-green-400" />
+                Simulation API
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-white font-medium">POST /api/simulate</span>
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
+                  </div>
+                  <p className="text-editor-text text-sm mb-3">Execute quantum circuit simulation</p>
+                  <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 p-2 rounded">
+{`{
+  "qasm_code": "OPENQASM 3.0; ...",
+  "backend": "statevector",
+  "shots": 1000
+}`}
+                  </pre>
+                </div>
+
+                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-white font-medium">GET /api/simulate/backends</span>
+                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Info</span>
+                  </div>
+                  <p className="text-editor-text text-sm">Get available simulation backends</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6">Available Backends</h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Database className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-white ml-3">Statevector</h4>
+                </div>
+                <p className="text-editor-text text-sm mb-3">Perfect simulation with full quantum state representation</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-400">Max Qubits:</span>
+                    <span className="text-white">32</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-400">Best for:</span>
+                    <span className="text-white">Exact results</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <Layers className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-white ml-3">Density Matrix</h4>
+                </div>
+                <p className="text-editor-text text-sm mb-3">Supports noise modeling and mixed quantum states</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-400">Max Qubits:</span>
+                    <span className="text-white">16</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-400">Best for:</span>
+                    <span className="text-white">Noise simulation</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-green-400" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-white ml-3">Stabilizer</h4>
+                </div>
+                <p className="text-editor-text text-sm mb-3">Efficient simulation for Clifford circuits</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-400">Max Qubits:</span>
+                    <span className="text-white">64</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-400">Best for:</span>
+                    <span className="text-white">Clifford circuits</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6">WebSocket API</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                <h4 className="text-white font-medium mb-2">Connection</h4>
+                <pre className="text-xs text-editor-text bg-gray-900 p-2 rounded">
+ws://localhost:8000/ws
+                </pre>
+              </div>
+              <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                <h4 className="text-white font-medium mb-2">Real-time Updates</h4>
+                <p className="text-editor-text text-sm">Live progress updates for long-running operations</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg overflow-x-hidden">
-      {/* Header */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-quantum-blue-light opacity-10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 opacity-10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-        
-        <div className="relative z-10 px-4 py-8">
-          <Link 
-            href="/login" 
-            className="inline-flex items-center text-editor-text hover:text-white transition-colors mb-8"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Login
-          </Link>
-          
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl">
-              <BookOpen className="w-12 h-12 text-white" />
-            </div>
-            <h1 className="text-5xl font-bold text-white mb-4">
-              <span className="quantum-gradient bg-clip-text text-transparent">Documentation</span>
-            </h1>
-            <div className="flex justify-center mb-4">
-              <button onClick={toggleTheme} className="btn-ghost p-2 hover:bg-quantum-blue-light/20 rounded-lg" title="Toggle theme">
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-            </div>
-            <p className="text-xl text-editor-text max-w-3xl mx-auto">
-              Comprehensive guide to using QCanvas for quantum circuit conversion, simulation, and visualization. 
-              Learn how to leverage the power of quantum computing across multiple frameworks.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <main className="px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar */}
-            <div className="lg:w-64 flex-shrink-0">
-              <div className="quantum-glass-dark rounded-2xl p-6 backdrop-blur-xl border border-white/10 lg:sticky lg:top-8">
-                <h3 className="text-lg font-semibold text-white mb-4">Contents</h3>
-                <nav className="space-y-2">
-                  {sections.map(section => (
-                    <button
-                      key={section.id}
-                      onClick={() => setActiveSection(section.id)}
-                      className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${
-                        activeSection === section.id
-                          ? 'bg-quantum-blue-light text-white'
-                          : 'text-editor-text hover:text-white hover:bg-editor-border'
-                      }`}
-                    >
-                      {section.icon}
-                      <span className="ml-3">{section.title}</span>
-                    </button>
-                  ))}
-                </nav>
+    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
+      {/* Enhanced Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-black/90 backdrop-blur-xl border-b border-white/10' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <Link href="/" className="flex items-center space-x-2 group">
+              <div className="relative">
+                <Image
+                  src="/QCanvas-logo-Black.svg"
+                  alt="QCanvas Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain block dark:hidden transition-all duration-300 hover:scale-110 animate-pulse"
+                  priority
+                />
+                <Image
+                  src="/QCanvas-logo-White.svg"
+                  alt="QCanvas Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain hidden dark:block transition-all duration-300 hover:scale-110 animate-pulse"
+                  priority
+                />
               </div>
+              <span className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent transition-all duration-200">
+                QCanvas
+              </span>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              {[
+                { id: 'overview', label: 'Overview', active: activeSection === 'overview' },
+                { id: 'getting-started', label: 'Getting Started', active: activeSection === 'getting-started' },
+                { id: 'features', label: 'Features', active: activeSection === 'features' },
+                { id: 'architecture', label: 'Architecture', active: activeSection === 'architecture' },
+                { id: 'api', label: 'API', active: activeSection === 'api' }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className={`transition-colors duration-200 ${
+                    item.active
+                      ? 'text-quantum-blue-light'
+                      : 'text-editor-text hover:text-white'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+
+              <Link
+                href="/"
+                className="text-editor-text hover:text-white transition-colors duration-200"
+              >
+                Home
+              </Link>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 min-w-0">
-              <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10">
-                {sections.find(section => section.id === activeSection)?.content}
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-editor-bg/50 border border-editor-border hover:border-quantum-blue-light transition-all duration-200 hover:scale-105"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-lg bg-editor-bg/50 border border-editor-border hover:border-quantum-blue-light transition-all duration-200 hover:scale-105"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden bg-black/95 backdrop-blur-xl border-t border-white/10">
+              <div className="px-4 py-4 space-y-4">
+                {[
+                  { id: 'overview', label: 'Overview' },
+                  { id: 'getting-started', label: 'Getting Started' },
+                  { id: 'features', label: 'Features' },
+                  { id: 'architecture', label: 'Architecture' },
+                  { id: 'api', label: 'API' }
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className={`block w-full text-left transition-colors duration-200 ${
+                      activeSection === item.id
+                        ? 'text-quantum-blue-light'
+                        : 'text-editor-text hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+
+                <Link
+                  href="/"
+                  className="block text-editor-text hover:text-white transition-colors duration-200"
+                >
+                  Home
+                </Link>
+
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                  <button
+                    onClick={toggleTheme}
+                    className="flex items-center space-x-2 text-editor-text hover:text-white transition-colors duration-200"
+                  >
+                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    <span>Theme</span>
+                  </button>
+                </div>
               </div>
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 pt-20 overflow-hidden">
+        {/* Enhanced Animated Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Large background orbs */}
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-quantum-blue-light opacity-8 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 opacity-8 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500 opacity-3 rounded-full blur-3xl animate-pulse delay-500"></div>
+
+          {/* Additional floating orbs */}
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400 opacity-6 rounded-full blur-2xl animate-float delay-300"></div>
+          <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-pink-400 opacity-5 rounded-full blur-2xl animate-float delay-700"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-green-400 opacity-4 rounded-full blur-2xl animate-float delay-1100"></div>
+        </div>
+
+        {/* Enhanced Floating Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Quantum-themed floating icons */}
+          <div className="absolute top-20 left-10 animate-float delay-1000 hover:scale-110 transition-transform duration-300">
+            <Atom className="w-8 h-8 text-quantum-blue-light opacity-40 animate-pulse" />
+          </div>
+          <div className="absolute top-40 right-20 animate-float-reverse delay-2000 hover:scale-110 transition-transform duration-300">
+            <Sparkles className="w-6 h-6 text-purple-400 opacity-50 animate-pulse delay-500" />
+          </div>
+          <div className="absolute bottom-40 left-20 animate-float delay-3000 hover:scale-110 transition-transform duration-300">
+            <Cpu className="w-10 h-10 text-teal-400 opacity-35 animate-pulse delay-1000" />
+          </div>
+          <div className="absolute top-1/3 right-10 animate-float-reverse delay-4000 hover:scale-110 transition-transform duration-300">
+            <Zap className="w-7 h-7 text-yellow-400 opacity-45 animate-pulse delay-1500" />
+          </div>
+          <div className="absolute bottom-1/3 left-1/5 animate-float delay-5000 hover:scale-110 transition-transform duration-300">
+            <Lightbulb className="w-6 h-6 text-orange-400 opacity-40 animate-pulse delay-2000" />
+          </div>
+          <div className="absolute top-2/3 right-1/3 animate-float-reverse delay-6000 hover:scale-110 transition-transform duration-300">
+            <Star className="w-5 h-5 text-indigo-400 opacity-50 animate-pulse delay-2500" />
+          </div>
+
+          {/* Geometric shapes */}
+          <div className="absolute top-16 right-1/4 w-2 h-2 bg-quantum-blue-light rounded-full animate-ping opacity-60"></div>
+          <div className="absolute bottom-32 right-16 w-1 h-8 bg-purple-400 rounded-full animate-pulse opacity-40"></div>
+          <div className="absolute top-1/2 left-16 w-3 h-3 bg-teal-400 rounded-full animate-bounce opacity-50"></div>
+        </div>
+
+        <div className={`text-center max-w-6xl mx-auto relative z-10 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full quantum-gradient mb-8 shadow-2xl">
+            <BookOpen className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            <span className="quantum-gradient bg-clip-text text-transparent">Documentation</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed">
+            Comprehensive guide to using QCanvas for quantum circuit conversion, simulation, and visualization.
+            Everything you need to build quantum applications with confidence.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <Link
+              href="/app"
+              className="btn-quantum text-lg px-8 py-4 flex items-center group hover-lift relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
+              <span className="relative z-10">Try QCanvas Now</span>
+            </Link>
+            <button
+              onClick={() => scrollToSection('getting-started')}
+              className="btn-ghost text-lg px-8 py-4 flex items-center group hover-lift relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-quantum-blue-light/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <BookOpen className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
+              <span className="relative z-10">Read Documentation</span>
+            </button>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div className="quantum-glass-dark rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">{config.stats.frameworks}</div>
+              <div className="text-editor-text text-sm">Quantum Frameworks</div>
+            </div>
+            <div className="quantum-glass-dark rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">OpenQASM 3.0</div>
+              <div className="text-editor-text text-sm">Standard Support</div>
+            </div>
+            <div className="quantum-glass-dark rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">Real-time</div>
+              <div className="text-editor-text text-sm">Simulation</div>
+            </div>
+            <div className="quantum-glass-dark rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">Educational</div>
+              <div className="text-editor-text text-sm">Platform</div>
             </div>
           </div>
         </div>
-      </main>
+      </section>
+
+      {/* Content Sections */}
+      {sections.map((section) => (
+        <section key={section.id} id={section.id} className="py-20 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
+                {section.icon}
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                <span className="quantum-gradient bg-clip-text text-transparent">{section.title}</span>
+              </h2>
+              {section.subtitle && (
+                <p className="text-lg text-editor-text max-w-2xl mx-auto">{section.subtitle}</p>
+              )}
+              {section.badge && (
+                <span className="inline-block mt-4 px-3 py-1 bg-quantum-blue-light/20 text-quantum-blue-light text-sm rounded-full border border-quantum-blue-light/30">
+                  {section.badge}
+                </span>
+              )}
+            </div>
+
+            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10">
+              {section.content}
+            </div>
+          </div>
+        </section>
+      ))}
 
       {/* Footer */}
-      <footer className="px-4 py-8 border-t border-editor-border">
+      <footer className="px-4 py-12 border-t border-editor-border">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-editor-text">
-            Need help? Check out our examples or contact our support team.
+            {getCopyrightText()}
           </p>
           <div className="flex justify-center space-x-6 mt-4">
-            <Link href="/examples" className="text-editor-text hover:text-white transition-colors">
-              Examples
-            </Link>
-            <Link href="/about" className="text-editor-text hover:text-white transition-colors">
-              About QCanvas
-            </Link>
-            <a href="https://github.com" className="text-editor-text hover:text-white transition-colors">
+            {config.footer.support.map((link) => (
+              <a
+                key={link.email || link.name}
+                href={link.email ? `mailto:${link.email}` : '#'}
+                className="text-editor-text hover:text-white transition-colors"
+              >
+                {link.name}
+              </a>
+            ))}
+            <a
+              href={config.social.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-editor-text hover:text-white transition-colors"
+            >
               GitHub
-            </a>
-            <a href="mailto:support@qcanvas.dev" className="text-editor-text hover:text-white transition-colors">
-              Support
             </a>
           </div>
         </div>
