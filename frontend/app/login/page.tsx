@@ -91,13 +91,24 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative z-10">
         {/* Logo and Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full quantum-gradient mb-6 shadow-2xl overflow-hidden">
+          <div className="inline-flex items-center justify-center mb-6">
+            {/* Light mode logo (violet) */}
             <Image
-              src="/mylogo.svg"
+              src="/mylogo2.svg"
               alt="App Logo"
-              width={64}
-              height={64}
-              className="object-contain"
+              width={72}
+              height={72}
+              className="object-contain block dark:hidden"
+              priority
+            />
+
+            {/* Dark mode logo (light blue) */}
+            <Image
+              src="/mylogo3.svg"
+              alt="App Logo"
+              width={72}
+              height={72}
+              className="object-contain hidden dark:block"
               priority
             />
           </div>
