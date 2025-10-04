@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Zap, Github, BookOpen, Play, Moon, Sun } from 'lucide-react'
+import { Eye, EyeOff, Github, BookOpen, Play, Moon, Sun } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
 import Image from 'next/image'
@@ -16,6 +16,7 @@ export default function LoginPage() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isLogoHovered, setIsLogoHovered] = useState(false)
 
   // Check if already authenticated
   useEffect(() => {
@@ -91,36 +92,66 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative z-10">
         {/* Logo and Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center mb-6">
-            {/* Light mode logo (violet) */}
-            <Image
-              src="/mylogo2.svg"
-              alt="App Logo"
-              width={72}
-              height={72}
-              className="object-contain block dark:hidden"
-              priority
-            />
+          <div
+            className="relative inline-flex items-center justify-center mb-6 group cursor-pointer"
+            onMouseEnter={() => setIsLogoHovered(true)}
+            onMouseLeave={() => setIsLogoHovered(false)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setIsLogoHovered(!isLogoHovered)
+              }
+            }}
+          >
+            {/* Centered logo container */}
+            <div className="relative flex items-center justify-center">
+              {/* Animated container - logo moves left on hover */}
+              <div className={`transition-all duration-500 ease-out ${isLogoHovered ? '-translate-x-20' : 'translate-x-0'}`}>
+                {/* Light mode logo (black) */}
+                <Image
+                  src="/QCanvas-logo-Black.svg"
+                  alt="QCanvas Logo"
+                  width={96}
+                  height={96}
+                  className={`object-contain block dark:hidden transition-all duration-300 ${isLogoHovered ? 'scale-110 drop-shadow-lg' : 'scale-100 hover:scale-105'} animate-pulse`}
+                  priority
+                />
 
-            {/* Dark mode logo (light blue) */}
-            <Image
-              src="/mylogo3.svg"
-              alt="App Logo"
-              width={72}
-              height={72}
-              className="object-contain hidden dark:block"
-              priority
-            />
+                {/* Dark mode logo (white) */}
+                <Image
+                  src="/QCanvas-logo-White.svg"
+                  alt="QCanvas Logo"
+                  width={96}
+                  height={96}
+                  className={`object-contain hidden dark:block transition-all duration-300 ${isLogoHovered ? 'scale-110 drop-shadow-2xl' : 'scale-100 hover:scale-105'} animate-pulse`}
+                  priority
+                />
+              </div>
+
+              {/* Animated text that appears on hover - centered above logo */}
+              <div className={`absolute -top-16 left-1/2 transform -translate-x-1/2 transition-all duration-500 ease-out ${isLogoHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+                <h1 className="text-4xl font-bold text-white whitespace-nowrap text-center">
+                  <span className="quantum-gradient bg-clip-text text-transparent animate-pulse">
+                    QCanvas
+                  </span>
+                </h1>
+                <div className="w-24 h-0.5 bg-quantum-blue-light rounded-full animate-pulse delay-200 mx-auto mt-1"></div>
+              </div>
+            </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-3">
-            Welcome to <span className="quantum-gradient bg-clip-text text-transparent">QCanvas</span>
-          </h1>
-          <p className="text-editor-text text-lg">
-            Quantum Code Editor & Simulation Platform
-          </p>
-          <p className="text-gray-400 text-sm mt-2">
-            Convert, simulate, and visualize quantum circuits
-          </p>
+
+          <div className={`transition-all duration-500 ${isLogoHovered ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
+            <h1 className="text-4xl font-bold text-white mb-3">
+              Welcome to <span className="quantum-gradient bg-clip-text text-transparent">QCanvas</span>
+            </h1>
+            <p className="text-editor-text text-lg">
+              Quantum Code Editor & Simulation Platform
+            </p>
+            <p className="text-gray-400 text-sm mt-2">
+              Convert, simulate, and visualize quantum circuits
+            </p>
+          </div>
         </div>
 
         {/* Login Form */}
