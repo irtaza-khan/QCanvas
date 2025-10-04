@@ -1,0 +1,532 @@
+FYP UML Workshop 
+Dr. Javaria Imtiaz 
+Assistant Professor 
+javaria.imtiaz@nu.edu.pk
+Agenda 
+1. Introduction 
+2. Project Vision 
+3. Use Case Diagram 
+4. High-level use cases 
+5. Expanded Use cases 
+6. Domain Model 
+7. SSD 
+8. Activity Diagram/Data Flow Diagram 9. Operations Contracts 
+10. Sequence Diagram 
+11. Architecture Diagram
+Introduction 
+• This section covers the overview of the entire document. 
+• The main purpose of this section is to identify the purpose and scope of the project. 
+• It also includes definitions, synonyms, abbreviations, and sometimes references.
+Project Vision 
+– Problem statement 
+– Business Opportunity 
+– Objectives 
+– Project Scope 
+– Constraints 
+– Stakeholder description 
+– Stakeholder summary
+Problem statement 
+• Summarize the problem that this project solves. Use the following statements as a model, providing project details to replace the parenthetical elements: 
+“The problem of (describe the problem) affects (the stakeholders affected by the  problem). The impact of the problem is (what is the impact of the problem). A  successful solution would include (list some key benefits of a successful  solution).”
+Scope 
+• Project scope is the part of project planning that involves determining and documenting a list of specific project goals, deliverables, tasks, and deadlines.
+Stakeholder Description 
+• This section identifies the key problems related to the users’ and stakeholders’ interests. The factors affecting product decisions are market demographics. 
+• A stakeholder summary, a user summary, detailed working user environment, user profile, stakeholder profiles, and key stakeholder or user needs should be included in this section.
+Stakeholder summary 
+• List all the identified stakeholders. For each stakeholder type, provide this information: 
+– Name: Name the stakeholder type. 
+– Represents: Briefly describe which individuals, teams, or organizations this stakeholder type represents. 
+– Role: Briefly describe the role this stakeholder type plays in the development effort.
+Textbooks and Supplementary Reading List 
+• Text Book(s) 
+• Craig Larman, Applying UML and Patterns, 3rd edition, 2004. 
+• Bernd Bruegge, Allen H. Dutoit, Object-Oriented Software Engineering, using UML, Patterns, and Java. 
+• UML 2 Toolkit Published by Wiley Publishing, Inc. 
+• UML 2.0, Documentation:www.rational.com 
+• Additional Reading List 
+• Unified Modeling Language: Superstructure, version 2.1.2, formal/07-11-02, OMG, www.omg.org ✔Available in the Library/E-Book 
+9
+Software 
+• UML (Designing/Modeling Standard) • Rational Software Architect (Modeling tool) • Enterprise Architect 
+10
+Requirements Analysis and  Use-Case Diagrams
+How are design ideas communicated in a team environment?
+• If the software is large scale, employing perhaps dozens of developers over several years, it is important that all members of the development team communicate using a common language. 
+• This isn’t meant to imply that they all need to be fluent in English or C++, but it does mean that they need to be able to describe their software’s operation and design to another person. 
+• That is, the ideas in the head of say the analyst have to be conveyed to the designer in some way so that he/she can implement that idea in code. 
+• Just as mathematicians use algebra and electronics engineers have evolved circuit notation and theory to describe their ideas, software engineers have evolved their own notation for describing the architecture and behaviour of software system. 
+• That notation is called UML. The Unified Modelling Language. Some might prefer the title Universal Modelling language since it can be used to model many things besides software. 
+What is UML ?
+• UML is not a language in the same way that we view programming languages such as ‘C++’, ‘Java’ or ‘Basic’. 
+• UML is however a language in the sense that it has syntax and semantics which convey meaning, understanding and constraints (i.e. what is right and wrong and the limitations of those decisions) to the reader and thereby allows two people fluent in that language to communicate and understand the intention of the other. 
+• UML represents a collection of graphical notations to capture requirements and design alternatives. 
+• UML is to software engineers what building plans are to an architect and an electrical circuit diagrams is to an electrician. 
+• UML is suitable for large scale projects 
+
+4
+• Requirement Analysis 
+Phases of System Development 
+
+– The functionality users require from the system – Use-case model 
+• OO Analysis 
+– Discovering classes and relationships 
+– Class diagram 
+• OO Design  
+– Result of Analysis expanded into technical solution – Sequence diagram, state diagram, etc. 
+– Results in detailed specs for the coding phase • Implementation (Programming/coding) 
+– Models are converted into code 
+• Testing 
+– Unit tests, integration tests, system tests and acceptance tests. 
+Definition of a Use-Case 
+• A process or procedure, describing a user’s interaction with the system (e.g.  library) for a specified, identifiable purpose. (e.g. borrowing a book).  
+• As such, each Use-Case describes a step-by-step sequence of operations,  iterations and events that document 
+– The Interaction taking place.  
+– The Measurable Benefits to the user interacting with the system. – The Effect of that Interaction on the system. 
+• It is important to document these use-cases as fully as possible as each  use-case captures some important functionality that our system will have to  provide in the automated version of the library.
+
+Flex ATM Bank Register Course Withdraw  
+Money Apply for Loan 
+Online Shoping Management  system 
+Make Purchase 
+
+Library OSM HMS FMS
+
+Issue Book Make Payment Order Food 
+Book Online  Ticket 
+
+Use Cases in Iterative Development 
+▪ Functional requirements are primarily captured in use cases ▪ Use cases drive the iteration planning and work Easy for users to understand ▪ Influence user manual/documentation 
+▪ Functional or system testing corresponds to the scenarios of use cases ▪ Independent of implementing technology UI shortcuts for most common scenarios
+What ‘should’ and what ‘shouldn’t ‘ be included in use cases?
+How to Find Use Cases? 
+• Choose the system boundary 
+▪ what you are building? 
+▪ who will be using the system? 
+▪ what else will be used that you are not building? 
+• Find primary actors and their goals 
+▪ brainstorm the primary actors first who starts and stops the system? ▪ who gets notified when there are errors or failures? 
+• Define use cases that satisfy user goals 
+▪ prepare an actor-goal list (and not actor-task list) in general, one use  case for each user goal 
+▪ name the use case similar to the user goal
+What Tests Can Help Find Useful Use Cases? 
+• Which of these are valid use cases?
+⮚ Negotiate a Supplier Contract  
+⮚ Handle Returns 
+⮚ Log in 
+⮚ Move Piece on the Game Board 
+What Tests Can Help Find Useful Use Cases? 
+• Which of these are valid use cases? 
+⮚ Negotiate a Supplier Contract  
+⮚ Handle Returns 
+⮚ Log in 
+⮚ Move Piece on the Game Board 
+All of these can be use cases at different levels, depending on the  system, boundary, actors, and goals
+What Tests Can Help Find Useful Use  Cases? 
+• Rather than asking 
+● ”What is a valid use case?” More practical question: 
+● “What is a useful level of focus to express use cases for application requirements analysis?” 
+• Rules of thumb 
+● The Boss Test 
+● The EBP Test 
+● The size test
+What Tests Can Help Find Useful Use  Cases? 
+The boss test 
+“What have you been doing all day?” 
+●Your reply “logging in!” 
+● Is your boss happy? No value? No good use case! 
+The Elementary Business Process (EBP) test a task performed by one person in one place at one time, in response to a business event, which adds measurable business value and leaves data in a consistent state 
+Good Examples: Approve Credit or Price Order 
+Bad Examples: delete a line item or print the document 
+The size test 
+●Just a single step in a sequence of others -> not good!
+Applying Tests 
+⮚ Negotiate a supplier contract 
+⮚ Much broader than EBP, rather a business use case ⮚ Handle returns 
+⮚ OK with the Boss. EBP. Size is good. 
+⮚ Log in 
+⮚ Boss is not happy is this is all you do all day! ⮚ Move piece on game board ⮚ Single step – fails the size test.
+Use Case Diagram Concepts 
+• Summarizes all use cases (for the part of the system being modeled) together in one picture. 
+• Typically drawn early in the SDLC 
+• Shows the associations between actors and use cases
+Use Case (Context) Diagrams:  Suggested Notation
+
+
+
+
+
+
+
+
+
+
+Requirement 1 
+The content management system shall allow an administrator to create a new blog account, provided the personal details of the new blogger are verified using the author credentials database. 
+Example 
+The requirement  
+indicates that that  
+the Administrator 
+interacts with the  
+system to create a  
+new blogger's  
+account 
+
+The 
+Administrator interacts with the  system and is not  part of the  
+system; thus, the  Administrator Is an Actor. 
+
+It's actually worth being very careful when naming your actors. The best approach is to use a name that can be understood by both your customer and your system designers.
+Example 
+• What can be the use case in our Requirement 1? to create a  
+
+Requirement 1 
+The content management system  shall allow an administrator to  create a new blog account,  provided the personal details of  the new blogger are verified  using the author credentials  database. 
+new blog  
+account 
+UML Representation
+
+Example (Cont) 
+Requirement 2 
+The content management system shall allow an administrator  to create a new personal Wiki, provided the personal details of  the applying author are verified using the Author Credentials  Database.
+
+Use Case Diagram– Guidelines & Caution 
+• Actors should be Use cases should ideally begin with a verb – i.e generate report. • Use cases should NOT be open ended – i.e Register (instead should be named as Register New User) 
+• Avoid showing communication between actors. 
+▪ named as singular. i.e., student and NOT students. NO names should be used – i.e John, Sam, etc. ▪ Do NOT show behavior in a use case diagram; instead only depict only system functionality. ▪ Use case diagram does not show sequence – unlike DFDs.
+Granularity of Use Cases 
+Add  
+reference 
+Remove  
+reference 
+User 
+Search for  
+reference 
+List  
+references
+Granularity of Use Cases 
+Manage  
+Reference 
+User 
+Generally, a use case should embody sufficient levels of granularity without which the use case may not be rendered as useful.
+Point of Sale System  
+A customer arrives at a checkout with items to purchase. The cashier uses the POS system to record each purchased item. The system presents a running total and line-item details. The customer enters payment information, which the system validates and records. The system updates inventory. The customer receives a receipt from the system and then leaves with the items. 
+33
+Actors and User Goals 
+Actor 
+Goal 
+Actor 
+Goal
+Cashier 
+1. Process sales  2. Process rentals 3. Handle returns 4. Cash in 
+5. Cash out 
+…
+System Administrator 
+1. Add users 
+2. Modify users 
+3. Delete users 
+4. Manage security 
+5. Manage system tables
+Manager 
+1. Start up 
+2. Shut down
+Sales Activity System 
+1. Analyze sales and 
+performance data
+… 
+… 
+… 
+…
+
+
+
+34
+35
+Use Case 
+• A use case is a set of scenarios tied together by a common user  goal. 
+• Examples are: 
+– “sign up for the exam”, 
+– “make a bank transfer”.
+Use Case Diagram 
+1. A use case diagram for the entire system – a graphic model. 2. Use cases are not diagrams they are text documents. 3. Use cases are one way of capturing the functional requirements. 4. Use cases are text stories of some actors using a system to meet goals. 
+5. One or more use case narratives for each use case – descriptions in text. ⮚ High-level Use Cases 
+⮚ Expanded/Extended Use Cases 
+4-37
+Use Case 
+What it is: 
+Text story 
+Widely used to discover and record (mostly functional) requirements What is it about: 
+
+Some actor(s) using a system to meet specific goals  Answering questions: 
+Who is using the system, what are their typical  scenarios of use, and what are their goals? 
+What it is NOT: 
+Not object-oriented 
+● Not a diagram 
+UML use cases diagrams are “secondary-value” artifacts Focus: use cases, not use case diagrams 
+Withdraw Money through ATM? Submit Online Exam 
+Place an order Food Panda
+
+Use Case Scenario 
+• A scenario is a specific sequence of actions and interactions between actors and the system under discussion. 
+• It is also called a use case instance. 
+• It is one particular story of using a system, or one path through the use case; for example, the scenario of successfully purchasing items with cash, or the scenario of failing to purchase items because of a credit card transaction denial.
+Process Sale:  
+1. A customer arrives at a checkout with items to purchase. 2. The cashier uses the POS system to record each purchased item. 
+3. The system presents a running total and line-item details. 4. The customer enters payment information, which the system validates and records. 
+5. The system updates inventory. 
+6. The customer receives a receipt from the system and then leaves with the items. 
+40
+Use Case Format 
+Brief 
+Succinct one-paragraph summary usually the 
+main success scenario 
+done during early requirements analysis should take 
+only a couple of minutes 
+Casual 
+informal paragraph format 
+multiple paragraphs covering various scenarios 
+Fully dressed 
+details all steps and variations 
+includes supporting sections such as preconditions and success guarantees mainly done after many use cases are identified and during early requirements workshop for high-value and high-risk requirements (e.g., core architectural)
+High Level/Brief Use Case Format Buy Items A brief description of use case’s role and purpose
+High Level/Brief Use Cases
+A Template for Fully Dressed Style 
+
+• Use case name 
+• start with a verb 
+• Scope 
+• the system under design 
+• Level 
+• user goal or subfunction level 
+• Primary actor 
+• calls on the system to deliver a service • Stakeholders and interests 
+• Main success scenario 
+• a typical, unconditional happy path scenario of  success 
+• Extensions 
+• alternate scenarios of success and failure • Special requirements 
+• related non-functional requirements 
+• Technology and data variations list • varying I/O methods and date formats
+
+• who cares about this use case, and what do  they want? 
+• Preconditions 
+• what must be true on start, and worth  telling the reader 
+• Success guarantee (postcondition) • what must be true on successful completion, and  worth telling the reader 
+Scope 
+• Defines how broad the use case is. 
+• This can be for the whole system, as in the POS example, or narrow, as in a use case for creating a journal entry in an accounting system. 
+45
+Level 
+• User-goal: Scenarios that let a user get something done. Corresponds to an elementary business process. 
+• Sub function: smaller steps required to support a user goal. 
+user-level for a use case that describes one complete activity in the system; or subfunction for a use case that depends on a user-level use case but is too long to include in the user-level use case.
+46 
+Primary Actor 
+• The person (or sometimes object) that calls upon system services to fulfill a goal. (When might an actor not be a person?) 
+47
+Stakeholders and Interests 
+• The stakeholders are people who have a reason to want this  system. The Interests are their reasons for wanting it and what  they expect from it.  
+• You could view the system as a contract between various  stakeholders. 
+Someone or something with an interest in the behavior of the system under discussion. E.g. company stakeholders, customers, vendors, and government regulatory agencies,…
+48 
+Preconditions 
+• It announces what the system will ensure is true before letting the use case start. Since it is enforced by the system and known to be true, it will not be checked again during the use case execution; e.g. user has logged in. 
+49
+What the system will ensure is true before letting the use case start
+Success Guarantee 
+• States what interests of the stakeholders are satisfied after a successful conclusion of the use case, either at the end of the main success scenario or at the end of a successful alternative path. The success guarantees are written additionally to the minimal guarantees.
+
+
+
+Main Success Scenario 
+• This satisfies the interests of the stakeholders. You get  your groceries, the store gets your money, inventory is  reduced, etc. 
+• Steps: 
+– An interaction between actors 
+– Validation (by the system) 
+– State change to the system 
+a case in which nothing goes wrong.
+53 
+
+One  
+Column 
+Format
+
+
+Two Column Format 
+Two column emphasizes interaction
+Extensions or Alternate Flows 
+• These include all other possible outcomes, both success  and failure. 
+what can happen differently during a scenario.
+56 
+
+Technology and Data Variations 
+• Technical variations on how something must be done: – Scan bar code 
+– Key item ID 
+– RFID 
+• Avoid early design decisions; keep things general. 57
+
+
+
+
+
+
+
+Write in a UI-Free Style 
+• Most programs are dependent upon a particular user  interface. However, avoid constraining your program too  early: 
+• “The user keys an ID and password into a dialog box and  presses the OK button.” 
+• “The user identifies himself to the system.” 
+• The latter allows for biometric ID, keyin, etc. 63
+
+Essential Style 
+• Focus on the essence, or basic idea, not the details of  implementation 
+• Contrast with concrete style 
+64
+Write Black-Box Use Cases 
+Focus on what the system must do, ● i.e., the behavior or functional requirements  Not on how it will do (the design) 
+Examples: 
+Good: The system records the sale 
+Bad: The system writes the sale to the database. Worse: System generates SQL INSERT statement for the sale
+Expanded Use Cases Buy Items 
+
+Pay by  CASH 
+Pay by  CREDIT 
+Pay by  CHEQUE
+
+
+Expanded Essential Use Cases (2) 
+Typical Course of Events 
+Actor Action System Response
+1. This use case begins when Customer arrives at the POST checkout with items to purchase.
+
+
+2. The Cashier records each item. If there is more than one item, Cashier can enter the quantity as well.
+3. Determines the item price and adds the item information to the running sales transaction. The description and price of the current item are presented.
+4. On completion of item entry, the Cashier indicates to the POST that item entry is complete.
+5. Calculates and presents the sale total.
+6. The Cashier tells the Customer the total.
+
+
+7. Customer chooses payment type: 
+a. If cash payment, see section Pay by Cash. b. If credit payment, see section Pay by Credit. c. If check payment, see section Pay by Check
+8. Logs the completed sale. 
+9. Updates inventory levels. 
+10. Generates a receipt.
+
+
+
+Lecture 08 -OOAD
+Expanded Essential Use Cases (3) 
+Typical Course of Events 
+Actor Action System Response
+11.The Cashier gives the receipt 
+to the Customer.
+
+
+12.The Customer leaves with 
+the items purchased.
+
+
+Alternative Courses 
+Line 2: Invalid item identifier entered. Indicate error. 
+Line 7: Customer could not pay. Cancel sale transaction.
+
+
+
+Lecture 08 -OOAD
+Expanded Essential Use Cases (4) 
+Section: Pay By Cash 
+Actor Action System Response
+1. The Customer gives a cash payment-the “cash tendered” - possibly greater then the sale total.
+
+
+2. The Cashier records the cash tendered. 
+3. Shows the balance due 
+back to the Customer.
+4. The Cashier deposits the cash received and  extracts the balance owing. The Cashier gives  the balance owing to the Customer.
+
+
+Alternative Courses 
+Line 1:Customer does not have sufficient cash. May cancel sale or initiate another payment  method. 
+Line 4: Cash drawer does not contain sufficient cash. Cashier requests additional cash from  supervisor or asks Customer for different payment amount or method.
+
+
+
+Lecture 08 -OOAD
+Expanded Essential Use Cases (5) 
+Section: Pay By Credit 
+Actor Action System Response
+1. The Customer communicates their credit  information for the credit payment.
+2.Generates a credit payment Request and  sends it to an external Credit Authorization  service.
+3. Credit Authorization Service authorizes the  payment
+4. Receives a credit approval Reply from the  Credit Authorization Service (CAS)
+
+
+5. POST (records) the credit payment and  approval reply information to the Accounts  Receivable system.(The CAS owes money to  the Store, hence Acct/Recv must track it).
+
+
+6. Display authorization success message.
+Alternative Courses 
+Line 3: Credit request denied by Credit Authorization Service. Suggest different payment  method.
+
+
+
+Lecture 08 -OOAD
+Expanded Essential Use Cases (6)
+
+Domain Model 
+• Why: 
+Domain modeling helps us to identify the relevant concepts and ideas of a domain 
+• When: 
+Domain modeling is done during object-oriented analysis 
+• Guideline: 
+Only create a domain model forthe tasks at hand
+“Good designs require deep  application knowledge.” 
+Curtis’law
+Domain Model 
+• The Domain Model illustrates noteworthy concepts in a domain. 
+• The domain model is created during object-oriented analysis to decompose the domain into concepts or objects in the real world. 
+• The model should identify the set of conceptual classes (The domain model is iteratively completed.) 
+• Also known as Visual Dictionary 
+• It is the basis for the design of the software. 
+• The domain model is also called conceptual model, domain object model or analysis object mode. 
+– conceptual is idea, thing, object 
+74
+Domain Model 
+• Illustrates meaningful conceptual classes in problem domain (Analysis phase) • It helps us identify, relate and visualize important information. 
+• Represents real-world concepts, not software components 
+• Software-oriented class diagrams will be developed later (during design phase) 
+• It provides inspiration for later creation of software design classes, to reduce “representational gap.” 
+75
+Domain Model
+-Domain Modeling is useful to understand the ideas and concepts of the domain and their interrelationships 
+- A Domain Model is usually created at the beginning of a project and is a basis for the design model 
+- ADomain Model is created using a subset ofthe UMLclass diagram notation 
+To visualize domain models the UML class diagram notation is used. 
+• However, no operations are defined in domain models • Only ...  
+– domain objects and conceptual classes 
+– associations between them 
+– attributes of conceptual classes 
+77
+A Domain Model is Conceptual, not a Software  Artifact 
+
+Conceptual Class: 
+Sale 
+amt 
+item 
+vs. 
+What’s the difference?
+Software Artifacts: SalesDatabase 
+Sale 
+Double amt; 
+Item item; 
+void print() 
+
+Monopoly Game domain model (first identify concepts as classes) 
+
+Monopoly Game 
+Dice Board 
+Player Piece 
+Square
+
+Monopoly Game domain model 
+Larman, Figure 9.28
+
