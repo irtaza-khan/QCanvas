@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Zap, Github, BookOpen, Play, Moon, Sun } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -90,8 +91,15 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative z-10">
         {/* Logo and Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full quantum-gradient mb-6 shadow-2xl">
-            <Zap className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full quantum-gradient mb-6 shadow-2xl overflow-hidden">
+            <Image
+              src="/mylogo.svg"
+              alt="App Logo"
+              width={64}
+              height={64}
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="text-4xl font-bold text-white mb-3">
             Welcome to <span className="quantum-gradient bg-clip-text text-transparent">QCanvas</span>
