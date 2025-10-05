@@ -77,6 +77,32 @@ export default function AppPage() {
     }
   }, [setFiles, files.length, isAuthenticated])
 
+  // Listen for inter-tab messages to add files from examples page
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const channel = new BroadcastChannel('qcanvas-examples')
+
+    channel.onmessage = (event) => {
+      if (event.data.type === 'add-example-file') {
+        const { filename, code } = event.data
+        // Add the file and set it as active
+        const newFile = useFileStore.getState().addFile(filename, code)
+        toast.success(`Loaded example: ${filename}`)
+
+        // Send confirmation back to examples page
+        channel.postMessage({
+          type: 'file-added',
+          filename
+        })
+      }
+    }
+
+    return () => {
+      channel.close()
+    }
+  }, [isAuthenticated])
+
   // Handle global save event
   useEffect(() => {
     const handleSave = async () => {
