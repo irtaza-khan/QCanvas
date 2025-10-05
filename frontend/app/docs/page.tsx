@@ -225,7 +225,7 @@ print(qc)`}
                   <Code className="w-8 h-8 text-blue-400" />
                 </div>
                 <h4 className="text-xl font-semibold text-white mb-2">Qiskit</h4>
-                <p className="text-editor-text text-sm mb-3">IBM's comprehensive quantum computing framework</p>
+                <p className="text-editor-text text-sm mb-3">IBM&apos;s comprehensive quantum computing framework</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">Circuit Design</span>
                   <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">IBM Quantum</span>
@@ -236,7 +236,7 @@ print(qc)`}
                   <Code className="w-8 h-8 text-purple-400" />
                 </div>
                 <h4 className="text-xl font-semibold text-white mb-2">Cirq</h4>
-                <p className="text-editor-text text-sm mb-3">Google's framework for near-term quantum devices</p>
+                <p className="text-editor-text text-sm mb-3">Google&apos;s framework for near-term quantum devices</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">Noise Modeling</span>
                   <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">Google AI</span>
@@ -247,7 +247,7 @@ print(qc)`}
                   <Code className="w-8 h-8 text-green-400" />
                 </div>
                 <h4 className="text-xl font-semibold text-white mb-2">PennyLane</h4>
-                <p className="text-editor-text text-sm mb-3">Xanadu's quantum machine learning framework</p>
+                <p className="text-editor-text text-sm mb-3">Xanadu&apos;s quantum machine learning framework</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">ML Integration</span>
                   <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">Variational</span>
