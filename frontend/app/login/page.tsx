@@ -21,9 +21,9 @@ export default function LoginPage() {
   // Check if already authenticated
   useEffect(() => {
     const authStatus = localStorage.getItem('qcanvas-auth')
-    if (authStatus) {
-      router.push('/app')
-    }
+    // if (authStatus) {
+    //   router.push('/app')
+    // }
   }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,7 +107,7 @@ export default function LoginPage() {
             {/* Centered logo container */}
             <div className="relative flex items-center justify-center">
               {/* Animated container - logo moves left on hover */}
-              <div className={`transition-all duration-500 ease-out ${isLogoHovered ? '-translate-x-20' : 'translate-x-0'}`}>
+              <div className={`transition-all duration-500 ease-out ${isLogoHovered ? '-translate-x-40' : 'translate-x-0'}`}>
                 {/* Light mode logo (black) */}
                 <Image
                   src="/QCanvas-logo-Black.svg"
@@ -130,7 +130,7 @@ export default function LoginPage() {
               </div>
 
               {/* Animated text that appears on hover - centered above logo */}
-              <div className={`absolute -top-16 left-1/2 transform -translate-x-1/2 transition-all duration-500 ease-out ${isLogoHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+              <div className={`absolute -top-16 left-1/2 transform -translate-x-1/2 transition-all duration-500 ease-out ${isLogoHovered ? 'opacity-100 translate-y-[5.5rem]' : 'opacity-0 -translate-y-4'}`}>
                 <h1 className="text-4xl font-bold text-white whitespace-nowrap text-center">
                   <span className="quantum-gradient bg-clip-text text-transparent animate-pulse">
                     QCanvas
