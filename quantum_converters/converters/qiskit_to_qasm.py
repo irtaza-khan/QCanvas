@@ -11,7 +11,7 @@ Version: 2.0.0 - Integrated with QASM3Builder
 """
 
 import inspect
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Union, List
 from qiskit import QuantumCircuit
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
@@ -117,24 +117,62 @@ class QiskitToQASM3Converter:
         """Try calling factory functions that might create circuits."""
         from qiskit import QuantumCircuit
 
+        factory_functions = self._find_factory_functions(namespace)
+
+        for func in factory_functions:
+            circuit = self._try_call_factory_function(func)
+            if circuit is not None:
+                return circuit
+
+        return None
+
+    def _find_factory_functions(self, namespace: dict) -> List[callable]:
+        """Find potential factory functions in the namespace."""
+        factory_functions = []
         for name, obj in namespace.items():
             if callable(obj) and name.startswith(("create_", "build_", "make_")):
-                try:
-                    # Try no-arg call
-                    maybe_circuit = obj()  # type: ignore
-                    if isinstance(maybe_circuit, QuantumCircuit):
-                        return maybe_circuit
-                except TypeError:
-                    # Try with common integer default, e.g., 2 or 4 qubits
-                    for trial_n in (2, 3, 4):
-                        try:
-                            maybe_circuit = obj(trial_n)
-                            if isinstance(maybe_circuit, QuantumCircuit):
-                                return maybe_circuit
-                        except Exception:
-                            continue
-                except Exception:
-                    continue
+                factory_functions.append(obj)
+        return factory_functions
+
+    def _try_call_factory_function(self, func: callable) -> Optional['QuantumCircuit']:
+        """Try to call a factory function to create a circuit."""
+        from qiskit import QuantumCircuit
+
+        # First try no-arg call
+        circuit = self._try_no_arg_call(func)
+        if circuit is not None:
+            return circuit
+
+        # Try with common integer defaults
+        return self._try_with_arg_call(func)
+
+    def _try_no_arg_call(self, func: callable) -> Optional['QuantumCircuit']:
+        """Try calling function with no arguments."""
+        from qiskit import QuantumCircuit
+
+        try:
+            maybe_circuit = func()  # type: ignore
+            if isinstance(maybe_circuit, QuantumCircuit):
+                return maybe_circuit
+        except TypeError:
+            # Function requires arguments, will try with args next
+            pass
+        except Exception:
+            # Other error, skip this function
+            pass
+        return None
+
+    def _try_with_arg_call(self, func: callable) -> Optional['QuantumCircuit']:
+        """Try calling function with common integer arguments."""
+        from qiskit import QuantumCircuit
+
+        for trial_n in (2, 3, 4):
+            try:
+                maybe_circuit = func(trial_n)
+                if isinstance(maybe_circuit, QuantumCircuit):
+                    return maybe_circuit
+            except Exception:
+                continue
         return None
     
     def _analyze_qiskit_circuit(self, qc: 'QuantumCircuit') -> ConversionStats:
@@ -404,7 +442,7 @@ class QiskitToQASM3Converter:
         self._convert_ast_operations(builder, circuit_ast)
 
         code = builder.get_code()
-        self._log_ast_conversion_complete(code, t0)
+        self._log_ast_conversion_complete(t0)
         return code
 
     def _build_ast_prelude(self, builder: QASM3Builder, circuit_ast) -> None:
@@ -481,7 +519,7 @@ class QiskitToQASM3Converter:
                 vprint(f"[QiskitToQASM3Converter] [{idx}] Barrier on all qubits")
             builder.add_barrier(None)
 
-    def _log_ast_conversion_complete(self, code: str, start_time: float) -> None:
+    def _log_ast_conversion_complete(self, start_time: float) -> None:
         """Log completion of AST conversion."""
         if VERBOSE:
             vprint(f"[QiskitToQASM3Converter] Build done in {(time.time()-start_time)*1000:.1f} ms")

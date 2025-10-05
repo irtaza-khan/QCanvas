@@ -37,6 +37,7 @@ Database:
     Redis (Cache & Session Store)
 
 Development & Testing:
+    SonarQube (Bugs and Security Vulnerabilities)
     pytest (Testing Framework)
     pytest-asyncio (Async Testing)
     Black (Code Formatting)
