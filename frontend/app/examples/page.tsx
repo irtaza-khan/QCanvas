@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Copy, Play, Code, Moon, Sun, Menu, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
@@ -675,7 +676,8 @@ export default function ExamplesPage() {
   const [selectedFramework, setSelectedFramework] = useState<string>('all')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const { theme, toggleTheme } = useFileStore()
+  const { theme, toggleTheme, addFile } = useFileStore()
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
 
@@ -687,6 +689,34 @@ export default function ExamplesPage() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  const openInEditor = (example: Example) => {
+    const filename = `${example.title.replace(/\s+/g, '_')}.py`
+
+    // Try to send message to existing app tab
+    const channel = new BroadcastChannel('qcanvas-examples')
+    channel.postMessage({
+      type: 'add-example-file',
+      filename,
+      code: example.code
+    })
+
+    // Fallback: navigate to app if no response after timeout
+    const timeout = setTimeout(() => {
+      channel.close()
+      // If app tab is not open, navigate to it
+      router.push('/app')
+    }, 500)
+
+    // Listen for confirmation (optional, for now just close after sending)
+    channel.onmessage = (event) => {
+      if (event.data.type === 'file-added') {
+        clearTimeout(timeout)
+        channel.close()
+        toast.success(`Example loaded in editor: ${filename}`)
+      }
+    }
+  }
 
   const filteredExamples = examples.filter(example => {
     const matchesCategory = selectedCategory === 'all' || example.category === selectedCategory
@@ -972,11 +1002,7 @@ export default function ExamplesPage() {
                       Copy Code
                     </button>
                     <button
-                      onClick={() => {
-                        copyToClipboard(example.code)
-                        // In a real app, this would open the editor with the code
-                        toast.success('Code copied! Open QCanvas to use it.')
-                      }}
+                      onClick={() => openInEditor(example)}
                       className="flex-1 btn-ghost flex items-center justify-center py-2 text-sm"
                     >
                       <Play className="w-4 h-4 mr-2" />
