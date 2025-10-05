@@ -200,24 +200,39 @@ class QiskitASTVisitor(ast.NodeVisitor):
 
     def _handle_measurement_qiskit(self, args: List[ast.expr]) -> None:
         """Handle measurement operations in Qiskit."""
-        if len(args) >= 2:
-            if VERBOSE:
-                vprint("[QiskitASTVisitor]   rule=measure -> support list and single indices")
+        if len(args) < 2:
+            return
 
-            # Support both single indices and list pairs
-            if isinstance(args[0], ast.List) and isinstance(args[1], ast.List):
-                qubits = [self._extract_qubit_index(item) for item in args[0].elts]
-                clbits = [self._extract_clbit_index(item) for item in args[1].elts]
-                for q, c in zip(qubits, clbits):
-                    self.operations.append(MeasurementNode(qubit=q, clbit=c))
-                    if VERBOSE:
-                        vprint(f"[QiskitASTVisitor] Added measure q[{q}] -> c[{c}]")
-            else:
-                qubit = self._extract_qubit_index(args[0])
-                clbit = self._extract_clbit_index(args[1])
-                self.operations.append(MeasurementNode(qubit=qubit, clbit=clbit))
-                if VERBOSE:
-                    vprint(f"[QiskitASTVisitor] Added measure q[{qubit}] -> c[{clbit}]")
+        if VERBOSE:
+            vprint("[QiskitASTVisitor]   rule=measure -> support list and single indices")
+
+        if self._is_batch_measurement(args):
+            self._handle_batch_measurement(args)
+        else:
+            self._handle_single_measurement(args)
+
+    def _is_batch_measurement(self, args: List[ast.expr]) -> bool:
+        """Check if this is a batch measurement with lists of qubits and clbits."""
+        return (isinstance(args[0], ast.List) and isinstance(args[1], ast.List))
+
+    def _handle_batch_measurement(self, args: List[ast.expr]) -> None:
+        """Handle measurement of multiple qubits to multiple clbits."""
+        qubits = [self._extract_qubit_index(item) for item in args[0].elts]
+        clbits = [self._extract_clbit_index(item) for item in args[1].elts]
+
+        for q, c in zip(qubits, clbits):
+            self.operations.append(MeasurementNode(qubit=q, clbit=c))
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Added measure q[{q}] -> c[{c}]")
+
+    def _handle_single_measurement(self, args: List[ast.expr]) -> None:
+        """Handle measurement of a single qubit to a single clbit."""
+        qubit = self._extract_qubit_index(args[0])
+        clbit = self._extract_clbit_index(args[1])
+        self.operations.append(MeasurementNode(qubit=qubit, clbit=clbit))
+
+        if VERBOSE:
+            vprint(f"[QiskitASTVisitor] Added measure q[{qubit}] -> c[{clbit}]")
 
     def _handle_reset_qiskit(self, args: List[ast.expr]) -> None:
         """Handle reset operations in Qiskit."""

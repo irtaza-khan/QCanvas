@@ -107,26 +107,37 @@ class CirqASTVisitor(ast.NodeVisitor):
 
     def _handle_qubit_creation(self, target, call_node):
         """Handle qubit creation and assignment."""
-        if isinstance(target, ast.Name):
+        if isinstance(target, ast.Tuple):
+            self._handle_tuple_qubit_creation(target)
+        elif isinstance(target, ast.Name):
             var_name = target.id
-        elif isinstance(target, ast.Tuple):
-            # Handle tuple unpacking like q0, q1 = cirq.LineQubit.range(2)
-            for i, elt in enumerate(target.elts):
-                if isinstance(elt, ast.Name):
-                    self.qubit_vars[elt.id] = self.qubit_counter
-                    self.qubit_counter += 1
-            return
-        else:
-            return
+            self._handle_single_qubit_creation(var_name, call_node)
+        # Other target types are ignored
 
-        # For single variable assignments
-        if isinstance(call_node.func, ast.Attribute) and call_node.func.attr == 'range':
-            # cirq.LineQubit.range(n)
-            if call_node.args and isinstance(call_node.args[0], ast.Num):
-                count = call_node.args[0].n
-                for i in range(count):
-                    self.qubit_vars[f"{var_name}[{i}]"] = self.qubit_counter
-                    self.qubit_counter += 1
+    def _handle_tuple_qubit_creation(self, target: ast.Tuple):
+        """Handle tuple unpacking for qubit creation like q0, q1 = cirq.LineQubit.range(2)."""
+        for elt in target.elts:
+            if isinstance(elt, ast.Name):
+                self.qubit_vars[elt.id] = self.qubit_counter
+                self.qubit_counter += 1
+
+    def _handle_single_qubit_creation(self, var_name: str, call_node):
+        """Handle single variable qubit creation."""
+        if self._is_range_qubit_creation(call_node):
+            self._handle_range_qubit_creation(var_name, call_node)
+
+    def _is_range_qubit_creation(self, call_node) -> bool:
+        """Check if this is a range-based qubit creation."""
+        return (isinstance(call_node.func, ast.Attribute) and
+                call_node.func.attr == 'range')
+
+    def _handle_range_qubit_creation(self, var_name: str, call_node):
+        """Handle range-based qubit creation like cirq.LineQubit.range(n)."""
+        if call_node.args and isinstance(call_node.args[0], ast.Num):
+            count = call_node.args[0].n
+            for i in range(count):
+                self.qubit_vars[f"{var_name}[{i}]"] = self.qubit_counter
+                self.qubit_counter += 1
 
     def _parse_circuit_constructor_args(self, circuit_call: ast.Call) -> None:
         """Parse arguments passed to Circuit constructor (operations)."""
@@ -143,28 +154,49 @@ class CirqASTVisitor(ast.NodeVisitor):
 
     def _parse_operation_call(self, call_node: ast.Call) -> None:
         """Parse a single operation call like cirq.H(q0) or cirq.measure(q0)."""
+        method_name = self._extract_method_name(call_node)
+        if method_name:
+            if VERBOSE:
+                self._log_operation_call(method_name, call_node)
+            self._parse_gate_operation(method_name, call_node.args, call_node.keywords)
+
+    def _extract_method_name(self, call_node: ast.Call) -> Optional[str]:
+        """Extract the method name from a function call node."""
         if isinstance(call_node.func, ast.Attribute):
             # cirq.H(q0), cirq.measure(q0), etc.
             if isinstance(call_node.func.value, ast.Name) and call_node.func.value.id == 'cirq':
-                method_name = call_node.func.attr
-                if VERBOSE:
-                    arg_dump = []
-                    for a in call_node.args:
-                        try:
-                            arg_dump.append(ast.dump(a, include_attributes=False))
-                        except Exception:
-                            arg_dump.append(str(a))
-                    kw_dump = {kw.arg: (ast.dump(kw.value, include_attributes=False) if hasattr(ast, 'dump') else str(kw.value)) for kw in call_node.keywords}
-                    vprint(f"[CirqASTVisitor] Found cirq operation: {method_name}")
-                    vprint(f"[CirqASTVisitor]   raw.args={arg_dump}")
-                    vprint(f"[CirqASTVisitor]   raw.keywords={kw_dump}")
-                self._parse_gate_operation(method_name, call_node.args, call_node.keywords)
+                return call_node.func.attr
         elif isinstance(call_node.func, ast.Name):
             # Direct function calls (less common in Cirq)
-            method_name = call_node.func.id
-            if VERBOSE:
-                vprint(f"[CirqASTVisitor] Found direct operation: {method_name}")
-            self._parse_gate_operation(method_name, call_node.args, call_node.keywords)
+            return call_node.func.id
+        return None
+
+    def _log_operation_call(self, method_name: str, call_node: ast.Call) -> None:
+        """Log details of an operation call for debugging."""
+        operation_type = "cirq operation" if isinstance(call_node.func, ast.Attribute) else "direct operation"
+        vprint(f"[CirqASTVisitor] Found {operation_type}: {method_name}")
+
+        if VERBOSE >= 2:  # Only dump args at higher verbosity
+            arg_dump = self._dump_args(call_node.args)
+            kw_dump = self._dump_keywords(call_node.keywords)
+            vprint(f"[CirqASTVisitor]   raw.args={arg_dump}")
+            vprint(f"[CirqASTVisitor]   raw.keywords={kw_dump}")
+
+    def _dump_args(self, args: List[ast.expr]) -> List[str]:
+        """Dump AST arguments to strings for logging."""
+        arg_dump = []
+        for a in args:
+            try:
+                arg_dump.append(ast.dump(a, include_attributes=False))
+            except Exception:
+                arg_dump.append(str(a))
+        return arg_dump
+
+    def _dump_keywords(self, keywords: List[ast.keyword]) -> Dict[str, str]:
+        """Dump AST keywords to strings for logging."""
+        return {kw.arg: (ast.dump(kw.value, include_attributes=False)
+                        if hasattr(ast, 'dump') else str(kw.value))
+                for kw in keywords}
 
     def _handle_circuit_method_call(self, node: ast.Call) -> None:
         """Handle method calls on circuit variables."""

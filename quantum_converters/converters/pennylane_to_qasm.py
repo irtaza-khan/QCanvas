@@ -66,65 +66,88 @@ class PennyLaneToQASM3Converter:
     def _extract_circuit_info(self, circuit_code: str) -> Dict[str, Any]:
         """
         Extract circuit information from PennyLane code string.
-        
+
         Args:
             circuit_code (str): The PennyLane circuit code as a string
-            
+
         Returns:
             Dict[str, Any]: Dictionary containing:
                 - num_qubits (int): Number of qubits in the circuit
                 - operations (List[str]): List of operation strings
         """
-        # Find device definition to determine number of qubits
-        device_match = re.search(r'qml\.device\([^,]+,\s*wires=(\d+)', circuit_code)
-        num_qubits = int(device_match.group(1)) if device_match else 2
-        
-        # Extract quantum operations from the circuit function
-        operations = []
-        lines = circuit_code.split('\n')
-        
-        for line in lines:
-            line = line.strip()
-            # Look for qml operations inside a qnode function body
-            if line.startswith('qml.') and not line.startswith('qml.expval') and not line.startswith('qml.device'):
-                operations.append(line)
+        num_qubits = self._extract_num_qubits(circuit_code)
+        operations = self._extract_operations(circuit_code)
 
-        # If no operations were found by static scan, try executing to introspect
+        # If no operations were found by static scan, try dynamic introspection
         if not operations:
-            namespace: Dict[str, Any] = {}
-            try:
-                exec(compile(circuit_code, "<pennylane_source>", "exec"), namespace)
-                # Prefer a get_circuit returning a callable qnode
-                qnode = namespace.get('get_circuit')
-                candidate_funcs = []
-                if callable(qnode):
-                    try:
-                        qnode = qnode()
-                    except Exception:
-                        pass
-                if callable(qnode):
-                    candidate_funcs.append(qnode)
-                # Also scan other callables that look like qnodes
-                for name, obj in namespace.items():
-                    if callable(obj) and hasattr(obj, 'qml') or hasattr(obj, 'device'):
-                        candidate_funcs.append(obj)
-            except Exception:
-                candidate_funcs = []  # fall back to empty
+            self._try_dynamic_introspection(circuit_code)
 
-            # We cannot easily extract ops from qnode; keep operations empty but keep num_qubits from device
-        
         return {
             'num_qubits': num_qubits,
             'operations': operations
         }
+
+    def _extract_num_qubits(self, circuit_code: str) -> int:
+        """Extract the number of qubits from the device definition."""
+        device_match = re.search(r'qml\.device\([^,]+,\s*wires=(\d+)', circuit_code)
+        return int(device_match.group(1)) if device_match else 2
+
+    def _extract_operations(self, circuit_code: str) -> List[str]:
+        """Extract quantum operations from the circuit code lines."""
+        operations = []
+        lines = circuit_code.split('\n')
+
+        for line in lines:
+            line = line.strip()
+            # Look for qml operations inside a qnode function body
+            if self._is_quantum_operation(line):
+                operations.append(line)
+
+        return operations
+
+    def _is_quantum_operation(self, line: str) -> bool:
+        """Check if a line contains a quantum operation."""
+        return (line.startswith('qml.') and
+                not line.startswith('qml.expval') and
+                not line.startswith('qml.device'))
+
+    def _try_dynamic_introspection(self, circuit_code: str) -> None:
+        """Try to dynamically introspect the circuit code for additional information."""
+        namespace: Dict[str, Any] = {}
+        try:
+            exec(compile(circuit_code, "<pennylane_source>", "exec"), namespace)
+            self._find_qnode_candidates(namespace)  # Introspect for potential qnodes
+        except Exception:
+            pass  # Ignore introspection failures
+
+    def _find_qnode_candidates(self, namespace: Dict[str, Any]) -> List[Any]:
+        """Find potential qnode functions in the executed namespace."""
+        candidate_funcs = []
+
+        # Prefer a get_circuit returning a callable qnode
+        qnode = namespace.get('get_circuit')
+        if callable(qnode):
+            try:
+                qnode = qnode()
+            except Exception:
+                pass
+            if callable(qnode):
+                candidate_funcs.append(qnode)
+
+        # Also scan other callables that look like qnodes
+        for name, obj in namespace.items():
+            if callable(obj) and (hasattr(obj, 'qml') or hasattr(obj, 'device')):
+                candidate_funcs.append(obj)
+
+        return candidate_funcs
     
     def _parse_operation(self, op_line: str, num_qubits: int) -> Dict[str, Any]:
         """
         Parse a single PennyLane operation line to extract gate name, parameters, and wires.
-        
+
         Args:
             op_line (str): A single line of PennyLane operation code
-            
+
         Returns:
             Dict[str, Any]: Dictionary containing:
                 - gate (str): Gate name
@@ -133,75 +156,111 @@ class PennyLaneToQASM3Converter:
         """
         # Remove qml. prefix for processing
         op_line = op_line.replace('qml.', '').strip()
-        
-        # Handle gates with parameters and/or wires
+
         if '(' in op_line:
-            gate_name = op_line.split('(')[0]
-            params_and_wires = op_line.split('(')[1].rstrip(')')
-            
-            # Separate parameters from wires
-            parts = params_and_wires.split('wires=')
-            
-            if len(parts) > 1:
-                # Has explicit wires parameter
-                param_part = parts[0].rstrip(', ')
-                wire_part = parts[1]
-            else:
-                # Only wires specified, no parameters
-                param_part = ''
-                wire_part = params_and_wires
-            
-            # Parse parameters
-            params = []
-            if param_part and param_part != '':
-                param_part = param_part.strip()
-                # Handle list format [param1, param2]
-                if param_part.startswith('[') and param_part.endswith(']'):
-                    param_part = param_part[1:-1]
-                
-                # Split multiple parameters
-                if ',' in param_part:
-                    params = [p.strip() for p in param_part.split(',')]
-                else:
-                    params = [param_part] if param_part else []
-            
-            # Parse wire indices
-            wire_part = wire_part.strip()
-            # Expand range(n_qubits) patterns
-            if wire_part.startswith('range('):
-                wires = list(range(num_qubits))
-            else:
-                # Handle list format [wire1, wire2]
-                if wire_part.startswith('[') and wire_part.endswith(']'):
-                    wire_part = wire_part[1:-1]
-                parts = [p.strip() for p in wire_part.split(',')]
-                wires = []
-                unsupported = False
-                for p in parts:
-                    try:
-                        wires.append(int(p))
-                    except Exception:
-                        # Try to extract integer literals inside expressions (e.g., "1", "0")
-                        import re as _re
-                        m = _re.findall(r"\d+", p)
-                        if m:
-                            wires.append(int(m[0]))
-                        else:
-                            unsupported = True
-                if unsupported and not wires:
-                    # Mark operation as unsupported due to dynamic wire indices
-                    return { 'unsupported': True, 'reason': 'dynamic_wires', 'raw': op_line }
-                
+            return self._parse_parameterized_operation(op_line, num_qubits)
         else:
-            # Gate without parameters or parentheses
-            gate_name = op_line
-            params = []
-            wires = []
-        
+            return self._parse_simple_operation(op_line)
+
+    def _parse_parameterized_operation(self, op_line: str, num_qubits: int) -> Dict[str, Any]:
+        """Parse an operation that has parameters and/or wires in parentheses."""
+        gate_name = op_line.split('(')[0]
+        params_and_wires = op_line.split('(')[1].rstrip(')')
+
+        param_part, wire_part = self._split_params_and_wires(params_and_wires)
+        params = self._parse_parameters(param_part)
+        wires = self._parse_wires(wire_part, num_qubits)
+
+        if isinstance(wires, dict) and wires.get('unsupported'):
+            return wires  # Return error dict
+
         return {
             'gate': gate_name,
             'params': params,
             'wires': wires
+        }
+
+    def _split_params_and_wires(self, params_and_wires: str) -> tuple:
+        """Split the parameter and wire parts of an operation."""
+        parts = params_and_wires.split('wires=')
+
+        if len(parts) > 1:
+            # Has explicit wires parameter
+            param_part = parts[0].rstrip(', ')
+            wire_part = parts[1]
+        else:
+            # Only wires specified, no parameters
+            param_part = ''
+            wire_part = params_and_wires
+
+        return param_part, wire_part
+
+    def _parse_parameters(self, param_part: str) -> List[str]:
+        """Parse the parameter part of an operation."""
+        params = []
+        if not param_part:
+            return params
+
+        param_part = param_part.strip()
+        # Handle list format [param1, param2]
+        if param_part.startswith('[') and param_part.endswith(']'):
+            param_part = param_part[1:-1]
+
+        # Split multiple parameters
+        if ',' in param_part:
+            params = [p.strip() for p in param_part.split(',')]
+        else:
+            params = [param_part] if param_part else []
+
+        return params
+
+    def _parse_wires(self, wire_part: str, num_qubits: int) -> Union[List[int], Dict[str, Any]]:
+        """Parse the wire indices from an operation."""
+        wire_part = wire_part.strip()
+
+        # Expand range(n_qubits) patterns
+        if wire_part.startswith('range('):
+            return list(range(num_qubits))
+
+        # Handle list format [wire1, wire2]
+        if wire_part.startswith('[') and wire_part.endswith(']'):
+            wire_part = wire_part[1:-1]
+
+        parts = [p.strip() for p in wire_part.split(',')]
+        wires = []
+        unsupported = False
+
+        for p in parts:
+            wire_index = self._parse_single_wire(p)
+            if wire_index is not None:
+                wires.append(wire_index)
+            else:
+                unsupported = True
+
+        if unsupported and not wires:
+            # Mark operation as unsupported due to dynamic wire indices
+            return {'unsupported': True, 'reason': 'dynamic_wires'}
+
+        return wires
+
+    def _parse_single_wire(self, wire_str: str) -> Optional[int]:
+        """Parse a single wire index, handling various formats."""
+        try:
+            return int(wire_str)
+        except ValueError:
+            # Try to extract integer literals inside expressions (e.g., "1", "0")
+            import re as _re
+            m = _re.findall(r"\d+", wire_str)
+            if m:
+                return int(m[0])
+            return None
+
+    def _parse_simple_operation(self, op_line: str) -> Dict[str, Any]:
+        """Parse a simple operation without parameters or parentheses."""
+        return {
+            'gate': op_line,
+            'params': [],
+            'wires': []
         }
     
     def _evaluate_parameter(self, param_str: str) -> Union[float, str]:
@@ -214,56 +273,56 @@ class PennyLaneToQASM3Converter:
         Returns:
             Union[float, str]: Evaluated numerical value or symbolic constant
         """
+        # Check for direct mathematical constants first
+        constant_value = self._check_direct_constants(param_str)
+        if constant_value is not None:
+            return constant_value
+
+        # Handle complex expressions with symbolic constants
+        symbolic_expr = self._process_symbolic_constants(param_str)
+        # Check if symbolic constants are present in the processed expression
+        if 'PI' in symbolic_expr or 'E' in symbolic_expr:
+            return symbolic_expr
+
+        # Evaluate numerical expressions
+        return self._evaluate_numerical_expression(param_str)
+
+    def _check_direct_constants(self, param_str: str) -> Optional[str]:
+        """Check for direct mathematical constant references."""
+        stripped = param_str.strip()
+
+        constants = {
+            ('np.pi', 'numpy.pi', 'pi', 'math.pi'): "PI",
+            ('np.e', 'numpy.e', 'e', 'math.e'): "E",
+            ('np.pi/2', 'pi/2'): "PI/2",
+            ('np.pi/4', 'pi/4'): "PI/4"
+        }
+
+        for constant_names, qasm_name in constants.items():
+            if stripped in constant_names:
+                return qasm_name
+
+        return None
+
+    def _process_symbolic_constants(self, param_str: str) -> str:
+        """Replace numpy constants with symbolic versions."""
+        # Replace numpy constants with symbolic versions
+        processed_str = param_str.replace('np.pi', 'PI')
+        processed_str = processed_str.replace('numpy.pi', 'PI')
+        processed_str = processed_str.replace('np.e', 'E')
+        processed_str = processed_str.replace('numpy.e', 'E')
+
+        # Return the processed string (will be different if symbolic constants were replaced)
+        return processed_str
+
+    def _evaluate_numerical_expression(self, param_str: str) -> Union[float, str]:
+        """Safely evaluate numerical expressions."""
         try:
-            # Check for direct mathematical constants
-            if param_str.strip() in ['np.pi', 'numpy.pi', 'pi', 'math.pi']:
-                return "PI"
-            elif param_str.strip() in ['np.e', 'numpy.e', 'e', 'math.e']:
-                return "E"
-            elif param_str.strip() == 'np.pi/2' or param_str.strip() == 'pi/2':
-                return "PI/2"
-            elif param_str.strip() == 'np.pi/4' or param_str.strip() == 'pi/4':
-                return "PI/4"
-
-            # For more complex expressions, evaluate numerically but keep symbolic constants
-            param_str = param_str.replace('np.pi', 'PI')
-            param_str = param_str.replace('numpy.pi', 'PI')
-            param_str = param_str.replace('np.e', 'E')
-            param_str = param_str.replace('numpy.e', 'E')
-
-            # If it contains symbolic constants, return as string
-            if 'PI' in param_str or 'E' in param_str:
-                return param_str
-
-            # For pure numerical expressions, evaluate them
-            allowed_names = {
-                "__builtins__": {},
-                "pi": np.pi,
-                "e": np.e,
-                "sqrt": np.sqrt,
-                "sin": np.sin,
-                "cos": np.cos,
-                "tan": np.tan,
-            }
-
-            # Safely evaluate the mathematical expression
+            allowed_names = self._get_eval_namespace()
             result = eval(param_str, allowed_names)
+
             if isinstance(result, (int, float)):
-                # Format nicely
-                if isinstance(result, float):
-                    # Check for common values
-                    if abs(result - np.pi) < 1e-10:
-                        return "PI"
-                    elif abs(result - np.pi/2) < 1e-10:
-                        return "PI/2"
-                    elif abs(result - np.pi/4) < 1e-10:
-                        return "PI/4"
-                    elif abs(result - np.e) < 1e-10:
-                        return "E"
-                    else:
-                        return f"{result:.6f}"
-                else:
-                    return str(result)
+                return self._format_numerical_result(result)
 
         except Exception:
             # If evaluation fails, try direct float conversion
@@ -272,48 +331,90 @@ class PennyLaneToQASM3Converter:
             except ValueError:
                 # As a last resort, return as string
                 return param_str
+
+    def _get_eval_namespace(self) -> Dict[str, Any]:
+        """Get the safe namespace for expression evaluation."""
+        return {
+            "__builtins__": {},
+            "pi": np.pi,
+            "e": np.e,
+            "sqrt": np.sqrt,
+            "sin": np.sin,
+            "cos": np.cos,
+            "tan": np.tan,
+        }
+
+    def _format_numerical_result(self, result: Union[int, float]) -> str:
+        """Format numerical results, recognizing common constants."""
+        if isinstance(result, float):
+            # Check for common mathematical constants
+            constant_checks = [
+                (np.pi, "PI"),
+                (np.pi/2, "PI/2"),
+                (np.pi/4, "PI/4"),
+                (np.e, "E")
+            ]
+
+            for constant_value, constant_name in constant_checks:
+                if abs(result - constant_value) < 1e-10:
+                    return constant_name
+
+            return f"{result:.6f}"
+        else:
+            return str(result)
     
     def _convert_gate(self, parsed_op: Dict[str, Any]) -> str:
         """
         Convert a parsed PennyLane operation to its OpenQASM 3.0 equivalent.
-        
+
         Args:
             parsed_op (Dict[str, Any]): Parsed operation containing gate, params, and wires
-            
+
         Returns:
             str: OpenQASM 3.0 gate instruction string
         """
         if parsed_op.get('unsupported'):
-            return f"// Unsupported PennyLane op: {parsed_op.get('raw')}"
+            return self._format_unsupported_operation(parsed_op)
 
         gate_name = parsed_op['gate']
+        qasm_gate = self._get_qasm_gate_name(gate_name)
+        if qasm_gate is None:
+            return f"// Unsupported gate: {gate_name}"
+
         params = parsed_op['params']
         wires = parsed_op['wires']
-        
-        # Check if gate is supported
-        if gate_name not in self.gate_mapping:
-            return f"// Unsupported gate: {gate_name}"
-        
-        qasm_gate = self.gate_mapping[gate_name]
-        
-        # Handle parameterized gates
-        if params:
-            evaluated_params = []
-            for param in params:
-                if isinstance(param, str):
-                    evaluated_params.append(self._evaluate_parameter(param))
-                else:
-                    evaluated_params.append(param)
-            
-            param_str = ', '.join(str(p) for p in evaluated_params)
-            param_str = f"({param_str})"
-        else:
-            param_str = ""
-        
-        # Format wire specifications
-        wire_str = ', '.join(f"q[{w}]" for w in wires)
-        
+
+        param_str = self._format_parameters(params)
+        wire_str = self._format_wires(wires)
+
         return f"{qasm_gate}{param_str} {wire_str};"
+
+    def _format_unsupported_operation(self, parsed_op: Dict[str, Any]) -> str:
+        """Format an unsupported operation as a comment."""
+        return f"// Unsupported PennyLane op: {parsed_op.get('raw')}"
+
+    def _get_qasm_gate_name(self, gate_name: str) -> Optional[str]:
+        """Get the OpenQASM equivalent of a PennyLane gate name."""
+        return self.gate_mapping.get(gate_name)
+
+    def _format_parameters(self, params: List[Any]) -> str:
+        """Format parameters for OpenQASM output."""
+        if not params:
+            return ""
+
+        evaluated_params = []
+        for param in params:
+            if isinstance(param, str):
+                evaluated_params.append(self._evaluate_parameter(param))
+            else:
+                evaluated_params.append(param)
+
+        param_str = ', '.join(str(p) for p in evaluated_params)
+        return f"({param_str})"
+
+    def _format_wires(self, wires: List[int]) -> str:
+        """Format wire indices for OpenQASM output."""
+        return ', '.join(f"q[{w}]" for w in wires)
     
     def _add_pennylane_operation(self, builder: QASM3Builder, parsed_op: Dict[str, Any]):
         """Add a PennyLane operation to the QASM builder."""
@@ -360,29 +461,52 @@ class PennyLaneToQASM3Converter:
             return ConversionStats(n_qubits=0, depth=None, n_moments=None, gate_counts=None, has_measurements=False)
 
     def _add_ast_operation(self, builder: QASM3Builder, operation):
+        """Add an AST operation to the QASM builder."""
         if isinstance(operation, GateNode):
-            qubits_str = [f"q[{i}]" for i in operation.qubits]
-            modifiers = operation.modifiers if operation.modifiers else None
-            name = operation.name
-            if name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id', 'swap', 'cx', 'cz', 'ccx']:
-                builder.apply_gate(name, qubits_str, modifiers=modifiers)
-            elif name in ['rx', 'ry', 'rz', 'p']:
-                if operation.parameters:
-                    param = builder.format_parameter(operation.parameters[0])
-                    builder.apply_gate(name, qubits_str, parameters=[param], modifiers=modifiers)
-                else:
-                    builder.add_comment(f"Parameterized gate {name} missing parameter")
-            else:
-                builder.add_comment(f"Unsupported gate: {name}")
+            self._add_ast_gate_operation(builder, operation)
         elif isinstance(operation, MeasurementNode):
             builder.add_measurement(f"q[{operation.qubit}]", f"c[{operation.clbit}]")
         elif isinstance(operation, ResetNode):
             builder.add_reset(f"q[{operation.qubit}]")
         elif isinstance(operation, BarrierNode):
-            if operation.qubits:
-                builder.add_barrier([f"q[{i}]" for i in operation.qubits])
-            else:
-                builder.add_barrier(None)
+            self._add_ast_barrier_operation(builder, operation)
+
+    def _add_ast_gate_operation(self, builder: QASM3Builder, operation: GateNode):
+        """Add a gate operation from AST to QASM builder."""
+        qubits_str = [f"q[{i}]" for i in operation.qubits]
+        modifiers = operation.modifiers if operation.modifiers else None
+        name = operation.name
+
+        if self._is_standard_gate(name):
+            builder.apply_gate(name, qubits_str, modifiers=modifiers)
+        elif self._is_parameterized_gate(name):
+            self._add_parameterized_gate(builder, name, qubits_str, operation, modifiers)
+        else:
+            builder.add_comment(f"Unsupported gate: {name}")
+
+    def _is_standard_gate(self, gate_name: str) -> bool:
+        """Check if gate is a standard single-qubit or multi-qubit gate."""
+        return gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id', 'swap', 'cx', 'cz', 'ccx']
+
+    def _is_parameterized_gate(self, gate_name: str) -> bool:
+        """Check if gate is a parameterized gate."""
+        return gate_name in ['rx', 'ry', 'rz', 'p']
+
+    def _add_parameterized_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
+                               operation: GateNode, modifiers):
+        """Add a parameterized gate to the QASM builder."""
+        if operation.parameters:
+            param = builder.format_parameter(operation.parameters[0])
+            builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers)
+        else:
+            builder.add_comment(f"Parameterized gate {gate_name} missing parameter")
+
+    def _add_ast_barrier_operation(self, builder: QASM3Builder, operation: BarrierNode):
+        """Add a barrier operation from AST to QASM builder."""
+        if operation.qubits:
+            builder.add_barrier([f"q[{i}]" for i in operation.qubits])
+        else:
+            builder.add_barrier(None)
 
     def _convert_ast_to_qasm3(self, circuit_ast: CircuitAST) -> str:
         builder = QASM3Builder()
@@ -405,13 +529,13 @@ class PennyLaneToQASM3Converter:
     def convert(self, pennylane_code: str) -> ConversionResult:
         """
         Convert PennyLane quantum circuit code to OpenQASM 3.0 format with statistics.
-        
+
         Args:
             pennylane_code (str): Complete PennyLane circuit code as a string
-            
+
         Returns:
             ConversionResult: Object containing QASM code and conversion statistics
-            
+
         Raises:
             ValueError: If the input code cannot be parsed or contains unsupported operations
         """
@@ -420,134 +544,159 @@ class PennyLaneToQASM3Converter:
         if ast_result is not None:
             return ast_result
 
-        try:
-            # Legacy path: Extract circuit information from PennyLane code
-            circuit_info = self._extract_circuit_info(pennylane_code)
-            num_qubits = circuit_info['num_qubits']
-            operations = circuit_info['operations']
+        # Fall back to legacy conversion
+        return self._convert_legacy(pennylane_code)
 
-            # Detect common loop patterns to expand dynamic wires
+    def _convert_legacy(self, pennylane_code: str) -> ConversionResult:
+        """Convert using the legacy parsing approach."""
+        try:
+            circuit_info = self._extract_circuit_info(pennylane_code)
             loop_info = self._detect_loop_patterns(pennylane_code)
-            has_loop_i_n = loop_info['has_loop_i_n']
-            has_loop_i_n_minus_1 = loop_info['has_loop_i_n_minus_1']
-            has_layer_loop = loop_info['has_layer_loop']
-            p_default = loop_info['p_default']
-            
-            # Initialize the QASM3 builder
+
             if VERBOSE:
                 vprint("[PennyLaneToQASM3Converter] Legacy path: building prelude and emitting operations")
-            t0 = time.time()
-            builder = QASM3Builder()
 
-            # Check if measurements exist
-            has_measurements = any('measure' in op.lower() for op in operations)
-            num_clbits = num_qubits if has_measurements else 0
-            
-            # Build standard prelude with all registers and variables
-            builder.build_standard_prelude(
-                num_qubits=num_qubits,
-                num_clbits=num_clbits,
-                include_vars=True
-            )
+            builder = self._initialize_builder(circuit_info)
+            stats = self._process_operations(builder, circuit_info, loop_info)
+            self._add_control_flow_examples(builder, stats.has_measurements)
 
-            # Add gate definitions section
-            builder.add_section_comment("Gate definitions")
-            builder.add_comment("(Custom gate definitions would go here)")
-            builder.add_blank_line()
-
-            # Add classical operations
-            builder.add_section_comment("Classical operations")
-            builder.add_assignment("temp_angle", "PI_2")
-            builder.add_assignment("loop_index", "0")
-            builder.add_blank_line()
-            
-            builder.add_section_comment("Circuit operations")
-            
-            # Initialize statistics
-            gate_counts = {}
-            has_measurements = False
-            depth = 0
-            
-            # Convert each PennyLane operation to OpenQASM 3.0 and collect stats
-            for op_line in operations:
-                if VERBOSE:
-                    vprint(f"[PennyLaneToQASM3Converter] Processing line: {op_line}")
-                expanded_lines = [op_line]
-
-                # Expand loops over i when wires use i
-                if 'wires=i' in op_line or 'wires=[i' in op_line or 'wires=i + 1' in op_line:
-                    new_lines = []
-                    if 'i + 1' in op_line and has_loop_i_n_minus_1:
-                        for i in range(max(0, num_qubits - 1)):
-                            nl = op_line.replace('i + 1', str(i + 1)).replace('i+1', str(i + 1)).replace('i', str(i))
-                            new_lines.append(nl)
-                    elif has_loop_i_n:
-                        for i in range(num_qubits):
-                            nl = op_line.replace('i', str(i))
-                            new_lines.append(nl)
-                    if new_lines:
-                        expanded_lines = new_lines
-
-                # Expand over layers if parameters index by layer
-                final_lines = []
-                if 'gamma[' in op_line or 'beta[' in op_line:
-                    for _ in range(p_default if has_layer_loop else 1):
-                        final_lines.extend(expanded_lines)
-                else:
-                    final_lines = expanded_lines
-
-                for line in final_lines:
-                    if VERBOSE:
-                        vprint(f"[PennyLaneToQASM3Converter] Emitting op from: {line}")
-                    parsed_op = self._parse_operation(line, num_qubits)
-                    self._add_pennylane_operation(builder, parsed_op)
-                    
-                    # Update gate counts
-                    if not parsed_op.get('unsupported'):
-                        gate_name = parsed_op['gate']
-                        gate_counts[gate_name] = gate_counts.get(gate_name, 0) + 1
-                        # Check for measurements
-                        if 'measure' in gate_name.lower():
-                            has_measurements = True
-                        depth += 1
-            
-            # Add example control flow (if we have classical bits)
-            if has_measurements:
-                builder.add_blank_line()
-                builder.add_section_comment("Classical control flow examples")
-                builder.add_if_statement(
-                    "c[0] == 1", 
-                    ["x q[1];"],
-                    else_body=None
-                )
-                builder.add_blank_line()
-                builder.add_for_loop(
-                    "loop_index", 
-                    "[0:2]", 
-                    ["ry(temp_angle) q[loop_index];"]
-                )
-            
-            # Create stats object
-            stats = ConversionStats(
-                n_qubits=num_qubits,
-                depth=depth,
-                n_moments=depth,  # In this simple model, depth = number of moments
-                gate_counts=gate_counts,
-                has_measurements=has_measurements
-            )
-            
-            # Create and return the result object
             code = builder.get_code()
             if VERBOSE:
                 vprint("[PennyLaneToQASM3Converter] QASM generated (legacy), length:", len(code))
-                vprint(f"[PennyLaneToQASM3Converter] Legacy build done in {(time.time()-t0)*1000:.1f} ms")
-            return ConversionResult(
-                qasm_code=code,
-                stats=stats
-            )
-            
+
+            return ConversionResult(qasm_code=code, stats=stats)
+
         except Exception as e:
             raise ValueError(f"Failed to convert PennyLane code to OpenQASM 3.0: {str(e)}")
+
+    def _initialize_builder(self, circuit_info: Dict[str, Any]) -> QASM3Builder:
+        """Initialize the QASM3 builder with prelude and sections."""
+        num_qubits = circuit_info['num_qubits']
+        operations = circuit_info['operations']
+
+        builder = QASM3Builder()
+
+        # Check if measurements exist
+        has_measurements = any('measure' in op.lower() for op in operations)
+        num_clbits = num_qubits if has_measurements else 0
+
+        # Build standard prelude
+        builder.build_standard_prelude(
+            num_qubits=num_qubits,
+            num_clbits=num_clbits,
+            include_vars=True
+        )
+
+        # Add sections
+        self._add_builder_sections(builder)
+
+        return builder
+
+    def _add_builder_sections(self, builder: QASM3Builder):
+        """Add standard sections to the builder."""
+        builder.add_section_comment("Gate definitions")
+        builder.add_comment("(Custom gate definitions would go here)")
+        builder.add_blank_line()
+
+        builder.add_section_comment("Classical operations")
+        builder.add_assignment("temp_angle", "PI_2")
+        builder.add_assignment("loop_index", "0")
+        builder.add_blank_line()
+
+        builder.add_section_comment("Circuit operations")
+
+    def _process_operations(self, builder: QASM3Builder, circuit_info: Dict[str, Any],
+                          loop_info: Dict[str, Any]) -> ConversionStats:
+        """Process all operations and collect statistics."""
+        operations = circuit_info['operations']
+        num_qubits = circuit_info['num_qubits']
+
+        gate_counts = {}
+        has_measurements = False
+        depth = 0
+
+        for op_line in operations:
+            expanded_lines = self._expand_operation_lines(op_line, num_qubits, loop_info)
+
+            for line in expanded_lines:
+                parsed_op = self._parse_operation(line, num_qubits)
+                self._add_pennylane_operation(builder, parsed_op)
+
+                # Update statistics
+                gate_name = parsed_op.get('gate', '')
+                if not parsed_op.get('unsupported') and gate_name:
+                    gate_counts[gate_name] = gate_counts.get(gate_name, 0) + 1
+                    if 'measure' in gate_name.lower():
+                        has_measurements = True
+                    depth += 1
+
+        return ConversionStats(
+            n_qubits=num_qubits,
+            depth=depth,
+            n_moments=depth,
+            gate_counts=gate_counts,
+            has_measurements=has_measurements
+        )
+
+    def _expand_operation_lines(self, op_line: str, num_qubits: int, loop_info: Dict[str, Any]) -> List[str]:
+        """Expand operation lines based on detected loop patterns."""
+        expanded_lines = [op_line]
+
+        # Expand loops over i when wires use i
+        if self._should_expand_wire_loops(op_line):
+            expanded_lines = self._expand_wire_loops(op_line, num_qubits, loop_info)
+
+        # Expand over layers if parameters index by layer
+        final_lines = self._expand_layer_loops(expanded_lines, op_line, loop_info)
+
+        return final_lines
+
+    def _should_expand_wire_loops(self, op_line: str) -> bool:
+        """Check if operation line needs wire loop expansion."""
+        return 'wires=i' in op_line or 'wires=[i' in op_line or 'wires=i + 1' in op_line
+
+    def _expand_wire_loops(self, op_line: str, num_qubits: int, loop_info: Dict[str, Any]) -> List[str]:
+        """Expand wire loops based on loop patterns."""
+        new_lines = []
+
+        if 'i + 1' in op_line and loop_info['has_loop_i_n_minus_1']:
+            for i in range(max(0, num_qubits - 1)):
+                nl = op_line.replace('i + 1', str(i + 1)).replace('i+1', str(i + 1)).replace('i', str(i))
+                new_lines.append(nl)
+        elif loop_info['has_loop_i_n']:
+            for i in range(num_qubits):
+                nl = op_line.replace('i', str(i))
+                new_lines.append(nl)
+
+        return new_lines if new_lines else [op_line]
+
+    def _expand_layer_loops(self, expanded_lines: List[str], op_line: str, loop_info: Dict[str, Any]) -> List[str]:
+        """Expand layer loops if parameters index by layer."""
+        if 'gamma[' in op_line or 'beta[' in op_line:
+            final_lines = []
+            for _ in range(loop_info['p_default'] if loop_info['has_layer_loop'] else 1):
+                final_lines.extend(expanded_lines)
+            return final_lines
+        else:
+            return expanded_lines
+
+
+    def _add_control_flow_examples(self, builder: QASM3Builder, has_measurements: bool):
+        """Add example control flow if measurements exist."""
+        if has_measurements:
+            builder.add_blank_line()
+            builder.add_section_comment("Classical control flow examples")
+            builder.add_if_statement(
+                "c[0] == 1",
+                ["x q[1];"],
+                else_body=None
+            )
+            builder.add_blank_line()
+            builder.add_for_loop(
+                "loop_index",
+                "[0:2]",
+                ["ry(temp_angle) q[loop_index];"]
+            )
 
     def _try_ast_conversion(self, pennylane_code: str) -> Optional[ConversionResult]:
         """Try AST-based conversion, return None if it fails."""
@@ -572,7 +721,7 @@ class PennyLaneToQASM3Converter:
         """Detect common loop patterns in the code."""
         p_default = self._extract_default_p(pennylane_code)
         return {
-            'has_loop_i_n': 'for i in range(n_qubits):' in pennylane_code or 'for i in range(n_qubits):' in pennylane_code,
+            'has_loop_i_n': 'for i in range(n_qubits):' in pennylane_code or 'for i in range(num_qubits):' in pennylane_code,
             'has_loop_i_n_minus_1': 'for i in range(n_qubits - 1):' in pennylane_code or 'for i in range(n_qubits-1):' in pennylane_code,
             'has_layer_loop': 'for layer in range(p):' in pennylane_code,
             'p_default': p_default

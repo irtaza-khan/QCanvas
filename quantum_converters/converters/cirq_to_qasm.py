@@ -295,21 +295,27 @@ class CirqToQASM3Converter:
 
     def _add_cirq_operation(self, builder: QASM3Builder, operation, qubit_map: dict):
         """Add a Cirq operation to the QASM builder."""
-        import cirq
-        import numpy as np
-
         gate = operation.gate
         qubits = operation.qubits
         qubit_indices = [qubit_map[qubit] for qubit in qubits]
         qubits_str = [f"q[{i}]" for i in qubit_indices]
-        
-        # Get gate name for type checking
+
+        # Get gate name and properties
         gate_name = type(gate).__name__
-        
-        # Detect gate modifiers and get actual exponent value
+        modifiers, actual_exponent = self._extract_gate_properties(gate)
+
+        # Handle different gate types
+        self._handle_standard_gates(builder, gate_name, qubits_str, modifiers, actual_exponent)
+        self._handle_parameterized_gates(builder, gate_name, qubits_str, modifiers, actual_exponent, gate)
+        self._handle_special_gates(builder, gate_name, qubits_str, qubit_indices, gate)
+
+    def _extract_gate_properties(self, gate) -> tuple:
+        """Extract modifiers and actual exponent from a gate."""
+        import numpy as np
+
         modifiers = {}
         actual_exponent = None
-        
+
         # Check for inverse (negative exponent)
         if hasattr(gate, 'exponent'):
             actual_exponent = gate.exponent
@@ -324,72 +330,112 @@ class CirqToQASM3Converter:
         else:
             actual_exponent = 1  # Default
 
-        # Handle different gate types
-        if gate_name in ['HPowGate', '_H'] and (actual_exponent is None or abs(actual_exponent) == 1):
+        return modifiers, actual_exponent
+
+    def _handle_standard_gates(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
+                              modifiers: dict, actual_exponent):
+        """Handle standard single-qubit and two-qubit gates."""
+        if gate_name in ['HPowGate', '_H'] and self._is_standard_exponent(actual_exponent):
             builder.apply_gate("h", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['XPowGate', '_PauliX', '_X'] and (actual_exponent is None or abs(actual_exponent) == 1):
+        elif gate_name in ['XPowGate', '_PauliX', '_X'] and self._is_standard_exponent(actual_exponent):
             builder.apply_gate("x", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['YPowGate', '_PauliY', '_Y'] and (actual_exponent is None or abs(actual_exponent) == 1):
+        elif gate_name in ['YPowGate', '_PauliY', '_Y'] and self._is_standard_exponent(actual_exponent):
             builder.apply_gate("y", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['ZPowGate', '_PauliZ', '_Z'] and (actual_exponent is None or abs(actual_exponent) == 1):
+        elif gate_name in ['ZPowGate', '_PauliZ', '_Z'] and self._is_standard_exponent(actual_exponent):
             builder.apply_gate("z", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['SPowGate', '_S'] and (actual_exponent is None or abs(actual_exponent) == 1):
+        elif gate_name in ['SPowGate', '_S'] and self._is_standard_exponent(actual_exponent):
             builder.apply_gate("s", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['TPowGate', '_T'] and (actual_exponent is None or abs(actual_exponent) == 1):
+        elif gate_name in ['TPowGate', '_T'] and self._is_standard_exponent(actual_exponent):
             builder.apply_gate("t", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['CNotPowGate', 'CXPowGate', '_CNOT'] and (actual_exponent is None or abs(actual_exponent) == 1):
+        elif gate_name in ['CNotPowGate', 'CXPowGate', '_CNOT'] and self._is_standard_exponent(actual_exponent):
             builder.apply_gate("cx", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['CZPowGate', '_CZ'] and (actual_exponent is None or abs(actual_exponent) == 1):
+        elif gate_name in ['CZPowGate', '_CZ'] and self._is_standard_exponent(actual_exponent):
             builder.apply_gate("cz", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['SwapPowGate', '_SWAP'] and (actual_exponent is None or abs(actual_exponent) == 1):
+        elif gate_name in ['SwapPowGate', '_SWAP'] and self._is_standard_exponent(actual_exponent):
             builder.apply_gate("swap", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['XPowGate', 'YPowGate', 'ZPowGate'] and actual_exponent is not None and abs(actual_exponent) != 1:
-            # Handle parameterized rotation gates
-            angle = actual_exponent * np.pi
-            param = builder.format_parameter(angle)
-            
-            if gate_name == 'XPowGate':
-                builder.apply_gate("rx", qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
-            elif gate_name == 'YPowGate':
-                builder.apply_gate("ry", qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
-            elif gate_name == 'ZPowGate':
-                builder.apply_gate("rz", qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
+
+    def _is_standard_exponent(self, exponent) -> bool:
+        """Check if exponent represents a standard gate (not parameterized)."""
+        return exponent is None or abs(exponent) == 1
+
+    def _handle_parameterized_gates(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
+                                   modifiers: dict, actual_exponent, gate):
+        """Handle parameterized rotation gates."""
+        import numpy as np
+
+        if gate_name in ['XPowGate', 'YPowGate', 'ZPowGate'] and actual_exponent is not None and abs(actual_exponent) != 1:
+            self._apply_rotation_gate(builder, gate_name, qubits_str, actual_exponent, modifiers)
         elif gate_name in ['Rx', 'Ry', 'Rz']:
-            # Handle rotation gates with direct angle
-            angle = None
-            for attr in ['rads', '_rads', 'angle', '_angle', 'theta', '_theta']:
-                if hasattr(gate, attr):
-                    angle = getattr(gate, attr)
-                    break
-            
-            if angle is None:
-                angle = np.pi/2  # Default fallback
-            
-            param = builder.format_parameter(angle)
-            
-            if gate_name == 'Rx':
-                builder.apply_gate("rx", qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
-            elif gate_name == 'Ry':
-                builder.apply_gate("ry", qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
-            elif gate_name == 'Rz':
-                builder.apply_gate("rz", qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
+            self._apply_direct_rotation_gate(builder, gate_name, qubits_str, gate, modifiers)
         elif gate_name == 'PhasedXPowGate':
-            # PhasedXPowGate - simplified handling
-            phase_exponent = getattr(gate, 'phase_exponent', 0)
-            if phase_exponent == 0:
-                param = builder.format_parameter(actual_exponent * np.pi)
-                builder.apply_gate("rx", qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
-            else:
-                # Complex case - add as comment
-                builder.add_comment(f"PhasedXPowGate(exp={actual_exponent}, phase={phase_exponent}) not fully supported")
-        elif gate_name == 'MatrixGate':
+            self._apply_phased_x_gate(builder, qubits_str, actual_exponent, gate, modifiers)
+
+    def _apply_rotation_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
+                           exponent, modifiers: dict):
+        """Apply a rotation gate based on exponent."""
+        import numpy as np
+
+        angle = exponent * np.pi
+        param = builder.format_parameter(angle)
+
+        gate_map = {'XPowGate': 'rx', 'YPowGate': 'ry', 'ZPowGate': 'rz'}
+        qasm_gate = gate_map.get(gate_name)
+        if qasm_gate:
+            builder.apply_gate(qasm_gate, qubits_str, parameters=[param],
+                             modifiers=modifiers if modifiers else None)
+
+    def _apply_direct_rotation_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
+                                  gate, modifiers: dict):
+        """Apply a rotation gate with direct angle parameter."""
+        import numpy as np
+
+        angle = self._extract_angle_from_gate(gate)
+        param = builder.format_parameter(angle)
+
+        gate_map = {'Rx': 'rx', 'Ry': 'ry', 'Rz': 'rz'}
+        qasm_gate = gate_map.get(gate_name)
+        if qasm_gate:
+            builder.apply_gate(qasm_gate, qubits_str, parameters=[param],
+                             modifiers=modifiers if modifiers else None)
+
+    def _extract_angle_from_gate(self, gate):
+        """Extract angle parameter from a rotation gate."""
+        import numpy as np
+
+        angle_attrs = ['rads', '_rads', 'angle', '_angle', 'theta', '_theta']
+        for attr in angle_attrs:
+            if hasattr(gate, attr):
+                return getattr(gate, attr)
+
+        return np.pi/2  # Default fallback
+
+    def _apply_phased_x_gate(self, builder: QASM3Builder, qubits_str: list,
+                           actual_exponent, gate, modifiers: dict):
+        """Apply a phased X gate."""
+        import numpy as np
+
+        phase_exponent = getattr(gate, 'phase_exponent', 0)
+        if phase_exponent == 0:
+            param = builder.format_parameter(actual_exponent * np.pi)
+            builder.apply_gate("rx", qubits_str, parameters=[param],
+                             modifiers=modifiers if modifiers else None)
+        else:
+            # Complex case - add as comment
+            builder.add_comment(f"PhasedXPowGate(exp={actual_exponent}, phase={phase_exponent}) not fully supported")
+
+    def _handle_special_gates(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
+                            qubit_indices: list, gate):
+        """Handle special gates like measurements, resets, and barriers."""
+        import numpy as np
+
+        if gate_name == 'MatrixGate':
             builder.add_comment(f"Matrix gate: {gate}")
         elif gate_name == 'MeasurementGate' or hasattr(gate, '_measurement_key'):
             builder.add_measurement(qubits_str[0], f"c[{qubit_indices[0]}]")
         elif gate_name in ['ResetChannel', '_ResetGate'] or str(gate) == 'reset':
             builder.add_reset(qubits_str[0])
         elif gate_name == 'IdentityGate' or str(gate) == 'I':
-            builder.apply_gate("id", qubits_str, modifiers=modifiers if modifiers else None)
+            builder.apply_gate("id", qubits_str)
         elif gate_name == 'ControlledGate':
             builder.add_comment(f"Controlled gate: {gate}")
         elif gate_name == 'GlobalPhaseGate':
@@ -414,35 +460,60 @@ class CirqToQASM3Converter:
             return ConversionStats(n_qubits=0, depth=None, n_moments=None, gate_counts=None, has_measurements=False)
 
     def _add_ast_operation(self, builder: QASM3Builder, operation):
+        """Add an AST operation to the QASM builder."""
         if isinstance(operation, GateNode):
-            gate_name = operation.name
-            qubits_str = [f"q[{i}]" for i in operation.qubits]
-            modifiers = operation.modifiers if operation.modifiers else None
-            if gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id']:
-                builder.apply_gate(gate_name, qubits_str, modifiers=modifiers)
-            elif gate_name in ['rx', 'ry', 'rz']:
-                if operation.parameters:
-                    param = builder.format_parameter(operation.parameters[0])
-                    builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers)
-                else:
-                    builder.add_comment(f"Parameterized gate {gate_name} missing parameter")
-            elif gate_name in ['cx', 'cnot', 'cz', 'cy', 'ch', 'swap']:
-                builder.apply_gate('cx' if gate_name == 'cnot' else gate_name, qubits_str, modifiers=modifiers)
-            elif gate_name == 'gphase':
-                if operation.parameters:
-                    param = builder.format_parameter(operation.parameters[0])
-                    builder.apply_gate('gphase', [], parameters=[param])
-            else:
-                builder.add_comment(f"Unsupported gate: {gate_name}")
+            self._add_ast_gate_operation(builder, operation)
         elif isinstance(operation, MeasurementNode):
             builder.add_measurement(f"q[{operation.qubit}]", f"c[{operation.clbit}]")
         elif isinstance(operation, ResetNode):
             builder.add_reset(f"q[{operation.qubit}]")
         elif isinstance(operation, BarrierNode):
-            if operation.qubits:
-                builder.add_barrier([f"q[{i}]" for i in operation.qubits])
-            else:
-                builder.add_barrier(None)
+            self._add_ast_barrier_operation(builder, operation)
+
+    def _add_ast_gate_operation(self, builder: QASM3Builder, operation: GateNode):
+        """Add a gate operation from AST to QASM builder."""
+        gate_name = operation.name
+        qubits_str = [f"q[{i}]" for i in operation.qubits]
+        modifiers = operation.modifiers if operation.modifiers else None
+
+        if self._is_standard_gate(gate_name):
+            builder.apply_gate(gate_name, qubits_str, modifiers=modifiers)
+        elif self._is_parameterized_gate(gate_name):
+            self._add_parameterized_gate(builder, gate_name, qubits_str, operation, modifiers)
+        elif gate_name == 'gphase':
+            self._add_global_phase_gate(builder, operation)
+        else:
+            builder.add_comment(f"Unsupported gate: {gate_name}")
+
+    def _is_standard_gate(self, gate_name: str) -> bool:
+        """Check if gate is a standard single-qubit gate."""
+        return gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id']
+
+    def _is_parameterized_gate(self, gate_name: str) -> bool:
+        """Check if gate is a parameterized rotation gate."""
+        return gate_name in ['rx', 'ry', 'rz']
+
+    def _add_parameterized_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
+                               operation: GateNode, modifiers):
+        """Add a parameterized gate to the QASM builder."""
+        if operation.parameters:
+            param = builder.format_parameter(operation.parameters[0])
+            builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers)
+        else:
+            builder.add_comment(f"Parameterized gate {gate_name} missing parameter")
+
+    def _add_global_phase_gate(self, builder: QASM3Builder, operation: GateNode):
+        """Add a global phase gate to the QASM builder."""
+        if operation.parameters:
+            param = builder.format_parameter(operation.parameters[0])
+            builder.apply_gate('gphase', [], parameters=[param])
+
+    def _add_ast_barrier_operation(self, builder: QASM3Builder, operation: BarrierNode):
+        """Add a barrier operation from AST to QASM builder."""
+        if operation.qubits:
+            builder.add_barrier([f"q[{i}]" for i in operation.qubits])
+        else:
+            builder.add_barrier(None)
 
     def _convert_ast_to_qasm3(self, circuit_ast: CircuitAST) -> str:
         builder = QASM3Builder()

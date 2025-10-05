@@ -110,74 +110,113 @@ class QASM3ExpressionParser:
     def parse_expression(self, expr_str: str) -> str:
         """
         Parse and potentially simplify an expression.
-        
+
         Args:
             expr_str: Expression string
-            
+
         Returns:
             Parsed/simplified expression string
         """
         expr_str = expr_str.strip()
-        
-        # Handle parentheses
-        if expr_str.startswith('(') and expr_str.endswith(')'):
-            # Check if outer parentheses are balanced
-            depth = 0
-            for i, char in enumerate(expr_str):
-                if char == '(':
-                    depth += 1
-                elif char == ')':
-                    depth -= 1
-                if depth == 0 and i < len(expr_str) - 1:
-                    break
-            if depth == 0 and i == len(expr_str) - 1:
-                # Outer parentheses are redundant
-                return self.parse_expression(expr_str[1:-1])
-                
-        # Check for binary operators
-        for op in ['||', '&&', '==', '!=', '<=', '>=', '<', '>', '+', '-', '*', '/']:
+
+        # Handle parentheses first
+        expr_str = self._handle_parentheses(expr_str)
+
+        # Try different expression types in order of precedence
+        binary_expr = self._parse_binary_expression(expr_str)
+        if binary_expr is not None:
+            return binary_expr
+
+        unary_expr = self._parse_unary_expression(expr_str)
+        if unary_expr is not None:
+            return unary_expr
+
+        function_expr = self._parse_function_expression(expr_str)
+        if function_expr is not None:
+            return function_expr
+
+        # Otherwise, return as-is (literal or variable)
+        return expr_str
+
+    def _handle_parentheses(self, expr_str: str) -> str:
+        """Handle and potentially remove redundant outer parentheses."""
+        if not (expr_str.startswith('(') and expr_str.endswith(')')):
+            return expr_str
+
+        # Check if outer parentheses are balanced
+        depth = 0
+        for i, char in enumerate(expr_str):
+            if char == '(':
+                depth += 1
+            elif char == ')':
+                depth -= 1
+            if depth == 0 and i < len(expr_str) - 1:
+                break
+
+        if depth == 0 and i == len(expr_str) - 1:
+            # Outer parentheses are redundant, remove them recursively
+            return self._handle_parentheses(expr_str[1:-1])
+
+        return expr_str
+
+    def _parse_binary_expression(self, expr_str: str) -> Optional[str]:
+        """Parse binary operations in order of precedence."""
+        binary_ops = ['||', '&&', '==', '!=', '<=', '>=', '<', '>', '+', '-', '*', '/']
+
+        for op in binary_ops:
             if op in expr_str:
                 parts = self._split_by_operator(expr_str, op)
                 if len(parts) == 2:
                     left = self.parse_expression(parts[0])
                     right = self.parse_expression(parts[1])
-                    
-                    # Convert to OpenQASM operators
-                    qasm_op = op
-                    if op == '&&':
-                        qasm_op = '&&'
-                    elif op == '||':
-                        qasm_op = '||'
-                        
+                    qasm_op = self._convert_to_qasm_operator(op)
                     return f"{left} {qasm_op} {right}"
-                    
-        # Check for unary operators
+
+        return None
+
+    def _convert_to_qasm_operator(self, op: str) -> str:
+        """Convert Python operators to OpenQASM operators."""
+        # Most operators are the same, only logical operators differ
+        if op == '&&':
+            return '&&'
+        elif op == '||':
+            return '||'
+        return op
+
+    def _parse_unary_expression(self, expr_str: str) -> Optional[str]:
+        """Parse unary operations."""
         if expr_str.startswith('!'):
             operand = self.parse_expression(expr_str[1:])
             return f"!{operand}"
+
         if expr_str.startswith('-') and len(expr_str) > 1:
             operand = self.parse_expression(expr_str[1:])
-            try:
-                # Try to evaluate if it's a number
-                float(operand)
-                return f"-{operand}"
-            except:
-                return f"(-{operand})"
-                
-        # Check for function calls
+            return self._format_negative_operand(operand)
+
+        return None
+
+    def _format_negative_operand(self, operand: str) -> str:
+        """Format a negative operand, adding parentheses if needed."""
+        try:
+            # Try to evaluate if it's a number
+            float(operand)
+            return f"-{operand}"
+        except ValueError:
+            return f"(-{operand})"
+
+    def _parse_function_expression(self, expr_str: str) -> Optional[str]:
+        """Parse function calls."""
         func_match = re.match(r'(\w+)\((.*)\)', expr_str)
         if func_match:
             func_name = func_match.group(1)
             args_str = func_match.group(2)
-            
+
             if func_name in self.MATH_FUNCTIONS:
-                # Parse arguments
                 args = [self.parse_expression(arg.strip()) for arg in self._split_args(args_str)]
                 args_formatted = ', '.join(args)
                 return f"{func_name}({args_formatted})"
-                
-        # Otherwise, return as-is (literal or variable)
-        return expr_str
+
+        return None
         
     def _split_by_operator(self, expr: str, operator: str) -> List[str]:
         """
@@ -317,7 +356,7 @@ class QASM3ExpressionParser:
                 return 'float'  # Conservative: assume float
                 
         # Check literals
-        val, val_type = self.parse_literal(expr_str)
+        _, val_type = self.parse_literal(expr_str)
         return val_type
         
     def format_for_qasm(self, expr: Any) -> str:
