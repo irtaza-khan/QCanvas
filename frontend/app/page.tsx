@@ -257,7 +257,8 @@ export default function HomePage() {
             </div>
 
             {/* Enhanced Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto transition-all duration-1000 delay-1200">
+            <div className='grid grid-rows-1 gap-4'>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto transition-all duration-1000 delay-1200">
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="text-3xl font-bold quantum-gradient bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300">{config.stats.frameworks}</div>
                 <div className="text-sm text-editor-text group-hover:text-white transition-colors duration-300">Quantum Frameworks</div>
@@ -274,17 +275,18 @@ export default function HomePage() {
                 <div className="w-0 group-hover:w-full h-0.5 bg-teal-400 rounded-full transition-all duration-500 mx-auto mt-2"></div>
               </div>
             </div>
+            {/* Scroll Indicator */}
+            <div className="relative transform -translate-x-1/2 animate-bounce">
+              <button
+                onClick={() => scrollToSection('features')}
+                className="text-editor-text hover:text-white transition-colors duration-200"
+              >
+                <ChevronDown className="w-6 h-6" />
+              </button>
+            </div>
+            </div>
           </div>
 
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <button
-              onClick={() => scrollToSection('features')}
-              className="text-editor-text hover:text-white transition-colors duration-200"
-            >
-              <ChevronDown className="w-6 h-6" />
-            </button>
-          </div>
         </div>
       </section>
 
