@@ -88,17 +88,13 @@ class QiskitASTVisitor(ast.NodeVisitor):
         args = node.args
         if len(args) >= 1:
             # First argument is typically number of qubits
-            if isinstance(args[0], ast.Num):
-                self.qubits = args[0].n
-            elif isinstance(args[0], ast.Constant):  # Python 3.8+
-                self.qubits = args[0].value
+            if isinstance(args[0], ast.Constant):  # Python 3.8+
+                self.qubits = int(args[0].value)
 
         if len(args) >= 2:
             # Second argument is number of classical bits
-            if isinstance(args[1], ast.Num):
-                self.clbits = args[1].n
-            elif isinstance(args[1], ast.Constant):
-                self.clbits = args[1].value
+            if isinstance(args[1], ast.Constant):
+                self.clbits = int(args[1].value)
 
     def _handle_circuit_method_call(self, node: ast.Call) -> None:
         """Handle method calls on circuit variables."""
@@ -139,6 +135,10 @@ class QiskitASTVisitor(ast.NodeVisitor):
             self._handle_two_qubit_gate(method_name, args)
         elif method_name in ['rx', 'ry', 'rz', 'p']:
             self._handle_parameterized_single_qubit_gate(method_name, args)
+        elif method_name in ['sdg', 'tdg']:
+            self._handle_inverse_gate(method_name, args)
+        elif method_name in ['ccx']:
+            self._handle_three_qubit_gate(method_name, args)
         elif method_name == 'u':
             self._handle_universal_gate(args)
         elif method_name == 'measure':
@@ -172,9 +172,9 @@ class QiskitASTVisitor(ast.NodeVisitor):
         """Handle parameterized single-qubit gates."""
         if len(args) >= 2:
             if VERBOSE:
-                vprint("[QiskitASTVisitor]   rule=rotation_gate -> extract_qubit_index(args[0]); extract_parameter(args[1])")
-            qubit = self._extract_qubit_index(args[0])
-            param = self._extract_parameter(args[1])
+                vprint("[QiskitASTVisitor]   rule=rotation_gate -> extract_parameter(args[0]); extract_qubit_index(args[1])")
+            param = self._extract_parameter(args[0])
+            qubit = self._extract_qubit_index(args[1])
             self.operations.append(GateNode(
                 name=method_name,
                 qubits=[qubit],
@@ -182,6 +182,25 @@ class QiskitASTVisitor(ast.NodeVisitor):
             ))
             if VERBOSE:
                 vprint(f"[QiskitASTVisitor] Added rotation {method_name}({param}) on q[{qubit}]")
+
+    def _handle_three_qubit_gate(self, method_name: str, args: List[ast.expr]) -> None:
+        """Handle three-qubit gates like ccx."""
+        if len(args) >= 3:
+            q0 = self._extract_qubit_index(args[0])
+            q1 = self._extract_qubit_index(args[1])
+            q2 = self._extract_qubit_index(args[2])
+            self.operations.append(GateNode(name=method_name, qubits=[q0, q1, q2]))
+
+    def _handle_inverse_gate(self, method_name: str, args: List[ast.expr]) -> None:
+        """Handle inverse named gates like sdg/tdg by emitting inv modifier on s/t."""
+        if len(args) >= 1:
+            qubit = self._extract_qubit_index(args[0])
+            base = 's' if method_name == 'sdg' else 't'
+            # Represent as GateNode with modifier in metadata
+            node = GateNode(name=base, qubits=[qubit], parameters=[])
+            # attach a simple modifiers dict
+            setattr(node, 'modifiers', {'inv': True})
+            self.operations.append(node)
 
     def _handle_universal_gate(self, args: List[ast.expr]) -> None:
         """Handle universal U gate."""
@@ -263,10 +282,8 @@ class QiskitASTVisitor(ast.NodeVisitor):
                 vprint(f"[QiskitASTVisitor]   _extract_qubit_index node={ast.dump(node, include_attributes=False)}")
             except Exception:
                 vprint("[QiskitASTVisitor]   _extract_qubit_index node=<dump failed>")
-        if isinstance(node, ast.Num):
-            return node.n
-        elif isinstance(node, ast.Constant):  # Python 3.8+
-            return node.value
+        if isinstance(node, ast.Constant):  # Python 3.8+
+            return node.value if isinstance(node.value, int) else 0
         elif isinstance(node, ast.Name):
             # Could be a parameter or variable, for now return 0
             return 0
@@ -288,9 +305,7 @@ class QiskitASTVisitor(ast.NodeVisitor):
                 vprint(f"[QiskitASTVisitor]   _extract_parameter node={ast.dump(node, include_attributes=False)}")
             except Exception:
                 vprint("[QiskitASTVisitor]   _extract_parameter node=<dump failed>")
-        if isinstance(node, ast.Num):
-            return node.n
-        elif isinstance(node, ast.Constant):
+        if isinstance(node, ast.Constant):
             return node.value
         elif isinstance(node, ast.Name):
             # Parameter name
@@ -300,18 +315,37 @@ class QiskitASTVisitor(ast.NodeVisitor):
         elif isinstance(node, ast.BinOp):
             # Mathematical expression
             return self._extract_expression(node)
+        elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.attr == 'pi' and node.value.id in ('np','numpy'):
+            return 'PI'
         return 0
 
     def _extract_expression(self, node: ast.expr) -> str:
-        """Extract mathematical expression as string."""
-        # For simplicity, return a placeholder
-        # In a full implementation, you'd parse the expression
+        """Extract simple numpy pi expressions into OpenQASM constants."""
+        text = self._extract_pi_constant(node)
+        if text:
+            return text
+        text = self._extract_pi_fraction(node)
+        if text:
+            return text
         if VERBOSE:
             try:
                 vprint(f"[QiskitASTVisitor]   _extract_expression node={ast.dump(node, include_attributes=False)}")
             except Exception:
                 vprint("[QiskitASTVisitor]   _extract_expression node=<dump failed>")
         return "expr"
+
+    def _extract_pi_constant(self, node: ast.expr) -> Optional[str]:
+        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.attr == 'pi' and node.value.id in ('np', 'numpy'):
+            return 'PI'
+        return None
+
+    def _extract_pi_fraction(self, node: ast.expr) -> Optional[str]:
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            left, right = node.left, node.right
+            if isinstance(left, ast.Attribute) and isinstance(left.value, ast.Name) and left.attr == 'pi' and left.value.id in ('np','numpy'):
+                if isinstance(right, ast.Constant) and isinstance(right.value, int) and right.value in (2, 4, 8):
+                    return f"PI/{int(right.value)}"
+        return None
 
 
 class QiskitASTParser:

@@ -550,8 +550,7 @@ class QASM3Builder:
             self.declare_variable('temp_angle', 'angle')
             self.declare_variable('condition_result', 'bool')
             self.declare_variable('counter', 'uint')
-            
-        self.add_blank_line()
+            self.add_blank_line()
 
     def add_input_directive(self, name: str, type_: str, size: Optional[int] = None):
         """

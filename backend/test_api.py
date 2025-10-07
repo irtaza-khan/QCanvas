@@ -12,10 +12,10 @@ def test_health():
         print(f"Health check: {response.status_code}")
         if response.status_code == 200:
             print(f"Response: {response.json()}")
-        return response.status_code == 200
+        assert response.status_code == 200
     except Exception as e:
         print(f"Health check failed: {e}")
-        return False
+        assert False
 
 def test_conversion():
     """Test conversion endpoint"""
@@ -52,10 +52,10 @@ def get_circuit():
         else:
             print(f"Response: {response.text}")
         
-        return response.status_code == 200
+        assert response.status_code == 200
     except Exception as e:
         print(f"Conversion test failed: {e}")
-        return False
+        assert False
 
 if __name__ == "__main__":
     print("Testing QCanvas Backend API...")

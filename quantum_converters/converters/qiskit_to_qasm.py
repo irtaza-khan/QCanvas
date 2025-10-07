@@ -15,11 +15,12 @@ from typing import Dict, Any, Optional, Union, List
 from qiskit import QuantumCircuit
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
-from config.config import VERBOSE, vprint
+from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
 from quantum_converters.base.circuit_ast import GateNode, MeasurementNode, ResetNode, BarrierNode
 import time
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary
 from quantum_converters.parsers.qiskit_parser import QiskitASTParser
+from quantum_converters.config import get_qiskit_inverse_qasm_map, QISKIT_TO_QASM_REGISTRY
 
 class QiskitToQASM3Converter:
     """
@@ -34,7 +35,7 @@ class QiskitToQASM3Converter:
     
     def __init__(self):
         """Initialize the Qiskit to QASM3 converter."""
-        pass
+        self.qiskit_inverse_qasm = get_qiskit_inverse_qasm_map()
     
     # In QiskitToQASM.py, update the _execute_qiskit_source method:
 
@@ -261,13 +262,12 @@ class QiskitToQASM3Converter:
         num_qubits = qc.num_qubits
         num_clbits = qc.num_clbits
 
-        # Build standard prelude - include constants/vars for advanced features
-        
+        # Build standard prelude using global config flags
         builder.build_standard_prelude(
             num_qubits=num_qubits,
             num_clbits=num_clbits,
-            include_vars=False,
-            include_constants=False
+            include_vars=INCLUDE_VARS,
+            include_constants=INCLUDE_CONSTANTS
         )
 
         # Add circuit parameters if any
@@ -371,16 +371,21 @@ class QiskitToQASM3Converter:
         builder.apply_gate(gate_name, qubits_str, modifiers=modifiers if modifiers else None)
 
     def _handle_parameterized_single_qubit_gate(self, builder: QASM3Builder, gate_name: str, instruction, qubits_str: list, modifiers: dict):
-        """Handle parameterized single-qubit gates."""
-        param = builder.format_parameter(instruction.params[0])
-        builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
+        """Handle parameterized single-qubit gates honoring registry param order."""
+        param_names = QISKIT_TO_QASM_REGISTRY.mapping[gate_name].param_order if gate_name in QISKIT_TO_QASM_REGISTRY.mapping else ["theta"]
+        # Map Qiskit instruction.params to expected order; for single-param gates it's the first
+        ordered_params = []
+        if param_names:
+            # Currently single parameter for rx/ry uses theta and rz/p use lambda
+            ordered_params.append(builder.format_parameter(instruction.params[0]))
+        builder.apply_gate(gate_name, qubits_str, parameters=ordered_params, modifiers=modifiers if modifiers else None)
 
     def _handle_universal_gate(self, builder: QASM3Builder, instruction, qubits_str: list, modifiers: dict):
         """Handle universal U gate."""
-        theta = builder.format_parameter(instruction.params[0])
-        phi = builder.format_parameter(instruction.params[1])
-        lam = builder.format_parameter(instruction.params[2])
-        builder.apply_gate('u', qubits_str, parameters=[theta, phi, lam], modifiers=modifiers if modifiers else None)
+        # Enforce parameter order from registry (theta, phi, lambda)
+        param_names = QISKIT_TO_QASM_REGISTRY.mapping['u'].param_order
+        params = [builder.format_parameter(instruction.params[i]) for i, _ in enumerate(param_names)]
+        builder.apply_gate('u', qubits_str, parameters=params, modifiers=modifiers if modifiers else None)
 
     def _handle_two_qubit_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list, modifiers: dict):
         """Handle two-qubit gates."""
@@ -388,9 +393,12 @@ class QiskitToQASM3Converter:
         builder.apply_gate(actual_gate, qubits_str, modifiers=modifiers if modifiers else None)
 
     def _handle_controlled_parametric_gate(self, builder: QASM3Builder, gate_name: str, instruction, qubits_str: list, modifiers: dict):
-        """Handle controlled parametric gates."""
-        param = builder.format_parameter(instruction.params[0])
-        builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers if modifiers else None)
+        """Handle controlled parametric gates honoring registry param order."""
+        param_names = QISKIT_TO_QASM_REGISTRY.mapping[gate_name].param_order if gate_name in QISKIT_TO_QASM_REGISTRY.mapping else ["theta"]
+        ordered_params = []
+        if param_names:
+            ordered_params.append(builder.format_parameter(instruction.params[0]))
+        builder.apply_gate(gate_name, qubits_str, parameters=ordered_params, modifiers=modifiers if modifiers else None)
 
     def _handle_global_phase(self, builder: QASM3Builder, instruction):
         """Handle global phase gate."""
@@ -447,11 +455,13 @@ class QiskitToQASM3Converter:
 
     def _build_ast_prelude(self, builder: QASM3Builder, circuit_ast) -> None:
         """Build the QASM prelude for AST conversion."""
+        # Honor global flags for constants/vars inclusion
+        include_consts = INCLUDE_CONSTANTS
         builder.build_standard_prelude(
             num_qubits=circuit_ast.qubits,
             num_clbits=circuit_ast.clbits,
-            include_vars=False,
-            include_constants=False,
+            include_vars=INCLUDE_VARS,
+            include_constants=include_consts,
         )
 
         if circuit_ast.parameters:
@@ -486,7 +496,8 @@ class QiskitToQASM3Converter:
 
         if name in ['h','x','y','z','s','t','sx','id','i','swap','cx','cz','ccx']:
             actual_name = 'cx' if name == 'cnot' else name
-            builder.apply_gate(actual_name, qubits_str)
+            modifiers = getattr(op, 'modifiers', None)
+            builder.apply_gate(actual_name, qubits_str, modifiers=modifiers if modifiers else None)
         elif name in ['rx','ry','rz','p','u']:
             raw_params = (op.parameters or [])
             params = [builder.format_parameter(p) for p in raw_params]

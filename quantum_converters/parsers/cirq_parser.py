@@ -225,6 +225,8 @@ class CirqASTVisitor(ast.NodeVisitor):
             self._handle_measurement_cirq(args)
         elif method_name == 'reset':
             self._handle_reset_cirq(args)
+        elif method_name in ['TOFFOLI', 'FREDKIN']:
+            self._handle_multi_qubit_named_gate(method_name, args)
         else:
             if VERBOSE:
                 vprint(f"[CirqASTVisitor] Unsupported gate: {method_name}")
@@ -268,6 +270,19 @@ class CirqASTVisitor(ast.NodeVisitor):
             if VERBOSE:
                 vprint(f"[CirqASTVisitor] Added rotation {gate_name}({param}) on q[{qubit}]")
 
+    def _handle_multi_qubit_named_gate(self, method_name: str, args: List[ast.expr]) -> None:
+        """Handle named multi-qubit gates like TOFFOLI/FREDKIN."""
+        if method_name == 'TOFFOLI' and len(args) >= 3:
+            q0 = self._extract_qubit_index(args[0])
+            q1 = self._extract_qubit_index(args[1])
+            q2 = self._extract_qubit_index(args[2])
+            self.operations.append(GateNode(name='ccx', qubits=[q0, q1, q2]))
+        elif method_name == 'FREDKIN' and len(args) >= 3:
+            q0 = self._extract_qubit_index(args[0])
+            q1 = self._extract_qubit_index(args[1])
+            q2 = self._extract_qubit_index(args[2])
+            self.operations.append(GateNode(name='cswap', qubits=[q0, q1, q2]))
+
     def _handle_measurement_cirq(self, args: List[ast.expr]) -> None:
         """Handle measurement operations in Cirq."""
         if len(args) >= 1:
@@ -298,9 +313,7 @@ class CirqASTVisitor(ast.NodeVisitor):
                 vprint("[CirqASTVisitor]   _extract_qubit_index node=<dump failed>")
 
         # Route to appropriate handler based on node type
-        if isinstance(node, ast.Num):
-            return self._handle_num_node(node)
-        elif isinstance(node, ast.Constant):  # Python 3.8+
+        if isinstance(node, ast.Constant):  # Python 3.8+
             return self._handle_constant_node(node)
         elif isinstance(node, ast.Name):
             return self._handle_name_node(node)
@@ -309,9 +322,7 @@ class CirqASTVisitor(ast.NodeVisitor):
         else:
             return 0
 
-    def _handle_num_node(self, node: ast.Num) -> int:
-        """Handle numeric literal nodes."""
-        return node.n
+    # Removed deprecated ast.Num handler; ast.Constant path covers ints
 
     def _handle_constant_node(self, node: ast.Constant) -> int:
         """Handle constant nodes (Python 3.8+)."""

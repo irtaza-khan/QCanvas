@@ -133,7 +133,7 @@ class TestAPIRoutes(unittest.TestCase):
     
     def test_malformed_json(self):
         """Test malformed JSON returns 422."""
-        response = self.client.post("/api/compile", data="invalid json")
+        response = self.client.post("/api/compile", content=b"invalid json", headers={"Content-Type": "application/json"})
         self.assertEqual(response.status_code, 422)
     
     def test_missing_required_fields(self):

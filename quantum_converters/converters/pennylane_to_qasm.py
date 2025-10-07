@@ -17,7 +17,8 @@ from quantum_converters.base.qasm3_builder import QASM3Builder
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
 from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode
 from quantum_converters.parsers.pennylane_parser import PennyLaneASTParser
-from config.config import VERBOSE, vprint
+from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
+from quantum_converters.config import get_pl_inverse_qasm_map
 import time
 
 class PennyLaneToQASM3Converter:
@@ -31,37 +32,12 @@ class PennyLaneToQASM3Converter:
     - Three-qubit gates: Toffoli
     
     Attributes:
-        gate_mapping (Dict[str, str]): Maps PennyLane gate names to OpenQASM 3.0 equivalents
+        pl_inverse_qasm (Mapping[str, str]): PennyLane gate name → OpenQASM mnemonic
     """
     
     def __init__(self):
-        """Initialize the converter with gate mappings."""
-        self.gate_mapping = {
-            # Single-qubit Pauli gates
-            'PauliX': 'x',
-            'PauliY': 'y', 
-            'PauliZ': 'z',
-            
-            # Single-qubit gates
-            'Hadamard': 'h',
-            'S': 's',
-            'T': 't',
-            'Identity': 'id',
-            
-            # Parameterized single-qubit gates
-            'RX': 'rx',
-            'RY': 'ry',
-            'RZ': 'rz',
-            'PhaseShift': 'p',
-            
-            # Two-qubit gates
-            'CNOT': 'cx',
-            'CZ': 'cz',
-            'SWAP': 'swap',
-            
-            # Three-qubit gates
-            'Toffoli': 'ccx'
-        }
+        """Initialize the converter with centralized, typed mappings."""
+        self.pl_inverse_qasm = get_pl_inverse_qasm_map()
     
     def _extract_circuit_info(self, circuit_code: str) -> Dict[str, Any]:
         """
@@ -395,7 +371,7 @@ class PennyLaneToQASM3Converter:
 
     def _get_qasm_gate_name(self, gate_name: str) -> Optional[str]:
         """Get the OpenQASM equivalent of a PennyLane gate name."""
-        return self.gate_mapping.get(gate_name)
+        return self.pl_inverse_qasm.get(gate_name)
 
     def _format_parameters(self, params: List[Any]) -> str:
         """Format parameters for OpenQASM output."""
@@ -427,11 +403,11 @@ class PennyLaneToQASM3Converter:
         wires = parsed_op['wires']
         
         # Check if gate is supported
-        if gate_name not in self.gate_mapping:
+        if gate_name not in self.pl_inverse_qasm:
             builder.add_comment(f"Unsupported gate: {gate_name}")
             return
         
-        qasm_gate = self.gate_mapping[gate_name]
+        qasm_gate = self.pl_inverse_qasm[gate_name]
         qubits_str = [f"q[{w}]" for w in wires]
         
         # Handle parameterized gates
@@ -513,8 +489,8 @@ class PennyLaneToQASM3Converter:
         builder.build_standard_prelude(
             num_qubits=circuit_ast.qubits,
             num_clbits=circuit_ast.clbits,
-            include_vars=False,
-            include_constants=False
+            include_vars=INCLUDE_VARS,
+            include_constants=INCLUDE_CONSTANTS
         )
         if circuit_ast.parameters:
             builder.add_section_comment("Circuit parameters")
@@ -584,7 +560,8 @@ class PennyLaneToQASM3Converter:
         builder.build_standard_prelude(
             num_qubits=num_qubits,
             num_clbits=num_clbits,
-            include_vars=True
+            include_vars=INCLUDE_VARS,
+            include_constants=INCLUDE_CONSTANTS
         )
 
         # Add sections

@@ -33,7 +33,7 @@ def discover_tests(pattern="test_*.py"):
 
 def run_tests(verbosity=2, failfast=False, pattern="test_*.py"):
     """Run all tests with specified options."""
-    print("🧪 QCanvas Comprehensive Test Suite")
+    print("QCanvas Comprehensive Test Suite")
     print("=" * 60)
     print(f"Project root: {project_root}")
     print(f"Test pattern: {pattern}")
@@ -41,29 +41,76 @@ def run_tests(verbosity=2, failfast=False, pattern="test_*.py"):
     print(f"Fail fast: {failfast}")
     print("=" * 60)
     
-    # Discover tests
-    print("🔍 Discovering tests...")
-    test_suite = discover_tests(pattern)
-    
-    if test_suite.countTestCases() == 0:
-        print("❌ No tests found!")
-        return False
-    
-    print(f"📊 Found {test_suite.countTestCases()} test cases")
-    print("=" * 60)
-    
-    # Run tests
-    print("🚀 Running tests...")
-    start_time = time.time()
-    
-    runner = unittest.TextTestRunner(
-        verbosity=verbosity,
-        stream=sys.stdout,
-        descriptions=True,
-        failfast=failfast
-    )
-    
-    result = runner.run(test_suite)
+    # Prefer pytest for comprehensive discovery; fallback to unittest
+    try:
+        import pytest  # type: ignore
+        print("Using pytest discovery (tests/)...")
+        # Build pytest args
+        pytest_args = [
+            str(project_root / "tests"),
+            "-q" if verbosity <= 1 else "-vv",
+        ]
+        if failfast:
+            pytest_args.append("-x")
+        # Run pytest
+        start_time = time.time()
+        code = pytest.main(pytest_args)
+        duration = time.time() - start_time
+        print("=" * 60)
+        print(f"Duration: {duration:.2f} seconds")
+        return code == 0
+    except Exception:
+        # Fallback to unittest discovery
+        print("Pytest unavailable; falling back to unittest discovery...")
+        print("Discovering tests...")
+        test_suite = discover_tests(pattern)
+        if test_suite.countTestCases() == 0:
+            print("❌ No tests found!")
+            return False
+        print(f"📊 Found {test_suite.countTestCases()} test cases")
+        print("=" * 60)
+        print("🚀 Running tests...")
+        start_time = time.time()
+        runner = unittest.TextTestRunner(
+            verbosity=verbosity,
+            stream=sys.stdout,
+            descriptions=True,
+            failfast=failfast
+        )
+        result = runner.run(test_suite)
+        end_time = time.time()
+        duration = end_time - start_time
+        
+        # Print summary
+        print("\n" + "=" * 60)
+        print("Test Results Summary")
+        print("=" * 60)
+        print(f"Total tests: {result.testsRun}")
+        print(f"Passed: {result.testsRun - len(result.failures) - len(result.errors)}")
+        print(f"Failed: {len(result.failures)}")
+        print(f"Errors: {len(result.errors)}")
+        print(f"Success rate: {((result.testsRun - len(result.failures) - len(result.errors)) / result.testsRun * 100):.1f}%")
+        print(f"Duration: {duration:.2f} seconds")
+        if result.failures:
+            print(f"\n❌ Failures ({len(result.failures)}):")
+            for test, traceback in result.failures:
+                print(f"  - {test}")
+                lines = traceback.split('\n')
+                for line in lines:
+                    if 'AssertionError:' in line or 'FAILED' in line:
+                        print(f"    {line.strip()}")
+                        break
+        if result.errors:
+            print(f"\n💥 Errors ({len(result.errors)}):")
+            for test, traceback in result.errors:
+                print(f"  - {test}")
+                lines = traceback.split('\n')
+                for line in lines:
+                    if 'Exception:' in line or 'ERROR' in line:
+                        print(f"    {line.strip()}")
+                        break
+        print("=" * 60)
+        return len(result.failures) == 0 and len(result.errors) == 0
     
     end_time = time.time()
     duration = end_time - start_time
@@ -177,10 +224,10 @@ def main():
         success = run_tests(args.verbosity, args.failfast, args.pattern)
     
     if success:
-        print("\n🎉 All tests passed!")
+        print("\nAll tests passed!")
         sys.exit(0)
     else:
-        print("\n💥 Some tests failed!")
+        print("\nSome tests failed!")
         sys.exit(1)
 
 

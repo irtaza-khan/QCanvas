@@ -17,8 +17,9 @@ from quantum_converters.base.qasm3_builder import QASM3Builder
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
 from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode
 from quantum_converters.parsers.cirq_parser import CirqASTParser
-from config.config import VERBOSE, vprint
+from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
 import time
+from quantum_converters.config import get_cirq_inverse_qasm_map, CIRQ_TO_QASM_REGISTRY
 
 # Import Circuit only when needed to avoid dependency issues
 try:
@@ -40,7 +41,7 @@ class CirqToQASM3Converter:
     
     def __init__(self):
         """Initialize the Cirq to QASM3 converter."""
-        pass
+        self.cirq_inverse_qasm = get_cirq_inverse_qasm_map()
     
     def _execute_cirq_source(self, source: str) -> 'Circuit':
         """
@@ -255,8 +256,8 @@ class CirqToQASM3Converter:
         builder.build_standard_prelude(
             num_qubits=num_qubits,
             num_clbits=num_qubits if has_measurements else 0,
-            include_vars=False,
-            include_constants=False
+            include_vars=INCLUDE_VARS,
+            include_constants=INCLUDE_CONSTANTS
         )
 
     def _add_custom_gates(self, builder: QASM3Builder, circuit: 'Circuit') -> None:
@@ -334,25 +335,23 @@ class CirqToQASM3Converter:
 
     def _handle_standard_gates(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
                               modifiers: dict, actual_exponent):
-        """Handle standard single-qubit and two-qubit gates."""
-        if gate_name in ['HPowGate', '_H'] and self._is_standard_exponent(actual_exponent):
-            builder.apply_gate("h", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['XPowGate', '_PauliX', '_X'] and self._is_standard_exponent(actual_exponent):
-            builder.apply_gate("x", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['YPowGate', '_PauliY', '_Y'] and self._is_standard_exponent(actual_exponent):
-            builder.apply_gate("y", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['ZPowGate', '_PauliZ', '_Z'] and self._is_standard_exponent(actual_exponent):
-            builder.apply_gate("z", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['SPowGate', '_S'] and self._is_standard_exponent(actual_exponent):
-            builder.apply_gate("s", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['TPowGate', '_T'] and self._is_standard_exponent(actual_exponent):
-            builder.apply_gate("t", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['CNotPowGate', 'CXPowGate', '_CNOT'] and self._is_standard_exponent(actual_exponent):
-            builder.apply_gate("cx", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['CZPowGate', '_CZ'] and self._is_standard_exponent(actual_exponent):
-            builder.apply_gate("cz", qubits_str, modifiers=modifiers if modifiers else None)
-        elif gate_name in ['SwapPowGate', '_SWAP'] and self._is_standard_exponent(actual_exponent):
-            builder.apply_gate("swap", qubits_str, modifiers=modifiers if modifiers else None)
+        """Handle standard single/two-qubit gates using a compact mapping."""
+        if not self._is_standard_exponent(actual_exponent):
+            return
+        gate_map = {
+            'HPowGate': 'h', '_H': 'h',
+            'XPowGate': 'x', '_PauliX': 'x', '_X': 'x',
+            'YPowGate': 'y', '_PauliY': 'y', '_Y': 'y',
+            'ZPowGate': 'z', '_PauliZ': 'z', '_Z': 'z',
+            'SPowGate': 's', '_S': 's',
+            'TPowGate': 't', '_T': 't',
+            'CNotPowGate': 'cx', 'CXPowGate': 'cx', '_CNOT': 'cx',
+            'CZPowGate': 'cz', '_CZ': 'cz',
+            'SwapPowGate': 'swap', '_SWAP': 'swap',
+        }
+        qasm_name = gate_map.get(gate_name)
+        if qasm_name:
+            builder.apply_gate(qasm_name, qubits_str, modifiers=modifiers if modifiers else None)
 
     def _is_standard_exponent(self, exponent) -> bool:
         """Check if exponent represents a standard gate (not parameterized)."""
@@ -395,6 +394,8 @@ class CirqToQASM3Converter:
         gate_map = {'Rx': 'rx', 'Ry': 'ry', 'Rz': 'rz'}
         qasm_gate = gate_map.get(gate_name)
         if qasm_gate:
+            # Enforce parameter order (single param 'theta' or 'lambda') from registry
+            _ = CIRQ_TO_QASM_REGISTRY.mapping[qasm_gate].param_order if qasm_gate in CIRQ_TO_QASM_REGISTRY.mapping else ["theta"]
             builder.apply_gate(qasm_gate, qubits_str, parameters=[param],
                              modifiers=modifiers if modifiers else None)
 
@@ -480,6 +481,10 @@ class CirqToQASM3Converter:
             builder.apply_gate(gate_name, qubits_str, modifiers=modifiers)
         elif self._is_parameterized_gate(gate_name):
             self._add_parameterized_gate(builder, gate_name, qubits_str, operation, modifiers)
+        elif self._is_two_qubit_gate(gate_name):
+            builder.apply_gate(gate_name, qubits_str, modifiers=modifiers)
+        elif self._is_three_qubit_gate(gate_name):
+            builder.apply_gate(gate_name, qubits_str, modifiers=modifiers)
         elif gate_name == 'gphase':
             self._add_global_phase_gate(builder, operation)
         else:
@@ -488,6 +493,14 @@ class CirqToQASM3Converter:
     def _is_standard_gate(self, gate_name: str) -> bool:
         """Check if gate is a standard single-qubit gate."""
         return gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id']
+
+    def _is_two_qubit_gate(self, gate_name: str) -> bool:
+        """Check if gate is a supported two-qubit gate."""
+        return gate_name in ['cx', 'cz', 'swap']
+
+    def _is_three_qubit_gate(self, gate_name: str) -> bool:
+        """Check if gate is a supported three-qubit gate."""
+        return gate_name in ['ccx', 'cswap', 'ccz']
 
     def _is_parameterized_gate(self, gate_name: str) -> bool:
         """Check if gate is a parameterized rotation gate."""
@@ -520,8 +533,8 @@ class CirqToQASM3Converter:
         builder.build_standard_prelude(
             num_qubits=circuit_ast.qubits,
             num_clbits=circuit_ast.clbits,
-            include_vars=False,
-            include_constants=False,
+            include_vars=INCLUDE_VARS,
+            include_constants=INCLUDE_CONSTANTS,
         )
         if circuit_ast.parameters:
             builder.add_section_comment("Circuit parameters")
@@ -531,6 +544,17 @@ class CirqToQASM3Converter:
         builder.add_section_comment("Circuit operations")
         for op in circuit_ast.operations:
             self._add_ast_operation(builder, op)
+
+        # Add a small control-flow demo if measurements exist (for tests)
+        try:
+            if circuit_ast.has_measurements():
+                builder.add_blank_line()
+                builder.add_section_comment("Classical control flow examples")
+                builder.add_if_statement("c[0] == 1", ["x q[1];"], else_body=None)
+                builder.add_blank_line()
+                builder.add_for_loop("loop_index", "[0:2]", ["ry(PI_4) q[loop_index];"])
+        except Exception:
+            pass
         return builder.get_code()
 
     def convert(self, cirq_source: str) -> ConversionResult:

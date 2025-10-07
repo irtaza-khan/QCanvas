@@ -28,7 +28,7 @@ def get_circuit():
         result = convert_qiskit_to_qasm3(test_code)
         print("✓ Conversion successful!")
         print(f"QASM Code:\n{result.qasm_code}")
-        return True
+        assert result is not None
         
     except Exception as e:
         print(f"✗ Qiskit conversion failed: {e}")
@@ -54,7 +54,7 @@ def get_circuit():
         result = convert_cirq_to_qasm3(test_code)
         print("✓ Conversion successful!")
         print(f"QASM Code:\n{result.qasm_code}")
-        return True
+        assert result is not None
         
     except Exception as e:
         print(f"✗ Cirq conversion failed: {e}")
@@ -83,7 +83,7 @@ def get_circuit():
         result = convert_pennylane_to_qasm3(test_code)
         print("✓ Conversion successful!")
         print(f"QASM Code:\n{result.qasm_code}")
-        return True
+        assert result is not None
         
     except Exception as e:
         print(f"✗ PennyLane conversion failed: {e}")
@@ -96,15 +96,15 @@ if __name__ == "__main__":
     success_count = 0
     total_tests = 3
     
-    if test_qiskit_conversion():
+    if test_qiskit_conversion() is None:
         success_count += 1
     print()
     
-    if test_cirq_conversion():
+    if test_cirq_conversion() is None:
         success_count += 1
     print()
     
-    if test_pennylane_conversion():
+    if test_pennylane_conversion() is None:
         success_count += 1
     print()
     

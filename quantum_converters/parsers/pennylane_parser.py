@@ -9,6 +9,7 @@ for Iteration I features: basic gates, simple parameters, and measurements.
 import ast
 import logging
 from config.config import VERBOSE, vprint
+from quantum_converters.config import get_pl_inverse_qasm_map
 from typing import List, Any, Set
 
 from quantum_converters.base.circuit_ast import (
@@ -67,9 +68,7 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
     def _extract_wires_from_device(self, call: ast.Call) -> None:
         for kw in call.keywords:
             if kw.arg == 'wires':
-                if isinstance(kw.value, ast.Num):
-                    self.qubits = int(kw.value.n)
-                elif isinstance(kw.value, ast.Constant):
+                if isinstance(kw.value, ast.Constant):
                     self.qubits = int(kw.value.value)
                 return
 
@@ -107,12 +106,8 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
 
     def _get_gate_mapping(self) -> dict:
         """Get mapping of PennyLane gate names to OpenQASM mnemonics."""
-        return {
-            'PauliX': 'x', 'PauliY': 'y', 'PauliZ': 'z',
-            'Hadamard': 'h', 'S': 's', 'T': 't', 'Identity': 'id',
-            'RX': 'rx', 'RY': 'ry', 'RZ': 'rz', 'PhaseShift': 'p',
-            'CNOT': 'cx', 'CZ': 'cz', 'SWAP': 'swap', 'Toffoli': 'ccx'
-        }
+        # Centralized registry: invert once and reuse
+        return dict(get_pl_inverse_qasm_map())
 
     def _log_qml_call(self, method_name: str, call: ast.Call) -> None:
         """Log detailed information about qml call if verbose."""
@@ -156,16 +151,14 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
                 vprint(f"[PennyLaneASTVisitor]     _parse_wires_value node={ast.dump(node, include_attributes=False)}")
             except Exception:
                 vprint("[PennyLaneASTVisitor]     _parse_wires_value node=<dump failed>")
-        if isinstance(node, ast.Num):
-            return [int(node.n)]
+        if isinstance(node, ast.Constant) and isinstance(node.value, int):
+            return [int(node.value)]
         if isinstance(node, ast.Constant) and isinstance(node.value, int):
             return [int(node.value)]
         if isinstance(node, ast.List):
             result: List[int] = []
             for elt in node.elts:
-                if isinstance(elt, ast.Num):
-                    result.append(int(elt.n))
-                elif isinstance(elt, ast.Constant) and isinstance(elt.value, int):
+                if isinstance(elt, ast.Constant) and isinstance(elt.value, int):
                     result.append(int(elt.value))
             return result
         # Unsupported dynamic wires
@@ -186,9 +179,7 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             self._log_parameter_extraction(node)
 
         # Route to appropriate handler based on node type
-        if isinstance(node, ast.Num):
-            return self._handle_num_parameter(node)
-        elif isinstance(node, ast.Constant):
+        if isinstance(node, ast.Constant):
             return self._handle_constant_parameter(node)
         elif isinstance(node, ast.Name):
             return self._handle_name_parameter(node)
@@ -210,9 +201,7 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         except Exception:
             vprint("[PennyLaneASTVisitor]   _extract_parameter node=<dump failed>")
 
-    def _handle_num_parameter(self, node: ast.Num):
-        """Handle numeric literal parameters."""
-        return node.n
+    # Removed deprecated ast.Num handler; ast.Constant path covers ints
 
     def _handle_constant_parameter(self, node: ast.Constant):
         """Handle constant parameters (Python 3.8+)."""
@@ -284,10 +273,16 @@ class PennyLaneASTParser:
         self.visitor = PennyLaneASTVisitor()
         self.visitor.visit(tree)
 
-        # Basic validation
+        # Determine qubit count: prefer device wires; else infer from max wire index
         if self.visitor.qubits <= 0:
-            # Default to 1 qubit if device not found, to keep builder happy
-            self.visitor.qubits = 1
+            try:
+                max_index = -1
+                for op in self.visitor.operations:
+                    if hasattr(op, 'qubits') and op.qubits:
+                        max_index = max(max_index, max(int(i) for i in op.qubits))
+                self.visitor.qubits = (max_index + 1) if max_index >= 0 else 1
+            except Exception:
+                self.visitor.qubits = 1
 
         circuit_ast = CircuitAST(
             qubits=self.visitor.qubits,
