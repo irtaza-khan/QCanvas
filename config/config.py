@@ -26,11 +26,20 @@ from typing import Any
 
 # Ensure logs directory and a per-run log file exist
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-LOG_DIR = os.path.join(_PROJECT_ROOT, "logs")
-os.makedirs(LOG_DIR, exist_ok=True)
+LOG_ROOT_DIR = os.path.join(_PROJECT_ROOT, "logs")
+os.makedirs(LOG_ROOT_DIR, exist_ok=True)
 
-_RUN_TIMESTAMP = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-LOG_FILE = os.path.join(LOG_DIR, f"run_{_RUN_TIMESTAMP}.log")
+def _month_dir_for(dt: datetime) -> str:
+    """Return directory path logs/YYYY/Mon for the given datetime, creating it if needed."""
+    year = dt.strftime("%Y")
+    month_abbr = dt.strftime("%b")  # Jan, Feb, ...
+    month_dir = os.path.join(LOG_ROOT_DIR, year, month_abbr)
+    os.makedirs(month_dir, exist_ok=True)
+    return month_dir
+
+_RUN_DT = datetime.now()
+_RUN_TIMESTAMP = _RUN_DT.strftime("%Y-%m-%d_%H-%M-%S")
+LOG_FILE = os.path.join(_month_dir_for(_RUN_DT), f"run_{_RUN_TIMESTAMP}.log")
 _SESSION_COUNTER = 0
 
 # Emit a header for this run
@@ -60,9 +69,10 @@ def new_log_session(name: str = "run") -> str:
     """
     global LOG_FILE, _SESSION_COUNTER
     _SESSION_COUNTER += 1
-    ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    now = datetime.now()
+    ts = now.strftime("%Y-%m-%d_%H-%M-%S")
     safe = "".join(ch for ch in name if ch.isalnum() or ch in ("-", "_")) or "run"
-    LOG_FILE = os.path.join(LOG_DIR, f"{safe}_{ts}_{_SESSION_COUNTER:02d}.log")
+    LOG_FILE = os.path.join(_month_dir_for(now), f"{safe}_{ts}_{_SESSION_COUNTER:02d}.log")
     _emit_log_header()
     return LOG_FILE
 
