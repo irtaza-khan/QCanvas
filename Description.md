@@ -577,16 +577,38 @@ ws.onmessage = (event) => {
 
 ## Development and Deployment
 
+### GitHub Commands
+
+```bash
+#1. Clone the Repository:
+git clone https://github.com/Umer-Farooq-CS/QCanvas.git
+
+#2. Always Use the `master` Branch (never `main`):
+git pull origin master
+
+#3. Check Status (Unstaged Changes in Red, Staged in Green):
+git status
+
+#4a. Stage Changes: All files
+git add .
+
+#4b. Stage Changes: Single files
+git add {filename}
+
+#5. Commit Changes
+git commit -m "message"
+
+#6. Push to GitHub (`master` branch):
+git push origin master
+```
+
 ### Development Setup:
 
 **1. Local Development:**
 ```bash
-**1. Local Development:**
-
-```bash
 # Clone the repository
-git clone https://github.com/your-username/qcanvas.git
-cd qcanvas
+git clone https://github.com/Umer-Farooq-CS/QCanvas.git
+cd QCanvas
 
 # Install Python backend dependencies
 pip install -r requirements.txt
@@ -600,7 +622,8 @@ cd ..
 copy environment.env .env
 # Edit .env in the root qcanvas directory with your settings
 
-# Start backend (from project root)
+# Start backend
+cd backend
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
 # In a new terminal, start frontend (from project root)
