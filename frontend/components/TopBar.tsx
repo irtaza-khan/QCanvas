@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image"; // <-- Add this line
 import {
   Play,
   Save,
@@ -450,8 +451,26 @@ export default function TopBar() {
           </button>
 
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg quantum-gradient flex items-center justify-center shadow-lg">
-              <Zap className="w-5 h-5 text-white" />
+            {/* Logo — changes automatically with theme */}
+            <div className="flex items-center justify-center w-8 h-8">
+              {/* Light mode (violet) */}
+              <Image
+                src="/QCanvas-logo-Black.svg"
+                alt="App Logo"
+                width={32}
+                height={32}
+                className="object-contain block dark:hidden"
+                priority
+              />
+              {/* Dark mode (light blue) */}
+              <Image
+                src="/QCanvas-logo-White.svg"
+                alt="App Logo"
+                width={32}
+                height={32}
+                className="object-contain hidden dark:block"
+                priority
+              />
             </div>
             <span className="font-bold text-lg hidden sm:block quantum-gradient bg-clip-text text-transparent">
               QCanvas
@@ -604,6 +623,7 @@ export default function TopBar() {
             onClick={toggleTheme}
             className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
             title="Toggle Theme (Ctrl/Cmd+Shift+K)"
+            aria-label="Toggle theme"
           >
             {theme === "dark" ? (
               <Sun className="w-5 h-5" />
@@ -638,8 +658,10 @@ export default function TopBar() {
                 Keyboard Shortcuts
               </h3>
               <button
+                type="button"
                 onClick={() => setShowShortcuts(false)}
                 className="btn-ghost p-1 hover:bg-quantum-blue-light/20 rounded-lg"
+                title="Close Shortcuts"
               >
                 <X className="w-5 h-5" />
               </button>
