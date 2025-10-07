@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { SupportedLanguage, LANGUAGE_EXTENSIONS } from "@/types"
+import { SupportedLanguage, LANGUAGE_EXTENSIONS, InputLanguage } from "@/types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -110,4 +110,28 @@ export function deepClone<T>(obj: T): T {
     return cloned
   }
   return obj
+}
+
+// Detect quantum framework from code content and filename
+export function detectFramework(content: string, filename: string): InputLanguage | null {
+  // Check for QASM first (file extension or content)
+  if (filename.toLowerCase().endsWith('.qasm') || content.trim().startsWith('OPENQASM')) {
+    return 'qasm'
+  }
+
+  // Check for framework imports
+  if (content.includes('import cirq') || content.includes('cirq.')) {
+    return 'cirq'
+  }
+
+  if (content.includes('import pennylane') || content.includes('qml.')) {
+    return 'pennylane'
+  }
+
+  if (content.includes('import qiskit') || content.includes('QuantumCircuit')) {
+    return 'qiskit'
+  }
+
+  // If no patterns match, return null
+  return null
 }
