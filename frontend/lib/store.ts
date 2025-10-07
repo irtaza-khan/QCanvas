@@ -40,26 +40,27 @@ interface FileStore extends EditorState {
 
 // Initial files sourced from tests/unit/test_converters
 const initialFiles: File[] = [
-  {
-    id: 'file-1',
-    name: 'test_qiskit_converter.py',
-    content: `from qiskit import QuantumCircuit
+  (() => {
+    const content = `from qiskit import QuantumCircuit
 def get_circuit():
     qc = QuantumCircuit(2, 2)
     qc.h(0)
     qc.cx(0, 1)
     qc.measure([0, 1], [0, 1])
     return qc
-`,
-    language: 'python',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    size: 0,
-  },
-  {
-    id: 'file-2',
-    name: 'test_cirq_converter.py',
-    content: `import cirq
+`;
+    return {
+      id: 'file-1',
+      name: 'test_qiskit_converter.py',
+      content,
+      language: 'python',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      size: content.length,
+    };
+  })(),
+  (() => {
+    const content = `import cirq
 def get_circuit():
     q0, q1 = cirq.LineQubit.range(2)
     circuit = cirq.Circuit(
@@ -69,16 +70,19 @@ def get_circuit():
         cirq.measure(q1, key="m1")
     )
     return circuit
-`,
-    language: 'python',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    size: 0,
-  },
-  {
-    id: 'file-3',
-    name: 'test_pennylane_converter.py',
-    content: `import pennylane as qml
+`;
+    return {
+      id: 'file-2',
+      name: 'test_cirq_converter.py',
+      content,
+      language: 'python',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      size: content.length,
+    };
+  })(),
+  (() => {
+    const content = `import pennylane as qml
 import numpy as np
 
 dev = qml.device('default.qubit', wires=3)
@@ -92,12 +96,17 @@ def circuit():
     qml.RZ(np.pi/3, wires=2)
     qml.CZ(wires=[1, 2])
     return qml.expval(qml.PauliZ(0))
-`,
-    language: 'python',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    size: 0,
-  },
+`;
+    return {
+      id: 'file-3',
+      name: 'test_pennylane_converter.py',
+      content,
+      language: 'python',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      size: content.length,
+    };
+  })(),
 ]
 
 export const useFileStore = create<FileStore>()(

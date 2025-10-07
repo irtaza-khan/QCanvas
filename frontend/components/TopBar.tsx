@@ -30,6 +30,7 @@ import toast from "react-hot-toast";
 import { useFileStore } from "@/lib/store";
 import { fileApi, quantumApi } from "@/lib/api";
 import { InputLanguage, ResultFormat } from "@/types";
+import { detectFramework } from "@/lib/utils";
 
 export default function TopBar() {
   const router = useRouter();
@@ -98,6 +99,13 @@ export default function TopBar() {
   const handleRun = async () => {
     if (!activeFile) {
       toast.error("No file selected");
+      return;
+    }
+
+    // Validate language selection
+    const detected = detectFramework(activeFile.content, activeFile.name);
+    if (detected && detected !== inputLanguage) {
+      toast.error(`Incorrect language selected.`);
       return;
     }
 
@@ -255,6 +263,14 @@ export default function TopBar() {
   const handleConvertToQASM = async () => {
     if (!activeFile) {
       toast.error("No file selected");
+      return;
+    }
+
+    // Validate language selection
+    const detected = detectFramework(activeFile.content, activeFile.name);
+    if (detected && detected !== inputLanguage) {
+      // toast.error(`Incorrect language selected. The code appears to be written in ${detected} but ${inputLanguage} is selected.`);
+      toast.error(`Incorrect language selected.`);
       return;
     }
 
@@ -446,6 +462,7 @@ export default function TopBar() {
         {/* Center - Compile/Run and Options */}
         <div className="flex items-center space-x-1 md:space-x-2">
           {/* Input Language */}
+          
           <select
             value={inputLanguage}
             onChange={(e) => setInputLanguage(e.target.value as InputLanguage)}
@@ -456,29 +473,6 @@ export default function TopBar() {
             <option value="qiskit">Qiskit</option>
             <option value="cirq">Cirq</option>
             <option value="pennylane">PennyLane</option>
-          </select>
-
-          {/* Output Format */}
-          <select
-            value={resultFormat}
-            onChange={(e) => setResultFormat(e.target.value as ResultFormat)}
-            className="hidden md:block bg-editor-bg border border-editor-border text-sm text-editor-text rounded-lg px-3 py-1.5 focus-quantum transition-colors"
-            title="Result Format"
-          >
-            <option value="json">JSON</option>
-            <option value="histogram">Histogram</option>
-            <option value="text">Text</option>
-          </select>
-
-          {/* Result Style */}
-          <select
-            value={resultStyle}
-            onChange={(e) => setResultStyle(e.target.value as any)}
-            className="hidden lg:block bg-editor-bg border border-editor-border text-sm text-editor-text rounded-lg px-3 py-1.5 focus-quantum transition-colors"
-            title="Result Style"
-          >
-            <option value="classic">Classic</option>
-            <option value="compact">Compact</option>
           </select>
 
           <button
