@@ -10,11 +10,11 @@ QCanvas is designed as a modular, scalable quantum computing platform with a cle
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Frontend (Next.js)                      │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│  │   Circuit   │ │  Quantum    │ │   Real-time │ │   Results   │ │
-│  │   Editor    │ │ Simulator   │ │  Updates    │ │Display & Viz│ │
-│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
+│                        Frontend (Next.js)                       │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
+│  │   Circuit   │ │  Quantum    │ │   Real-time │ │   Results   ││
+│  │   Editor    │ │ Simulator   │ │  Updates    │ │Display & Viz││
+│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘│
 │                                                                 │
 │  - UI Components & Routing                                      │
 │  - Simple Operations & SSR/SSG                                  │
@@ -24,11 +24,11 @@ QCanvas is designed as a modular, scalable quantum computing platform with a cle
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Backend (FastAPI)                           │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│  │   REST API  │ │  WebSocket  │ │   Services  │ │   Database  │ │
-│  │   Layer     │ │   Manager   │ │   Layer     │ │   Layer     │ │
-│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
+│                    Backend (FastAPI)                            │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
+│  │   REST API  │ │  WebSocket  │ │   Services  │ │   Database  ││
+│  │   Layer     │ │   Manager   │ │   Layer     │ │   Layer     ││
+│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘│
 │                                                                 │
 │  - Complex Quantum Simulations                                  │
 │  - Heavy Computational Tasks                                    │
@@ -39,10 +39,10 @@ QCanvas is designed as a modular, scalable quantum computing platform with a cle
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                  Quantum Processing Layer                       │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│  │  Quantum    │ │  Quantum    │ │  OpenQASM   │ │  Circuit    │ │
-│  │ Converters  │ │ Simulator   │ │  Generator  │ │ Optimizers  │ │
-│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
+│  │  Quantum    │ │  Quantum    │ │  OpenQASM   │ │  Circuit    ││
+│  │ Converters  │ │ Simulator   │ │  Generator  │ │ Optimizers  ││
+│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘│
 └─────────────────────────────────────────────────────────────────┘
 ```
 
