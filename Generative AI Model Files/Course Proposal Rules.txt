@@ -1,0 +1,8 @@
+Course Project Proposal 
+Course Title Generative AI Deadline: 19 October-2025  
+Project Marks Distribution: 10 (Proposal) + 45 (Code Demo) + 45 (Research Paper) Objectives: 
+You are required to research and find a suitable topic for your Generative AI course  project. Each group must select a unique topic and conduct a comprehensive analysis in the  domain of Generative AI. As an initial step, you must submit a project proposal of at least  two pages containing the project title, description, and main functions well before the  deadline. To avoid topic duplication, all groups must fill out the provided sheet: Project  Registration Sheet. 
+For each proposal, at least 10 research papers from recent years must be cited, with proper  references provided in the bibliography at the end of the proposal document. The proposal  should be composed of Overleaf, and all references should be stored in a separate  bibliography (.bib) file for proper citation. The final proposal must be submitted as a PDF  file. 
+The final submission of your project will also require a research paper composed in  Springer’s LNCS paper format, following the official template: Springer LNCS Conference  Template. 
+General Requirements 
+We expect either you have done innovative work (a work that has not been proposed earlier) or  you have performed comparative analysis by comparing various methods on different datasets  or the same dataset. These results must be discussed in detail in the research paper. You are not  just restricted to exploring the models that we have discussed in class, this is a research paper,  so you are expected to explore the maximum models that you need for your project.
