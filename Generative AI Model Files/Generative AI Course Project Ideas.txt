@@ -1,0 +1,161 @@
+Generative AI Course Project Ideas — Complete Guide 
+Date: October 01, 2025 
+Prepared for: Students of Generative AI course 
+Prepared by: Dr. Akhtar Jamil 
+Introduction 
+This document lists practical, semester-friendly project ideas across major categories of  Generative AI which can help get idea what students can implement as part of this course  project. Please note that these are just recommendations, you can come up with your own  ideas too. 
+Each category contains few implementable project ideas, followed by the theoretical  knowledge students should master, recommended tools and frameworks, and suggested  datasets. At the end you'll find a concise implementation checklist, evaluation suggestions,  and delivery expectations. 
+1. Text & LLM Projects 
+Project Ideas 
+1. Fine-tune a small LLM on a domain (medical/education/legal) for specialized text  generation. 
+2. Build a retrieval-augmented chatbot (RAG) using vector search + generative responses for a specific use case. 
+3. Prompt-based story generation with controllable plot elements. 
+4. Multi-document summarization e.g., summarizing multiple research papers or should  be able to summarize the financial documents given in the form of text or images,  should extract correct format from PDF, images or excel sheets etc. 
+5. Generate coding solutions + automatic test cases from problem statements. 6. Grammar and fluency correction tool using a fine-tuned GPT-like models for Urdu  language. 
+7. Automatic question generation from textbooks or lecture notes. Verifiable results and  format the question as per needs like MCQ, detailed questions etc. LLM should also be  able to verify the answers. 
+8. Multi-language translation and summarization using a small generative model. 
+Theoretical Knowledge Needed 
+• - NLP basics: tokenization, embeddings, transformer architecture. • - Sequence modeling: autoregressive and encoder-decoder paradigms. • - Attention mechanisms and positional encodings. 
+• - Fine-tuning methods, parameter-efficient techniques (LoRA, adapters). • - Retrieval-augmented generation (RAG) and dense retrieval (FAISS). • - Evaluation metrics: BLEU, ROUGE, METEOR, perplexity, human eval.
+Tools / Frameworks 
+• - Hugging Face Transformers and Datasets (transformers, datasets). • - LangChain / LlamaIndex for RAG orchestration. 
+• - Vector databases: FAISS, Milvus, Pinecone. 
+• - PyTorch / TensorFlow for training and fine-tuning. 
+• - OpenAI/Anthropic APIs (if using hosted LLMs). 
+Suggested Datasets / Resources 
+• - Small/classroom: IMDb, CNN/DailyMail, SQuAD, WikiText-2. 
+• - Mid/domain: PubMed abstracts, ArXiv abstracts, Stack Overflow dumps. • - Large: OpenWebText or subsets of The Pile (use licensed/public subsets). 
+2. Agentic AI Projects 
+Project Ideas (10) 
+1. Build a ReAct-style agent that searches the web and writes a mini research report. 2. Multi-agent debate system (two LLMs argue and one adjudicator agent summarizes). 3. An autonomous research assistant that can query arXiv and draft literature reviews. 4. Shopping assistant that fetches product details and compares prices, add and search  items to the based using conversational agent. 
+5. Automated assignment grader that provides scores + explanations. Should be able to  generate assignments and then evaluate them against ruberics. Can also be quizzes or  exams. 
+6. Scheduling agent that integrates with a calendar and emails recommendations. Should  be automatically able to schedule meetings, check flights for travels, hostels for booking  etc. 
+7. Negotiation simulation: two AI agents bargain on price/conditions and then settle on a  price , one agens places the order and other is handling the orders. 
+8. Game-playing multi-agent system (e.g., simple strategy game). 
+9. Teacher–student agent pair where teacher explains concepts and student asks clarifying  questions. 
+Theoretical Knowledge Needed 
+• - ReAct and tool-using agent paradigms (reason+act loops). 
+• - Multi-agent systems and coordination strategies. 
+• - Basic reinforcement learning (policy, reward, planning). 
+• - Evaluation of agentic behavior: task success, efficiency, safety. 
+• - Prompt engineering for tool invocation and function calling. 
+Tools / Frameworks 
+• - LangChain, AutoGen, or OpenAI function-calling patterns. 
+• - Simulation environments: Gymnasium, MiniGrid, MiniWoB, WebShop. • - APIs for web/search integration (custom scraping or search APIs). • - Python (requests, BeautifulSoup) and orchestration libraries.
+Suggested Datasets / Resources 
+• - Instruction datasets: Alpaca-style instruction-following data. • - Document corpora for tool use: Wikipedia subsets, curated PDFs or local corpora. • - Task traces or game logs (MiniGrid demos, scripted play data). 
+3. Diffusion Models (Image/Video/3D) 
+Project Ideas  
+1. Train a diffusion model on a custom dataset (e.g., flowers, vehicles). 2. Implement image inpainting using Stable Diffusion. 
+3. Diffusion-based super-resolution (low-res → high-res images). 4. Text-to-emoji or icon generator using diffusion fine-tuning. 
+5. Temporal consistency improvement for text-to-video generation. 6. Diffusion-based 3D object generation from 2D sketches. 
+7. Domain-specific diffusion (e.g., generating architectural floor plans). 8. Image editing by prompt (e.g., add sunglasses to faces). 
+9. Latent diffusion with attribute control (color, pose, lighting). 
+10. Few-shot diffusion model adaptation to new art styles. 
+Theoretical Knowledge Needed 
+• - Noise-to-data diffusion processes (DDPM/DDIM). 
+• - Score-matching, denoising objectives, and Langevin dynamics. • - Conditional generation and classifier-free guidance. 
+• - Latent diffusion and efficiency trade-offs. 
+• - Evaluation metrics: FID, IS, LPIPS, human perceptual tests. 
+Tools / Frameworks 
+• - PyTorch and Hugging Face Diffusers library. 
+• - Stable Diffusion checkpoints and Automatic1111 UI for experimentation. • - PyTorch3D and Blender for 3D tasks / rendering. 
+• - Image processing libraries: OpenCV, Pillow. 
+Suggested Datasets / Resources 
+• - Toy/small: CIFAR-10, Oxford Flowers. 
+• - Faces: CelebA, FFHQ. 
+• - Text-conditioned: MS-COCO (captions), LAION subsets (with license checks). • - Video: UCF101 (small), Kinetics (larger). 
+• - 3D: ShapeNet, DTU. 
+4. Audio & Speech 
+Project Ideas 
+1. Build a multi-accent text-to-speech model. 
+2. Emotion-aware TTS (happy, sad, angry tones).
+3. Voice conversion system (convert speaker A → B). 
+4. Text-to-music generation (simple melodies). 
+5. Generate environmental sound effects (rain, wind, footsteps). 6. Audio super-resolution (low-quality → high-quality audio). 7. Speech synthesis for low-resource languages with few samples. 8. Lip-synchronized speech generation for talking avatars. 9. Music style transfer (classical → jazz). 
+10. Generate podcast intro/outro music using AI. 
+Theoretical Knowledge Needed 
+• - Digital signal processing: STFT, spectrograms, mel-spectrograms. • - Sequence modelling for audio (RNNs, Transformers). • - Acoustic modeling and vocoders (WaveNet, HiFi-GAN). • - Evaluation metrics: MOS, MCD, PESQ. 
+• - Data augmentation and low-resource techniques. 
+Tools / Frameworks 
+• - Librosa for audio processing, PyTorchAudio. 
+• - TTS frameworks: Coqui TTS, ESPnet, Fairseq TTS examples. • - Pretrained vocoders: HiFi-GAN, WaveGlow, WaveNet checkpoints. • - OpenAI Whisper for ASR preprocessing. 
+Suggested Datasets / Resources 
+• - TTS: LJSpeech (single-speaker), VCTK (multi-speaker). • - ASR & TTS: LibriTTS, Common Voice (multilingual). • - Music: MAESTRO (piano), NSynth (instruments). 
+• - Sound effects: ESC-50, UrbanSound8K. 
+5. Multimodal 
+Project Ideas (10) 
+1. Image captioning using CLIP + LLM. 
+2. Text-to-image fine-tuning on a small domain (e.g., food, cars). 3. Audio-to-image generation (generate scene from sound). 4. Image-to-music mapping (photo mood → music). 
+5. Video captioning using multimodal transformers. 
+6. Multimodal retrieval (query an image with text or vice versa). 7. Multimodal emotion recognition (face + voice → emotion). 8. Create a meme generator (text + image alignment). 
+9. Generating sign language video from spoken text (research-grade). 10. AI that explains diagrams from textbooks with natural language. 
+Theoretical Knowledge Needed 
+• - Multimodal embeddings and cross-modal contrastive learning (CLIP).
+• - Cross-attention and fusion strategies. 
+• - Evaluation: Recall@K, CIDEr, BLEU, human eval. 
+• - Noise robustness and alignment challenges. 
+Tools / Frameworks 
+• - CLIP, BLIP, LLaVA implementations (Hugging Face). 
+• - Multimodal frameworks and vision-language toolkits. 
+• - OpenCV for image/video preprocessing, PyTorch Lightning for pipelines. 
+Suggested Datasets / Resources 
+• - Image+Text: MS-COCO, Flickr30k, Visual Genome. 
+• - Audio+Text: AudioCaps, AudioSet. 
+• - Video+Text: HowTo100M (large), YouCook2 (cooking). 6. Generative AI for Science & Data 
+Project Ideas 
+1. Synthetic tabular dataset generation (imbalanced dataset balancing). 2. Molecule generation for drug discovery (graph-based models). 3. Protein sequence generation constrained by properties. 4. Climate simulation data generation for risk analysis. 
+5. Generative modeling of medical imaging scans. 
+6. Synthetic patient records for privacy-preserving training. 7. Generating financial time-series. 
+8. Materials design using graph-based generative models. 
+9. Generating synthetic sensor data for IoT applications. 
+Theoretical Knowledge Needed 
+• - Graph neural networks for molecules, VAEs and GANs for structured data. • - Statistical measures for distribution matching and evaluation. • - Differential privacy and privacy-preserving training. 
+• - Domain-specific theory (chemistry, biology, PDEs) as required. 
+Tools / Frameworks 
+• - RDKit for chemistry, BioPython for biological sequences. • - PyTorch Geometric for graph models, CTGAN and SDV for tabular data. • - Scientific Python stack: SciPy, xarray, pandas. 
+Suggested Datasets / Resources 
+• - Molecules: ZINC, ChEMBL. 
+• - Proteins: ProteinNet, UniProt subsets. 
+• - Medical imaging: ChestX-ray14, BraTS (check access/ethics). • - Tabular: UCI repository datasets, MIMIC-III (requires approvals).
+7. Security, Privacy & Detection 
+Project Ideas 
+1. AI-generated text detection (train classifier on human vs AI essays). 2. Robust AI text detector against paraphrasing attacks. 
+3. Watermarking images generated by diffusion models. 
+4. Membership inference attack on a small generative model. 
+5. Differentially private GAN for tabular data. 
+6. Detecting deepfake audio using spectral features. 
+7. Prompt injection detection for LLMs. 
+8. Adversarial prompt generation to fool LLMs. 
+9. Defense against data poisoning in generative models. 
+10. Attribution: identifying which model generated a given image. 
+Theoretical Knowledge Needed 
+• - Adversarial machine learning and attack/defense taxonomy. 
+• - Membership inference, model inversion attacks, and defenses. 
+• - Principles of differential privacy and DP-SGD. 
+• - Evaluation metrics for detectors: AUROC, precision/recall. 
+Tools / Frameworks 
+• - CleverHans, Foolbox for attacks; Opacus for differential privacy. • - Standard classifier frameworks: RoBERTa, ResNet, EfficientNet. • - Tooling for watermarking and fingerprinting outputs. 
+Suggested Datasets / Resources 
+• - Text: synthetic human vs AI corpora (construct using LLM outputs + human writing). • - Deepfake video: FaceForensics++, DFDC. 
+• - Audio: ASVspoof. 
+• - Tabular: UCI datasets for membership experiments. 
+8. Explainability & Control 
+Project Ideas 
+1. Visualize attention maps of a transformer LLM during generation. 2. Latent space exploration of a diffusion model (interpolate between images). 3. Attribute-guided image generation (control color, pose, emotion). 4. Constrained text generation (logical rules, grammar). 
+5. Explainability via SHAP/LIME for AI-generated outputs. 
+6. Editable GANs (edit a face’s age or expression). 
+7. Style mixing in latent space (combine two styles). 
+8. Explain hallucinations in LLM outputs via attention tracing. 
+9. Build controllable poetry generator (meter/rhyme constraints). 
+10. Visual storytelling: controlling scene sequence in image generation.
+Theoretical Knowledge Needed 
+• - Interpretability techniques: SHAP, LIME, Grad-CAM, attention analysis. • - Latent representations and disentanglement concepts. 
+• - Constrained optimization and controllable generation. 
+• - Human-centered evaluation for explanations. 
+Tools / Frameworks 
+• - Captum, SHAP, LIME, Ecco (transformer probing). 
+• - StyleGAN / StyleGAN2/3 for latent editing; matplotlib and Plotly for visualization. • - Hugging Face for controllable text generation baselines. 
+Suggested Datasets / Resources 
+• - Use domain-matched datasets: COCO, WikiText, FFHQ depending on task. • - Synthetic datasets for controlled latent experiments. 
+• - e-SNLI for explanation-focused NLI tasks.
