@@ -8,7 +8,7 @@
 - **Frontend**: Next.js/React application with TypeScript
 - **Backend**: FastAPI-based REST API server
 - **Quantum Converters**: Python modules for framework-to-QASM conversion
-- **Simulator**: Quantum circuit execution engine
+- **Simulator (QSim)**: Quantum circuit execution engine (statevector, density matrix, stabilizer) with result aggregation
 
 ### Key Features
 - Multi-framework quantum circuit editing
@@ -126,7 +126,7 @@ app.include_router(files.router)      # /api/files/*
 
 **Execution Flow**:
 1. Parse QASM code
-2. Call `SimulationService.execute_qasm()`
+2. Call `SimulationService.execute_qasm()` (QSim backends)
 3. Return simulation results (counts, statevector, etc.)
 
 ### Services Layer
@@ -516,14 +516,14 @@ python-multipart==0.0.6
 ## 11. Future Enhancements
 
 ### Planned Features
-- **Advanced Simulator**: Full quantum simulator integration
+- **Advanced Simulator (QSim)**: Full quantum simulator integration
 - **Circuit Optimization**: Gate optimization passes
 - **Visualization**: Circuit diagram rendering
 - **Collaboration**: Multi-user editing
 - **Plugin System**: Extensible converter architecture
 
 ### Technical Debt
-- **Simulator Integration**: Complete quantum simulator backend
+- **Simulator Integration (QSim)**: Complete quantum simulator backend
 - **Error Handling**: Comprehensive error reporting
 - **Performance**: Optimization for large circuits
 - **Documentation**: API documentation generation

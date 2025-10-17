@@ -40,8 +40,9 @@ QCanvas is designed as a modular, scalable quantum computing platform with a cle
 ┌─────────────────────────────────────────────────────────────────┐
 │                  Quantum Processing Layer                       │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
-│  │  Quantum    │ │  Quantum    │ │  OpenQASM   │ │  Circuit    ││
-│  │ Converters  │ │ Simulator   │ │  Generator  │ │ Optimizers  ││
+│  │  QCanvas     │ │    QSim     │ │  QASM3      │ │  Optimizers ││
+│  │ (Converters, │ │ (Execution) │ │ Generator   │ │             ││
+│  │  Orchestr.)  │ │             │ │             │ │             ││
 │  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘│
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -160,7 +161,7 @@ quantum_simulator/
 10. Next.js Frontend Display
 ```
 
-### Simulation Flow
+### Simulation Flow (Hybrid CPU–QPU)
 
 ```
 1. User Input (QASM Code in Next.js)
@@ -175,13 +176,15 @@ quantum_simulator/
    ↓
 6. Backend Selection (Statevector/Density Matrix/Stabilizer)
    ↓
-7. Circuit Execution (Heavy computation in FastAPI)
+7. Hybrid Orchestration (QCanvas → QSim)
+   - Split CPU logic and QPU circuit execution blocks
+   - Execute via QSim; reserve pluggable QPU endpoints only if enabled
    ↓
 8. Result Processing
    ↓
 9. Response (JSON)
    ↓
-10. Next.js Frontend Visualization
+10. Next.js Frontend Visualization (histograms, node stats)
 ```
 
 ### Real-time Communication Flow

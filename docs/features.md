@@ -28,7 +28,7 @@ QCanvas is a comprehensive quantum computing platform that provides framework co
     - Error reporting with detailed messages
     - Framework-specific validation rules
 
-### 2. Quantum Simulation Engine
+### 2. Quantum Simulation Engine (QSim)
 
 2.1 **Multiple Simulation Backends**
     - Statevector backend for exact simulation
@@ -43,10 +43,11 @@ QCanvas is a comprehensive quantum computing platform that provides framework co
     - Circuit statistics and analysis
 
 2.3 **Performance Optimization**
-    - Circuit optimization algorithms
-    - Gate fusion and simplification
-    - Memory-efficient simulation
-    - Parallel execution support
+- Circuit optimization algorithms
+- Gate fusion and simplification
+- Memory-efficient simulation
+- Parallel execution support
+- Intelligent caching of identical jobs
 
 ### 3. Web-Based User Interface
 
@@ -103,10 +104,11 @@ QCanvas is a comprehensive quantum computing platform that provides framework co
     - Migration system
 
 5.3 **Caching and Performance**
-    - Redis caching layer
+- Redis caching layer
     - Query optimization
     - Response caching
     - Session management
+    - Execution result caching for QSim
 
 ### 6. Development and Deployment
 
@@ -247,10 +249,10 @@ QCanvas is a comprehensive quantum computing platform that provides framework co
 ### 5. Hybrid Computing Support
 
 5.1 **CPU + QPU Integration**
-    - Communication with QSim team
-    - Hybrid algorithm support
-    - Resource allocation optimization
-    - Performance monitoring
+    - QCanvas orchestrates; QSim executes (simulation-first)
+    - Hybrid algorithm support (split CPU logic vs QPU circuits)
+    - Resource allocation optimization and optional QPU reservation
+    - Performance monitoring and node statistics
 
 5.2 **Distributed Computing**
     - Multi-node simulation support

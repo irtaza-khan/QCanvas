@@ -142,6 +142,7 @@ This document details the full workflow in the QCanvas project starting from the
 | 5 | `quantum_converters/converters/qiskit_to_qasm.py` | `QiskitToQASM3Converter.convert` | Conversion logic for Qiskit |
 | 6 | `quantum_converters/base/qasm3_builder.py` | `QASM3Builder` | QASM code generation |
 | 7 | `frontend/components/ResultsPane.tsx` | Render QASM code | Display generated QASM |
+| 8 | `backend/app/api/routes/simulator.py` | `execute` | QSim execution endpoint for hybrid flow |
 
 ---
 
