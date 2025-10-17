@@ -1,0 +1,147 @@
+\chapter{Introduction}
+
+The product whose requirements are specified in this document is "QCanvas," a unified quantum simulator platform. This document is intended for project supervisors, developers, and testers who require a technical overview of the project's architecture, requirements, and design.
+
+\section{Problem Statement}
+
+Despite rapid progress in quantum computing, the developer and learner experience remains fragmented across multiple frameworks, toolchains, and mental models. The absence of a common, practical interchange format in day-to-day workflows forces researchers and students to learn duplicated concepts with different APIs, impeding collaboration and reproducibility. Educational environments further struggle to present immediate feedback and visual intuition while remaining faithful to modern quantum programming practices.
+
+QCanvas addresses this gap with a single, standards-aligned pipeline centered on OpenQASM 3.0. It enables authors to write in Cirq, Qiskit, or PennyLane, convert to OpenQASM 3.0 as a universal IR, validate the output, and simulate on multiple backends with live visual feedback in a web IDE. The platform targets education and research, prioritizing clarity, correctness, and fast iteration.
+
+\clearpage
+
+\section{Project Scope}
+
+\subsection{In Scope}
+
+QCanvas shall:
+\begin{itemize}
+    \item Provide robust conversion from Cirq, Qiskit, and PennyLane to OpenQASM 3.0.
+    \item Validate generated OpenQASM 3.0 against an explicitly supported subset aligned with project scope.
+    \item Execute circuits via software simulation backends (statevector, density matrix, stabilizer) with configurable shots and summaries.
+    \item Offer a web-based IDE for editing, conversion, execution, visualization, and sharing of example circuits.
+    \item Stream progress and results via WebSocket for long-running operations.
+    \item Implement hybrid CPU–QPU execution model where QCanvas orchestrates compilation and QSim executes circuits.
+\end{itemize}
+
+\subsection{Out of Scope}
+
+The following features are explicitly excluded from this project:
+\begin{itemize}
+    \item Pulse-level control and OpenPulse grammar
+    \item Hardware-specific extensions and extern functions
+    \item Circuit timing features (delay, duration, box statements)
+    \item Memory management and quantum error correction
+    \item Physical qubit addressing (\$0, \$1, etc.)
+    \item Direct quantum hardware integration
+\end{itemize}
+
+\section{System Modules}
+
+This section outlines the main system modules and their key features.
+
+\subsection{Conversion Module}
+\begin{itemize}
+    \item Framework parsers for Cirq, Qiskit, and PennyLane with consistent internal models.
+    \item OpenQASM 3.0 generation covering types, gates, classical flow, measurement, and reset.
+    \item Dual-path strategy: AST-first parsing with safe runtime fallback where AST is insufficient.
+    \item Gate mapping with parameter and broadcast handling; safe fallbacks for unsupported operations.
+    \item Conversion statistics: qubits, depth, gate counts, measurement schema.
+    \item Extensibility hooks to register additional frameworks through a converter factory.
+\end{itemize}
+
+\subsection{Simulation Module}
+\begin{itemize}
+    \item Statevector, density matrix, and stabilizer backends.
+    \item Configurable shots; histogram-ready results; optional seed control.
+    \item Lightweight caching for identical executions; pluggable backend interface.
+    \item Backend capability discovery (e.g., max qubits, supported gates); graceful degradation on limits.
+    \item Results envelope with counts, metadata (execution time, backend), and optional state snapshots.
+\end{itemize}
+
+\subsection{Hybrid CPU–QPU Module}
+\begin{itemize}
+    \item Clear separation between classical orchestration (CPU) and quantum execution (QPU/Simulator).
+    \item Data flow: Source Framework Code $\rightarrow$ OpenQASM 3.0 $\rightarrow$ Backend Execution $\rightarrow$ Results Aggregation.
+    \item WebSocket progress updates for long-running hybrid operations.
+    \item Simulation-first approach with optional pluggable QPU endpoints.
+\end{itemize}
+
+\subsection{Web IDE Module}
+\begin{itemize}
+    \item Monaco-based code editor with diagnostics; circuit visualization; results and logs panels.
+    \item Examples browser; project workspace; export/import of QASM.
+    \item Accessibility-minded UI with keyboard-first workflows.
+    \item Real-time progress indicator for conversion and simulation tasks.
+    \item Persistent settings (theme, keybindings) and per-project configuration.
+\end{itemize}
+
+\subsection{API Module}
+\begin{itemize}
+    \item REST endpoints for conversion/validation; WebSocket for progress and streaming.
+    \item Structured responses with metadata for reproducibility.
+    \item Endpoint categories: health, convert (single/batch), validate, simulate (single/batch), backends/frameworks info.
+    \item Error model with machine-readable codes and human-readable messages.
+\end{itemize}
+
+\subsection{Validation Module}
+\begin{itemize}
+    \item Syntax and semantic checks; explicit subset conformance for OpenQASM 3.0.
+    \item Helpful error messages with suggested fixes and line/column mapping.
+    \item Static checks for excluded features (timing, pulse-level, extern functions) with clear guidance.
+\end{itemize}
+
+\clearpage
+
+\section{User Classes and Characteristics}
+
+These are the various user classes anticipated to use QCanvas. Each class has distinct goals, skill levels, and characteristic requirements.
+
+\begin{longtable}{p{0.20\textwidth} p{0.30\textwidth} p{0.42\textwidth}}
+\toprule
+\textbf{User Class} & \textbf{Description} & \textbf{Characteristics} \\
+\midrule
+\endhead
+
+Beginners & Students new to quantum computing & Guided learning, visualizations, and templates. Clear feedback with simplified interfaces. \\
+\midrule
+
+Intermediate Learners & Students building practical skills & Progressive examples with validation. Framework exploration and optimization. \\
+\midrule
+
+Researchers & Academic and industry researchers & Accuracy, batch runs, and parameter sweeps. Cross-framework comparison. \\
+\midrule
+
+Educators & Instructors and curriculum designers & Curated examples and exercises. Shareable workspaces and tracking. \\
+\midrule
+
+Developers/Testers & Internal contributors and maintainers & Diagnostics, logs, and reproducibility. CI/CD integration and benchmarks. \\
+\bottomrule
+\caption{User Classes and Characteristics}
+\label{tab:user_classes}
+\end{longtable}
+
+\section{Assumptions and Dependencies}
+
+\subsection{Assumptions}
+\begin{itemize}
+    \item Users provide syntactically valid source code for supported frameworks where feasible; invalid code yields diagnostics.
+    \item Users have stable network connectivity for API operations and WebSocket communication.
+    \item The platform is accessed through modern web browsers with JavaScript and WebSocket support.
+\end{itemize}
+
+\subsection{Dependencies}
+\begin{itemize}
+    \item Server execution environment with Python 3.11+, FastAPI, and required quantum libraries (Cirq, Qiskit, PennyLane).
+    \item PostgreSQL database for persistence and Redis for caching (future implementation).
+    \item Next.js 14+ frontend with React 18+ and TypeScript support.
+\end{itemize}
+
+\section{Constraints}
+
+\begin{itemize}
+    \item Maximum circuit size is bounded by backend capabilities and resource limits (memory/timeouts).
+    \item OpenQASM 3.0 features are limited to the explicitly supported subset per project scope.
+    \item No hardware integration; simulation-only execution path.
+    \item Performance targets: API response < 2s for conversions, simulation < 30s for 20-qubit circuits.
+\end{itemize}

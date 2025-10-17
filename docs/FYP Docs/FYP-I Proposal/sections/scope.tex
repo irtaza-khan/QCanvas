@@ -1,0 +1,223 @@
+\chapter{Language Constructs Reference}
+\label{ch:scope}
+
+This chapter defines the precise technical boundaries of the Q-CANVAS compiler. The core functionality is the accurate translation of high-level quantum frameworks into the OpenQASM 3.0 intermediate representation \cite{mckay2018}. To manage this complex undertaking, the implementation of OpenQASM 3.0 language features will be divided into distinct phases. The following tables provide a detailed breakdown of all language constructs and their scheduled implementation phase, clearly delineating what is included within the project's scope for the initial release and what is planned for future iterations or explicitly excluded \cite{barenco1995}.
+
+\section{Implementation Phases Legend}
+\begin{itemize}
+    \item \textbf{Iteration I:} Essential core features for basic quantum programming and MVP release.
+    \item \textbf{Iteration II:} Advanced features for extended functionality and production release.
+    \item \textbf{Excluded:} Specialized features deferred to future releases or considered out of scope for this project.
+\end{itemize}
+
+\section{Language Constructs Implementation Plan}
+
+\subsection{Comments and Version Control}
+\begin{longtable}{@{}p{10cm}l@{}}
+\caption{Comments and Version Control}\label{tab:comments-version}\\
+\toprule
+\textbf{Feature} & \textbf{Phase} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Feature} & \textbf{Phase} \\
+\midrule
+\endhead
+Single-line Comments (//) & \textbf{Iteration I} \\
+Multi-line Comments (/* */) & \textbf{Iteration I} \\
+Version String (OPENQASM 3.0) & \textbf{Iteration I} \\
+Include Statements & \textbf{Iteration I} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Types and Casting}
+\begin{longtable}{@{}p{10cm}l@{}}
+\caption{Types and Casting}\label{tab:types-casting}\\
+\toprule
+\textbf{Feature} & \textbf{Phase} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Feature} & \textbf{Phase} \\
+\midrule
+\endhead
+Identifiers & \textbf{Iteration I} \\
+Variables & \textbf{Iteration I} \\
+Quantum Types (qubit) & \textbf{Iteration I} \\
+Physical Qubits (\$0, \$1, \ldots) & \textbf{Excluded} \\
+Boolean Type (bool) & \textbf{Iteration I} \\
+Bit Type (bit) & \textbf{Iteration I} \\
+Integer Type (int) & \textbf{Iteration I} \\
+Unsigned Integer Type (uint) & \textbf{Iteration I} \\
+Float Type (float) & \textbf{Iteration I} \\
+Angle Type (angle) & \textbf{Iteration I} \\
+Complex Type (complex) & \textbf{Iteration II} \\
+Compile-time Constants (const) & \textbf{Iteration I} \\
+Literals (Integer, Float, Boolean) & \textbf{Iteration I} \\
+Arrays & \textbf{Iteration I} \\
+Duration Type (duration) & \textbf{Excluded} \\
+Stretch Type (stretch) & \textbf{Excluded} \\
+Aliasing & \textbf{Iteration I} \\
+Index Sets and Slicing & \textbf{Iteration I} \\
+Register Concatenation & \textbf{Iteration I} \\
+Classical Value Bit Slicing & \textbf{Excluded} \\
+Array Concatenation & \textbf{Iteration I} \\
+Type Casting & \textbf{Iteration II} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Gates}
+\begin{longtable}{@{}p{10cm}l@{}}
+\caption{Gates}\label{tab:gates}\\
+\toprule
+\textbf{Feature} & \textbf{Phase} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Feature} & \textbf{Phase} \\
+\midrule
+\endhead
+Applying Gates & \textbf{Iteration I} \\
+Gate Broadcasting & \textbf{Iteration I} \\
+Parameterized Gates & \textbf{Iteration I} \\
+Hierarchical Gate Definitions & \textbf{Iteration I} \\
+Control Modifier (ctrl@) & \textbf{Iteration I} \\
+Negative Control Modifier (negctrl@) & \textbf{Iteration II} \\
+Multi-Control (ctrl(n)@) & \textbf{Iteration II} \\
+Inverse Modifier (inv@) & \textbf{Iteration I} \\
+Power Modifier (pow(k)@) & \textbf{Iteration II} \\
+Built-in U Gate & \textbf{Iteration I} \\
+Global Phase Gate (gphase) & \textbf{Iteration I} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Built-in Quantum Instructions}
+\begin{longtable}{@{}p{10cm}l@{}}
+\caption{Built-in Quantum Instructions}\label{tab:quantum-instr}\\
+\toprule
+\textbf{Instruction} & \textbf{Phase} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Instruction} & \textbf{Phase} \\
+\midrule
+\endhead
+Reset Instruction & \textbf{Iteration I} \\
+Measurement Instruction & \textbf{Iteration I} \\
+Barrier Instruction & \textbf{Iteration I} \\
+Delay Instruction & \textbf{Excluded} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Classical Instructions}
+\begin{longtable}{@{}p{10cm}l@{}}
+\caption{Classical Instructions}\label{tab:classical-instr}\\
+\toprule
+\textbf{Instruction} & \textbf{Phase} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Instruction} & \textbf{Phase} \\
+\midrule
+\endhead
+Assignment Statements & \textbf{Iteration I} \\
+Arithmetic Operations (+, -, *, /) & \textbf{Iteration I} \\
+Comparison Operations (<, >, ==, !=) & \textbf{Iteration I} \\
+Logical Operations (\&\&, ||, !) & \textbf{Iteration I} \\
+Bitwise Operations (\&, |, \textasciicircum, \textasciitilde) & \textbf{Iteration II} \\
+Shift Operations (<<, >>) & \textbf{Iteration II} \\
+If Statements & \textbf{Iteration I} \\
+If-Else Statements & \textbf{Iteration I} \\
+While Loops & \textbf{Iteration II} \\
+For Loops & \textbf{Iteration I} \\
+Break Statement & \textbf{Iteration II} \\
+Continue Statement & \textbf{Iteration II} \\
+Mathematical Functions & \textbf{Iteration II} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Subroutines}
+\begin{longtable}{@{}p{10cm}l@{}}
+\caption{Subroutines}\label{tab:subroutines}\\
+\toprule
+\textbf{Feature} & \textbf{Phase} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Feature} & \textbf{Phase} \\
+\midrule
+\endhead
+Function Definitions & \textbf{Iteration II} \\
+Function Calls & \textbf{Iteration II} \\
+Return Statements & \textbf{Iteration II} \\
+Parameter Passing & \textbf{Iteration II} \\
+Local Variables & \textbf{Iteration II} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Scoping of Variables}
+\begin{longtable}{@{}p{10cm}l@{}}
+\caption{Scoping of Variables}\label{tab:scoping}\\
+\toprule
+\textbf{Scope} & \textbf{Phase} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Scope} & \textbf{Phase} \\
+\midrule
+\endhead
+Global Scope & \textbf{Iteration I} \\
+Function Scope & \textbf{Iteration II} \\
+Block Scope & \textbf{Iteration II} \\
+Variable Shadowing & \textbf{Iteration II} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Directives}
+\begin{longtable}{@{}p{10cm}l@{}}
+\caption{Directives}\label{tab:directives}\\
+\toprule
+\textbf{Directive} & \textbf{Phase} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Directive} & \textbf{Phase} \\
+\midrule
+\endhead
+Pragma Directives & \textbf{Excluded} \\
+Input/Output Directives & \textbf{Iteration I} \\
+Annotation Directives & \textbf{Excluded} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Standard Library and Built-ins}
+\begin{longtable}{@{}p{10cm}l@{}}
+\caption{Standard Library and Built-ins}\label{tab:stdlib}\\
+\toprule
+\textbf{Item} & \textbf{Phase} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Item} & \textbf{Phase} \\
+\midrule
+\endhead
+Standard Gate Library & \textbf{Iteration I} \\
+Built-in Functions & \textbf{Iteration I} \\
+Mathematical Constants & \textbf{Iteration I} \\
+Trigonometric Functions & \textbf{Iteration II} \\
+Exponential Functions & \textbf{Iteration II} \\
+\bottomrule
+\end{longtable}
+
+\section{Explicitly Excluded Features}
+
+The following broad categories of OpenQASM 3.0 are explicitly excluded from the scope of this project and are deferred to future work:
+
+\begin{itemize}
+    \item \textbf{Circuit Timing:} Delay Instructions, Duration Literals, Box Statement
+    \item \textbf{Pulse-level Descriptions:} Calibration Blocks, Pulse Gates, Waveforms, Frames, Ports
+    \item \textbf{OpenPulse Grammar:} Complete pulse-level control specifications
+    \item \textbf{Advanced Features:} Extern Functions, Memory Management, Hardware-specific Extensions, Quantum Error Correction
+\end{itemize}
+
+\noindent Complete specifications are available at: \url{https://openqasm.com/versions/3.0/}

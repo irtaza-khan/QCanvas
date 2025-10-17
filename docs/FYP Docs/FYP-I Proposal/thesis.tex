@@ -1,0 +1,69 @@
+\documentclass{fast-nuces-bs}
+
+\usepackage{blindtext}
+\usepackage{mathptmx}% Times Roman font
+\usepackage[T1]{fontenc}
+\usepackage{lipsum} 
+\usepackage{sectsty}
+\usepackage{tikz-uml}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+% Class will not insert List of Figures; keep command available
+
+% Information about the Thesis 
+% -----------------------------------------------------------------------------
+% (All are compulsory, do not delete any line other than author Information)
+% For e.g., usually there are 3 students in a group, so leave authorone, 
+% authortwo, and authorthree, and delete authorfour.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\department{Department of Computer Science}
+\faculty{Computer Science}
+\degreeyear{2026}
+\degreemonth{June}
+\degreename{Computer Science}
+\campuscity{Islamabad}
+\authorone{Umer Farooq}{22I-0891}
+\authortwo{Hussan Waseem Syed}{22I-0893}
+\authorthree{Muhammad Irtaza Khan}{22I-0911}
+\supervisor{Dr. Imran Ashraf}
+\sessionduration{2022-2026}
+\cosupervisor{Dr. Muhammad Nouman Noor}
+\deanname{Dr. Jawwad Ahmed Shamsi}
+\directorname{Dr. Waseem Shahzad}
+\hodname{Dr. Hasan Mujtaba}
+\fypcoordinatorname{Dr. Imran Ashraf}
+\title{Q-CANVAS}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Former document starts below this
+\begin{document}
+
+% Tighten top-of-page spacing and remove header rule
+\renewcommand{\headrulewidth}{0pt}
+\setlength{\headsep}{6pt}
+
+% Abstract
+\chapter*{Abstract}\thispagestyle{empty}
+This proposal presents Q-CANVAS, a unified quantum simulation platform designed to address the critical standardization gap in multi-framework quantum programming. The platform serves as a universal intermediary, translating quantum circuits written in popular frameworks (Qiskit, Cirq, PennyLane) into the standardized OpenQASM 3.0 intermediate representation. Q-CANVAS features a sophisticated web-based IDE with real-time circuit visualization, user authentication, and GitHub-style circuit sharing. The platform integrates with a quantum simulation backend via API to enable hybrid quantum-classical algorithm execution. This project aims to unify the quantum programming experience, accelerating development and learning while fostering collaboration in the quantum computing ecosystem.
+\addcontentsline{toc}{chapter}{Abstract}
+
+% Start main matter page numbering from 1 and restore page style
+\clearpage
+\setcounter{page}{1}
+\pagestyle{fancy}
+\include{sections/chapter1}
+\include{sections/chapter2}
+\include{sections/scope}
+\include{sections/conclusions}
+
+%\appendix
+%\include{appendix1/appendix1}
+
+\bibliographystyle{plain}
+\bibliography{bib} 
+\addcontentsline{toc}{chapter}{References} 
+
+\end{document}

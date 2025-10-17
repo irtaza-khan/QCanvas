@@ -1,0 +1,100 @@
+\chapter{Project Description}
+\label{ch:description}
+
+This chapter provides a comprehensive overview of the Q-CANVAS project. It details the project's scope, defining its core functionalities and boundaries. The architectural modules are broken down with their specific features, followed by the complete technology stack required for implementation. The chapter concludes with the work division among team members and a high-level project timeline \cite{mckay2018, barenco1995}.
+
+\section{Scope}
+The scope of the Q-CANVAS project encompasses the development of a unified cloud-based quantum simulation platform that serves as a multi-framework compiler and intermediary. The core functionality is the translation of quantum circuits written in popular high-level frameworks (Qiskit, Cirq, PennyLane) into the standardized OpenQASM 3.0 intermediate representation \cite{mckay2018}. This involves implementing a significant portion of the OpenQASM 3.0 language specification, including core types, gates, classical instructions, and scoping rules, while explicitly excluding specialized features like pulse-level control and hardware-specific extensions \cite{alexander2020, nguyen2020}. The platform will feature a sophisticated web-based IDE with syntax highlighting, IntelliSense, and real-time circuit visualization. It will manage user authentication, role-based access, and provide a GitHub-style repository for circuit sharing. Furthermore, the platform will integrate with a separate quantum simulation backend (QSim) via a well-defined API to enable the execution of hybrid quantum-classical algorithms, splitting code between classical CPU and quantum QPU resources for optimal performance. The project is strictly a software solution and does not include the development of underlying quantum hardware or the QSim execution engine itself.
+
+\section{Modules}
+The system is architected into several key modules, primarily focused on a web application.
+
+\subsection{Compilation Engine Core}
+The central module responsible for parsing, validating, and converting quantum code from supported frameworks into OpenQASM 3.0.
+\begin{enumerate}
+    \item Multi-Framework Parser Support for Qiskit, Cirq, and PennyLane.
+    \item AST-Based Parsing and Intelligent Gate Mapping.
+    \item OpenQASM 3.0 Code Generation and Validation.
+    \item Syntax and Semantic Error Checking.
+\end{enumerate}
+
+\subsection{Hybrid Execution Orchestrator}
+Manages the seamless integration and execution flow between classical and quantum processing units.
+\begin{enumerate}
+    \item Hybrid Code File Segmentation (CPU vs. QPU blocks).
+    \item API Integration Layer for QSim Backend Communication.
+    \item Intelligent Job Queuing and Resource Management.
+\end{enumerate}
+
+\subsection{Web IDE (Frontend)}
+The user-facing interface built with Next.js, providing a full-featured development environment.
+\begin{enumerate}
+    \item Monaco Editor Integration with Quantum Language IntelliSense.
+    \item Real-Time, Interactive Quantum Circuit Rendering.
+    \item Multi-Theme Support and Multi-File Workspace.
+    \item Results Visualization with Histograms and Charts.
+\end{enumerate}
+
+\subsection{User \& Community Platform}
+Handles user management, social features, and educational content.
+\begin{enumerate}
+    \item User Registration, Authentication, and Role Management.
+    \item GitHub-Style Circuit Sharing and Repository System.
+    \item Gamified Learning Paths and Achievement System.
+    \item Pre-Built Example Circuit Library.
+\end{enumerate}
+
+\subsection{Backend API \& Services}
+The server-side infrastructure that powers the application logic and data persistence.
+\begin{enumerate}
+    \item RESTful API with FastAPI for all frontend operations.
+    \item PostgreSQL Database with SQLAlchemy ORM for data storage.
+    \item Redis-based Intelligent Caching for improved performance.
+    \item Usage Analytics and Monitoring System.
+\end{enumerate}
+
+\section{Tools and Technologies}
+\begin{itemize}
+    \item \textbf{Version Control \& Project Management:} Git, GitHub, Trello
+    \item \textbf{Frontend:} Next.js 14, React 18, TypeScript, Tailwind CSS, Monaco Editor, D3.js, Chart.js
+    \item \textbf{Backend:} Python, FastAPI, Uvicorn, Pydantic
+    \item \textbf{Quantum Frameworks:} Qiskit, Cirq, PennyLane, OpenQASM 3.0
+    \item \textbf{Database \& Cache:} PostgreSQL, SQLAlchemy, Alembic, Redis
+    \item \textbf{DevOps \& Deployment:} Docker, CI/CD (to be determined)
+    \item \textbf{Communication:} Discord
+\end{itemize}
+
+\section{Work Division}
+Responsibility for modules and features is assigned based on team member roles and expertise.
+% Ensure longtables align to full text width consistently
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\begin{longtable}{|l|l|p{8cm}|}
+\caption{Team Responsibilities}\label{tab:team-resp}\\
+\hline
+\textbf{Name} & \textbf{Registration} & \textbf{Responsibility / Module / Feature} \\ \hline
+\endfirsthead
+\hline
+\textbf{Name} & \textbf{Registration} & \textbf{Responsibility / Module / Feature} \\ \hline
+\endhead
+Mr. Umer Farooq & 22I-0891 & Project Lead: Overall Architecture, Quantum Compilation Core (Module 1), Database \& Security Schema, API Design, Final Integration \\ \hline
+Mr. Hussain Waseem Syed & 22I-0893 & Frontend Specialist: Web IDE Module (Module 3) - Next.js App, Monaco Editor, Themes, Circuit Visualizations (D3.js) \\ \hline
+Mr. Muhammad Irtaza Khan & 22I-0911 & Backend Specialist: Backend API \& Services (Module 5) - FastAPI Server, Authentication, QSim API Integration, Caching (Redis) \\ \hline
+\end{longtable}
+
+\section{TimeLine}
+The project will be executed over four iterative sprints, following an Agile development philosophy.
+% Match width and column specs with Work Division table
+\begin{longtable}{|l|l|p{8cm}|}
+\caption{Project Timeline}\label{tab:timeline}\\
+\hline
+\textbf{Iteration} & \textbf{Time Frame} & \textbf{Key Tasks / Modules} \\ \hline
+\endfirsthead
+\hline
+\textbf{Iteration} & \textbf{Time Frame} & \textbf{Key Tasks / Modules} \\ \hline
+\endhead
+Sprint 1 & Month 1-2 & Foundation: Basic Frontend + Backend, Core Compilation for Basic Gates (OpenQASM 3.0 Iteration I), Multi-Language Support (Qiskit, Cirq, PennyLane) \\ \hline
+Sprint 2 & Month 3-4 & Strength \& Security: User Authentication + Database, Advanced Algorithm Support (OpenQASM 3.0 Iteration II), API for QSim Compilation \\ \hline
+Sprint 3 & Month 5-6 & Intelligence \& Extensibility: "Quantum Explain It" Mode, Gamified Learning, Circuit Sharing Platform, Plug-n-Play Language Support \\ \hline
+Sprint 4 & Month 7-8 & Integration \& Insight: Merge QCanvas + QSim, API for Execution, Advanced Visualization (Node Stats, Utilization), User Metrics \\ \hline
+\end{longtable}
