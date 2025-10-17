@@ -46,9 +46,10 @@ def get_circuit():
         assert "h q[0];" in qasm
         assert "cx q[0], q[1];" in qasm
         
-        # Simple circuit without advanced features - no constants
-        assert "const float PI" not in qasm
-        assert "const float E" not in qasm
+        # Simple circuit - constants are included by default for consistency
+        # This ensures all generated QASM has the same structure
+        assert "const float PI" in qasm
+        assert "const float E" in qasm
         
     def test_parameterized_gates(self):
         """Test Qiskit circuit with parameterized gates"""
