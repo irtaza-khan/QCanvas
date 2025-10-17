@@ -9,11 +9,12 @@ QCanvas is a modern, web-based quantum computing platform that bridges the gap b
 ### Key Features
 
 - **Multi-Framework Support**: Convert circuits between Cirq, Qiskit, and PennyLane
-- **Real-Time Simulation**: Execute quantum circuits with multiple backend options
-- **Interactive Visualization**: Visualize quantum states, circuits, and measurement results
-- **Hybrid Architecture**: Next.js for UI/routing, FastAPI for complex quantum operations
+- **Hybrid CPU–QPU Model**: QCanvas orchestrates; QSim executes (simulator-first, pluggable QPU later)
+- **Real-Time Simulation**: Execute quantum circuits with statevector, density matrix, or stabilizer backends
+- **OpenQASM 3.0 (Rosetta Stone)**: Universal intermediate representation across frameworks
+- **Smart Conversion Engine**: AST-based parsing, intelligent gate mapping, built-in validation, instant analytics
+- **Interactive Visualization**: Circuit rendering, histograms, and results analysis
 - **Shared TypeScript Types**: Type safety across frontend and backend services
-- **OpenQASM 3.0 Integration**: Standardized intermediate representation
 - **Extensible Architecture**: Plugin-based system for adding new frameworks
 
 ## 🏗️ Architecture
@@ -29,13 +30,17 @@ QCanvas/
 
 ### Core Components
 
-1. **Quantum Converters**: Convert between Cirq, Qiskit, and PennyLane
-2. **Quantum Simulator**: Multi-backend simulation engine
+1. **QCanvas (Compilation/Orchestration)**: AST parsing, QASM generation, validation, hybrid scheduling
+2. **QSim (Execution)**: High-performance simulation backends and result aggregation
 3. **Next.js Frontend**: UI components, routing, and simple operations
-4. **FastAPI Backend**: Complex quantum simulations and heavy computations
+4. **FastAPI Backend**: API, WebSockets, and heavy computations
 5. **Shared TypeScript Types**: Type safety across frontend and backend
 
 ### Hybrid Approach Benefits
+
+- **Two Pillars**:
+  - QCanvas orchestrates compilation, optimization, validation, and hybrid scheduling
+  - QSim executes OpenQASM 3.0 circuits and aggregates results
 
 - **Next.js Advantages**:
   - Server-side rendering (SSR) and static site generation (SSG)
@@ -129,8 +134,8 @@ response = requests.post('http://localhost:8000/api/convert', json={
     'source_code': 'your_cirq_code_here'
 })
 
-# Simulate a quantum circuit
-response = requests.post('http://localhost:8000/api/simulate', json={
+# Execute via QSim (simulation-first)
+response = requests.post('http://localhost:8000/api/simulator/execute', json={
     'qasm_code': 'your_qasm_code_here',
     'backend': 'statevector',
     'shots': 1000

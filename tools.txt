@@ -39,6 +39,7 @@ Database:
 Development & Testing:
     SonarQube (Bugs and Security Vulnerabilities)
     pytest (Testing Framework)
+    CI/CD Pipelines (GitHub Actions - ACTIVE)
     pytest-asyncio (Async Testing)
     Black (Code Formatting)
     Flake8 (Code Linting)
