@@ -31,6 +31,7 @@ QCanvas is a Quantum Unified Simulator - a comprehensive platform that bridges t
 ## Technical Scope
 
 ### Architecture
+- **Two Pillars (Hybrid CPU–QPU)**: QCanvas orchestrates compilation/validation/scheduling; QSim executes circuits on simulation backends
 - **Hybrid Approach**: Next.js frontend + FastAPI backend
 - **Shared TypeScript Types**: Type safety across services
 - **OpenQASM 3.0**: Universal intermediate representation
@@ -41,10 +42,11 @@ QCanvas is a Quantum Unified Simulator - a comprehensive platform that bridges t
 - **Qiskit** (IBM): Comprehensive quantum computing
 - **PennyLane** (Xanadu): Quantum machine learning
 
-### Simulation Backends
+### Simulation Backends (QSim)
 - Statevector: Exact quantum state simulation
 - Density Matrix: Mixed states and noise handling
 - Stabilizer: Efficient Clifford circuit simulation
+- Intelligent caching of identical jobs; future pluggable QPU endpoints behind same API contract
 
 ## Success Criteria
 1. Successful conversion between all supported frameworks
@@ -64,5 +66,5 @@ QCanvas is a Quantum Unified Simulator - a comprehensive platform that bridges t
 - Focus on circuit conversion and simulation (not quantum hardware)
 - Support for 3 major frameworks initially
 - Web-based interface (no mobile app initially)
-- Educational and research focus (not commercial quantum computing)
+- Educational and development focus (simulation-first; no hardware integration)
 - Explicitly excluded: Pulse-level/OpenPulse, hardware-specific extensions, extern functions, memory mgmt, QEC, circuit timing features (delay, duration, box).

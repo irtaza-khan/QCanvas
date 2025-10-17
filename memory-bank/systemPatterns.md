@@ -18,7 +18,7 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-See `docs/project-scope.md` for authoritative scope and exclusions.
+See `docs/project-scope.md` for authoritative scope and exclusions. QCanvas orchestrates compilation and hybrid scheduling; QSim executes OpenQASM 3.0 circuits.
 
 ## Key Technical Decisions
 
@@ -134,11 +134,10 @@ OpenQASM Generation → Target Framework Conversion → Response →
 Frontend Display
 ```
 
-### Simulation Flow
+### Simulation Flow (Hybrid CPU–QPU)
 ```
-QASM Input → Validation → Backend Selection → Simulation Execution → 
-Progress Updates (WebSocket) → Results Processing → Response → 
-Visualization
+QASM Input → Validation → Backend Selection → Hybrid Orchestration (QCanvas → QSim)
+→ Progress Updates (WebSocket) → Results Processing → Response → Visualization
 ```
 
 ### Real-time Update Flow

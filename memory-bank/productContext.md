@@ -15,8 +15,8 @@ Quantum computing is fragmented across multiple frameworks, each with different 
 QCanvas provides a unified platform that:
 - Translates between quantum frameworks seamlessly
 - Offers a single interface for all quantum computing needs
-- Uses OpenQASM 3.0 as a universal intermediate language
-- Provides real-time simulation and visualization
+- Uses OpenQASM 3.0 as a universal intermediate language (“Rosetta Stone”)
+- Provides real-time simulation and visualization via QSim (simulation-first)
 - Enables collaborative quantum circuit development
 
 ## How It Should Work
@@ -50,10 +50,10 @@ QCanvas provides a unified platform that:
 4. **Output**: Converted code with statistics and optimization suggestions
 5. **Verification**: Option to simulate both circuits to verify equivalence
 
-#### Simulation Workflow
+#### Simulation Workflow (Hybrid CPU–QPU)
 1. **Input**: User provides OpenQASM 3.0 code or selects from examples
 2. **Configuration**: User selects backend, shots, noise models
-3. **Execution**: Real-time progress updates via WebSocket
+3. **Execution**: Hybrid orchestration (QCanvas → QSim), real-time progress via WebSocket
 4. **Results**: Measurement outcomes, state vectors, and visualizations
 5. **Analysis**: Statistical analysis and comparison tools
 

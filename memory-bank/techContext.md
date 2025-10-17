@@ -22,7 +22,7 @@
 - **Cirq**: Google's quantum computing framework
 - **Qiskit**: IBM's quantum computing framework
 - **PennyLane**: Xanadu's quantum machine learning framework
-- **OpenQASM 3.0**: Open Quantum Assembly Language standard
+- **OpenQASM 3.0**: Open Quantum Assembly Language standard (universal IR; “Rosetta Stone”)
 
 ### DevOps and Deployment
 - **Docker**: Containerization platform
@@ -64,7 +64,7 @@ cp environment.env.example environment.env
 ```bash
 # Backend (Terminal 1)
 cd backend
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000  # exposes /api/converter/* and /api/simulator/* (QSim)
 
 # Frontend (Terminal 2)
 cd frontend

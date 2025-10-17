@@ -16,7 +16,7 @@
 ### Current Objectives
 1. **Documentation Foundation**: Keep Memory Bank consistent with `docs/project-scope.md`
 2. **Project Intelligence**: Reflect exclusions and focus areas in rules
-3. **Architecture Documentation**: Ensure system patterns match scope
+3. **Architecture Documentation**: Ensure system patterns match scope and two-pillar hybrid model (QCanvas/QSim)
 4. **Development Guidelines**: Maintain clear development and deployment procedures
 
 ## Next Steps
@@ -42,7 +42,7 @@
 ## Active Decisions and Considerations
 
 ### Architecture Decisions
-- **Hybrid Architecture**: Confirmed Next.js + FastAPI approach
+- **Two Pillars (Hybrid CPU–QPU)**: QCanvas orchestrates; QSim executes on simulators
 - **OpenQASM 3.0**: Standardized on OpenQASM 3.0 as intermediate format
 - **TypeScript**: Shared types across frontend and backend
 - **WebSocket**: Real-time updates for long-running operations
@@ -83,7 +83,8 @@
 
 ### Core Functionality
 - **Circuit Conversion**: Framework-to-framework conversion logic
-- **Quantum Simulation**: Multi-backend simulation engine
+- **Hybrid Orchestration**: Split CPU logic vs QPU circuits; schedule via QSim
+- **Quantum Simulation**: Multi-backend simulation engine (QSim)
 - **Real-time Communication**: WebSocket implementation
 - **API Development**: RESTful API endpoints
 
