@@ -1,5 +1,0 @@
-{"q": "How to implement VQE for H2 in Qiskit with UCCSD ansatz?", "sdk": "qiskit"}
-{"q": "Build QAOA for MaxCut on a 5-node graph in Cirq.", "sdk": "cirq"}
-{"q": "Perform two-qubit state tomography and report fidelity in PennyLane.", "sdk": "pennylane"}
-
-
