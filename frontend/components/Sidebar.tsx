@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { 
+import { useState, useEffect } from 'react'
+import {
   File as FileIcon, 
   Folder, 
   Plus, 
@@ -22,14 +22,12 @@ import {
   Download,
   Upload,
   FolderPlus,
-  FileCode,
-  Languages
+  FileCode
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
 import { File } from '@/types'
 import { isValidFilename, sanitizeFilename, formatFileSize, formatTimestamp } from '@/lib/utils'
-import AddNewLanguage from './AddNewLanguage'
 
 interface FileTemplate {
   name: string
@@ -151,7 +149,12 @@ export default function Sidebar() {
   const [editingFileName, setEditingFileName] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'python' | 'qasm' | 'javascript' | 'json'>('all')
-  const [showAddLanguage, setShowAddLanguage] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // Set client-side flag after hydration
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -281,13 +284,6 @@ export default function Sidebar() {
         >
           <FileCode className="w-5 h-5 text-editor-text" />
         </button>
-        <button
-          onClick={() => setShowAddLanguage(true)}
-          className="p-2 hover:bg-quantum-blue-light/20 rounded-lg transition-colors"
-          title="Add Language"
-        >
-          <Languages className="w-5 h-5 text-editor-text" />
-        </button>
       </div>
     )
   }
@@ -317,13 +313,6 @@ export default function Sidebar() {
               title="Templates"
             >
               <FileCode className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setShowAddLanguage(true)}
-              className="btn-ghost p-1.5 hover:bg-quantum-blue-light/20 rounded-lg transition-colors"
-              title="Add New Language"
-            >
-              <Languages className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowNewFileInput(true)}
@@ -494,7 +483,7 @@ export default function Sidebar() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Clock className="w-3 h-3" />
-                      <span>Modified: {formatTimestamp(file.updatedAt)}</span>
+                      <span>Modified: {isClient ? formatTimestamp(file.updatedAt) : 'Loading...'}</span>
                     </div>
                   </div>
                 )}
@@ -558,12 +547,6 @@ export default function Sidebar() {
           </div>
         </div>
       )}
-
-      {/* Add New Language Modal */}
-      <AddNewLanguage 
-        isOpen={showAddLanguage} 
-        onClose={() => setShowAddLanguage(false)} 
-      />
     </div>
   )
 }

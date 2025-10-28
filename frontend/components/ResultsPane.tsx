@@ -233,6 +233,12 @@ export default function ResultsPane() {
       gates: 3
     }
   })
+  const [isClient, setIsClient] = useState(false)
+
+  // Set client-side flag after hydration
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Listen for execution events
   useEffect(() => {
@@ -304,10 +310,12 @@ export default function ResultsPane() {
     
     const exportFileDefaultName = `qcanvas-results-${Date.now()}.json`
     
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
+    if (globalThis.window !== undefined) {
+      const linkElement = document.createElement('a')
+      linkElement.setAttribute('href', dataUri)
+      linkElement.setAttribute('download', exportFileDefaultName)
+      linkElement.click()
+    }
     
     toast.success('Results downloaded')
   }
@@ -483,7 +491,7 @@ export default function ResultsPane() {
                 {logs.map((log) => (
                   <div key={log.id} className="flex items-start space-x-3 py-1 hover:bg-editor-border hover:bg-opacity-50 rounded px-2">
                     <span className="text-xs text-gray-500 mt-0.5 min-w-[60px]">
-                      {formatTimestamp(log.timestamp)}
+                      {isClient ? formatTimestamp(log.timestamp) : '--:--:--'}
                     </span>
                     <span className={`${getLogColor(log.type)} mt-0.5`}>
                       {getLogIcon(log.type)}

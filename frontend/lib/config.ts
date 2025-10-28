@@ -112,10 +112,6 @@ export const technicalSpecs: TechnicalSpecs = {
 export const projectUrls = {
   homepage: '/',
   app: '/app',
-  login: '/login',
-  docs: '/docs',
-  examples: '/examples',
-  about: '/about',
   api: '/api'
 }
 
@@ -171,19 +167,13 @@ export const seoConfig = {
 
 // Navigation menu configuration
 export const navigationMenu = [
-  { name: 'Home', path: projectUrls.homepage, icon: 'Home' },
-  { name: 'Examples', path: projectUrls.examples, icon: 'Play' },
-  { name: 'Documentation', path: projectUrls.docs, icon: 'BookOpen' },
-  { name: 'About', path: projectUrls.about, icon: 'Info' }
+  { name: 'Home', path: projectUrls.homepage, icon: 'Home' }
 ]
 
 // Footer links configuration
 export const footerLinks = {
   platform: [
-    { name: 'Editor', path: projectUrls.app },
-    { name: 'Examples', path: projectUrls.examples },
-    { name: 'Documentation', path: projectUrls.docs },
-    { name: 'About', path: projectUrls.about }
+    { name: 'Editor', path: projectUrls.app }
   ],
   community: [
     { name: 'GitHub', url: socialLinks.github, external: true },

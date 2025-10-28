@@ -9,40 +9,31 @@ import {
   Moon,
   Sun,
   Menu,
-  LogOut,
   Settings,
   Zap,
   Keyboard,
   X,
   HelpCircle,
-  BookOpen,
-  Code,
   Github,
   Mail,
   ChevronDown,
   FileText,
   Download,
   Share2,
-  Search,
-  Replace,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useFileStore } from "@/lib/store";
 import { fileApi, quantumApi } from "@/lib/api";
-import { InputLanguage, ResultFormat } from "@/types";
+import { InputLanguage } from "@/types";
 import { detectFramework } from "@/lib/utils";
 
 export default function TopBar() {
-  const router = useRouter();
   const {
     theme,
     toggleTheme,
     toggleSidebar,
     getActiveFile,
     updateFileContent,
-  } = useFileStore();
-  const {
     setCompileOptions,
     compileActiveToQasm,
     setCompiledQasm,
@@ -54,10 +45,6 @@ export default function TopBar() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showHelpMenu, setShowHelpMenu] = useState(false);
   const [inputLanguage, setInputLanguage] = useState<InputLanguage>("qasm");
-  const [resultFormat, setResultFormat] = useState<ResultFormat>("json");
-  const [resultStyle, setResultStyle] = useState<"classic" | "compact">(
-    "classic",
-  );
 
   const activeFile = getActiveFile();
 
@@ -66,8 +53,6 @@ export default function TopBar() {
     { key: "Ctrl/Cmd + N", action: "New file" },
     { key: "Ctrl/Cmd + B", action: "Toggle sidebar" },
     { key: "Ctrl/Cmd + J", action: "Toggle results panel" },
-    { key: "Ctrl/Cmd + F", action: "Find" },
-    { key: "Ctrl/Cmd + H", action: "Find and Replace" },
     { key: "Ctrl/Cmd + Shift + K", action: "Toggle theme" },
     { key: "Ctrl/Cmd + Shift + R", action: "Run circuit" },
     { key: "Ctrl/Cmd + Tab", action: "Next file" },
@@ -75,16 +60,6 @@ export default function TopBar() {
   ];
 
   const helpMenuItems = [
-    {
-      icon: <BookOpen className="w-4 h-4" />,
-      label: "Documentation",
-      action: () => window.open("/docs", "_blank"),
-    },
-    {
-      icon: <Code className="w-4 h-4" />,
-      label: "Examples",
-      action: () => window.open("/examples", "_blank"),
-    },
     {
       icon: <Github className="w-4 h-4" />,
       label: "GitHub",
@@ -113,7 +88,7 @@ export default function TopBar() {
     setIsRunning(true);
     try {
       // Dispatch custom event for results panel
-      window.dispatchEvent(new CustomEvent("circuit-execute"));
+      globalThis.dispatchEvent(new CustomEvent("circuit-execute"));
 
       toast.loading("Running quantum circuit...", { id: "execution" });
 
@@ -270,7 +245,6 @@ export default function TopBar() {
     // Validate language selection
     const detected = detectFramework(activeFile.content, activeFile.name);
     if (detected && detected !== inputLanguage) {
-      // toast.error(`Incorrect language selected. The code appears to be written in ${detected} but ${inputLanguage} is selected.`);
       toast.error(`Incorrect language selected.`);
       return;
     }
@@ -320,7 +294,7 @@ export default function TopBar() {
       }
     }
 
-    setCompileOptions({ inputLanguage, resultFormat, style: resultStyle });
+    setCompileOptions({ inputLanguage, resultFormat: "json", style: "classic" });
 
     try {
       toast.loading("Converting to OpenQASM...", { id: "conversion" });
@@ -328,7 +302,7 @@ export default function TopBar() {
       const result = await quantumApi.convertToQasm(
         activeFile.content,
         framework as string,
-        resultStyle,
+        "classic",
       );
 
       if (!result.success || !result.data?.success) {
@@ -370,7 +344,7 @@ export default function TopBar() {
       toast.success("Converted to OpenQASM 3.0", { id: "conversion" });
 
       // Focus QASM tab in results
-      window.dispatchEvent(new CustomEvent("show-qasm"));
+      globalThis.dispatchEvent(new CustomEvent("show-qasm"));
 
       // Display conversion stats from backend
       if (stats && stats.qubits) {
@@ -401,7 +375,7 @@ export default function TopBar() {
     a.download = activeFile.name;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
     toast.success("File exported successfully!");
   };
@@ -415,26 +389,6 @@ export default function TopBar() {
     // In a real app, this would generate a shareable link
     navigator.clipboard.writeText(activeFile.content);
     toast.success("Code copied to clipboard for sharing!");
-  };
-
-  const handleFind = () => {
-    // Dispatch custom event for find
-    window.dispatchEvent(
-      new CustomEvent("open-find", { detail: { mode: "find" } }),
-    );
-  };
-
-  const handleFindReplace = () => {
-    // Dispatch custom event for find and replace
-    window.dispatchEvent(
-      new CustomEvent("open-find", { detail: { mode: "replace" } }),
-    );
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("qcanvas-auth");
-    toast.success("Logged out successfully");
-    router.push("/login");
   };
 
   return (
@@ -554,28 +508,6 @@ export default function TopBar() {
           >
             <Share2 className="w-4 h-4" />
           </button>
-
-          <div className="hidden md:block w-px h-6 bg-editor-border mx-2"></div>
-
-          <button
-            onClick={handleFind}
-            disabled={!activeFile}
-            className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
-            title="Find (Ctrl/Cmd+F)"
-          >
-            <Search className="w-4 h-4" />
-            <span className="hidden lg:inline">Find</span>
-          </button>
-
-          <button
-            onClick={handleFindReplace}
-            disabled={!activeFile}
-            className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
-            title="Find and Replace (Ctrl/Cmd+H)"
-          >
-            <Replace className="w-4 h-4" />
-            <span className="hidden lg:inline">Replace</span>
-          </button>
         </div>
 
         {/* Right side - Settings and Theme */}
@@ -593,9 +525,9 @@ export default function TopBar() {
             {showHelpMenu && (
               <div className="absolute right-0 top-full mt-2 w-48 quantum-glass-dark rounded-lg shadow-xl border border-white/10 backdrop-blur-xl z-50">
                 <div className="py-2">
-                  {helpMenuItems.map((item, index) => (
+                  {helpMenuItems.map((item) => (
                     <button
-                      key={index}
+                      key={item.label}
                       onClick={() => {
                         item.action();
                         setShowHelpMenu(false);
@@ -638,14 +570,6 @@ export default function TopBar() {
           >
             <Settings className="w-5 h-5" />
           </button>
-
-          <button
-            onClick={handleLogout}
-            className="btn-ghost text-red-400 hover:text-red-300 hover:bg-red-500/20 p-2 rounded-lg transition-colors"
-            title="Logout"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
         </div>
       </div>
 
@@ -668,9 +592,9 @@ export default function TopBar() {
             </div>
 
             <div className="space-y-3">
-              {shortcuts.map((shortcut, index) => (
+              {shortcuts.map((shortcut) => (
                 <div
-                  key={index}
+                  key={shortcut.key}
                   className="flex justify-between items-center py-3 border-b border-editor-border last:border-b-0"
                 >
                   <span className="text-sm text-editor-text">

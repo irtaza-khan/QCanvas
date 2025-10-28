@@ -5,54 +5,11 @@ import { Editor } from '@monaco-editor/react'
 import { FileIcon, Code2 } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import { debounce } from '@/lib/utils'
-import FindReplace from './FindReplace'
-import CircuitVisualization from './CircuitVisualization'
 
 export default function EditorPane() {
   const { getActiveFile, updateFileContent } = useFileStore()
   const editorRef = useRef<any>(null)
   const activeFile = getActiveFile()
-  const [showFindReplace, setShowFindReplace] = useState(false)
-  const [findReplaceMode, setFindReplaceMode] = useState<'find' | 'replace'>('find')
-  const [showCircuitVisualization, setShowCircuitVisualization] = useState(false)
-
-  // Simple circuit parsing for demonstration
-  const parseCircuitFromCode = (code: string) => {
-    if (!code) return []
-    
-    const gates = []
-    const lines = code.split('\n')
-    let qubitIndex = 0
-    
-    for (const line of lines) {
-      // Simple Qiskit gate detection
-      if (line.includes('.h(')) {
-        const match = line.match(/\.h\((\d+)\)/)
-        if (match) gates.push({ type: 'h', qubit: parseInt(match[1]) })
-      }
-      if (line.includes('.x(')) {
-        const match = line.match(/\.x\((\d+)\)/)
-        if (match) gates.push({ type: 'x', qubit: parseInt(match[1]) })
-      }
-      if (line.includes('.cx(')) {
-        const match = line.match(/\.cx\((\d+),\s*(\d+)\)/)
-        if (match) gates.push({ type: 'cx', control: parseInt(match[1]), target: parseInt(match[2]), qubit: parseInt(match[1]) })
-      }
-      
-      // Simple Cirq gate detection
-      if (line.includes('cirq.H(')) {
-        gates.push({ type: 'h', qubit: qubitIndex++ })
-      }
-      if (line.includes('cirq.X(')) {
-        gates.push({ type: 'x', qubit: qubitIndex++ })
-      }
-      if (line.includes('cirq.CNOT(')) {
-        gates.push({ type: 'cx', control: 0, target: 1, qubit: 0 })
-      }
-    }
-    
-    return gates
-  }
 
   // Debounced content update to avoid too frequent updates
   const debouncedUpdate = useRef(
@@ -110,24 +67,15 @@ export default function EditorPane() {
     })
 
     // Set theme based on current theme
-    const currentTheme = document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark'
-    monaco.editor.setTheme(currentTheme)
+    if (globalThis.window !== undefined) {
+      const currentTheme = document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark'
+      monaco.editor.setTheme(currentTheme)
+    }
 
     // Add keyboard shortcuts
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       // Save functionality will be handled by TopBar
       // This prevents default browser save dialog
-    })
-
-    // Find and Replace shortcuts
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF, () => {
-      setFindReplaceMode('find')
-      setShowFindReplace(true)
-    })
-
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyH, () => {
-      setFindReplaceMode('replace')
-      setShowFindReplace(true)
     })
 
     // Add quantum-specific snippets for Python/Qiskit
@@ -206,31 +154,13 @@ export default function EditorPane() {
         // Trigger save action
         const event = new CustomEvent('save-file')
         window.dispatchEvent(event)
-      } else if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-        e.preventDefault()
-        setFindReplaceMode('find')
-        setShowFindReplace(true)
-      } else if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
-        e.preventDefault()
-        setFindReplaceMode('replace')
-        setShowFindReplace(true)
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
-
-  // Handle find events from TopBar
-  useEffect(() => {
-    const handleOpenFind = (e: CustomEvent) => {
-      const mode = e.detail?.mode || 'find'
-      setFindReplaceMode(mode)
-      setShowFindReplace(true)
+    if (globalThis.window !== undefined) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
     }
-
-    window.addEventListener('open-find', handleOpenFind as EventListener)
-    return () => window.removeEventListener('open-find', handleOpenFind as EventListener)
   }, [])
 
   // Get Monaco language from file extension
@@ -280,40 +210,7 @@ export default function EditorPane() {
             {activeFile.language}
           </span>
         </div>
-        
-        {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
-          <button
-            onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
-            className={`px-3 py-1 text-xs rounded-md transition-colors ${
-              showCircuitVisualization
-                ? 'bg-quantum-blue-light text-white'
-                : 'text-editor-text hover:bg-editor-border'
-            }`}
-          >
-            Circuit View
-          </button>
-        )}
       </div>
-
-      {/* Find and Replace */}
-      <FindReplace
-        isVisible={showFindReplace}
-        onClose={() => setShowFindReplace(false)}
-        mode={findReplaceMode}
-        editorRef={editorRef}
-      />
-
-      {/* Circuit Visualization */}
-      {showCircuitVisualization && (
-        <div className="h-48 bg-editor-bg border-b border-editor-border p-4 overflow-hidden">
-          <h4 className="text-sm font-medium text-white mb-3">Circuit Visualization</h4>
-          <CircuitVisualization
-            gates={parseCircuitFromCode(activeFile.content)}
-            qubits={Math.max(2, parseCircuitFromCode(activeFile.content).reduce((max, gate) => Math.max(max, gate.qubit + 1), 0))}
-            className="h-32"
-          />
-        </div>
-      )}
 
       {/* Monaco Editor */}
       <div className="flex-1 overflow-hidden">
@@ -324,7 +221,7 @@ export default function EditorPane() {
           onChange={handleEditorChange}
           onMount={handleEditorDidMount}
           options={{
-            theme: document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark',
+            theme: globalThis.window !== undefined && document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark',
             fontSize: 14,
             fontFamily: 'JetBrains Mono, Fira Code, Monaco, Consolas, monospace',
             lineNumbers: 'on',

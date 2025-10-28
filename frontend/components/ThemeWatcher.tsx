@@ -9,6 +9,8 @@ export default function ThemeWatcher() {
 
   useEffect(() => {
     // Initialize theme on mount - ALWAYS default to dark
+    if (typeof window === 'undefined') return
+    
     try {
       const saved = localStorage.getItem('qcanvas-theme') as 'light' | 'dark' | null
       const effective = saved === 'light' ? 'light' : 'dark' // Only use light if explicitly set
@@ -31,6 +33,8 @@ export default function ThemeWatcher() {
 
   useEffect(() => {
     // Apply theme changes from store to document
+    if (typeof window === 'undefined') return
+    
     document.documentElement.classList.remove('light', 'dark')
     document.documentElement.classList.add(theme)
   }, [theme])

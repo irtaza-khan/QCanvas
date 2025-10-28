@@ -80,8 +80,10 @@ export default function KeyboardShortcuts() {
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+    if (globalThis.window !== undefined) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [toggleSidebar, toggleResults, toggleTheme, addFile, files, activeFileId, setActiveFile])
 
   return null // This component only handles keyboard events

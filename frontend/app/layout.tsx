@@ -4,6 +4,9 @@ import { Toaster } from 'react-hot-toast'
 import './globals.css'
 import ThemeWatcher from '@/components/ThemeWatcher'
 
+// Disable static generation for the entire app
+export const dynamic = 'force-dynamic'
+
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',

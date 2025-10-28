@@ -8,12 +8,12 @@ import ResultsPane from '@/components/ResultsPane'
 import TopBar from '@/components/TopBar'
 import Sidebar from '@/components/Sidebar'
 import KeyboardShortcuts from '@/components/KeyboardShortcuts'
-import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic'
+
 export default function AppPage() {
-  const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [resultsHeight, setResultsHeight] = useState(320) // Default height
   const [isDragging, setIsDragging] = useState(false)
@@ -29,12 +29,16 @@ export default function AppPage() {
   // Check for mobile screen size
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      if (typeof window !== 'undefined') {
+        setIsMobile(window.innerWidth < 768)
+      }
     }
     
     checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', checkMobile)
+      return () => window.removeEventListener('resize', checkMobile)
+    }
   }, [])
 
   // Auto-collapse sidebar on mobile
@@ -44,21 +48,8 @@ export default function AppPage() {
     }
   }, [isMobile]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Authentication check
-  useEffect(() => {
-    const authStatus = localStorage.getItem('qcanvas-auth')
-    
-    if (!authStatus) {
-      setIsAuthenticated(false)
-    } else {
-      setIsAuthenticated(true)
-    }
-  }, [])
-
   // Load files on component mount
   useEffect(() => {
-    if (!isAuthenticated) return
-
     const loadFiles = async () => {
       try {
         const result = await fileApi.getFiles()
@@ -75,19 +66,19 @@ export default function AppPage() {
     if (files.length === 0) {
       loadFiles()
     }
-  }, [setFiles, files.length, isAuthenticated])
+  }, [setFiles, files.length])
 
   // Listen for inter-tab messages to add files from examples page
   useEffect(() => {
-    if (!isAuthenticated) return
-
+    if (typeof window === 'undefined') return
+    
     const channel = new BroadcastChannel('qcanvas-examples')
 
     channel.onmessage = (event) => {
       if (event.data.type === 'add-example-file') {
         const { filename, code } = event.data
         // Add the file and set it as active
-        const newFile = useFileStore.getState().addFile(filename, code)
+        useFileStore.getState().addFile(filename, code)
         toast.success(`Loaded example: ${filename}`)
 
         // Send confirmation back to examples page
@@ -101,10 +92,12 @@ export default function AppPage() {
     return () => {
       channel.close()
     }
-  }, [isAuthenticated])
+  }, [])
 
   // Handle global save event
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    
     const handleSave = async () => {
       const activeFile = useFileStore.getState().getActiveFile()
       if (!activeFile) {
@@ -165,34 +158,6 @@ export default function AppPage() {
     setIsDragging(true)
   }
 
-  // Loading state
-  if (isAuthenticated === null) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-editor-bg">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-8 h-8 border-4 border-quantum-blue-light border-t-transparent rounded-full spinner"></div>
-          <p className="text-editor-text">Loading QCanvas...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Not authenticated - redirect to login
-  if (!isAuthenticated) {
-    router.push('/login')
-    return (
-      <div className="flex items-center justify-center h-screen bg-editor-bg px-4">
-        <div className="max-w-md mx-auto p-8 quantum-glass-dark rounded-lg text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Redirecting to Login...</h2>
-          <p className="text-editor-text mb-6">
-            Please wait while we redirect you to the login page.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  // Authenticated - show main app
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       <KeyboardShortcuts />
