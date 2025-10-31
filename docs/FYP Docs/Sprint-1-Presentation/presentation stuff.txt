@@ -1,0 +1,163 @@
+Q-CANVAS
+A Quantum Simulation Platform for 
+Multi-Framework Quantum Programming
+Supervised By:
+Dr. Imran Ashraf
+Presented By:
+Umer Farooq
+Hussain Waseem Syed
+Muhammad Irtaza Khan
+
+-----------------------------
+Quantum Simulator Architecture
+Two Core Pillars of the System
+
+Compilation (QCanvas)
+Multi-Framework Support (Qiskit, Cirq, PennyLane)
+Circuit Compilation to OpenQASM 3.0
+Syntax & Error Checking
+Quantum Circuit Optimization
+
+Execution (QSim)
+High-Performance Simulation
+Hybrid CPU/QPU Execution
+Result Aggregation & Analysis
+Advanced Visualization
+
+QCanvas orchestrates. QSim executes.
+
+-----------------------------
+Overview of FYP Goals
+Primary Objectives
+Universal Translation: 
+Convert Qiskit, Cirq, and PennyLane circuits to OpenQASM 3.0
+Unified Development Platform: 
+Single web-based IDE for multi-framework quantum programming
+Hybrid Execution: 
+Seamless CPU-QPU orchestration for hybrid quantum-classical algorithms
+Educational Accessibility: 
+Lower barriers to quantum computing through unified tooling
+Standards-Aligned Pipeline: 
+OpenQASM 3.0 as universal intermediate representation
+
+-----------------------------
+Faculty Feedback Resolution
+Feedback from Proposal Defense
+“Why is there a need for such a platform when major tech giants haven’t built one?”
+Resolution Implemented
+Vendor incentives ≠ neutrality
+Interoperability gap (OpenQASM 3.0 IR missing)
+Education & research need (cross‑framework learning)
+Scoped to simulation (no hardware/pulse/timing)
+Feasibility proven (Iteration I + converters + tests)
+-----------------------------
+Feedback from Proposal Defense
+"What if the other team can't build the execution platform — how will you test your code?"
+Resolution Implemented
+Standard IR (OpenQASM 3.0) → run on existing simulators (Aer/Cirq/PL, cloud)
+Execution‑independent compiler
+Validate vs native simulators (Aer/Cirq/PennyLane)
+Round‑trip equivalence (source ↔ QASM ↔ source)
+Static QASM validation (grammar/semantics)
+Still valuable: conversion, standard QASM export, IDE/education
+
+-----------------------------
+Feedback from Proposal Defense
+"Scope clarity — how much depth of each language will be covered by QCanvas?"
+Resolution Implemented
+Complete scope documented included in Mid‑I Report
+Included: standard gates (X, Y, Z, H, S, T, RX/RY/RZ, U, CX/CZ, SWAP, gphase), modifiers (ctrl@, inv@), measurement, reset, barriers; types (qubit, bit, int, float, bool), arrays/slices, if/for, arithmetic/comparison, I/O directives
+Excluded: pulse/OpenPulse, timing (delay/duration/box), extern/hardware‑specific, memory mgmt, QEC, physical qubits ($i)
+-----------------------------
+
+-----------------------------
+Feedback from Proposal Defense
+"Domain-specific challenges not mentioned"
+Resolution Implemented
+Qiskit: 
+U/CX‑basis → map to RX/RY/RZ
+classical regs vs QASM bits
+Cirq: 
+moment scheduling → linearize to instruction order
+device/qubit ordering differences
+no classical regs
+PennyLane: 
+high‑level ops → decompose to core gates
+measurement post‑processing differs
+-----------------------------
+
+Feedback from Proposal Defense
+"How to verify conversion accuracy and translator correctness?"
+Resolution Implemented
+ Correctness: 
+L2<1e‑8
+TVD<1e‑3
+fidelity>0.999999
+Conformance: 100% Iteration I (reject excluded)
+Performance: p95<2s (≤500 ops)
+Round‑trip: source ↔ QASM ↔ source ≥ 99%
+Diagnostics: precise, actionable
+Coverage: ≥80%; property‑based fuzz
+
+
+-----------------------------
+Feedback from Proposal Defense
+"Need clear evaluation metrics or benchmarks"
+Resolution Implemented
+ Numerical parity vs native (statevectors/histograms) under fixed seeds
+Parser/IR unit tests per construct
+Mutation tests to ensure failures surface
+Reports: 
+gate counts
+depth
+qubits
+deltas
+CI‑enforced thresholds
+-----------------------------
+Progress Since FYP Proposal
+Development Philosophy
+Agile. Modular. User-Centric.
+Goal: A functional MVP after each iteration.
+Testing: Project testing within and after every iteration
+The Foundation
+Build the Core.
+Launch the MVP
+01
+Strength and Security
+Harden the Core,
+Empower the User
+02
+Intelligence and Extensibility
+Smart Features
+Future-Proof Design
+03
+Integration and Insight
+Unify, Visualize, Enhance
+04
+-----------------------------
+Sprint 1: The Foundation
+Fully Completed Sprint-1
+Web IDE
+Backend API Foundation
+Dual-path strategy: AST-first with safe runtime execution fallback
+Compilation Engine: Gate mapping library for 20+ quantum gates
+Multi-Language Support: Qiskit, Cirq, PennyLane.
+Essential Features: Code Highlighting, Multi-Theme, Multi-File, etc.
+Deliverable: A working, unified compiler and interface.
+-----------------------------
+Detailed Implementation
+Conversion Engine Capabilities
+Supported Quantum Gates (20+):
+Single-qubit: X, Y, Z, H, S, T, RX, RY, RZ
+Two-qubit: CNOT, CZ, SWAP, CRX, CRY, CRZ
+Multi-qubit: Toffoli, Fredkin
+Special: U (universal single-qubit), Phase gates
+
+IDE Capabilities
+Monaco Editor: Same engine powering VS Code
+Multi-Theme Support
+Multi-File Workspace
+Real-Time Conversion Preview
+
+-----------------------------
+-----------------------------
