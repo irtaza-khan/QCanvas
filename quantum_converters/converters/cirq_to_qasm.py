@@ -358,7 +358,7 @@ class CirqToQASM3Converter:
         return exponent is None or abs(exponent) == 1
 
     def _handle_parameterized_gates(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
-                                   modifiers: dict, actual_exponent, gate):
+                                modifiers: dict, actual_exponent, gate):
         """Handle parameterized rotation gates."""
         import numpy as np
 
@@ -370,18 +370,27 @@ class CirqToQASM3Converter:
             self._apply_phased_x_gate(builder, qubits_str, actual_exponent, gate, modifiers)
 
     def _apply_rotation_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
-                           exponent, modifiers: dict):
+                        exponent, modifiers: dict):
         """Apply a rotation gate based on exponent."""
         import numpy as np
 
-        angle = exponent * np.pi
-        param = builder.format_parameter(angle)
+        # Check for common exponents to use symbolic constants
+        if abs(exponent - 0.5) < 1e-10:
+            param = "PI_2"
+        elif abs(exponent - 0.25) < 1e-10:
+            param = "PI_4"
+        elif abs(exponent - 1.0) < 1e-10:
+            param = "PI"
+        else:
+            angle = exponent * np.pi
+            param = builder.format_parameter(angle)
 
         gate_map = {'XPowGate': 'rx', 'YPowGate': 'ry', 'ZPowGate': 'rz'}
         qasm_gate = gate_map.get(gate_name)
         if qasm_gate:
             builder.apply_gate(qasm_gate, qubits_str, parameters=[param],
-                             modifiers=modifiers if modifiers else None)
+                            modifiers=modifiers if modifiers else None)
+
 
     def _apply_direct_rotation_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
                                   gate, modifiers: dict):
@@ -589,25 +598,26 @@ class CirqToQASM3Converter:
             >>> result = converter.convert(source)
             >>> print(f"Circuit has {result.stats.n_qubits} qubits and {result.stats.depth} moments")
         """
-        # Try AST-based path first (secure, no execution)
+        # Skip AST if source contains numpy operations (likely parameterized)
+        if 'np.' in cirq_source or 'numpy' in cirq_source:
+            circuit = self._execute_cirq_source(cirq_source)
+            stats = self._analyze_cirq_circuit(circuit)
+            qasm3_program = self._convert_to_qasm3(circuit)
+            return ConversionResult(qasm_code=qasm3_program, stats=stats)
+        
+        # Try AST path
         try:
-            if VERBOSE:
-                vprint("[CirqToQASM3Converter] Attempt AST-based conversion")
             parser = CirqASTParser()
             circuit_ast = parser.parse(cirq_source)
             stats = self._analyze_circuit_ast(circuit_ast)
             qasm3_program = self._convert_ast_to_qasm3(circuit_ast)
             return ConversionResult(qasm_code=qasm3_program, stats=stats)
         except Exception:
-            pass
-
-        # Fallback: execute source to obtain cirq.Circuit
-        if VERBOSE:
-            vprint("[CirqToQASM3Converter] AST failed, fallback to runtime execution path")
-        circuit = self._execute_cirq_source(cirq_source)
-        stats = self._analyze_cirq_circuit(circuit)
-        qasm3_program = self._convert_to_qasm3(circuit)
-        return ConversionResult(qasm_code=qasm3_program, stats=stats)
+            # Fallback to runtime
+            circuit = self._execute_cirq_source(cirq_source)
+            stats = self._analyze_cirq_circuit(circuit)
+            qasm3_program = self._convert_to_qasm3(circuit)
+            return ConversionResult(qasm_code=qasm3_program, stats=stats)
 
 
 # Public API function for easy module usage
