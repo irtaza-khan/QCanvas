@@ -1,12 +1,54 @@
 """
 Qiskit AST Parser Module
 
-This module provides AST-based parsing for Qiskit quantum circuit source code.
-It parses Python source code using the ast module to extract circuit operations
-without executing the code, providing a secure alternative to dynamic execution.
+WHAT THIS FILE DOES:
+    Parses Qiskit quantum circuit source code using Python's AST module to extract
+    circuit operations without executing the code. Provides secure, static analysis
+    of Qiskit code to build a CircuitAST representation. Identifies QuantumCircuit
+    creation, gate operations, measurements, resets, and barriers.
+
+HOW IT LINKS TO OTHER FILES:
+    - Used by: qiskit_to_qasm.py (QiskitToQASM3Converter uses QiskitASTParser)
+    - Uses: circuit_ast.py (builds CircuitAST, GateNode, MeasurementNode, etc.)
+    - Uses: config/config.py (VERBOSE flag for debugging output)
+    - Part of: Parsers module providing framework-specific parsing logic
+
+INPUT:
+    - qiskit_source (str): Qiskit Python source code
+    - Expected format: Code with QuantumCircuit() calls and gate operations (e.g., qc.h(0))
+    - Used in: QiskitASTParser.parse() method
+
+OUTPUT:
+    - CircuitAST: Unified circuit representation with operations list
+    - Returned by: QiskitASTParser.parse() method
+    - Contains: Qubit count, classical bit count, operations (gates, measurements, etc.)
+
+STAGE OF USE:
+    - Parsing Stage: First step in AST-based conversion pipeline
+    - Security Stage: Provides secure alternative to code execution
+    - Used before: AST analysis and QASM code generation
+    - Used by: QiskitToQASM3Converter.convert() method
+
+TOOLS USED:
+    - ast: Python's Abstract Syntax Tree module for parsing source code
+    - logging: Debug logging (via config)
+    - typing: Type hints for method signatures
+    - re: Regular expressions for pattern matching (if needed)
+
+PARSING STRATEGY:
+    1. AST Visitor Pattern: Uses ast.NodeVisitor to traverse AST nodes
+    2. Circuit Detection: Identifies QuantumCircuit() constructor calls
+    3. Operation Extraction: Visits method calls on circuit variables (qc.h(), qc.cx(), etc.)
+    4. Parameter Extraction: Extracts qubit indices, gate parameters, measurement mappings
+    5. AST Building: Constructs CircuitAST with GateNode, MeasurementNode, etc.
+
+ARCHITECTURE ROLE:
+    Provides secure, static analysis of Qiskit code. Enables conversion without
+    executing potentially unsafe user code. Part of the parsing layer that bridges
+    framework-specific syntax and the unified CircuitAST representation.
 
 Author: QCanvas Team
-Date: 2025-01-15
+Date: 2025-08-10
 Version: 1.0.0
 """
 

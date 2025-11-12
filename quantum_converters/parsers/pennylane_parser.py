@@ -1,9 +1,58 @@
 """
 PennyLane AST Parser Module
 
-Parses PennyLane-style quantum circuit source code into the unified CircuitAST
-without executing user code. This mirrors the approach in `qiskit_parser.py`
-for Iteration I features: basic gates, simple parameters, and measurements.
+WHAT THIS FILE DOES:
+    Parses PennyLane quantum circuit source code using Python's AST module to extract
+    circuit operations without executing the code. Provides secure, static analysis
+    of PennyLane code to build a CircuitAST representation. Identifies qml.device()
+    definitions, gate operations (qml.Hadamard(), qml.CNOT(), etc.), and measurements.
+    Supports Iteration I features: basic gates, simple parameters, and measurements.
+
+HOW IT LINKS TO OTHER FILES:
+    - Used by: pennylane_to_qasm.py (PennyLaneToQASM3Converter uses PennyLaneASTParser)
+    - Uses: circuit_ast.py (builds CircuitAST, GateNode, MeasurementNode, etc.)
+    - Uses: config/mappings.py (gate name mappings via get_pl_inverse_qasm_map())
+    - Uses: config/config.py (VERBOSE flag for debugging output)
+    - Part of: Parsers module providing framework-specific parsing logic
+
+INPUT:
+    - pennylane_code (str): PennyLane Python source code
+    - Expected format: Code with qml.device() and qml operations (e.g., qml.Hadamard(wires=0))
+    - Used in: PennyLaneASTParser.parse() method
+
+OUTPUT:
+    - CircuitAST: Unified circuit representation with operations list
+    - Returned by: PennyLaneASTParser.parse() method
+    - Contains: Qubit count (from wires), operations (gates, measurements, etc.)
+
+STAGE OF USE:
+    - Parsing Stage: First step in AST-based conversion pipeline
+    - Security Stage: Provides secure alternative to code execution
+    - Used before: AST analysis and QASM code generation
+    - Used by: PennyLaneToQASM3Converter.convert() method
+
+TOOLS USED:
+    - ast: Python's Abstract Syntax Tree module for parsing source code
+    - logging: Debug logging (via config)
+    - typing: Type hints for method signatures
+
+PARSING STRATEGY:
+    1. AST Visitor Pattern: Uses ast.NodeVisitor to traverse AST nodes
+    2. Device Detection: Identifies qml.device() calls to extract wire count
+    3. Operation Extraction: Visits qml.* function calls (qml.Hadamard(), qml.CNOT(), etc.)
+    4. Wire Extraction: Extracts wire indices from keyword or positional arguments
+    5. Parameter Extraction: Extracts gate parameters (angles, phases, etc.)
+    6. Gate Mapping: Maps PennyLane gate names to OpenQASM mnemonics
+    7. AST Building: Constructs CircuitAST with GateNode, MeasurementNode, etc.
+
+ARCHITECTURE ROLE:
+    Provides secure, static analysis of PennyLane code. Enables conversion without
+    executing potentially unsafe user code. Part of the parsing layer that bridges
+    framework-specific syntax and the unified CircuitAST representation.
+
+Author: QCanvas Team
+Date: 2025-08-14
+Version: 1.0.0
 """
 
 import ast

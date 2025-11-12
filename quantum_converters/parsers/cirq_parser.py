@@ -1,12 +1,55 @@
 """
 Cirq AST Parser Module
 
-This module provides AST-based parsing for Cirq quantum circuit source code.
-It parses Python source code using the ast module to extract circuit operations
-without executing the code, providing a secure alternative to dynamic execution.
+WHAT THIS FILE DOES:
+    Parses Cirq quantum circuit source code using Python's AST module to extract
+    circuit operations without executing the code. Provides secure, static analysis
+    of Cirq code to build a CircuitAST representation. Identifies Circuit creation,
+    gate operations (cirq.H(), cirq.CNOT(), etc.), measurements, resets, and barriers.
+    Handles Cirq-specific patterns like LineQubit.range() and constructor-based operations.
+
+HOW IT LINKS TO OTHER FILES:
+    - Used by: cirq_to_qasm.py (CirqToQASM3Converter uses CirqASTParser)
+    - Uses: circuit_ast.py (builds CircuitAST, GateNode, MeasurementNode, etc.)
+    - Uses: config/config.py (VERBOSE flag for debugging output)
+    - Part of: Parsers module providing framework-specific parsing logic
+
+INPUT:
+    - cirq_source (str): Cirq Python source code
+    - Expected format: Code with cirq.Circuit() and gate operations (e.g., cirq.H(q0))
+    - Used in: CirqASTParser.parse() method
+
+OUTPUT:
+    - CircuitAST: Unified circuit representation with operations list
+    - Returned by: CirqASTParser.parse() method
+    - Contains: Qubit count, classical bit count, operations (gates, measurements, etc.)
+
+STAGE OF USE:
+    - Parsing Stage: First step in AST-based conversion pipeline
+    - Security Stage: Provides secure alternative to code execution
+    - Used before: AST analysis and QASM code generation
+    - Used by: CirqToQASM3Converter.convert() method
+
+TOOLS USED:
+    - ast: Python's Abstract Syntax Tree module for parsing source code
+    - logging: Debug logging (via config)
+    - typing: Type hints for method signatures
+
+PARSING STRATEGY:
+    1. AST Visitor Pattern: Uses ast.NodeVisitor to traverse AST nodes
+    2. Circuit Detection: Identifies cirq.Circuit() constructor calls
+    3. Qubit Tracking: Handles qubit creation patterns (LineQubit.range(), etc.)
+    4. Operation Extraction: Visits gate calls (cirq.H(), cirq.CNOT(), etc.) and constructor args
+    5. Parameter Extraction: Extracts qubit references, gate parameters, measurement mappings
+    6. AST Building: Constructs CircuitAST with GateNode, MeasurementNode, etc.
+
+ARCHITECTURE ROLE:
+    Provides secure, static analysis of Cirq code. Enables conversion without
+    executing potentially unsafe user code. Part of the parsing layer that bridges
+    framework-specific syntax and the unified CircuitAST representation.
 
 Author: QCanvas Team
-Date: 2025-01-15
+Date: 2025-08-12
 Version: 1.0.0
 """
 
