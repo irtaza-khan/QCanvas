@@ -1,11 +1,54 @@
 """
 OpenQASM 3.0 Expression Evaluator and Parser
 
-Handles classical expressions, arithmetic, comparison, and logical operations
-for OpenQASM 3.0 Iteration I features.
+WHAT THIS FILE DOES:
+    Parses, validates, and formats classical expressions for OpenQASM 3.0. Handles
+    arithmetic operations, comparisons, logical operations, and mathematical functions.
+    Converts Python-style expressions to OpenQASM 3.0 syntax and validates expression
+    correctness. Supports Iteration I expression features.
+
+HOW IT LINKS TO OTHER FILES:
+    - Used by: qasm3_builder.py (for formatting expressions in gate parameters and assignments)
+    - Used by: Converter classes (when processing parameterized gates with expressions)
+    - Part of: Base module providing expression handling utilities
+
+INPUT:
+    - Expression strings: Python-style expressions (e.g., "theta + PI/2", "x == 0")
+    - Literal values: Numbers, booleans, constants
+    - Used in: Parameter formatting, conditional statements, assignments
+
+OUTPUT:
+    - Formatted OpenQASM 3.0 expressions: Valid OpenQASM 3.0 expression strings
+    - Type inference: Expression result types (int, float, bool, angle)
+    - Validation results: (is_valid, error_message) tuples
+    - Returned by: parse_expression(), format_for_qasm(), infer_type() methods
+
+STAGE OF USE:
+    - Expression Processing Stage: During gate parameter formatting
+    - Validation Stage: Before code generation
+    - Conversion Stage: When converting framework expressions to OpenQASM
+    - Used throughout: Anywhere expressions need to be formatted or validated
+
+TOOLS USED:
+    - re (regex): Expression parsing, operator splitting, argument parsing
+    - ast (Python AST): Not used directly, but handles similar tree structures
+    - enum.Enum: ExpressionType enumeration
+    - typing: Type hints for parameters and return values
+
+SUPPORTED OPERATIONS (Iteration I):
+    - Arithmetic: +, -, *, /
+    - Comparison: <, >, <=, >=, ==, !=
+    - Logical: &&, ||, !
+    - Mathematical functions: sqrt, exp, log, sin, cos, tan, etc.
+    - Literals: Integers, floats, booleans, constants (PI, E, etc.)
+
+ARCHITECTURE ROLE:
+    Provides expression handling utilities for the code generation system.
+    Ensures expressions are correctly formatted and validated according to
+    OpenQASM 3.0 syntax rules.
 
 Author: QCanvas Team
-Date: 2025-09-30
+Date: 2025-08-04
 Version: 1.0.0
 """
 

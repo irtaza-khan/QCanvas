@@ -1,12 +1,48 @@
 """
 Circuit AST (Abstract Syntax Tree) Module
 
-This module defines the intermediate representation for quantum circuits
-parsed from various frameworks. It provides a unified AST structure that
-can be converted to OpenQASM 3.0.
+WHAT THIS FILE DOES:
+    Defines the unified intermediate representation (IR) for quantum circuits parsed
+    from various frameworks. Provides dataclasses for circuit operations (gates,
+    measurements, resets, barriers) and the main CircuitAST container. This AST serves
+    as a framework-agnostic representation that can be converted to OpenQASM 3.0.
+
+HOW IT LINKS TO OTHER FILES:
+    - Used by: All parser classes (qiskit_parser.py, cirq_parser.py, pennylane_parser.py)
+               build CircuitAST instances from source code
+    - Used by: All converter classes use CircuitAST as intermediate representation
+    - Imported by: qasm3_builder.py (converts AST to OpenQASM 3.0 code)
+    - Part of: Base module providing core data structures
+
+INPUT:
+    - Framework-specific source code (via parsers)
+    - Circuit operations extracted from AST parsing
+    - Used in: Parser classes build CircuitAST from parsed operations
+
+OUTPUT:
+    - CircuitAST: Complete circuit representation with operations list
+    - GateNode, MeasurementNode, ResetNode, BarrierNode: Individual operation nodes
+    - Statistics: Gate counts, depth, measurement detection (via helper methods)
+    - Returned by: Parser.parse() methods
+
+STAGE OF USE:
+    - Parsing Stage: Built by AST parsers from source code
+    - Analysis Stage: Analyzed for statistics and validation
+    - Conversion Stage: Converted to OpenQASM 3.0 by QASM3Builder
+    - Used throughout: Core intermediate representation in conversion pipeline
+
+TOOLS USED:
+    - dataclasses.dataclass: Python dataclasses for operation nodes
+    - typing.List, Dict, Optional, Union: Type hints for operation lists and metadata
+    - Built-in methods: get_gate_count(), get_depth(), has_measurements() for analysis
+
+ARCHITECTURE ROLE:
+    Provides the unified intermediate representation that bridges framework-specific
+    parsers and OpenQASM 3.0 generation. This abstraction enables framework-agnostic
+    circuit processing and conversion logic.
 
 Author: QCanvas Team
-Date: 2025-01-15
+Date: 2025-08-03
 Version: 1.0.0
 """
 

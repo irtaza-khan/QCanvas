@@ -1,26 +1,65 @@
 """
 OpenQASM 3.0 Builder - Complete Iteration I Implementation
 
-This module provides comprehensive OpenQASM 3.0 code generation with full
-support for Iteration I features as defined in the project scope.
+WHAT THIS FILE DOES:
+    Provides a programmatic builder for generating OpenQASM 3.0 code. Implements
+    comprehensive support for Iteration I features including types, gates, modifiers,
+    control flow, and standard library. Converts CircuitAST or direct operation calls
+    into syntactically correct OpenQASM 3.0 code strings.
 
-Features Implemented:
-- Comments and version control
-- All basic types (qubit, bit, int, uint, float, angle, bool)
-- Compile-time constants
-- Variables and global scope
-- Arrays and array operations
-- Aliasing, slicing, and concatenation
-- All gate types and modifiers (ctrl@, inv@)
-- Hierarchical gate definitions
-- Gate broadcasting
-- Built-in quantum instructions
-- Classical operations and control flow
-- Standard gate library
-- Built-in mathematical functions
+HOW IT LINKS TO OTHER FILES:
+    - Used by: All converter classes (qiskit_to_qasm.py, cirq_to_qasm.py, pennylane_to_qasm.py)
+               use QASM3Builder to generate OpenQASM 3.0 code
+    - Uses: circuit_ast.py (CircuitAST, GateNode, etc.) as input source
+    - Uses: qasm3_gates.py (gate library and formatting utilities)
+    - Uses: qasm3_expression.py (expression parsing and formatting)
+    - Part of: Base module providing core code generation
+
+INPUT:
+    - CircuitAST: Unified circuit representation from parsers
+    - Direct method calls: apply_gate(), add_measurement(), etc.
+    - Configuration: Number of qubits, classical bits, include options
+    - Used in: Converter._convert_ast_to_qasm3() methods
+
+OUTPUT:
+    - OpenQASM 3.0 code string: Complete, valid OpenQASM 3.0 program
+    - Returned by: get_code() method
+    - Format: Multi-line string with proper syntax and formatting
+
+STAGE OF USE:
+    - Code Generation Stage: Converts AST or operations to OpenQASM 3.0
+    - Conversion Stage: Final step in converter pipeline
+    - Used after: AST parsing and analysis
+    - Used before: Validation and return to API
+
+TOOLS USED:
+    - re (regex): Identifier validation, slice parsing
+    - numpy: Mathematical constant detection (PI, E, etc.)
+    - typing: Type hints for parameters and return values
+    - dataclasses: Internal data structures (QASMVariable, QASMGateDefinition, QASMAlias)
+
+FEATURES IMPLEMENTED (Iteration I):
+    - Comments and version control
+    - All basic types (qubit, bit, int, uint, float, angle, bool)
+    - Compile-time constants
+    - Variables and global scope
+    - Arrays and array operations
+    - Aliasing, slicing, and concatenation
+    - All gate types and modifiers (ctrl@, inv@)
+    - Hierarchical gate definitions
+    - Gate broadcasting
+    - Built-in quantum instructions
+    - Classical operations and control flow
+    - Standard gate library
+    - Built-in mathematical functions
+
+ARCHITECTURE ROLE:
+    Central code generation engine that produces OpenQASM 3.0 output. Handles
+    all syntax generation, formatting, and feature support according to project
+    scope (Iteration I features only, excluding pulse-level and timing features).
 
 Author: QCanvas Team
-Date: 2025-09-30
+Date: 2025-08-05
 Version: 2.0.0 - Iteration I Complete
 """
 

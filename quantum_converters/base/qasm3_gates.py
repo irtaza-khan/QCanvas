@@ -1,16 +1,58 @@
 """
 OpenQASM 3.0 Gate Library - Complete Implementation
 
-Comprehensive gate definitions and modifiers for OpenQASM 3.0 Iteration I.
+WHAT THIS FILE DOES:
+    Provides comprehensive gate library definitions, gate formatting utilities, and
+    modifier handling for OpenQASM 3.0. Defines all standard gates (single-qubit,
+    two-qubit, three-qubit, parameterized) and provides methods for formatting gate
+    applications with modifiers (ctrl@, inv@, pow@). Supports Iteration I gate features.
 
-Features:
-- All standard gates from stdgates.inc
-- Gate modifiers (ctrl@, inv@)
-- Hierarchical gate definitions
-- Gate broadcasting support
+HOW IT LINKS TO OTHER FILES:
+    - Used by: qasm3_builder.py (for gate formatting and validation)
+    - Used by: Converter classes (for gate name mapping and formatting)
+    - Uses: numpy for mathematical constant detection
+    - Part of: Base module providing gate-related utilities
+
+INPUT:
+    - Gate names: Standard gate identifiers (e.g., "h", "cx", "rx")
+    - Gate parameters: Parameter values (angles, phases, etc.)
+    - Gate modifiers: Control, inverse, power modifiers
+    - Qubit arguments: Lists of qubit indices or names
+    - Used in: Gate application formatting, validation, custom gate definitions
+
+OUTPUT:
+    - Formatted gate strings: Complete OpenQASM 3.0 gate application statements
+    - Gate definitions: Custom gate definition blocks
+    - Validation results: (is_valid, error_message) tuples
+    - Gate metadata: Qubit counts, parameter counts, gate types
+    - Returned by: format_gate_application(), generate_gate_definition() methods
+
+STAGE OF USE:
+    - Gate Formatting Stage: When converting gates to OpenQASM 3.0 syntax
+    - Validation Stage: Before code generation
+    - Conversion Stage: Throughout the conversion pipeline
+    - Used throughout: Anywhere gates need to be formatted or validated
+
+TOOLS USED:
+    - numpy: Mathematical constant detection (PI, E, etc.)
+    - dataclasses: GateModifier dataclass
+    - typing: Type hints for parameters and return values
+
+FEATURES (Iteration I):
+    - All standard gates from stdgates.inc
+    - Gate modifiers (ctrl@, inv@)
+    - Hierarchical gate definitions
+    - Gate broadcasting support
+    - Parameter formatting with constant detection
+    - Gate validation (qubit count, parameter count)
+
+ARCHITECTURE ROLE:
+    Central gate library providing gate definitions, formatting, and validation.
+    Ensures consistent gate representation across all converters and proper
+    OpenQASM 3.0 syntax generation.
 
 Author: QCanvas Team
-Date: 2025-09-30
+Date: 2025-08-04
 Version: 1.0.0
 """
 
