@@ -1,3 +1,55 @@
+"""
+Gate Mappings Configuration Module
+
+WHAT THIS FILE DOES:
+    Defines centralized gate name mappings between framework-specific gate names
+    and OpenQASM 3.0 gate mnemonics. Provides registry structures for Qiskit, Cirq,
+    and PennyLane frameworks. Includes helper functions to access mappings and
+    inverse mappings (framework gate name → OpenQASM mnemonic).
+
+HOW IT LINKS TO OTHER FILES:
+    - Used by: All converter classes (qiskit_to_qasm.py, cirq_to_qasm.py, pennylane_to_qasm.py)
+               for gate name translation
+    - Used by: All parser classes for mapping framework gates to OpenQASM names
+    - Uses: schemas.py (FrameworkGateRegistry, GateMap data structures)
+    - Part of: Config module providing centralized configuration
+
+INPUT:
+    - Framework gate names: Framework-specific gate identifiers (e.g., "PauliX", "Hadamard")
+    - Used in: get_*_inverse_qasm_map() functions, registry access
+
+OUTPUT:
+    - Gate mappings: FrameworkGateRegistry instances for each framework
+    - Inverse mappings: Dict[str, str] mapping framework gate names to OpenQASM mnemonics
+    - Returned by: get_qiskit_inverse_qasm_map(), get_cirq_inverse_qasm_map(),
+                   get_pl_inverse_qasm_map() functions
+
+STAGE OF USE:
+    - Configuration Stage: Loaded at module import time
+    - Conversion Stage: Used during gate name translation
+    - Parsing Stage: Used when mapping parsed gates to OpenQASM names
+    - Used throughout: Anywhere gate name translation is needed
+
+TOOLS USED:
+    - typing.Mapping, Dict: Type hints for mapping structures
+    - pydantic: FrameworkGateRegistry and GateMap use Pydantic models (from schemas.py)
+
+MAPPING STRUCTURE:
+    - QISKIT_TO_QASM_REGISTRY: Maps Qiskit gate IDs to GateMap (with OpenQASM names)
+    - CIRQ_TO_QASM_REGISTRY: Maps Cirq gate IDs to GateMap
+    - PENNYLANE_TO_QASM_REGISTRY: Maps PennyLane gate IDs to GateMap
+    - Inverse maps: Framework gate names → OpenQASM mnemonics (for parsers)
+
+ARCHITECTURE ROLE:
+    Centralized gate mapping configuration. Ensures consistent gate name translation
+    across all converters and parsers. Single source of truth for framework-to-OpenQASM
+    gate mappings.
+
+Author: QCanvas Team
+Date: 2025-08-08
+Version: 1.0.0
+"""
+
 from typing import Mapping, Dict
 from .schemas import FrameworkGateRegistry, GateMap
 
