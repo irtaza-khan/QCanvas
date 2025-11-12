@@ -1,12 +1,57 @@
 """
 PennyLane to OpenQASM 3.0 Converter Module
 
-This module provides functionality to convert PennyLane quantum circuits 
-containing basic gates to OpenQASM 3.0 format. It serves as an intermediate 
-representation (IR) converter for unified quantum simulators.
+WHAT THIS FILE DOES:
+    Converts PennyLane quantum circuit source code to OpenQASM 3.0 format. Implements
+    the AbstractConverter interface, supporting both AST-based parsing (secure, preferred)
+    and legacy string-based parsing (fallback). Handles PennyLane gates, measurements,
+    and device definitions. Generates OpenQASM 3.0 code using QASM3Builder.
+
+HOW IT LINKS TO OTHER FILES:
+    - Inherits from: abstract_converter.py (AbstractConverter interface)
+    - Uses: pennylane_parser.py (PennyLaneASTParser for AST-based parsing)
+    - Uses: qasm3_builder.py (QASM3Builder for code generation)
+    - Uses: circuit_ast.py (CircuitAST, GateNode, etc. as intermediate representation)
+    - Uses: config/mappings.py (gate name mappings)
+    - Returns: ConversionResult (from base/ConversionResult.py)
+    - Part of: Converters module implementing framework-specific conversion logic
+
+INPUT:
+    - pennylane_code (str): PennyLane Python source code defining a quantum circuit
+    - Expected format: Code with qml.device() and qml operations (qnode functions)
+    - Used in: convert() method (primary entry point)
+
+OUTPUT:
+    - ConversionResult: Contains OpenQASM 3.0 code string and conversion statistics
+    - Returned by: convert() method
+    - Includes: QASM code, qubit count, depth, gate counts, measurement flags
+
+STAGE OF USE:
+    - Conversion Stage: Primary converter for PennyLane framework
+    - API Stage: Called by API endpoints when source framework is PennyLane
+    - Used after: Framework detection/selection
+    - Used before: Validation and response formatting
+
+TOOLS USED:
+    - numpy: Numerical operations and constant detection
+    - re: Regular expressions for string-based parsing (legacy fallback)
+    - ast: Python AST module (via PennyLaneASTParser)
+    - time: Performance timing for conversion steps
+    - typing: Type hints for method signatures
+
+CONVERSION STRATEGY:
+    1. AST-based parsing (preferred): Uses PennyLaneASTParser to extract operations
+    2. Legacy parsing (fallback): String-based regex parsing if AST parsing fails
+    3. AST to QASM: Converts CircuitAST to OpenQASM 3.0 using QASM3Builder
+    4. Statistics: Analyzes circuit for qubits, depth, gate counts, measurements
+
+ARCHITECTURE ROLE:
+    Implements PennyLane-specific conversion logic, bridging PennyLane source code and
+    OpenQASM 3.0 output. Part of the converter strategy pattern, enabling polymorphic
+    framework conversion through the AbstractConverter interface.
 
 Author: QCanvas Team
-Date: 2025-09-30
+Date: 2025-08-22
 Version: 2.0.0 - Integrated with QASM3Builder
 """
 import numpy as np
