@@ -98,8 +98,8 @@ async def compat_compile(payload: dict):
     # Required fields check
     if not source or not isinstance(source, str) or not backend:
         return JSONResponse(status_code=422, content={"detail": "Missing required fields"})
-    # Minimal validation: must include OPENQASM header
-    if not source.strip().startswith("OPENQASM 3.0;"):
+    # Minimal validation: must include OPENQASM 3 header
+    if not source.strip().startswith("OPENQASM 3;"):
         return {"success": False, "errors": ["Invalid OpenQASM header"]}
     # Naive type-check example to satisfy error-path test
     normalized = source.replace(" ", "").replace("\n", "").replace("\t", "")
@@ -110,7 +110,7 @@ async def compat_compile(payload: dict):
 @app.post("/api/validate")
 async def compat_validate(payload: dict):
     source = payload.get("source", "")
-    valid = isinstance(source, str) and source.strip().startswith("OPENQASM 3.0;")
+    valid = isinstance(source, str) and source.strip().startswith("OPENQASM 3;")
     # Simulate a basic semantic error for the test case
     normalized = source.replace(" ", "").replace("\n", "").replace("\t", "")
     if "intx=true;" in normalized:

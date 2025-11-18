@@ -54,7 +54,7 @@ class ConversionService:
     
     def convert_to_qasm(self, code: str, framework: str, style: str = "classic") -> Dict[str, Any]:
         """
-        Convert quantum circuit code from specified framework to OpenQASM 3.0
+        Convert quantum circuit code from specified framework to OpenQASM 3
 
         Args:
             code: The source code in the specified framework
@@ -179,7 +179,7 @@ class ConversionService:
             "qasm_code": qasm_code,
             "error": None,
             "framework": framework,
-            "qasm_version": "3.0",
+            "qasm_version": "3",
             "conversion_stats": stats
         }
 
@@ -200,7 +200,7 @@ class ConversionService:
         num_qubits = self._extract_qubit_count_qiskit(code)
 
         qasm_lines = [
-            "OPENQASM 3.0;",
+            "OPENQASM 3;",
             "include \"stdgates.inc\";",
             "",
             f"qubit[{num_qubits}] q;",
@@ -322,7 +322,7 @@ class ConversionService:
         num_qubits, name_to_idx = self._extract_cirq_qubit_mapping(code)
 
         qasm_lines = [
-            "OPENQASM 3.0;",
+            "OPENQASM 3;",
             "include \"stdgates.inc\";",
             "",
             f"qubit[{num_qubits}] q;",
@@ -404,7 +404,7 @@ class ConversionService:
     
     def _basic_pennylane_conversion(self, _code: str) -> str:
         """Basic PennyLane to QASM conversion"""
-        return """OPENQASM 3.0;
+        return """OPENQASM 3;
 include "stdgates.inc";
 
 // Converted from PennyLane (basic fallback)
