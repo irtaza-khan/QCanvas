@@ -507,11 +507,11 @@ class PennyLaneToQASM3Converter:
 
     def _is_standard_gate(self, gate_name: str) -> bool:
         """Check if gate is a standard single-qubit or multi-qubit gate."""
-        return gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id', 'swap', 'cx', 'cz', 'ccx']
+        return gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id', 'swap', 'cx', 'cz', 'cy', 'ch', 'ccx', 'cswap', 'ccz']
 
     def _is_parameterized_gate(self, gate_name: str) -> bool:
         """Check if gate is a parameterized gate."""
-        return gate_name in ['rx', 'ry', 'rz', 'p']
+        return gate_name in ['rx', 'ry', 'rz', 'p', 'crx', 'cry', 'crz', 'cp', 'gphase']
 
     def _add_parameterized_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
                                operation: GateNode, modifiers):

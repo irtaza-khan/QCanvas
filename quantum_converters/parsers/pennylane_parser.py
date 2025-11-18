@@ -215,8 +215,14 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
 
     def _extract_params(self, call: ast.Call, method_name: str) -> List[Any]:
         params: List[Any] = []
-        # Parameterized for RX/RY/RZ/PhaseShift: first arg is angle
-        if method_name in ['RX', 'RY', 'RZ', 'PhaseShift'] and call.args:
+        # Parameterized gates: RX/RY/RZ/PhaseShift and their controlled versions
+        # Also includes GlobalPhase
+        parameterized_gates = [
+            'RX', 'RY', 'RZ', 'PhaseShift', 
+            'CRX', 'CRY', 'CRZ', 'ControlledPhaseShift',
+            'GlobalPhase'
+        ]
+        if method_name in parameterized_gates and call.args:
             angle = call.args[0]
             params.append(self._extract_parameter(angle))
         if VERBOSE:

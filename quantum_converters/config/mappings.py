@@ -54,7 +54,7 @@ from typing import Mapping, Dict
 from .schemas import FrameworkGateRegistry, GateMap
 
 
-# PennyLane → OpenQASM 3 (Iteration I gates only)
+# PennyLane → OpenQASM 3 (Iteration I + Iteration II gates)
 _PENNYLANE_TO_QASM = FrameworkGateRegistry(
     framework="pennylane",
     mapping={
@@ -75,13 +75,28 @@ _PENNYLANE_TO_QASM = FrameworkGateRegistry(
         "rz": GateMap(openqasm_gate="rz", target_gate="RZ", param_order=["lambda"]),
         "p": GateMap(openqasm_gate="p", target_gate="PhaseShift", param_order=["lambda"]),
 
-        # Two-qubit gates
+        # Two-qubit gates (Iteration I)
         "cx": GateMap(openqasm_gate="cx", target_gate="CNOT"),
         "cz": GateMap(openqasm_gate="cz", target_gate="CZ"),
         "swap": GateMap(openqasm_gate="swap", target_gate="SWAP"),
 
-        # Three-qubit gates
+        # Iteration II: Controlled two-qubit gates
+        "cy": GateMap(openqasm_gate="cy", target_gate="CY"),
+        "ch": GateMap(openqasm_gate="ch", target_gate="ControlledHadamard"),
+        "crx": GateMap(openqasm_gate="crx", target_gate="CRX", param_order=["theta"]),
+        "cry": GateMap(openqasm_gate="cry", target_gate="CRY", param_order=["theta"]),
+        "crz": GateMap(openqasm_gate="crz", target_gate="CRZ", param_order=["lambda"]),
+        "cp": GateMap(openqasm_gate="cp", target_gate="ControlledPhaseShift", param_order=["lambda"]),
+
+        # Three-qubit gates (Iteration I)
         "ccx": GateMap(openqasm_gate="ccx", target_gate="Toffoli"),
+        
+        # Iteration II: Three-qubit gates
+        "cswap": GateMap(openqasm_gate="cswap", target_gate="CSWAP"),
+        "ccz": GateMap(openqasm_gate="ccz", target_gate="CCZ"),
+        
+        # Iteration II: Global phase
+        "gphase": GateMap(openqasm_gate="gphase", target_gate="GlobalPhase", param_order=["gamma"]),
     },
 )
 
@@ -134,6 +149,7 @@ _QISKIT_TO_QASM = FrameworkGateRegistry(
         "cry": GateMap(openqasm_gate="cry", target_gate="cry", param_order=["theta"]),
         "crz": GateMap(openqasm_gate="crz", target_gate="crz", param_order=["lambda"]),
         "cp": GateMap(openqasm_gate="cp", target_gate="cp", param_order=["lambda"]),
+        "cu": GateMap(openqasm_gate="cu", target_gate="cu", param_order=["theta", "phi", "lambda", "gamma"]),
         # Three-qubit
         "ccx": GateMap(openqasm_gate="ccx", target_gate="ccx"),
         # Special
