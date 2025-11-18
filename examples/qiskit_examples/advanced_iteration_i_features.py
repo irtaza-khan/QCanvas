@@ -71,9 +71,9 @@ def get_circuit():
 
     return qc
 
-# Expected OpenQASM 3.0 output:
+# Expected OpenQASM 3 output:
 """
-OPENQASM 3.0;
+OPENQASM 3;
 include "stdgates.inc";
 
 // Mathematical constants
@@ -109,8 +109,8 @@ ry(phi) q[1];
 swap q[0], q[3];
 barrier q[0], q[1], q[2], q[3];
 reset q[2];
-measure q[0] -> c[0];
-measure q[1] -> c[1];
-measure q[2] -> c[2];
-measure q[3] -> c[3];
+c[0] = measure q[0];
+c[1] = measure q[1];
+c[2] = measure q[2];
+c[3] = measure q[3];
 """
