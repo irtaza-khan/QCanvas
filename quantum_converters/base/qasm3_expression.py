@@ -83,11 +83,16 @@ class QASM3ExpressionParser:
     PRECEDENCE = {
         '||': 1,
         '&&': 2,
-        '==': 3, '!=': 3,
-        '<': 4, '>': 4, '<=': 4, '>=': 4,
-        '+': 5, '-': 5,
-        '*': 6, '/': 6,  '%': 6,
-        '!': 7,  # Unary not
+        '|': 3,  # Bitwise OR (Iteration II)
+        '^': 4,  # Bitwise XOR (Iteration II)
+        '&': 5,  # Bitwise AND (Iteration II)
+        '==': 6, '!=': 6,
+        '<': 7, '>': 7, '<=': 7, '>=': 7,
+        '<<': 8, '>>': 8,  # Shift operators (Iteration II)
+        '+': 9, '-': 9,
+        '*': 10, '/': 10,  '%': 10,
+        '~': 11,  # Bitwise NOT (Iteration II)
+        '!': 11,  # Unary not
     }
     
     # Supported mathematical functions (Iteration I)
@@ -203,8 +208,13 @@ class QASM3ExpressionParser:
         return expr_str
 
     def _parse_binary_expression(self, expr_str: str) -> Optional[str]:
-        """Parse binary operations in order of precedence."""
-        binary_ops = ['||', '&&', '==', '!=', '<=', '>=', '<', '>', '+', '-', '*', '/']
+        """Parse binary operations in order of precedence (including Iteration II operators)."""
+        binary_ops = [
+            '||', '&&', '|', '^', '&',  # Logical and bitwise
+            '==', '!=', '<=', '>=', '<', '>',  # Comparison
+            '<<', '>>',  # Shift (Iteration II)
+            '+', '-', '*', '/', '%'  # Arithmetic
+        ]
 
         for op in binary_ops:
             if op in expr_str:
@@ -227,10 +237,14 @@ class QASM3ExpressionParser:
         return op
 
     def _parse_unary_expression(self, expr_str: str) -> Optional[str]:
-        """Parse unary operations."""
+        """Parse unary operations (including Iteration II bitwise NOT)."""
         if expr_str.startswith('!'):
             operand = self.parse_expression(expr_str[1:])
             return f"!{operand}"
+        
+        if expr_str.startswith('~'):  # Bitwise NOT (Iteration II)
+            operand = self.parse_expression(expr_str[1:])
+            return f"~{operand}"
 
         if expr_str.startswith('-') and len(expr_str) > 1:
             operand = self.parse_expression(expr_str[1:])
