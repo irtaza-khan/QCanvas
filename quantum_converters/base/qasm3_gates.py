@@ -63,10 +63,18 @@ import numpy as np
 
 @dataclass
 class GateModifier:
-    """Represents gate modifiers in OpenQASM 3.0"""
+    """Represents gate modifiers in OpenQASM 3.0
+    
+    Supports Iteration II modifiers:
+    - inverse: inv@ modifier
+    - ctrl_qubits: ctrl@ or ctrl(n)@ modifier
+    - negctrl_qubits: negctrl@ or negctrl(n)@ modifier (Iteration II)
+    - power: pow(k)@ modifier (Iteration II)
+    """
     inverse: bool = False
     ctrl_qubits: Optional[int] = None  # Number of control qubits
-    power: Optional[float] = None  # Power modifier
+    negctrl_qubits: Optional[int] = None  # Number of negative control qubits (Iteration II)
+    power: Optional[float] = None  # Power modifier (Iteration II)
     
     def to_string(self) -> str:
         """Convert modifiers to QASM string."""
@@ -80,6 +88,12 @@ class GateModifier:
                 parts.append("ctrl")
             else:
                 parts.append(f"ctrl({self.ctrl_qubits})")
+        
+        if self.negctrl_qubits is not None:
+            if self.negctrl_qubits == 1:
+                parts.append("negctrl")
+            else:
+                parts.append(f"negctrl({self.negctrl_qubits})")
                 
         if self.power is not None:
             parts.append(f"pow({self.power})")

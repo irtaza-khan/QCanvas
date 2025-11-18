@@ -73,7 +73,7 @@ import numpy as np
 class QASMVariable:
     """Represents a variable in OpenQASM 3.0"""
     name: str
-    type: str  # qubit, bit, int, uint, float, angle, bool
+    type: str  # qubit, bit, int, uint, float, angle, bool, complex (Iteration II)
     size: Optional[int] = None  # For arrays
     is_const: bool = False
     value: Optional[Any] = None
@@ -95,6 +95,15 @@ class QASMAlias:
     target: str  # e.g., "q[0:2]"
 
 
+@dataclass
+class QASMSubroutine:
+    """Represents a subroutine/function definition (Iteration II)"""
+    name: str
+    parameters: List[str] = field(default_factory=list)
+    return_type: Optional[str] = None  # None for void functions
+    body: List[str] = field(default_factory=list)
+
+
 class QASM3Builder:
     """
     Comprehensive OpenQASM 3.0 code builder with full Iteration I support.
@@ -107,6 +116,7 @@ class QASM3Builder:
         """Initialize the QASM 3.0 builder."""
         self.variables: Dict[str, QASMVariable] = {}
         self.gate_definitions: Dict[str, QASMGateDefinition] = {}
+        self.subroutines: Dict[str, QASMSubroutine] = {}  # Iteration II
         self.aliases: Dict[str, QASMAlias] = {}
         self.lines: List[str] = []
         self.included_files: Set[str] = set()
@@ -138,12 +148,13 @@ class QASM3Builder:
         
     def initialize_header(self, include_stdgates: bool = True):
         """
-        Initialize OpenQASM 3.0 header with version and includes.
+        Initialize OpenQASM 3 header with version and includes.
         
         Args:
             include_stdgates: Whether to include standard gate library
         """
-        self.lines.append("OPENQASM 3.0;")
+        # OpenQASM 3 specification uses `OPENQASM 3;` (no minor version)
+        self.lines.append("OPENQASM 3;")
         
         if include_stdgates:
             self.add_include("stdgates.inc")
@@ -269,6 +280,41 @@ class QASM3Builder:
             self.lines.append(f"    {op}")
         self.lines.append("}")
         
+    def define_subroutine(self, name: str, parameters: List[str], return_type: Optional[str],
+                         body: List[str]):
+        """
+        Define a subroutine/function (Iteration II).
+        
+        Args:
+            name: Subroutine name
+            parameters: List of parameter declarations (e.g., "int x", "float theta")
+            return_type: Return type (None for void)
+            body: List of statements in the subroutine body
+        """
+        subroutine = QASMSubroutine(name, parameters, return_type, body)
+        self.subroutines[name] = subroutine
+        
+        # Build subroutine definition
+        param_str = f"({', '.join(parameters)})" if parameters else "()"
+        return_str = f" -> {return_type}" if return_type else ""
+        
+        self.lines.append(f"def {name}{param_str}{return_str} {{")
+        for stmt in body:
+            self.lines.append(f"    {stmt}")
+        self.lines.append("}")
+        
+    def add_return_statement(self, expression: Optional[str] = None):
+        """
+        Add a return statement (Iteration II).
+        
+        Args:
+            expression: Optional return value expression
+        """
+        if expression:
+            self.lines.append(f"return {expression};")
+        else:
+            self.lines.append("return;")
+        
     def apply_gate(self, gate_name: str, qubits: List[str], 
                    parameters: Optional[List[str]] = None,
                    modifiers: Optional[Dict[str, Any]] = None):
@@ -302,6 +348,12 @@ class QASM3Builder:
     def _build_modifier_str(self, modifiers: Optional[Dict[str, Any]]) -> str:
         """
         Build the OpenQASM modifier prefix string from a modifiers dict.
+        
+        Supports Iteration II modifiers:
+        - inv: Inverse modifier
+        - ctrl: Control modifier (single int or list)
+        - negctrl: Negative control modifier (Iteration II)
+        - pow: Power modifier (Iteration II)
         """
         if not modifiers:
             return ""
@@ -314,6 +366,12 @@ class QASM3Builder:
                 parts.append("ctrl" if ctrl == 1 else f"ctrl({ctrl})")
             elif isinstance(ctrl, list):
                 parts.append(f"ctrl({len(ctrl)})")
+        if 'negctrl' in modifiers:
+            negctrl = modifiers['negctrl']
+            if isinstance(negctrl, int):
+                parts.append("negctrl" if negctrl == 1 else f"negctrl({negctrl})")
+            elif isinstance(negctrl, list):
+                parts.append(f"negctrl({len(negctrl)})")
         if 'pow' in modifiers:
             parts.append(f"pow({modifiers['pow']})")
         return (" @ ".join(parts) + " @ ") if parts else ""
@@ -338,11 +396,10 @@ class QASM3Builder:
         """
         Add a measurement operation.
         
-        Args:
-            qubit: Qubit to measure
-            bit: Classical bit to store result
+        OpenQASM 3 uses the assignment form for measurements:
+            bit_expr = measure qubit_expr;
         """
-        self.lines.append(f"measure {qubit} -> {bit};")
+        self.lines.append(f"{bit} = measure {qubit};")
         
     def add_reset(self, qubit: str):
         """
@@ -410,6 +467,27 @@ class QASM3Builder:
         for stmt in body:
             self.lines.append(f"    {stmt}")
         self.lines.append("}")
+        
+    def add_while_loop(self, condition: str, body: List[str]):
+        """
+        Add a while loop (Iteration II).
+        
+        Args:
+            condition: Loop condition expression
+            body: List of statements in loop body
+        """
+        self.lines.append(f"while ({condition}) {{")
+        for stmt in body:
+            self.lines.append(f"    {stmt}")
+        self.lines.append("}")
+        
+    def add_break_statement(self):
+        """Add a break statement (Iteration II)."""
+        self.lines.append("break;")
+        
+    def add_continue_statement(self):
+        """Add a continue statement (Iteration II)."""
+        self.lines.append("continue;")
         
     def _format_float_constant(self, value: float) -> Optional[str]:
         """
