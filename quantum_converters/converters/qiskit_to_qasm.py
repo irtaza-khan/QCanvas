@@ -381,7 +381,7 @@ class QiskitToQASM3Converter:
             self._handle_universal_gate(builder, instruction, qubits_str, modifiers)
         elif gate_name in ['cx', 'cnot', 'cz', 'cy', 'ch', 'swap']:
             self._handle_two_qubit_gate(builder, gate_name, qubits_str, modifiers)
-        elif gate_name in ['cp', 'crx', 'cry', 'crz']:
+        elif gate_name in ['cp', 'crx', 'cry', 'crz', 'cu']:
             self._handle_controlled_parametric_gate(builder, gate_name, instruction, qubits_str, modifiers)
         elif gate_name == 'gphase':
             self._handle_global_phase(builder, instruction)
@@ -441,8 +441,9 @@ class QiskitToQASM3Converter:
         """Handle controlled parametric gates honoring registry param order."""
         param_names = QISKIT_TO_QASM_REGISTRY.mapping[gate_name].param_order if gate_name in QISKIT_TO_QASM_REGISTRY.mapping else ["theta"]
         ordered_params = []
-        if param_names:
-            ordered_params.append(builder.format_parameter(instruction.params[0]))
+        for idx, _ in enumerate(param_names):
+            if idx < len(instruction.params):
+                ordered_params.append(builder.format_parameter(instruction.params[idx]))
         builder.apply_gate(gate_name, qubits_str, parameters=ordered_params, modifiers=modifiers if modifiers else None)
 
     def _handle_global_phase(self, builder: QASM3Builder, instruction):
@@ -539,15 +540,24 @@ class QiskitToQASM3Converter:
         if VERBOSE:
             vprint(f"[QiskitToQASM3Converter] [{idx}] GateNode name={name} qubits={op.qubits} params={op.parameters} modifiers={getattr(op, 'modifiers', None)}")
 
+        # Standard 1- and 2-qubit gates
         if name in ['h','x','y','z','s','t','sx','id','i','swap','cx','cz','ccx']:
             actual_name = 'cx' if name == 'cnot' else name
             modifiers = getattr(op, 'modifiers', None)
             builder.apply_gate(actual_name, qubits_str, modifiers=modifiers if modifiers else None)
+        # Single-qubit parameterized
         elif name in ['rx','ry','rz','p','u']:
             raw_params = (op.parameters or [])
             params = [builder.format_parameter(p) for p in raw_params]
             if VERBOSE:
                 vprint(f"[QiskitToQASM3Converter]     params_raw={raw_params} params_fmt={params}")
+            builder.apply_gate(name, qubits_str, parameters=params)
+        # Controlled parameterized two-qubit gates (Iteration II)
+        elif name in ['cp', 'crx', 'cry', 'crz', 'cu']:
+            raw_params = (op.parameters or [])
+            params = [builder.format_parameter(p) for p in raw_params]
+            if VERBOSE:
+                vprint(f"[QiskitToQASM3Converter]     controlled params_raw={raw_params} params_fmt={params}")
             builder.apply_gate(name, qubits_str, parameters=params)
         else:
             builder.add_comment(f"Unsupported gate: {name}")

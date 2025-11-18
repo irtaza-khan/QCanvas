@@ -86,6 +86,7 @@ class CirqASTVisitor(ast.NodeVisitor):
         self.current_circuit: Optional[str] = None  # Current circuit variable being operated on
         self.qubit_vars: Dict[str, int] = {}  # Map variable names to qubit indices
         self.qubit_counter: int = 0  # Counter for qubit indices
+        self.unsupported_operations: Set[str] = set()
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Handle variable assignments, particularly Circuit creation."""
@@ -296,6 +297,8 @@ class CirqASTVisitor(ast.NodeVisitor):
             self._handle_zpow_gate_cirq(args, call_node)
         elif method_name == 'PhasedXPowGate':
             self._handle_phased_xpow_gate_cirq(args, call_node)
+        elif method_name == 'ControlledGate':
+            self._handle_controlled_gate_cirq(args)
         elif method_name == 'measure':
             self._handle_measurement_cirq(args)
         elif method_name == 'reset':
@@ -305,6 +308,7 @@ class CirqASTVisitor(ast.NodeVisitor):
         else:
             # if VERBOSE:
             vprint(f"[CirqASTVisitor] Unsupported gate: {method_name}")
+            self.unsupported_operations.add(method_name)
 
     def _handle_single_qubit_gate_cirq(self, method_name: str, args: List[ast.expr]) -> None:
         """Handle single-qubit gates in Cirq."""
@@ -344,6 +348,112 @@ class CirqASTVisitor(ast.NodeVisitor):
             ))
             if VERBOSE:
                 vprint(f"[CirqASTVisitor] Added rotation {gate_name}({param}) on q[{qubit}]")
+
+    def _handle_controlled_gate_cirq(self, args: List[ast.expr]) -> None:
+        """Handle cirq.ControlledGate(...)(...) constructs."""
+        if len(args) < 3:
+            self.unsupported_operations.add("ControlledGate")
+            return
+
+        base_info = self._extract_controlled_gate_base(args[0])
+        if base_info is None:
+            self.unsupported_operations.add("ControlledGate")
+            return
+
+        qubit_exprs = args[1:]
+        outer_controls = len(qubit_exprs) - base_info['qubit_count']
+        if outer_controls < 0:
+            self.unsupported_operations.add("ControlledGate")
+            return
+
+        total_controls = base_info['control_count'] + outer_controls
+        gate_name, parameters = self._map_controlled_gate_to_qasm(base_info, total_controls)
+        if gate_name is None:
+            self.unsupported_operations.add("ControlledGate")
+            return
+
+        qubits = [self._extract_qubit_index(q) for q in qubit_exprs]
+        self.operations.append(GateNode(
+            name=gate_name,
+            qubits=qubits,
+            parameters=parameters or []
+        ))
+
+    def _extract_controlled_gate_base(self, expr: ast.expr) -> Optional[dict]:
+        """Extract base gate info from a ControlledGate expression."""
+        if isinstance(expr, ast.Call) and isinstance(expr.func, ast.Attribute) and isinstance(expr.func.value, ast.Name) and expr.func.value.id == 'cirq':
+            attr = expr.func.attr
+            if attr in ['rx', 'ry', 'rz']:
+                if not expr.args:
+                    return None
+                param = self._extract_parameter(expr.args[0])
+                return {'kind': attr, 'params': [param], 'control_count': 0, 'qubit_count': 1}
+            if attr == 'ZPowGate':
+                exponent = None
+                if expr.args:
+                    exponent = self._extract_parameter(expr.args[0])
+                for kw in expr.keywords:
+                    if kw.arg == 'exponent':
+                        exponent = self._extract_parameter(kw.value)
+                if exponent is None:
+                    return None
+                return {'kind': 'phase', 'params': [exponent], 'control_count': 0, 'qubit_count': 1}
+            if attr == 'ControlledGate':
+                if not expr.args:
+                    return None
+                nested = self._extract_controlled_gate_base(expr.args[0])
+                if nested is None:
+                    return None
+                nested['control_count'] += 1
+                nested['qubit_count'] += 1
+                return nested
+
+        if isinstance(expr, ast.Attribute) and isinstance(expr.value, ast.Name) and expr.value.id == 'cirq':
+            attr = expr.attr.lower()
+            if attr in ['x', 'y', 'z', 'h']:
+                return {'kind': attr, 'params': [], 'control_count': 0, 'qubit_count': 1}
+
+        return None
+
+    def _map_controlled_gate_to_qasm(self, info: dict, total_controls: int) -> tuple[Optional[str], Optional[List[Any]]]:
+        """Map base gate info + control count to QASM gate/parameters."""
+        kind = info['kind']
+        params = info['params']
+
+        if kind == 'y':
+            if total_controls == 1:
+                return 'cy', []
+        elif kind == 'h':
+            if total_controls == 1:
+                return 'ch', []
+        elif kind == 'x':
+            if total_controls == 1:
+                return 'cx', []
+        elif kind == 'z':
+            if total_controls == 1:
+                return 'cz', []
+            if total_controls == 2:
+                return 'ccz', []
+        elif kind == 'rx':
+            if total_controls == 1:
+                return 'crx', params
+        elif kind == 'ry':
+            if total_controls == 1:
+                return 'cry', params
+        elif kind == 'rz':
+            if total_controls == 1:
+                return 'crz', params
+        elif kind == 'phase':
+            if total_controls == 1 and params:
+                return 'cp', [self._parameter_times_pi(params[0])]
+
+        return None, None
+
+    def _parameter_times_pi(self, param):
+        import numpy as np
+        if isinstance(param, (int, float)):
+            return param * np.pi
+        return f"({param})*PI"
 
     def _handle_zpow_gate_cirq(self, args: List[ast.expr], call_node: ast.Call) -> None:
         """Handle ZPowGate in Cirq."""
@@ -604,6 +714,10 @@ class CirqASTParser:
             vprint(f"[CirqASTParser] Found operations: {len(self.visitor.operations)}")
             vprint(f"[CirqASTParser] Qubits: {self.visitor.qubit_counter}, Clbits: {self.visitor.qubit_counter}")
             vprint(f"[CirqASTParser] Parameters: {list(self.visitor.parameters)}")
+
+        if self.visitor.unsupported_operations:
+            unsupported = ", ".join(sorted(self.visitor.unsupported_operations))
+            raise ValueError(f"Unsupported Cirq operations encountered: {unsupported}")
 
         # Validate that we found a circuit
         if not self.visitor.operations:

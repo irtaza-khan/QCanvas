@@ -350,6 +350,11 @@ class CirqToQASM3Converter:
         gate_name = type(gate).__name__
         modifiers, actual_exponent = self._extract_gate_properties(gate)
 
+        # Handle special structured gates before generic dispatch
+        if gate_name == 'ControlledGate':
+            self._handle_controlled_gate(builder, gate, qubits_str)
+            return
+
         # Handle different gate types
         self._handle_standard_gates(builder, gate_name, qubits_str, modifiers, actual_exponent)
         self._handle_parameterized_gates(builder, gate_name, qubits_str, modifiers, actual_exponent, gate)
@@ -492,6 +497,100 @@ class CirqToQASM3Converter:
             builder.add_barrier(qubits_str if qubits_str else None)
         else:
             builder.add_comment(f"Unsupported gate: {type(gate).__name__}")
+
+    def _handle_controlled_gate(self, builder: QASM3Builder, gate, qubits_str: list):
+        """Handle Cirq ControlledGate instances, mapping to OpenQASM controlled gates."""
+        import numpy as np
+
+        base_gate, total_controls = self._flatten_controlled_gate(gate)
+        if base_gate is None:
+            builder.add_comment("Unsupported controlled gate structure")
+            return
+
+        mapping = self._map_controlled_base_gate(builder, base_gate, total_controls)
+        if mapping is None:
+            builder.add_comment(f"Unsupported controlled gate: {type(base_gate).__name__}")
+            return
+
+        gate_name, params = mapping
+        builder.apply_gate(gate_name, qubits_str, parameters=params if params else None)
+
+    def _flatten_controlled_gate(self, gate):
+        """Flatten nested ControlledGate structures."""
+        total_controls = getattr(gate, 'num_controls', lambda: 1)()
+        sub_gate = getattr(gate, 'sub_gate', None)
+
+        while sub_gate is not None and hasattr(sub_gate, 'sub_gate') and hasattr(sub_gate, 'num_controls'):
+            total_controls += sub_gate.num_controls()
+            sub_gate = getattr(sub_gate, 'sub_gate', None)
+
+        return sub_gate, total_controls
+
+    def _map_controlled_base_gate(self, builder: QASM3Builder, base_gate, total_controls: int):
+        """Map a base gate to its controlled OpenQASM counterpart."""
+        import numpy as np
+
+        gate_type = type(base_gate).__name__
+        exponent = getattr(base_gate, 'exponent', None)
+
+        if gate_type in ['YPowGate', '_PauliY', '_Y']:
+            if total_controls == 1 and self._is_full_turn(exponent):
+                return ('cy', [])
+            angle = self._angle_from_exponent(exponent)
+            if angle is not None and total_controls == 1:
+                return ('cry', [builder.format_parameter(angle)])
+
+        if gate_type in ['HPowGate', '_H']:
+            if total_controls == 1 and self._is_full_turn(exponent):
+                return ('ch', [])
+
+        if gate_type in ['XPowGate', '_PauliX', '_X']:
+            if total_controls == 1 and self._is_full_turn(exponent):
+                return ('cx', [])
+            angle = self._angle_from_exponent(exponent)
+            if angle is not None and total_controls == 1:
+                return ('crx', [builder.format_parameter(angle)])
+
+        if gate_type in ['ZPowGate', '_PauliZ', '_Z']:
+            if total_controls == 1 and self._is_full_turn(exponent):
+                return ('cz', [])
+            if total_controls == 2 and self._is_full_turn(exponent):
+                return ('ccz', [])
+            angle = self._angle_from_exponent(exponent)
+            if angle is not None and total_controls == 1:
+                return ('cp', [builder.format_parameter(angle)])
+
+        if gate_type in ['Rx', 'Ry', 'Rz']:
+            angle_attr = getattr(base_gate, 'rads', None)
+            if angle_attr is None:
+                angle_attr = getattr(base_gate, '_rads', None)
+            if angle_attr is not None and total_controls == 1:
+                qasm_gate = {'Rx': 'crx', 'Ry': 'cry', 'Rz': 'crz'}.get(gate_type)
+                if qasm_gate:
+                    return (qasm_gate, [builder.format_parameter(angle_attr)])
+
+        if gate_type in ['RXPowGate', 'RYPowGate', 'RZPowGate']:
+            angle = self._angle_from_exponent(exponent)
+            name_map = {
+                'RXPowGate': 'crx',
+                'RYPowGate': 'cry',
+                'RZPowGate': 'crz',
+            }
+            if angle is not None and total_controls == 1 and gate_type in name_map:
+                return (name_map[gate_type], [builder.format_parameter(angle)])
+
+        return None
+
+    def _angle_from_exponent(self, exponent):
+        import numpy as np
+        if exponent is None:
+            return None
+        return exponent * np.pi
+
+    def _is_full_turn(self, exponent) -> bool:
+        if exponent is None:
+            return False
+        return abs(abs(exponent) - 1.0) < 1e-9
         
     def _analyze_circuit_ast(self, circuit_ast: CircuitAST) -> ConversionStats:
         try:
@@ -541,7 +640,7 @@ class CirqToQASM3Converter:
 
     def _is_two_qubit_gate(self, gate_name: str) -> bool:
         """Check if gate is a supported two-qubit gate."""
-        return gate_name in ['cx', 'cz', 'swap']
+        return gate_name in ['cx', 'cz', 'swap', 'cy', 'ch', 'crx', 'cry', 'crz', 'cp']
 
     def _is_three_qubit_gate(self, gate_name: str) -> bool:
         """Check if gate is a supported three-qubit gate."""
@@ -549,14 +648,14 @@ class CirqToQASM3Converter:
 
     def _is_parameterized_gate(self, gate_name: str) -> bool:
         """Check if gate is a parameterized rotation gate."""
-        return gate_name in ['rx', 'ry', 'rz']
+        return gate_name in ['rx', 'ry', 'rz', 'crx', 'cry', 'crz', 'cp']
 
     def _add_parameterized_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
                                operation: GateNode, modifiers):
         """Add a parameterized gate to the QASM builder."""
         if operation.parameters:
-            param = builder.format_parameter(operation.parameters[0])
-            builder.apply_gate(gate_name, qubits_str, parameters=[param], modifiers=modifiers)
+            formatted_params = [builder.format_parameter(p) for p in operation.parameters]
+            builder.apply_gate(gate_name, qubits_str, parameters=formatted_params, modifiers=modifiers)
         else:
             builder.add_comment(f"Parameterized gate {gate_name} missing parameter")
 

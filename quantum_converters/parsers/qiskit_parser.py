@@ -181,6 +181,8 @@ class QiskitASTVisitor(ast.NodeVisitor):
             self._handle_inverse_gate(method_name, args)
         elif method_name in ['ccx']:
             self._handle_three_qubit_gate(method_name, args)
+        elif method_name in ['cp', 'crx', 'cry', 'crz', 'cu']:
+            self._handle_controlled_two_qubit_gate(method_name, args)
         elif method_name == 'u':
             self._handle_universal_gate(args)
         elif method_name == 'measure':
@@ -209,6 +211,31 @@ class QiskitASTVisitor(ast.NodeVisitor):
             self.operations.append(GateNode(name=gate_name, qubits=[qubit1, qubit2]))
             if VERBOSE:
                 vprint(f"[QiskitASTVisitor] Added two-qubit gate {gate_name} on q[{qubit1}], q[{qubit2}]")
+
+    def _handle_controlled_two_qubit_gate(self, method_name: str, args: List[ast.expr]) -> None:
+        """Handle controlled parameterized two-qubit gates like cp, crx, cry, crz, cu."""
+        param_counts = {
+            'cp': 1,
+            'crx': 1,
+            'cry': 1,
+            'crz': 1,
+            'cu': 4,
+        }
+        required_params = param_counts.get(method_name, 0)
+        total_required = required_params + 2  # parameters + two qubit indices
+        if len(args) < total_required:
+            return
+
+        params = [self._extract_parameter(arg) for arg in args[:required_params]]
+        control = self._extract_qubit_index(args[required_params])
+        target = self._extract_qubit_index(args[required_params + 1])
+        self.operations.append(GateNode(
+            name=method_name,
+            qubits=[control, target],
+            parameters=params
+        ))
+        if VERBOSE:
+            vprint(f"[QiskitASTVisitor] Added {method_name} gate with params {params} on q[{control}], q[{target}]")
 
     def _handle_parameterized_single_qubit_gate(self, method_name: str, args: List[ast.expr]) -> None:
         """Handle parameterized single-qubit gates."""
