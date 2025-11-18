@@ -47,11 +47,11 @@ class TestCommentsAndVersionControl:
         assert "/* This is a multi-line comment */" in code
         
     def test_version_string(self):
-        """Test OPENQASM 3.0 version string"""
+        """Test OPENQASM 3 version string"""
         builder = QASM3Builder()
         builder.initialize_header()
         code = builder.get_code()
-        assert code.startswith("OPENQASM 3.0;")
+        assert code.startswith("OPENQASM 3;")
         
     def test_include_statements(self):
         """Test include statements"""
@@ -292,7 +292,7 @@ class TestBuiltInQuantumInstructions:
         builder.declare_bit_register("c", 1)
         builder.add_measurement("q[0]", "c[0]")
         code = builder.get_code()
-        assert "measure q[0] -> c[0];" in code
+        assert "c[0] = measure q[0];" in code
         
     def test_barrier_instruction(self):
         """Test barrier instruction"""

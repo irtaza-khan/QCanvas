@@ -38,18 +38,15 @@ def get_circuit():
         assert result is not None
         assert result.qasm_code is not None
         
-        # Check for expected QASM 3.0 elements
+        # Check for expected QASM 3 elements
         qasm = result.qasm_code
-        assert "OPENQASM 3.0;" in qasm
+        assert "OPENQASM 3;" in qasm
         assert 'include "stdgates.inc";' in qasm
         assert "qubit[2] q;" in qasm
         assert "h q[0];" in qasm
         assert "cx q[0], q[1];" in qasm
         
-        # Simple circuit - constants are included by default for consistency
-        # This ensures all generated QASM has the same structure
-        assert "const float PI" in qasm
-        assert "const float E" in qasm
+        # Basic circuits no longer inject mathematical constants automatically
         
     def test_parameterized_gates(self):
         """Test Qiskit circuit with parameterized gates"""
@@ -89,12 +86,8 @@ def get_circuit():
         
         qasm = result.qasm_code
         assert "bit[2] c;" in qasm
-        assert "measure q[0] -> c[0];" in qasm
-        assert "measure q[1] -> c[1];" in qasm
-        
-        # Circuit with measurements has advanced features - should have constants
-        assert "const float PI" in qasm
-        assert "const float E" in qasm
+        assert "c[0] = measure q[0];" in qasm
+        assert "c[1] = measure q[1];" in qasm
         
     def test_inverse_modifier(self):
         """Test inverse gate modifier"""
@@ -193,6 +186,31 @@ def get_circuit():
         qasm = result.qasm_code
         assert "u(" in qasm
         assert "q[0];" in qasm
+
+    def test_controlled_parameterized_gates(self):
+        """Test controlled parameterized gates including CU"""
+        source = '''
+from qiskit import QuantumCircuit
+import numpy as np
+
+def get_circuit():
+    qc = QuantumCircuit(2)
+    qc.cp(np.pi/4, 0, 1)
+    qc.crx(np.pi/3, 0, 1)
+    qc.cry(np.pi/5, 0, 1)
+    qc.crz(np.pi/6, 0, 1)
+    qc.cu(1.0, 0.5, 0.25, 0.1, 0, 1)
+    return qc
+'''
+        converter = QiskitToQASM3Converter()
+        result = converter.convert(source)
+
+        qasm = result.qasm_code
+        assert "cp(" in qasm
+        assert "crx(" in qasm
+        assert "cry(" in qasm
+        assert "crz(" in qasm
+        assert "cu(" in qasm
 
 
 # Run tests if executed directly

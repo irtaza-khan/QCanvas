@@ -43,17 +43,15 @@ def get_circuit():
         assert result is not None
         assert result.qasm_code is not None
         
-        # Check for expected QASM 3.0 elements
+        # Check for expected QASM 3 elements
         qasm = result.qasm_code
-        assert "OPENQASM 3.0;" in qasm
+        assert "OPENQASM 3;" in qasm
         assert 'include "stdgates.inc";' in qasm
         assert "qubit[2] q;" in qasm
         assert "h q[0];" in qasm
         assert "cx q[0], q[1];" in qasm
         
-        # Check for constants
-        assert "const float PI" in qasm
-        assert "const float E" in qasm
+        # Constants are emitted only when required by expressions
         
     def test_parameterized_gates(self):
         """Test PennyLane circuit with parameterized gates"""

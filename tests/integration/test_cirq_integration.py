@@ -40,17 +40,15 @@ def get_circuit():
         assert result is not None
         assert result.qasm_code is not None
         
-        # Check for expected QASM 3.0 elements
+        # Check for expected QASM 3 elements
         qasm = result.qasm_code
-        assert "OPENQASM 3.0;" in qasm
+        assert "OPENQASM 3;" in qasm
         assert 'include "stdgates.inc";' in qasm
         assert "qubit[2] q;" in qasm
         assert "h q[0];" in qasm
         assert "cx q[0], q[1];" in qasm
         
-        # Check for constants
-        assert "const float PI" in qasm
-        assert "const float E" in qasm
+        # Constants are only emitted when required by expressions
         
     def test_parameterized_gates(self):
         """Test Cirq circuit with parameterized gates"""
@@ -95,8 +93,8 @@ def get_circuit():
         
         qasm = result.qasm_code
         assert "bit[2] c;" in qasm
-        assert "measure q[0] -> c[0];" in qasm
-        assert "measure q[1] -> c[1];" in qasm
+        assert "c[0] = measure q[0];" in qasm
+        assert "c[1] = measure q[1];" in qasm
         
         # Should have control flow examples
         assert "if (c[0] == 1)" in qasm
@@ -190,6 +188,37 @@ def get_circuit():
         # Toffoli and Fredkin should be converted
         assert "ccx" in qasm.lower() or "toffoli" in qasm.lower()
         assert "cswap" in qasm.lower() or "fredkin" in qasm.lower()
+
+    def test_controlled_parameterized_gates(self):
+        """Test Cirq controlled parameterized gates from Iteration II"""
+        source = '''
+import cirq
+import numpy as np
+
+def get_circuit():
+    q0, q1, q2 = cirq.LineQubit.range(3)
+    circuit = cirq.Circuit(
+        cirq.ControlledGate(cirq.Y)(q0, q1),
+        cirq.ControlledGate(cirq.H)(q0, q1),
+        cirq.ControlledGate(cirq.rx(np.pi/3))(q0, q1),
+        cirq.ControlledGate(cirq.ry(np.pi/4))(q0, q1),
+        cirq.ControlledGate(cirq.rz(np.pi/6))(q0, q1),
+        cirq.ControlledGate(cirq.ZPowGate(exponent=0.25))(q0, q1),
+        cirq.ControlledGate(cirq.ControlledGate(cirq.Z))(q0, q1, q2)
+    )
+    return circuit
+'''
+        converter = CirqToQASM3Converter()
+        result = converter.convert(source)
+
+        qasm = result.qasm_code
+        assert "cy q[0], q[1];" in qasm
+        assert "ch q[0], q[1];" in qasm
+        assert "crx(" in qasm
+        assert "cry(" in qasm
+        assert "crz(" in qasm
+        assert "cp(" in qasm
+        assert "ccz q[0], q[1], q[2];" in qasm
 
 
 # Run tests if executed directly

@@ -61,18 +61,18 @@ def api_client():
 def sample_qasm_programs():
     """Provide sample OpenQASM programs for testing."""
     return {
-        "simple": '''OPENQASM 3.0;
+        "simple": '''OPENQASM 3;
 qubit q;
 h q;''',
         
-        "bell_state": '''OPENQASM 3.0;
+        "bell_state": '''OPENQASM 3;
 qubit[2] q;
 h q[0];
 cx q[0], q[1];
-measure q[0] -> c[0];
-measure q[1] -> c[1];''',
+c[0] = measure q[0];
+c[1] = measure q[1];''',
         
-        "qft": '''OPENQASM 3.0;
+        "qft": '''OPENQASM 3;
 qubit[3] q;
 bit[3] c;
 
@@ -87,10 +87,10 @@ for (int i in range(3)) {
 
 // Measure all qubits
 for (int i in range(3)) {
-    measure q[i] -> c[i];
+    c[i] = measure q[i];
 }''',
         
-        "grover": '''OPENQASM 3.0;
+        "grover": '''OPENQASM 3;
 qubit[3] q;
 bit[3] c;
 int n = 3;
@@ -124,7 +124,7 @@ for (int iteration in range(int(sqrt(2**n)))) {
 
 // Measure
 for (int i in range(n)) {
-    measure q[i] -> c[i];
+    c[i] = measure q[i];
 }'''
     }
 
@@ -165,14 +165,14 @@ def sample_circuits():
 def test_errors():
     """Provide test error cases."""
     return {
-        "syntax_error": '''OPENQASM 3.0;
+        "syntax_error": '''OPENQASM 3;
 qubit q;
 h q  // Missing semicolon''',
         
-        "type_error": '''OPENQASM 3.0;
+        "type_error": '''OPENQASM 3;
 int x = true;  // Type mismatch''',
         
-        "undefined_variable": '''OPENQASM 3.0;
+        "undefined_variable": '''OPENQASM 3;
 int x = undefined_var;''',
         
         "missing_version": '''include "stdgates.inc";
