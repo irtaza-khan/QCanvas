@@ -222,6 +222,23 @@ class ValidationError(QCanvasException):
 - Maintain test circuit examples for each framework
 - Use parameterized tests for multiple scenarios
 
+## OpenQASM 3.0 Implementation Status
+
+### Iteration I Features ✅
+- All standard gates and modifiers (ctrl@, inv@)
+- Complete type system (qubit, bit, int, uint, float, angle, bool)
+- Classical control flow (if/else, for loops)
+- Mathematical operations and functions
+- Input/Output directives
+
+### Iteration II Features ✅ (November 2025)
+- Advanced gate modifiers (negctrl@, ctrl(n)@, pow(k)@)
+- Complex type support
+- Advanced control flow (while, break, continue)
+- Bitwise and shift operators
+- Subroutines and functions
+- PennyLane Iteration II gates (CY, CH, CRX, CRY, CRZ, CP, CSWAP, CCZ, GlobalPhase)
+
 ## Out-of-Scope (per project scope)
 - Pulse-level control/OpenPulse and calibration blocks
 - Circuit timing constructs (delay, duration, box)

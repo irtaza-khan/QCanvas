@@ -28,6 +28,20 @@ QCanvas is a comprehensive quantum computing platform that provides framework co
     - Error reporting with detailed messages
     - Framework-specific validation rules
 
+1.4 **OpenQASM 3.0 Iteration II Support** ✅ (November 2025)
+    - **PennyLane Iteration II Gates**: Full support for CY, CH, CRX, CRY, CRZ, CP, CSWAP, CCZ, GlobalPhase
+    - **Advanced Gate Modifiers**:
+      - Negative control modifier (negctrl@, negctrl(n)@)
+      - Multi-control modifier (ctrl(n)@)
+      - Power modifier (pow(k)@) for fractional gates
+    - **Iteration II Language Features**:
+      - Complex type support (complex variables)
+      - Advanced control flow (while loops, break, continue statements)
+      - Bitwise operators (&, |, ^, ~)
+      - Shift operators (<<, >>)
+      - Subroutines and functions with return statements
+    - All features fully tested and OpenQASM 3.0 compliant
+
 ### 2. Quantum Simulation Engine (QSim)
 
 2.1 **Multiple Simulation Backends**
