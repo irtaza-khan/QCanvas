@@ -409,7 +409,7 @@ class CirqToQASM3Converter:
 
         if gate_name in ['XPowGate', 'YPowGate', 'ZPowGate'] and actual_exponent is not None and abs(actual_exponent) != 1:
             self._apply_rotation_gate(builder, gate_name, qubits_str, actual_exponent, modifiers)
-        elif gate_name in ['Rx', 'Ry', 'Rz']:
+        elif gate_name.lower() in ['rx', 'ry', 'rz']:
             self._apply_direct_rotation_gate(builder, gate_name, qubits_str, gate, modifiers)
         elif gate_name == 'PhasedXPowGate':
             self._apply_phased_x_gate(builder, qubits_str, actual_exponent, gate, modifiers)
