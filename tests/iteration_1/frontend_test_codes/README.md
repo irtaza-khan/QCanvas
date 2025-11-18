@@ -155,9 +155,9 @@ my_gate(PI/2) q[0], q[1];
 
 ### 12. **Built-in Quantum Instructions**
 ```qasm
-reset q[0];            // Reset
-measure q[0] -> c[0];  // Measurement
-barrier q[0], q[1];    // Barrier
+reset q[0];             // Reset
+c[0] = measure q[0];    // Measurement
+barrier q[0], q[1];     // Barrier
 ```
 
 ### 13. **Classical Operations**

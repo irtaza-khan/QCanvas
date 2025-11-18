@@ -73,7 +73,7 @@
 | Instruction | Status | Notes |
 |-------------|--------|-------|
 | Reset Instruction | ✅ Implemented | reset q[i] |
-| Measurement Instruction | ✅ Implemented | measure q[i] -> c[i] |
+| Measurement Instruction | ✅ Implemented | c[i] = measure q[i]; |
 | Barrier Instruction | ✅ Implemented | barrier q[i], q[j] |
 
 ### 5. Classical Instructions ✅ COMPLETE (100%)
