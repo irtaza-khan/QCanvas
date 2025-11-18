@@ -117,8 +117,8 @@ print(qft_circuit)`,
   },
   {
     name: 'OpenQASM Circuit',
-    description: 'Basic OpenQASM 3.0 circuit',
-    content: `OPENQASM 3.0;
+    description: 'Basic OpenQASM 3 circuit',
+    content: `OPENQASM 3;
 include "stdgates.inc";
 
 qubit[2] q;
@@ -126,7 +126,7 @@ bit[2] c;
 
 h q[0];
 cx q[0], q[1];
-measure q -> c;`,
+c = measure q;`,
     language: 'qasm',
     icon: <FileIcon className="w-4 h-4 text-purple-400" />
   }

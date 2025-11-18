@@ -8,7 +8,7 @@ const mockFiles: File[] = [
     id: 'file-1',
     name: 'main.qasm',
     content: `// Bell State Creation
-OPENQASM 3.0;
+OPENQASM 3;
 include "stdgates.inc";
 
 qubit[2] q;

@@ -123,7 +123,7 @@ export const useFileStore = create<FileStore>()(
       compileOptions: {
         inputLanguage: 'qasm',
         resultFormat: 'json',
-        qasmVersion: '3.0',
+        qasmVersion: '3',
         style: 'classic',
       },
 
@@ -338,8 +338,8 @@ export const useFileStore = create<FileStore>()(
           return active.content
         }
 
-        // Mock conversion to OpenQASM 3.0
-        const header = `OPENQASM 3.0;\ninclude "stdgates.inc";\n\n// Converted from ${active.language.toUpperCase()} by QCanvas`;
+        // Mock conversion to OpenQASM 3
+        const header = `OPENQASM 3;\ninclude "stdgates.inc";\n\n// Converted from ${active.language.toUpperCase()} by QCanvas`;
         // Provide a minimal Bell-like placeholder when converting
         const body = [
           'qubit[2] q;',
