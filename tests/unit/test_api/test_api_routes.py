@@ -33,7 +33,7 @@ class TestAPIRoutes(unittest.TestCase):
     def test_compile_endpoint(self):
         """Test OpenQASM compilation endpoint."""
         payload = {
-            "source": "OPENQASM 3;\nqubit q;\nh q;",
+            "source": "OPENQASM 3.0;\nqubit q;\nh q;",
             "backend": "statevector"
         }
         
@@ -46,7 +46,7 @@ class TestAPIRoutes(unittest.TestCase):
     def test_compile_endpoint_with_errors(self):
         """Test compilation endpoint with errors."""
         payload = {
-            "source": "OPENQASM 3;\nint x = true;",  # Type error
+            "source": "OPENQASM 3.0;\nint x = true;",  # Type error
             "backend": "statevector"
         }
         
@@ -61,7 +61,7 @@ class TestAPIRoutes(unittest.TestCase):
     def test_convert_endpoint(self):
         """Test framework conversion endpoint."""
         payload = {
-            "source": "OPENQASM 3;\nqubit q;\nh q;",
+            "source": "OPENQASM 3.0;\nqubit q;\nh q;",
             "target_framework": "qiskit"
         }
         
@@ -73,7 +73,7 @@ class TestAPIRoutes(unittest.TestCase):
     def test_simulate_endpoint(self):
         """Test simulation endpoint."""
         payload = {
-            "source": "OPENQASM 3;\nqubit q;\nh q;\nc = measure q;",
+            "source": "OPENQASM 3.0;\nqubit q;\nh q;\nc = measure q;",
             "backend": "statevector",
             "shots": 1000
         }
@@ -88,7 +88,7 @@ class TestAPIRoutes(unittest.TestCase):
     def test_validate_endpoint(self):
         """Test validation endpoint."""
         payload = {
-            "source": "OPENQASM 3;\nqubit q;\nh q;"
+            "source": "OPENQASM 3.0;\nqubit q;\nh q;"
         }
         
         response = self.client.post("/api/validate", json=payload)
@@ -100,7 +100,7 @@ class TestAPIRoutes(unittest.TestCase):
     def test_validate_endpoint_with_errors(self):
         """Test validation endpoint with errors."""
         payload = {
-            "source": "OPENQASM 3;\nint x = true;"  # Type error
+            "source": "OPENQASM 3.0;\nint x = true;"  # Type error
         }
         
         response = self.client.post("/api/validate", json=payload)
@@ -146,7 +146,7 @@ class TestAPIRoutes(unittest.TestCase):
     def test_large_program_compilation(self):
         """Test compilation of large program."""
         # Generate a large OpenQASM program
-        source = "OPENQASM 3;\n"
+        source = "OPENQASM 3.0;\n"
         source += "qubit[20] q;\n"
         source += "bit[20] c;\n"
         

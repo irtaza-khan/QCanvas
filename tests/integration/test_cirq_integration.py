@@ -42,7 +42,7 @@ def get_circuit():
         
         # Check for expected QASM 3 elements
         qasm = result.qasm_code
-        assert "OPENQASM 3;" in qasm
+        assert "OPENQASM 3.0;" in qasm
         assert 'include "stdgates.inc";' in qasm
         assert "qubit[2] q;" in qasm
         assert "h q[0];" in qasm
