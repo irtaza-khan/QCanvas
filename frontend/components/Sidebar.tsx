@@ -118,7 +118,7 @@ print(qft_circuit)`,
   {
     name: 'OpenQASM Circuit',
     description: 'Basic OpenQASM 3 circuit',
-    content: `OPENQASM 3;
+    content: `OPENQASM 3.0;
 include "stdgates.inc";
 
 qubit[2] q;

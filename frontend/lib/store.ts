@@ -339,7 +339,7 @@ export const useFileStore = create<FileStore>()(
         }
 
         // Mock conversion to OpenQASM 3
-        const header = `OPENQASM 3;\ninclude "stdgates.inc";\n\n// Converted from ${active.language.toUpperCase()} by QCanvas`;
+        const header = `OPENQASM 3.0;\ninclude "stdgates.inc";\n\n// Converted from ${active.language.toUpperCase()} by QCanvas`;
         // Provide a minimal Bell-like placeholder when converting
         const body = [
           'qubit[2] q;',
