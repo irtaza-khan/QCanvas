@@ -1,16 +1,26 @@
-# TODO: Add Python dependencies
-# Quantum Computing Framework Dependencies
-cirq>=1.2.0
-qiskit>=0.45.0
-pennylane>=0.32.0
+# QCanvas & QSim Combined Requirements
+# ====================================
 
-# Backend Framework Dependencies
+# Quantum Computing Framework Dependencies
+# Updated to match QSim requirements (using >= for flexibility)
+cirq>=1.5.0
+qiskit>=2.1.2
+pennylane>=0.42.3
+qiskit-aer>=0.17.2
+
+# QSim-Specific Dependencies
+antlr4-python3-runtime>=4.13.2
+pennylane-lightning>=0.42.0
+openqasm3>=1.0.1
+pyqasm>=0.5.0
+
+# Backend Framework Dependencies (QCanvas)
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 websockets>=12.0
 pydantic>=2.5.0
 
-# Database Dependencies
+# Database Dependencies (QCanvas)
 sqlalchemy>=2.0.0
 alembic>=1.13.0
 
@@ -28,5 +38,5 @@ black>=23.0.0
 flake8>=6.0.0
 mypy>=1.7.0
 
-# Optional: For enhanced quantum simulation
-qiskit-aer>=0.13.0
+# Install QSim as editable package (must be after dependencies)
+-e ./quantum_simulator

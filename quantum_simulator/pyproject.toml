@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qsim"
+version = "0.1.0"
+description = "A backend quantum simulation framework"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+  {name = "Aneeq Malik", email = "i221167@nu.edu.pk"}, 
+  {name = "Abeer Noor", email = "i221122@nu.edu.pk"}, 
+  {name = "Abullah Mehmood", email = "i220978@nu.edu.pk"}, 
+]
+
+# Runtime dependencies 
+dependencies = [
+    "antlr4-python3-runtime==4.13.2",
+    "pennylane==0.42.3",
+    "pennylane_lightning==0.42.0",
+    "openqasm3==1.0.1",
+    "pyqasm==0.5.0",
+    "cirq==1.5.0",
+    "qiskit==2.1.2",
+    "qiskit-aer==0.17.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["qsim*"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.4.2",
+]

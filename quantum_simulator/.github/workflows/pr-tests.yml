@@ -1,0 +1,77 @@
+name: PR Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 pytest
+
+      # --------------------------
+      # Flake8 linting (only on visitors/* branches)
+      # --------------------------
+      - name: Run Flake8 on Python files
+        run: |
+          # Fetch the target branch to compare
+          git fetch origin ${{ github.base_ref }}
+      
+          # Default: all changed Python files in PR
+          FILES=$(git diff --name-only --diff-filter=ACM origin/${{ github.base_ref }}...HEAD | grep '\.py$' || true)
+      
+          # Special handling for visitors subbranches
+          if [[ "${GITHUB_HEAD_REF}" == "visitors/cirq"* ]]; then
+            FILES="qsim/visitors/cirq_visitor.py"
+          elif [[ "${GITHUB_HEAD_REF}" == "visitors/pennylane"* ]]; then
+            FILES="qsim/visitors/pennylane_visitor.py"
+          elif [[ "${GITHUB_HEAD_REF}" == "visitors/qiskit"* ]]; then
+            FILES="qsim/visitors/qiskit_visitor.py"
+          fi
+      
+          if [ -n "$FILES" ]; then
+            echo "Linting Python files:"
+            echo "$FILES"
+      
+            # Strict checks for syntax errors / likely bugs
+            flake8 $FILES --count --select=E9,F63,F7,F82 --show-source --statistics
+      
+            # Style and complexity checks (won’t fail workflow)
+            flake8 $FILES --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
+          else
+            echo "No Python files to lint."
+          fi
+      
+
+      # --------------------------
+      # Conditional framework tests
+      # --------------------------
+      - name: Run tests for PennyLane
+        if: startsWith(github.head_ref, 'visitors/pennylane')
+        run: pytest tests/pennylane_test.py
+
+      - name: Run tests for Qiskit
+        if: startsWith(github.head_ref, 'visitors/qiskit')
+        run: pytest tests/qiskit_test.py
+
+      - name: Run tests for Cirq
+        if: startsWith(github.head_ref, 'visitors/cirq')
+        run: pytest tests/cirq_test.py
