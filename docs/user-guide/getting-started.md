@@ -12,7 +12,9 @@ QCanvas is a **Quantum Unified Simulator** that provides:
 - **Real-time Simulation**: Execute quantum circuits with multiple backends
 - **Interactive Visualization**: Visualize quantum states and measurement results
 - **Educational Platform**: Learn quantum computing through interactive examples
-- **Web-based Interface**: Modern, responsive web application
+- **Advanced Web IDE**: Monaco editor with syntax highlighting and multi-file support
+- **Authentication System**: Persistent login with demo accounts
+- **Keyboard Shortcuts**: Comprehensive shortcut system for power users
 
 ## Quick Start
 
@@ -21,6 +23,24 @@ QCanvas is a **Quantum Unified Simulator** that provides:
 **Web Application**: Visit `http://localhost:3000` (after starting the application)
 
 **API Documentation**: Visit `http://localhost:8000/docs` for interactive API documentation
+
+### 2. Authentication
+
+QCanvas supports both full user accounts and demo access:
+
+- **Demo Account**: Click "Use Demo Account" on the login page for instant access
+- **Full Account**: Register with email and password (any valid email works for demo purposes)
+- **Persistent Login**: Once logged in, you'll stay authenticated until you explicitly log out
+
+### 3. Try Examples
+
+QCanvas includes pre-built examples to help you learn:
+
+- **Bell State Preparation** (Beginner) - Basic entanglement
+- **Quantum Teleportation** (Intermediate) - Full teleportation protocol
+- **VQE Algorithm** (Advanced) - Variational quantum eigensolver
+
+Click any example card on the homepage to load it directly into the editor!
 
 ### 2. Your First Circuit Conversion
 
@@ -44,6 +64,32 @@ circuit = cirq.Circuit(
 4. **Select Target Framework**: Choose "Qiskit" from the dropdown
 5. **Click Convert**: Watch the real-time conversion process
 6. **View Results**: See the converted Qiskit code and intermediate OpenQASM 3.0
+
+### 4. Keyboard Shortcuts
+
+QCanvas supports comprehensive keyboard shortcuts for power users:
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd + S` | Save current file |
+| `Ctrl/Cmd + N` | Create new file |
+| `Ctrl/Cmd + B` | Toggle sidebar |
+| `Ctrl/Cmd + J` | Toggle results panel |
+| `Ctrl/Cmd + F` | Find in code |
+| `Ctrl/Cmd + H` | Find and replace |
+| `Ctrl/Cmd + Shift + K` | Toggle theme |
+| `Ctrl/Cmd + Shift + R` | Run circuit |
+| `Ctrl/Cmd + Tab` | Next file |
+| `Ctrl/Cmd + Shift + Tab` | Previous file |
+
+### 5. Settings & Preferences
+
+Customize your QCanvas experience:
+
+- **Theme**: Choose between Dark and Light modes
+- **Auto-save**: Automatically save your work
+- **Format on save**: Auto-format code when saving
+- **Simulation Settings**: Configure backend and shots for quantum execution
 
 ### 3. Your First Simulation
 

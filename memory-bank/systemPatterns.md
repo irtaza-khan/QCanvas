@@ -48,6 +48,32 @@ See `docs/project-scope.md` for authoritative scope and exclusions. QCanvas orch
 
 ### Shared TypeScript Types
 **Decision**: Maintain type definitions shared between frontend and backend
+**Implementation**: Centralized type definitions in `/types` with shared interfaces
+
+### Authentication Patterns
+**Decision**: Implement persistent authentication with conditional UI rendering
+**Implementation**:
+- localStorage-based session persistence
+- Automatic redirect for authenticated users
+- Conditional rendering based on auth status
+- Demo account support for quick access
+
+### Keyboard Shortcuts System
+**Decision**: Comprehensive keyboard shortcut system with proper event handling
+**Implementation**:
+- useEffect-based event listeners with cleanup
+- Cross-platform support (Ctrl/Cmd detection)
+- Prevent default browser behavior
+- Automatic file naming for new files
+- File navigation with tab cycling
+
+### Example Loading System
+**Decision**: Smart example loading with authentication awareness
+**Implementation**:
+- Session-based example storage
+- Automatic code injection after authentication
+- Example cards on homepage with direct loading
+- Seamless navigation between home and app
 **Rationale**:
 - Ensures consistency across services
 - Reduces development time and errors

@@ -47,6 +47,20 @@ QCanvas is designed as a modular, scalable quantum computing platform with a cle
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+### Frontend Component Architecture
+
+#### Core Components
+- **TopBar**: Navigation, authentication status, settings dropdown, keyboard shortcuts
+- **EditorPane**: Monaco editor integration, file management, simulation controls
+- **ResultsPane**: Output display, histogram visualization, circuit analysis
+- **SimulationControls**: Backend selection, shots configuration, framework selection
+
+#### User Experience Features
+- **Authentication Flow**: Persistent login, conditional UI rendering, demo accounts
+- **Keyboard Shortcuts System**: Comprehensive shortcut handling with proper event management
+- **Example Loading System**: Smart example injection based on authentication status
+- **Settings Management**: Theme selection, preferences storage, user customization
+
 ### Component Architecture
 
 #### Frontend Architecture

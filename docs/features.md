@@ -42,7 +42,45 @@ QCanvas is a comprehensive quantum computing platform that provides framework co
       - Subroutines and functions with return statements
     - All features fully tested and OpenQASM 3.0 compliant
 
-### 2. Quantum Simulation Engine (QSim)
+### 2. User Experience & Interface
+
+2.1 **Authentication System**
+    - Persistent login with session management
+    - Demo account support for quick access
+    - Conditional UI based on authentication status
+    - Automatic redirect for authenticated users
+
+2.2 **Advanced Web IDE**
+    - Monaco Editor with syntax highlighting
+    - Multi-file workspace with tab navigation
+    - Responsive design with mobile support
+    - Real-time code validation and feedback
+
+2.3 **Keyboard Shortcuts System**
+    - Ctrl/Cmd + S: Save file
+    - Ctrl/Cmd + N: Create new file (automatic naming)
+    - Ctrl/Cmd + B: Toggle sidebar
+    - Ctrl/Cmd + J: Toggle results panel
+    - Ctrl/Cmd + F: Find in code
+    - Ctrl/Cmd + H: Find and replace
+    - Ctrl/Cmd + Shift + K: Toggle theme
+    - Ctrl/Cmd + Shift + R: Run circuit
+    - Ctrl/Cmd + Tab: Next file
+    - Ctrl/Cmd + Shift + Tab: Previous file
+
+2.4 **Settings & Preferences**
+    - Theme selection (Dark/Light mode)
+    - Auto-save toggle
+    - Format on save toggle
+    - Persistent settings storage
+
+2.5 **Simulation Controls**
+    - Input framework selection (Qiskit, Cirq, PennyLane, QASM)
+    - Backend selection (Cirq, Qiskit, PennyLane)
+    - Shots configuration for measurements
+    - Real-time validation and feedback
+
+### 3. Quantum Simulation Engine (QSim)
 
 2.1 **Multiple Simulation Backends**
     - Statevector backend for exact simulation
@@ -63,7 +101,21 @@ QCanvas is a comprehensive quantum computing platform that provides framework co
 - Parallel execution support
 - Intelligent caching of identical jobs
 
-### 3. Web-Based User Interface
+### 4. Example System & Education
+
+4.1 **Pre-built Quantum Examples**
+    - Bell State Preparation (Beginner)
+    - Quantum Teleportation (Intermediate)
+    - Variational Quantum Eigensolver (Advanced)
+    - Interactive loading with authentication awareness
+
+4.2 **Smart Example Flow**
+    - Automatic example loading after authentication
+    - Session-based example storage
+    - Seamless navigation between home and app
+    - Code injection into editor workspace
+
+### 5. Web-Based User Interface
 
 3.1 **Modern React/Next.js Frontend**
     - Responsive design for desktop and mobile
