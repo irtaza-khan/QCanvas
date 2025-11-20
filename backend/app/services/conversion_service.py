@@ -200,7 +200,7 @@ class ConversionService:
         num_qubits = self._extract_qubit_count_qiskit(code)
 
         qasm_lines = [
-            "OPENQASM 3;",
+            "OPENQASM 3.0;",
             "include \"stdgates.inc\";",
             "",
             f"qubit[{num_qubits}] q;",
@@ -322,7 +322,7 @@ class ConversionService:
         num_qubits, name_to_idx = self._extract_cirq_qubit_mapping(code)
 
         qasm_lines = [
-            "OPENQASM 3;",
+            "OPENQASM 3.0;",
             "include \"stdgates.inc\";",
             "",
             f"qubit[{num_qubits}] q;",
@@ -404,7 +404,7 @@ class ConversionService:
     
     def _basic_pennylane_conversion(self, _code: str) -> str:
         """Basic PennyLane to QASM conversion"""
-        return """OPENQASM 3;
+        return """OPENQASM 3.0;
 include "stdgates.inc";
 
 // Converted from PennyLane (basic fallback)
