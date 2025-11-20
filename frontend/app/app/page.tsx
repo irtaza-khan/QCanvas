@@ -3,11 +3,12 @@
 import { useEffect, useState, useRef } from 'react'
 import { useFileStore } from '@/lib/store'
 import { fileApi } from '@/lib/api'
+import { InputLanguage } from '@/types'
 import EditorPane from '@/components/EditorPane'
 import ResultsPane from '@/components/ResultsPane'
 import TopBar from '@/components/TopBar'
 import Sidebar from '@/components/Sidebar'
-import KeyboardShortcuts from '@/components/KeyboardShortcuts'
+import SimulationControls from '@/components/SimulationControls'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
@@ -18,6 +19,12 @@ export default function AppPage() {
   const [resultsHeight, setResultsHeight] = useState(320) // Default height
   const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  // Simulation settings state
+  const [inputLanguage, setInputLanguage] = useState<InputLanguage | "">("");
+  const [simBackend, setSimBackend] = useState<'cirq' | 'qiskit' | 'pennylane' | ''>('');
+  const [shots, setShots] = useState(1024);
+  
   const { 
     setFiles, 
     files, 
@@ -68,6 +75,20 @@ export default function AppPage() {
       } catch (error) {
         console.error('Failed to load files:', error)
         // Keep using the mock files from store if API fails
+      }
+
+      // Check for pending example to add from home page
+      const pendingExample = sessionStorage.getItem('pending-example')
+      if (pendingExample) {
+        try {
+          const example = JSON.parse(pendingExample)
+          const newFile = useFileStore.getState().addFile(example.name, example.content)
+          setActiveFileId(newFile.id)
+          toast.success(`Loaded example: ${example.name}`)
+          sessionStorage.removeItem('pending-example')
+        } catch (error) {
+          console.error('Failed to load pending example:', error)
+        }
       }
     }
 
@@ -195,8 +216,22 @@ export default function AppPage() {
   // Authenticated - show main app
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <KeyboardShortcuts />
-      <TopBar />
+      <TopBar 
+        inputLanguage={inputLanguage}
+        setInputLanguage={setInputLanguage}
+        simBackend={simBackend}
+        setSimBackend={setSimBackend}
+        shots={shots}
+        setShots={setShots}
+      />
+      <SimulationControls
+        inputLanguage={inputLanguage}
+        setInputLanguage={setInputLanguage}
+        simBackend={simBackend}
+        setSimBackend={setSimBackend}
+        shots={shots}
+        setShots={setShots}
+      />
       
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Sidebar */}
