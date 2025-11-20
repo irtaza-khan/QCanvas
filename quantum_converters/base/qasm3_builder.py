@@ -153,8 +153,8 @@ class QASM3Builder:
         Args:
             include_stdgates: Whether to include standard gate library
         """
-        # OpenQASM 3 specification uses `OPENQASM 3;` (no minor version)
-        self.lines.append("OPENQASM 3;")
+        # OpenQASM 3.0 specification uses `OPENQASM 3.0;`
+        self.lines.append("OPENQASM 3.0;")
         
         if include_stdgates:
             self.add_include("stdgates.inc")
