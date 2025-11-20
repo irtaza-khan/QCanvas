@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image"; // <-- Add this line
+import Link from "next/link";
 import {
   Play,
   Save,
@@ -33,7 +34,23 @@ import { fileApi, quantumApi } from "@/lib/api";
 import { InputLanguage, ResultFormat } from "@/types";
 import { detectFramework } from "@/lib/utils";
 
-export default function TopBar() {
+interface TopBarProps {
+  inputLanguage: InputLanguage | ""
+  setInputLanguage: (language: InputLanguage | "") => void
+  simBackend: 'cirq' | 'qiskit' | 'pennylane' | ''
+  setSimBackend: (backend: 'cirq' | 'qiskit' | 'pennylane' | '') => void
+  shots: number
+  setShots: (shots: number) => void
+}
+
+export default function TopBar({
+  inputLanguage,
+  setInputLanguage,
+  simBackend,
+  setSimBackend,
+  shots,
+  setShots
+}: TopBarProps) {
   const router = useRouter();
   const {
     theme,
@@ -53,13 +70,44 @@ export default function TopBar() {
   const [isSaving, setIsSaving] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showHelpMenu, setShowHelpMenu] = useState(false);
-  const [inputLanguage, setInputLanguage] = useState<InputLanguage>("qasm");
+  const [showSettings, setShowSettings] = useState(false);
   const [resultFormat, setResultFormat] = useState<ResultFormat>("json");
   const [resultStyle, setResultStyle] = useState<"classic" | "compact">(
     "classic",
   );
+  const [autoSave, setAutoSave] = useState(true);
+  const [formatOnSave, setFormatOnSave] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication status
+  useEffect(() => {
+    const authStatus = localStorage.getItem('qcanvas-auth')
+    setIsAuthenticated(!!authStatus)
+  }, [])
 
   const activeFile = getActiveFile();
+
+  // File navigation functions
+  const navigateToNextFile = () => {
+    const state = useFileStore.getState();
+    const { files, activeFileId, setActiveFile } = state;
+    if (files.length <= 1) return;
+
+    const currentIndex = files.findIndex(f => f.id === activeFileId);
+    const nextIndex = (currentIndex + 1) % files.length;
+    setActiveFile(files[nextIndex].id);
+  };
+
+  const navigateToPreviousFile = () => {
+    const state = useFileStore.getState();
+    const { files, activeFileId, setActiveFile } = state;
+    if (files.length <= 1) return;
+
+    const currentIndex = files.findIndex(f => f.id === activeFileId);
+    const prevIndex = currentIndex === 0 ? files.length - 1 : currentIndex - 1;
+    setActiveFile(files[prevIndex].id);
+  };
+
 
   const shortcuts = [
     { key: "Ctrl/Cmd + S", action: "Save file" },
@@ -78,12 +126,12 @@ export default function TopBar() {
     {
       icon: <BookOpen className="w-4 h-4" />,
       label: "Documentation",
-      action: () => window.open("/docs", "_blank"),
+      action: () => router.push("/docs"),
     },
     {
       icon: <Code className="w-4 h-4" />,
       label: "Examples",
-      action: () => window.open("/examples", "_blank"),
+      action: () => router.push("/examples"),
     },
     {
       icon: <Github className="w-4 h-4" />,
@@ -103,10 +151,27 @@ export default function TopBar() {
       return;
     }
 
-    // Validate language selection
+    // Determine if file is QASM or a framework code
+    const isQasmFile =
+      activeFile.name.endsWith(".qasm") ||
+      activeFile.content.trim().startsWith("OPENQASM");
+
+    // Validate input framework selection (required for non-QASM files)
+    if (!isQasmFile && !inputLanguage) {
+      toast.error("Please select an input framework for your code");
+      return;
+    }
+
+    // Validate backend selection
+    if (!simBackend) {
+      toast.error("Please select a simulation backend");
+      return;
+    }
+
+    // Validate language selection matches detected framework
     const detected = detectFramework(activeFile.content, activeFile.name);
-    if (detected && detected !== inputLanguage) {
-      toast.error(`Incorrect language selected.`);
+    if (inputLanguage && detected && detected !== inputLanguage) {
+      toast.error(`Incorrect language selected. Detected: ${detected}`);
       return;
     }
 
@@ -117,117 +182,72 @@ export default function TopBar() {
 
       toast.loading("Running quantum circuit...", { id: "execution" });
 
-      // Determine if file is QASM or a framework code
-      const isQasmFile =
-        activeFile.name.endsWith(".qasm") ||
-        activeFile.content.trim().startsWith("OPENQASM");
+      let qasmCode = "";
 
       if (isQasmFile) {
-        // Execute QASM directly
-        const result = await quantumApi.executeQasm(
-          activeFile.content,
-          "statevector", // Default backend
-          1024, // Default shots
-        );
-
-        if (result.success && result.data?.success) {
-          const executionData = result.data.results;
-          toast.success("QASM execution completed!", { id: "execution" });
-
-          // Log results for now (will be displayed in results panel)
-          console.log("QASM Execution Results:", executionData);
-
-          // Display basic stats
-          if (executionData.counts) {
-            const totalCounts = Object.values(executionData.counts).reduce(
-              (a: any, b: any) => a + b,
-              0,
-            );
-            setTimeout(() => {
-              toast.success(`Executed with ${totalCounts} shots`, {
-                duration: 3000,
-              });
-            }, 1000);
-          }
-        } else {
-          const errorMsg =
-            result.data?.error || result.error || "QASM execution failed";
-          toast.error(`Execution failed: ${errorMsg}`, { id: "execution" });
-        }
+        // Use QASM directly
+        qasmCode = activeFile.content;
       } else {
-        // Convert framework code to QASM first, then execute
-        let framework = "qiskit"; // Default
+        // Use the selected input framework for conversion
+        const sourceFramework = inputLanguage;
 
-        // Auto-detect framework
-        if (
-          activeFile.content.includes("import cirq") ||
-          activeFile.content.includes("cirq.")
-        ) {
-          framework = "cirq";
-        } else if (
-          activeFile.content.includes("import pennylane") ||
-          activeFile.content.includes("qml.")
-        ) {
-          framework = "pennylane";
-        } else if (
-          activeFile.content.includes("import qiskit") ||
-          activeFile.content.includes("QuantumCircuit")
-        ) {
-          framework = "qiskit";
-        }
-
-        // First convert to QASM
+        // Convert to QASM
+        toast.loading(`Converting ${sourceFramework} to OpenQASM...`, { id: "execution" });
         const conversionResult = await quantumApi.convertToQasm(
           activeFile.content,
-          framework,
+          sourceFramework,
           "classic",
         );
 
-        if (conversionResult.success && conversionResult.data?.success) {
-          const qasmCode = conversionResult.data.qasm_code;
-
-          // Then execute the QASM
-          const executionResult = await quantumApi.executeQasm(
-            qasmCode,
-            "statevector",
-            1024,
-          );
-
-          if (executionResult.success && executionResult.data?.success) {
-            const executionData = executionResult.data.results;
-            toast.success(`${framework} circuit executed successfully!`, {
-              id: "execution",
-            });
-
-            // Log results for now
-            console.log(`${framework} Execution Results:`, executionData);
-
-            // Display stats
-            if (executionData.counts) {
-              const totalCounts = Object.values(executionData.counts).reduce(
-                (a: any, b: any) => a + b,
-                0,
-              );
-              setTimeout(() => {
-                toast.success(
-                  `Executed ${framework} circuit with ${totalCounts} shots`,
-                );
-              }, 1000);
-            }
-          } else {
-            const errorMsg =
-              executionResult.data?.error ||
-              executionResult.error ||
-              "Execution failed";
-            toast.error(`Execution failed: ${errorMsg}`, { id: "execution" });
-          }
-        } else {
+        if (!conversionResult.success || !conversionResult.data?.success) {
           const errorMsg =
             conversionResult.data?.error ||
             conversionResult.error ||
             "Conversion failed";
           toast.error(`Conversion failed: ${errorMsg}`, { id: "execution" });
+          return;
         }
+
+        qasmCode = conversionResult.data.qasm_code;
+        toast.loading("Running simulation with QSim...", { id: "execution" });
+      }
+
+      // Execute QASM using QSim with selected backend and shots
+      const executionResult = await quantumApi.executeQasmWithQSim(
+        qasmCode,
+        simBackend,
+        shots,
+      );
+
+      if (executionResult.success && executionResult.data?.success) {
+        const simResult = executionResult.data.results;
+        
+        // Store results in the store for ResultsPane to display
+        useFileStore.getState().setSimulationResults(simResult);
+
+        toast.success(`Simulation completed on ${simBackend} backend!`, {
+          id: "execution",
+        });
+
+        // Display stats
+        if (simResult.counts) {
+          const totalCounts = Object.values(simResult.counts).reduce(
+            (a: any, b: any) => a + b,
+            0,
+          );
+          setTimeout(() => {
+            toast.success(
+              `Executed with ${totalCounts} shots | Backend: ${simBackend}`,
+              { duration: 3000 }
+            );
+          }, 1000);
+        }
+      } else {
+        const errorMsg =
+          executionResult.data?.error ||
+          executionResult.error ||
+          "Execution failed";
+        toast.error(`Execution failed: ${errorMsg}`, { id: "execution" });
       }
     } catch (error) {
       toast.error("Execution failed: Network error", { id: "execution" });
@@ -269,14 +289,20 @@ export default function TopBar() {
 
     // Validate language selection
     const detected = detectFramework(activeFile.content, activeFile.name);
-    if (detected && detected !== inputLanguage) {
-      // toast.error(`Incorrect language selected. The code appears to be written in ${detected} but ${inputLanguage} is selected.`);
+    
+    // Require framework selection if not detected
+    if (!inputLanguage && !detected) {
+      toast.error("Please select an input framework");
+      return;
+    }
+    
+    if (inputLanguage && detected && detected !== inputLanguage) {
       toast.error(`Incorrect language selected.`);
       return;
     }
 
     // Determine framework from the current language selection or file extension
-    let framework = inputLanguage;
+    let framework = inputLanguage || detected || "qasm";
     if (framework === "qasm") {
       // If input is already QASM, check file content or extension for hints
       if (
@@ -320,7 +346,11 @@ export default function TopBar() {
       }
     }
 
-    setCompileOptions({ inputLanguage, resultFormat, style: resultStyle });
+    setCompileOptions({
+      inputLanguage: inputLanguage || undefined,
+      resultFormat,
+      style: resultStyle
+    });
 
     try {
       toast.loading("Converting to OpenQASM...", { id: "conversion" });
@@ -437,11 +467,106 @@ export default function TopBar() {
     router.push("/login");
   };
 
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const { ctrlKey, metaKey, shiftKey, key } = event;
+      const isCtrlOrCmd = ctrlKey || metaKey;
+
+      // Ctrl/Cmd + S: Save file
+      if (isCtrlOrCmd && key === 's' && !shiftKey) {
+        event.preventDefault();
+        handleSave();
+        return;
+      }
+
+      // Ctrl/Cmd + N: New file
+      if (isCtrlOrCmd && key === 'n' && !shiftKey) {
+        event.preventDefault();
+        const { files, addFile } = useFileStore.getState();
+
+        // Find the next available "new_X.py" filename
+        let fileName = 'new.py';
+        let counter = 1;
+        const existingNames = files.map(f => f.name);
+
+        while (existingNames.includes(fileName)) {
+          fileName = `new_${counter}.py`;
+          counter++;
+        }
+
+        const newFile = addFile(fileName, ''); // Create blank file
+        toast.success(`Created new file: ${fileName}`);
+        return;
+      }
+
+      // Ctrl/Cmd + B: Toggle sidebar
+      if (isCtrlOrCmd && key === 'b' && !shiftKey) {
+        event.preventDefault();
+        toggleSidebar();
+        return;
+      }
+
+      // Ctrl/Cmd + J: Toggle results panel
+      if (isCtrlOrCmd && key === 'j' && !shiftKey) {
+        event.preventDefault();
+        useFileStore.getState().toggleResults();
+        return;
+      }
+
+      // Ctrl/Cmd + F: Find
+      if (isCtrlOrCmd && key === 'f' && !shiftKey) {
+        event.preventDefault();
+        handleFind();
+        return;
+      }
+
+      // Ctrl/Cmd + H: Find and Replace
+      if (isCtrlOrCmd && key === 'h' && !shiftKey) {
+        event.preventDefault();
+        handleFindReplace();
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + K: Toggle theme
+      if (isCtrlOrCmd && shiftKey && key === 'K') {
+        event.preventDefault();
+        toggleTheme();
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + R: Run circuit
+      if (isCtrlOrCmd && shiftKey && key === 'R') {
+        event.preventDefault();
+        handleRun();
+        return;
+      }
+
+      // Ctrl/Cmd + Tab: Next file
+      if (isCtrlOrCmd && key === 'Tab' && !shiftKey) {
+        event.preventDefault();
+        navigateToNextFile();
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + Tab: Previous file
+      if (isCtrlOrCmd && shiftKey && key === 'Tab') {
+        event.preventDefault();
+        navigateToPreviousFile();
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave, handleRun, handleFind, handleFindReplace, toggleSidebar, toggleTheme]);
+
   return (
     <>
-      <div className="topbar bg-gradient-to-r from-editor-bg to-gray-900 border-b border-editor-border shadow-lg">
-        {/* Left side - Logo and Navigation */}
-        <div className="flex items-center space-x-2 md:space-x-4">
+      <div className="topbar">
+        <div className="topbar-content">
+          {/* Left side - Logo and Navigation */}
+          <div className="flex items-center space-x-2 md:space-x-4">
           <button
             onClick={toggleSidebar}
             className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
@@ -450,7 +575,7 @@ export default function TopBar() {
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center space-x-2">
+          <a href="/" className="flex items-center space-x-2 group cursor-pointer">
             {/* Logo — changes automatically with theme */}
             <div className="flex items-center justify-center w-8 h-8">
               {/* Light mode (violet) */}
@@ -459,7 +584,7 @@ export default function TopBar() {
                 alt="App Logo"
                 width={32}
                 height={32}
-                className="object-contain block dark:hidden"
+                className="object-contain block dark:hidden group-hover:scale-110 transition-transform"
                 priority
               />
               {/* Dark mode (light blue) */}
@@ -468,32 +593,18 @@ export default function TopBar() {
                 alt="App Logo"
                 width={32}
                 height={32}
-                className="object-contain hidden dark:block"
+                className="object-contain hidden dark:block group-hover:scale-110 transition-transform"
                 priority
               />
             </div>
-            <span className="font-bold text-lg hidden sm:block quantum-gradient bg-clip-text text-transparent">
+            <span className="font-bold text-lg hidden sm:block quantum-gradient bg-clip-text text-transparent group-hover:scale-105 transition-transform">
               QCanvas
             </span>
+          </a>
           </div>
-        </div>
 
-        {/* Center - Compile/Run and Options */}
-        <div className="flex items-center space-x-1 md:space-x-2">
-          {/* Input Language */}
-          
-          <select
-            value={inputLanguage}
-            onChange={(e) => setInputLanguage(e.target.value as InputLanguage)}
-            className="hidden md:block bg-editor-bg border border-editor-border text-sm text-editor-text rounded-lg px-3 py-1.5 focus-quantum transition-colors"
-            title="Input Language"
-          >
-            <option value="qasm">OpenQASM</option>
-            <option value="qiskit">Qiskit</option>
-            <option value="cirq">Cirq</option>
-            <option value="pennylane">PennyLane</option>
-          </select>
-
+          {/* Center - Compile/Run and Options */}
+          <div className="flex items-center space-x-1 md:space-x-2">
           <button
             onClick={handleConvertToQASM}
             disabled={!activeFile}
@@ -518,7 +629,7 @@ export default function TopBar() {
             ) : (
               <>
                 <Play className="w-4 h-4" />
-                <span className="hidden sm:inline">Run</span>
+                <span className="hidden sm:inline font-semibold">Run</span>
               </>
             )}
           </button>
@@ -576,15 +687,15 @@ export default function TopBar() {
             <Replace className="w-4 h-4" />
             <span className="hidden lg:inline">Replace</span>
           </button>
-        </div>
+          </div>
 
-        {/* Right side - Settings and Theme */}
-        <div className="flex items-center space-x-1 md:space-x-2">
+          {/* Right side - Settings and Theme */}
+          <div className="flex items-center space-x-1 md:space-x-2">
           {/* Help Menu */}
           <div className="relative">
             <button
               onClick={() => setShowHelpMenu(!showHelpMenu)}
-              className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors relative"
+              className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
               title="Help & Resources"
             >
               <HelpCircle className="w-5 h-5" />
@@ -619,71 +730,184 @@ export default function TopBar() {
             <Keyboard className="w-5 h-5" />
           </button>
 
-          <button
-            onClick={toggleTheme}
-            className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
-            title="Toggle Theme (Ctrl/Cmd+Shift+K)"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-5 h-5" />
-            ) : (
-              <Moon className="w-5 h-5" />
+          {/* Settings Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-all duration-200"
+              title="Settings"
+            >
+              <Settings className={`w-5 h-5 transition-transform duration-300 ${
+                showSettings ? 'rotate-90' : ''
+              }`} />
+            </button>
+
+            {showSettings && (
+              <div className="absolute right-0 top-full mt-2 w-64 quantum-glass-dark rounded-xl shadow-2xl border border-white/10 backdrop-blur-xl overflow-hidden animate-fade-in z-50">
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </h3>
+
+                  {/* Theme Selection */}
+                  <div className="space-y-2 mb-4 pb-4 border-b border-white/10">
+                    <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                      Theme
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {
+                          if (theme !== 'dark') {
+                            toggleTheme();
+                            toast.success('Switched to dark theme');
+                          }
+                        }}
+                        className={`flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg border transition-all duration-200 ${
+                          theme === 'dark'
+                            ? 'bg-quantum-blue-light/20 border-quantum-blue-light text-white shadow-lg shadow-quantum-blue-light/20'
+                            : 'bg-editor-bg/50 border-editor-border text-gray-400 hover:border-quantum-blue-light/50'
+                        }`}
+                      >
+                        <Moon className="w-4 h-4" />
+                        <span className="text-xs font-medium">Dark</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (theme !== 'light') {
+                            toggleTheme();
+                            toast.success('Switched to light theme');
+                          }
+                        }}
+                        className={`flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg border transition-all duration-200 ${
+                          theme === 'light'
+                            ? 'bg-yellow-500/20 border-yellow-500 text-white shadow-lg shadow-yellow-500/20'
+                            : 'bg-editor-bg/50 border-editor-border text-gray-400 hover:border-yellow-500/50'
+                        }`}
+                      >
+                        <Sun className="w-4 h-4" />
+                        <span className="text-xs font-medium">Light</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Additional Settings */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                      Preferences
+                    </label>
+
+                    {/* Auto-save */}
+                    <button
+                      onClick={() => {
+                        setAutoSave(!autoSave);
+                        toast.success(`Auto-save ${!autoSave ? 'enabled' : 'disabled'}`);
+                      }}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Save className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-white">Auto-save</span>
+                      </div>
+                      <div className="relative inline-flex items-center">
+                        <div className={`w-10 h-5 rounded-full shadow-inner transition-colors ${autoSave ? 'bg-quantum-blue-light' : 'bg-editor-border'}`}>
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${autoSave ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Format on Save */}
+                    <button
+                      onClick={() => {
+                        setFormatOnSave(!formatOnSave);
+                        toast.success(`Format on save ${!formatOnSave ? 'enabled' : 'disabled'}`);
+                      }}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Code className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-white">Format on save</span>
+                      </div>
+                      <div className="relative inline-flex items-center">
+                        <div className={`w-10 h-5 rounded-full shadow-inner transition-colors ${formatOnSave ? 'bg-quantum-blue-light' : 'bg-editor-border'}`}>
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${formatOnSave ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
-          </button>
+          </div>
 
-          <button
-            className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors hidden lg:block"
-            title="Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="btn-ghost text-red-400 hover:text-red-300 hover:bg-red-500/20 p-2 rounded-lg transition-colors"
-            title="Logout"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="btn-ghost text-red-400 hover:text-red-300 hover:bg-red-500/20 p-2 rounded-lg transition-all duration-200 hover:scale-110"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
+              title="Login"
+            >
+              <LogOut className="w-5 h-5 rotate-180" />
+            </Link>
+          )}
+          </div>
         </div>
       </div>
 
       {/* Keyboard Shortcuts Modal */}
       {showShortcuts && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full max-h-96 overflow-y-auto backdrop-blur-xl border border-white/10 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">
-                Keyboard Shortcuts
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowShortcuts(false)}
-                className="btn-ghost p-1 hover:bg-quantum-blue-light/20 rounded-lg"
-                title="Close Shortcuts"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {shortcuts.map((shortcut, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center py-3 border-b border-editor-border last:border-b-0"
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-[55]"
+            onClick={() => setShowShortcuts(false)}
+          />
+          
+          {/* Modal */}
+          <div className="fixed inset-0 flex items-center justify-center z-[60] p-4 pointer-events-none">
+            <div 
+              className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full max-h-96 overflow-y-auto backdrop-blur-xl border border-white/10 shadow-2xl pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white">
+                  Keyboard Shortcuts
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowShortcuts(false)}
+                  className="btn-ghost p-1 hover:bg-quantum-blue-light/20 rounded-lg"
+                  title="Close Shortcuts"
                 >
-                  <span className="text-sm text-editor-text">
-                    {shortcut.action}
-                  </span>
-                  <kbd className="px-3 py-1.5 bg-editor-bg border border-editor-border rounded-lg text-xs font-mono text-white shadow-sm">
-                    {shortcut.key}
-                  </kbd>
-                </div>
-              ))}
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {shortcuts.map((shortcut, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center py-3 border-b border-editor-border last:border-b-0"
+                  >
+                    <span className="text-sm text-editor-text">
+                      {shortcut.action}
+                    </span>
+                    <kbd className="px-3 py-1.5 bg-editor-bg border border-editor-border rounded-lg text-xs font-mono text-white shadow-sm">
+                      {shortcut.key}
+                    </kbd>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Click outside to close help menu */}
@@ -691,6 +915,14 @@ export default function TopBar() {
         <div
           className="fixed inset-0 z-40"
           onClick={() => setShowHelpMenu(false)}
+        />
+      )}
+
+      {/* Click outside to close settings menu */}
+      {showSettings && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowSettings(false)}
         />
       )}
     </>
