@@ -71,9 +71,9 @@ def get_circuit():
 
     return qc
 
-# Expected OpenQASM 3 output:
+# Expected OpenQASM 3.0 output:
 """
-OPENQASM 3;
+OPENQASM 3.0;
 include "stdgates.inc";
 
 // Mathematical constants
