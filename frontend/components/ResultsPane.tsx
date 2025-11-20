@@ -60,7 +60,7 @@ interface ErrorEntry {
 }
 
 export default function ResultsPane() {
-  const { resultsCollapsed, toggleResults, compiledQasm, getActiveFile, conversionStats } = useFileStore()
+  const { resultsCollapsed, toggleResults, compiledQasm, getActiveFile, conversionStats, simulationResults } = useFileStore()
   
   // Helper function to get display stats from backend conversion stats
   const getDisplayStats = () => {
@@ -115,6 +115,36 @@ export default function ResultsPane() {
     const entanglingGates = ['cx', 'cnot', 'cz', 'swap', 'ccx'].reduce((sum, gate) => sum + (gates[gate] || 0), 0)
     const singleQubitGates = totalGates - entanglingGates
 
+    // Use simulation results if available
+    const executionData = simulationResults ? {
+      status: 'completed',
+      totalTime: simulationResults.metadata.execution_time || 'N/A',
+      simulationTime: simulationResults.metadata.simulation_time || 'N/A',
+      postProcessingTime: simulationResults.metadata.postprocessing_time || 'N/A',
+      shots: simulationResults.metadata.shots || 0,
+      successfulShots: Object.values(simulationResults.counts).reduce((a, b) => a + b, 0),
+      backend: simulationResults.metadata.backend || 'N/A',
+      visitor: simulationResults.metadata.visitor || 'N/A',
+      memoryUsage: simulationResults.metadata.memory_usage || '-',
+      cpuUsage: simulationResults.metadata.cpu_usage || '-',
+      fidelity: simulationResults.metadata.fidelity || 100.0
+    } : {
+      status: 'pending',
+      totalTime: '-',
+      simulationTime: '-',
+      postProcessingTime: '-',
+      shots: 0,
+      successfulShots: 0,
+      backend: 'N/A',
+      visitor: 'N/A',
+      memoryUsage: '-',
+      cpuUsage: '-',
+      fidelity: 0
+    };
+
+    // Use qubits from simulation results if available, otherwise from conversion stats
+    const numQubits = simulationResults?.metadata.n_qubits || conversionStats.qubits || 0;
+    
     return {
       compilation: {
         status: conversionStats.success ? 'success' : 'failed',
@@ -123,7 +153,7 @@ export default function ResultsPane() {
         optimizedGates: totalGates, // Same for now
         reductionPercentage: 0,
         circuitDepth: conversionStats.depth || 0,
-        qubits: conversionStats.qubits || 0,
+        qubits: numQubits,
         classicalBits: 0, // Not tracked yet
         warnings: 0,
         errors: conversionStats.error ? 1 : 0
@@ -131,23 +161,12 @@ export default function ResultsPane() {
       circuit: {
         gates: gates,
         depth: conversionStats.depth || 0,
-        width: conversionStats.qubits || 0,
+        width: numQubits,
         complexity: totalGates > 10 ? 'High' : totalGates > 5 ? 'Medium' : 'Low',
         entanglingGates: entanglingGates,
         singleQubitGates: singleQubitGates
       },
-      execution: {
-        status: 'pending',
-        totalTime: '-',
-        simulationTime: '-',
-        postProcessingTime: '-',
-        shots: 0,
-        successfulShots: 0,
-        backend: 'N/A',
-        memoryUsage: '-',
-        cpuUsage: '-',
-        fidelity: 0
-      },
+      execution: executionData,
       optimization: {
         level: 0,
         timeSpent: '-',
@@ -221,8 +240,20 @@ export default function ResultsPane() {
     }
   })
 
-  // Mock quantum results data
-  const [quantumResults, setQuantumResults] = useState({
+  // Use simulation results from store if available, otherwise use mock data
+  const quantumResults = simulationResults ? {
+    counts: simulationResults.counts,
+    shots: simulationResults.metadata.shots || 1024,
+    backend: simulationResults.metadata.backend || 'N/A',
+    execution_time: 'N/A',
+    circuit_info: {
+      depth: conversionStats?.depth || 0,
+      qubits: simulationResults.metadata.n_qubits || 0,
+      gates: conversionStats?.gates ? Object.values(conversionStats.gates).reduce((a: number, b: number) => a + b, 0) : 0
+    },
+    metadata: simulationResults.metadata,
+    probs: simulationResults.probs
+  } : {
     counts: { '00': 512, '11': 512 },
     shots: 1024,
     backend: 'qasm_simulator',
@@ -232,7 +263,7 @@ export default function ResultsPane() {
       qubits: 2,
       gates: 3
     }
-  })
+  }
 
   // Listen for execution events
   useEffect(() => {
@@ -240,31 +271,24 @@ export default function ResultsPane() {
       addLog('info', 'Starting quantum circuit execution...')
       
       setTimeout(() => {
-        addLog('success', 'Circuit executed successfully')
-        addLog('info', `Execution time: ${quantumResults.execution_time}`)
+        if (simulationResults) {
+          addLog('success', 'Circuit executed successfully with QSim')
+          addLog('info', `Backend: ${simulationResults.metadata.backend}`)
+          addLog('info', `Shots: ${simulationResults.metadata.shots}`)
+        } else {
+          addLog('success', 'Circuit executed successfully')
+        }
         
-        // Update execution stats with new data
-        setLegacyExecutionStats(prev => ({
-          ...prev,
-          execution: {
-            ...prev.execution,
-            status: 'completed',
-            totalTime: quantumResults.execution_time,
-            simulationTime: '1.8s',
-            postProcessingTime: '0.3s'
-          }
-        }))
-        
-        // Automatically switch to stats tab after execution
-        setActiveTab('stats')
-        toast.success('Execution complete! View stats for detailed analysis.')
-      }, 2000)
+        // Automatically switch to histogram tab after execution
+        setActiveTab('histogram')
+        toast.success('Execution complete! View results.')
+      }, 500)
     }
 
     // Listen for custom events from TopBar
     window.addEventListener('circuit-execute', handleExecution)
     return () => window.removeEventListener('circuit-execute', handleExecution)
-  }, [quantumResults.execution_time])
+  }, [simulationResults])
 
   useEffect(() => {
     const showQasm = () => setActiveTab('qasm')
@@ -508,32 +532,86 @@ export default function ResultsPane() {
         {activeTab === 'output' && (
           <div className="h-full overflow-y-auto results-content">
             <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-white mb-2">Quantum Results</h4>
-                <div className="bg-editor-bg border border-editor-border rounded p-3">
-                  <pre className="text-sm text-editor-text">
-                    {JSON.stringify(quantumResults, null, 2)}
-                  </pre>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-sm font-medium text-white mb-2">Circuit Information</h4>
-                <div className="grid grid-cols-3 gap-4 text-sm">
+              {simulationResults ? (
+                <>
                   <div>
-                    <span className="text-gray-400">Qubits:</span>
-                    <span className="text-white ml-2">{quantumResults.circuit_info.qubits}</span>
+                    <h4 className="text-sm font-medium text-white mb-2">QSim Simulation Results</h4>
+                    <div className="bg-editor-bg border border-editor-border rounded p-3">
+                      <div className="space-y-3">
+                        <div>
+                          <h5 className="text-xs font-medium text-gray-400 mb-2">Measurement Counts</h5>
+                          <pre className="text-sm text-editor-text">
+                            {JSON.stringify(simulationResults.counts, null, 2)}
+                          </pre>
+                        </div>
+                        
+                        {simulationResults.probs && (
+                          <div className="mt-3 pt-3 border-t border-editor-border">
+                            <h5 className="text-xs font-medium text-gray-400 mb-2">State Probabilities</h5>
+                            <pre className="text-sm text-editor-text">
+                              {JSON.stringify(simulationResults.probs, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+
+                        <div className="mt-3 pt-3 border-t border-editor-border">
+                          <h5 className="text-xs font-medium text-gray-400 mb-2">Simulation Metadata</h5>
+                          <pre className="text-sm text-editor-text">
+                            {JSON.stringify(simulationResults.metadata, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                  
                   <div>
-                    <span className="text-gray-400">Depth:</span>
-                    <span className="text-white ml-2">{quantumResults.circuit_info.depth}</span>
+                    <h4 className="text-sm font-medium text-white mb-2">Circuit Information</h4>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-400">Qubits:</span>
+                        <span className="text-white ml-2">{simulationResults.metadata.n_qubits}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Backend:</span>
+                        <span className="text-white ml-2">{simulationResults.metadata.backend}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Shots:</span>
+                        <span className="text-white ml-2">{simulationResults.metadata.shots}</span>
+                      </div>
+                    </div>
                   </div>
+                </>
+              ) : (
+                <>
                   <div>
-                    <span className="text-gray-400">Gates:</span>
-                    <span className="text-white ml-2">{quantumResults.circuit_info.gates}</span>
+                    <h4 className="text-sm font-medium text-white mb-2">Quantum Results</h4>
+                    <div className="bg-editor-bg border border-editor-border rounded p-3">
+                      <pre className="text-sm text-editor-text">
+                        {JSON.stringify(quantumResults, null, 2)}
+                      </pre>
+                    </div>
                   </div>
-                </div>
-              </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-white mb-2">Circuit Information</h4>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-400">Qubits:</span>
+                        <span className="text-white ml-2">{quantumResults.circuit_info.qubits}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Depth:</span>
+                        <span className="text-white ml-2">{quantumResults.circuit_info.depth}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Gates:</span>
+                        <span className="text-white ml-2">{quantumResults.circuit_info.gates}</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -606,11 +684,41 @@ export default function ResultsPane() {
               </div>
               
               <div className="mt-4 pt-4 border-t border-editor-border">
-                <div className="flex justify-between text-sm text-gray-400">
-                  <span>Total Shots: {quantumResults.shots}</span>
-                  <span>Backend: {quantumResults.backend}</span>
-                  <span>Time: {quantumResults.execution_time}</span>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-400">Total Shots:</span>
+                    <span className="text-white ml-2 font-mono">{quantumResults.shots}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Backend:</span>
+                    <span className="text-white ml-2 font-mono">{quantumResults.backend}</span>
+                  </div>
+                  {simulationResults?.metadata.visitor && (
+                    <div>
+                      <span className="text-gray-400">Visitor:</span>
+                      <span className="text-white ml-2 font-mono">{simulationResults.metadata.visitor}</span>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-gray-400">States:</span>
+                    <span className="text-white ml-2 font-mono">{Object.keys(quantumResults.counts).length}</span>
+                  </div>
                 </div>
+
+                {/* Show probabilities if available */}
+                {simulationResults?.probs && (
+                  <div className="mt-4 pt-4 border-t border-editor-border">
+                    <h5 className="text-xs font-medium text-gray-400 mb-2">State Probabilities</h5>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                      {Object.entries(simulationResults.probs).map(([state, prob]) => (
+                        <div key={state} className="bg-editor-bg border border-editor-border rounded px-2 py-1">
+                          <span className="text-gray-400">|{state}⟩:</span>
+                          <span className="text-white ml-1 font-mono">{(prob * 100).toFixed(2)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -737,16 +845,42 @@ export default function ResultsPane() {
                   Execution Summary
                 </h4>
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
-                    <div className="text-lg font-bold text-green-400">{executionStats.execution.status}</div>
-                    <div className="text-xs text-green-300">Status</div>
+                  <div className={`${
+                    executionStats.execution.status === 'completed' 
+                      ? 'bg-green-500/10 border-green-500/20' 
+                      : executionStats.execution.status === 'pending'
+                      ? 'bg-yellow-500/10 border-yellow-500/20'
+                      : 'bg-red-500/10 border-red-500/20'
+                  } border rounded-lg p-3 text-center`}>
+                    <div className={`text-lg font-bold capitalize ${
+                      executionStats.execution.status === 'completed' 
+                        ? 'text-green-400' 
+                        : executionStats.execution.status === 'pending'
+                        ? 'text-yellow-400'
+                        : 'text-red-400'
+                    }`}>
+                      {executionStats.execution.status}
+                    </div>
+                    <div className={`text-xs ${
+                      executionStats.execution.status === 'completed' 
+                        ? 'text-green-300' 
+                        : executionStats.execution.status === 'pending'
+                        ? 'text-yellow-300'
+                        : 'text-red-300'
+                    }`}>
+                      Status
+                    </div>
                   </div>
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-center">
                     <div className="text-lg font-bold text-blue-400">{executionStats.execution.totalTime}</div>
                     <div className="text-xs text-blue-300">Total Time</div>
                   </div>
                   <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 text-center">
-                    <div className="text-lg font-bold text-purple-400">{executionStats.execution.fidelity}%</div>
+                    <div className="text-lg font-bold text-purple-400">
+                      {executionStats.execution.fidelity !== 0 
+                        ? `${executionStats.execution.fidelity.toFixed(2)}%` 
+                        : 'N/A'}
+                    </div>
                     <div className="text-xs text-purple-300">Fidelity</div>
                   </div>
                 </div>
@@ -793,12 +927,66 @@ export default function ResultsPane() {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-editor-text">Backend:</span>
-                        <span className="text-sm text-white">{executionStats.execution.backend}</span>
+                        <span className="text-sm text-white font-mono">{executionStats.execution.backend}</span>
                       </div>
+                      {simulationResults && simulationResults.metadata.visitor && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-editor-text">Visitor:</span>
+                          <span className="text-sm text-white font-mono">{simulationResults.metadata.visitor}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* QSim Simulation Details (only show if we have simulation results) */}
+              {simulationResults && (
+                <div className="bg-editor-bg border border-editor-border rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-white mb-4 flex items-center">
+                    <Zap className="w-4 h-4 mr-2" />
+                    QSim Simulation Details
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h5 className="text-xs font-medium text-gray-400 mb-3">Measurement Results</h5>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-editor-text">Total States Measured:</span>
+                          <span className="text-sm text-white">{Object.keys(simulationResults.counts).length}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-editor-text">Total Counts:</span>
+                          <span className="text-sm text-white">{Object.values(simulationResults.counts).reduce((a, b) => a + b, 0)}</span>
+                        </div>
+                        {simulationResults.probs && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-editor-text">Has Probabilities:</span>
+                            <span className="text-sm text-green-400">Yes</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-medium text-gray-400 mb-3">Execution Metadata</h5>
+                      <div className="space-y-2">
+                        {Object.entries(simulationResults.metadata).map(([key, value]) => {
+                          // Skip already displayed fields
+                          if (['n_qubits', 'backend', 'shots', 'visitor'].includes(key)) return null;
+                          return (
+                            <div key={key} className="flex justify-between items-center">
+                              <span className="text-sm text-editor-text capitalize">{key.replace(/_/g, ' ')}:</span>
+                              <span className="text-sm text-white font-mono text-right truncate max-w-[200px]" title={String(value)}>
+                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Circuit Analysis */}
               <div className="bg-editor-bg border border-editor-border rounded-lg p-4">
@@ -834,24 +1022,30 @@ export default function ResultsPane() {
                   </div>
                   <div>
                     <h5 className="text-xs font-medium text-gray-400 mb-3">Gate Distribution</h5>
-                    <div className="space-y-2">
-                      {Object.entries(executionStats.circuit.gates).map(([gate, count]) => (
-                        <div key={gate} className="flex justify-between items-center">
-                          <span className="text-sm text-editor-text font-mono">{gate.toUpperCase()}:</span>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-16 h-2 bg-editor-border rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-quantum-blue-light rounded-full"
-                                style={{ 
-                                  width: `${(count / Math.max(...Object.values(executionStats.circuit.gates))) * 100}%` 
-                                }}
-                              />
+                    {Object.keys(executionStats.circuit.gates).length > 0 ? (
+                      <div className="space-y-2">
+                        {Object.entries(executionStats.circuit.gates).map(([gate, count]) => (
+                          <div key={gate} className="flex justify-between items-center">
+                            <span className="text-sm text-editor-text font-mono">{gate.toUpperCase()}:</span>
+                            <div className="flex items-center space-x-2">
+                              <div className="w-16 h-2 bg-editor-border rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-quantum-blue-light rounded-full"
+                                  style={{ 
+                                    width: `${(count / Math.max(...Object.values(executionStats.circuit.gates))) * 100}%` 
+                                  }}
+                                />
+                              </div>
+                              <span className="text-sm text-white w-6">{count}</span>
                             </div>
-                            <span className="text-sm text-white w-6">{count}</span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500 text-center py-4">
+                        No gate data available
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

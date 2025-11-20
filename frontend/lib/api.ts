@@ -117,12 +117,24 @@ export const quantumApi = {
     })
   },
 
-  // Execute OpenQASM code via FastAPI backend
+  // Execute OpenQASM code via FastAPI backend (legacy)
   async executeQasm(qasm_code: string, backend = 'statevector', shots = 1024): Promise<ApiResponse<any>> {
     return apiRequest('/api/simulator/execute', {
       method: 'POST',
       body: JSON.stringify({
         qasm_code,
+        backend,
+        shots,
+      }),
+    })
+  },
+
+  // Execute OpenQASM code with QSim backend
+  async executeQasmWithQSim(qasm_code: string, backend: 'cirq' | 'qiskit' | 'pennylane' = 'cirq', shots = 1024): Promise<ApiResponse<any>> {
+    return apiRequest('/api/simulator/execute-qsim', {
+      method: 'POST',
+      body: JSON.stringify({
+        qasm_input: qasm_code,
         backend,
         shots,
       }),

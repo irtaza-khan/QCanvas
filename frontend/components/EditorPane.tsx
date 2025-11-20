@@ -281,18 +281,20 @@ export default function EditorPane() {
           </span>
         </div>
         
-        {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
-          <button
-            onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
-            className={`px-3 py-1 text-xs rounded-md transition-colors ${
-              showCircuitVisualization
-                ? 'bg-quantum-blue-light text-white'
-                : 'text-editor-text hover:bg-editor-border'
-            }`}
-          >
-            Circuit View
-          </button>
-        )}
+        <div className="flex items-center space-x-2">
+          {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
+            <button
+              onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
+              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                showCircuitVisualization
+                  ? 'bg-quantum-blue-light text-white'
+                  : 'text-editor-text hover:bg-editor-border'
+              }`}
+            >
+              Circuit View
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Find and Replace */}

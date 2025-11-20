@@ -984,7 +984,7 @@ ws://localhost:8000/ws
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Link
-              href="/app"
+              href="/login"
               className="btn-quantum text-lg px-8 py-4 flex items-center group hover-lift relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>

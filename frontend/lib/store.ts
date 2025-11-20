@@ -15,9 +15,24 @@ interface ConversionStats {
   error?: string | null
 }
 
+// QSim simulation results interface
+interface SimulationResult {
+  counts: { [state: string]: number }
+  metadata: {
+    n_qubits: number
+    visitor: string
+    backend: string
+    shots: number
+    [key: string]: any
+  }
+  probs?: { [state: string]: number } | null
+  circuit?: any
+}
+
 interface FileStore extends EditorState {
-  // Additional state for conversion stats
+  // Additional state for conversion stats and simulation results
   conversionStats: ConversionStats | null
+  simulationResults: SimulationResult | null
   
   // Actions
   setActiveFile: (fileId: string | null) => void
@@ -35,6 +50,7 @@ interface FileStore extends EditorState {
   setCompileOptions: (options: Partial<CompileOptions>) => void
   setCompiledQasm: (qasm: string | null) => void
   setConversionStats: (stats: ConversionStats | null) => void
+  setSimulationResults: (results: SimulationResult | null) => void
   compileActiveToQasm: () => string | null
 }
 
@@ -120,10 +136,11 @@ export const useFileStore = create<FileStore>()(
       resultsCollapsed: false,
       compiledQasm: null,
       conversionStats: null,
+      simulationResults: null,
       compileOptions: {
         inputLanguage: 'qasm',
         resultFormat: 'json',
-        qasmVersion: '3',
+        qasmVersion: '3.0',
         style: 'classic',
       },
 
@@ -325,6 +342,10 @@ export const useFileStore = create<FileStore>()(
 
       setConversionStats: (stats) => {
         set({ conversionStats: stats }, false, 'setConversionStats')
+      },
+
+      setSimulationResults: (results) => {
+        set({ simulationResults: results }, false, 'setSimulationResults')
       },
 
       compileActiveToQasm: () => {

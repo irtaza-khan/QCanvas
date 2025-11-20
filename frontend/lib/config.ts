@@ -45,7 +45,7 @@ export const projectConfig: ProjectInfo = {
   name: 'QCanvas',
   tagline: 'Quantum Code Editor & Simulation Platform',
   description: 'A modern quantum computing platform that bridges quantum frameworks, enabling seamless conversion between Cirq, Qiskit, and PennyLane with real-time simulation and visualization.',
-  year: 2024,
+  year: 2025,
   version: '1.0.0-beta',
   status: 'development'
 }

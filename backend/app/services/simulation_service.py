@@ -7,31 +7,29 @@ current_file = os.path.abspath(__file__)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_file))))
 sys.path.insert(0, project_root)
 
-# Import the user's quantum simulator
+# Import QSim for quantum simulation
 try:
-    from quantum_simulator.backends.statevector_backend import StatevectorBackend
-    from quantum_simulator.backends.density_matrix_backend import DensityMatrixBackend
-    from quantum_simulator.core.quantum_state import QuantumState
-    print("✓ User's quantum simulator imported successfully")
+    from qsim import run_qasm, RunArgs, SimResult
+    print("✓ QSim imported successfully")
+    QSIM_AVAILABLE = True
 except ImportError as e:
     print(f"Import error in simulation service: {e}")
-    print("Simulation features may not be fully available")
-    StatevectorBackend = None
-    DensityMatrixBackend = None
-    QuantumState = None
+    print("QSim simulation features may not be fully available")
+    run_qasm = None
+    RunArgs = None
+    SimResult = None
+    QSIM_AVAILABLE = False
 
 class SimulationService:
-    """Service for executing quantum simulations"""
+    """Service for executing quantum simulations using QSim"""
     
     def __init__(self):
-        self.available_backends = {
-            "statevector": StatevectorBackend,
-            "density_matrix": DensityMatrixBackend
-        }
+        self.available_backends = ['cirq', 'qiskit', 'pennylane']
+        self.legacy_backends = ["statevector", "density_matrix"]
     
     def execute_qasm(self, qasm_code: str, backend: str = "statevector", shots: int = 1024) -> Dict[str, Any]:
         """
-        Execute OpenQASM code using the specified backend
+        Execute OpenQASM code using the specified backend (legacy method)
         
         Args:
             qasm_code: OpenQASM 3.0 code to execute
@@ -43,14 +41,13 @@ class SimulationService:
         """
         try:
             # Validate backend
-            if backend not in self.available_backends:
+            if backend not in self.legacy_backends:
                 return {
                     "success": False,
-                    "error": f"Unsupported backend: {backend}. Available: {list(self.available_backends.keys())}"
+                    "error": f"Unsupported backend: {backend}. Available: {self.legacy_backends}"
                 }
             
             # For now, return a basic simulation result
-            # This can be expanded to use the actual quantum_simulator when ready
             if backend == "statevector":
                 result = self._simulate_statevector(qasm_code, shots)
             elif backend == "density_matrix":
@@ -73,6 +70,63 @@ class SimulationService:
             return {
                 "success": False,
                 "error": f"Simulation failed: {str(e)}"
+            }
+    
+    def execute_qasm_with_qsim(self, qasm_code: str, backend: str = "cirq", shots: int = 1024) -> Dict[str, Any]:
+        """
+        Execute OpenQASM code using QSim
+        
+        Args:
+            qasm_code: OpenQASM 3.0 code to execute
+            backend: QSim backend to use (cirq, qiskit, or pennylane)
+            shots: Number of measurement shots
+            
+        Returns:
+            Dictionary containing simulation results from QSim
+        """
+        try:
+            if not QSIM_AVAILABLE:
+                return {
+                    "success": False,
+                    "error": "QSim is not available. Please ensure it is installed correctly."
+                }
+            
+            # Validate backend
+            if backend not in self.available_backends:
+                return {
+                    "success": False,
+                    "error": f"Unsupported QSim backend: {backend}. Available: {self.available_backends}"
+                }
+            
+            # Create RunArgs for QSim
+            args = RunArgs(
+                qasm_input=qasm_code,
+                backend=backend,
+                shots=shots
+            )
+            
+            # Execute with QSim
+            sim_result: SimResult = run_qasm(args)
+            
+            # Convert SimResult to dictionary format
+            result_dict = {
+                "counts": sim_result.counts,
+                "metadata": sim_result.metadata,
+                "probs": sim_result.probs,
+                # Note: circuit object might not be JSON serializable, so we omit it or convert to string
+            }
+            
+            return {
+                "success": True,
+                "results": result_dict,
+                "backend": backend,
+                "shots": shots
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"QSim simulation failed: {str(e)}"
             }
     
     def _simulate_statevector(self, qasm_code: str, shots: int) -> Dict[str, Any]:
@@ -123,8 +177,8 @@ class SimulationService:
         return 2  # Default fallback
     
     def get_available_backends(self) -> List[str]:
-        """Get list of available simulation backends"""
-        return list(self.available_backends.keys())
+        """Get list of available simulation backends (QSim backends)"""
+        return self.available_backends
     
     def health_check(self) -> Dict[str, Any]:
         """Check health of simulation service"""
@@ -134,7 +188,7 @@ class SimulationService:
             return {
                 "status": "healthy",
                 "available_backends": backends,
-                "quantum_simulator_available": StatevectorBackend is not None
+                "qsim_available": QSIM_AVAILABLE
             }
         except Exception as e:
             return {

@@ -20,7 +20,7 @@ simulation_service = SimulationService()
 @router.post("/execute")
 async def execute_qasm(request: dict):
     """
-    Execute OpenQASM code using the quantum simulator
+    Execute OpenQASM code using the quantum simulator (legacy)
     
     Args:
         request: Dictionary containing qasm_code, backend, shots, etc.
@@ -49,6 +49,39 @@ async def execute_qasm(request: dict):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Simulation failed: {str(e)}")
+
+@router.post("/execute-qsim")
+async def execute_qasm_with_qsim(request: dict):
+    """
+    Execute OpenQASM code using QSim backend
+    
+    Args:
+        request: Dictionary containing qasm_input, backend (cirq/qiskit/pennylane), shots
+        
+    Returns:
+        JSON response with QSim simulation results
+    """
+    try:
+        qasm_input = request.get("qasm_input")
+        backend = request.get("backend", "cirq")
+        shots = request.get("shots", 1024)
+        
+        if not qasm_input:
+            raise HTTPException(status_code=400, detail="qasm_input is required")
+        
+        # Execute with QSim
+        result = simulation_service.execute_qasm_with_qsim(
+            qasm_code=qasm_input,
+            backend=backend,
+            shots=shots
+        )
+        
+        return JSONResponse(content=result)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"QSim simulation failed: {str(e)}")
 
 @router.get("/backends")
 async def get_available_backends():
