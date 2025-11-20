@@ -301,10 +301,15 @@ body {
   height: 3.5rem;
   background-color: #252526;
   border-bottom: 1px solid #3e3e42;
+  position: relative;
+}
+
+.topbar-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem;
+  height: 100%;
 }
 
 /* Layout utilities */
@@ -997,6 +1002,67 @@ section {
 
 .tooltip:hover::after {
   opacity: 1;
+}
+
+/* Simulation Controls Animations */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes slide-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes expand {
+  0% {
+    width: 0;
+    opacity: 0;
+  }
+  100% {
+    width: 50%;
+    opacity: 1;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.5s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s ease-out;
+}
+
+.animate-expand {
+  animation: expand 0.3s ease-out;
 }
 
 /* Responsive utilities */
