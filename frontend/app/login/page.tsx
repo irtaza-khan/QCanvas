@@ -21,9 +21,9 @@ export default function LoginPage() {
   // Check if already authenticated
   useEffect(() => {
     const authStatus = localStorage.getItem('qcanvas-auth')
-    // if (authStatus) {
-    //   router.push('/app')
-    // }
+    if (authStatus) {
+      router.push('/app')
+    }
   }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {

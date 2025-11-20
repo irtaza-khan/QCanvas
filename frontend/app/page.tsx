@@ -31,6 +31,13 @@ export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Check authentication status
+  useEffect(() => {
+    const authStatus = localStorage.getItem('qcanvas-auth')
+    setIsAuthenticated(!!authStatus)
+  }, [])
 
   useEffect(() => {
     setIsVisible(true)
@@ -46,6 +53,110 @@ export default function HomePage() {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
     element?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // Get example code by type
+  const getExampleCode = (exampleType: string) => {
+    const examples = {
+      'bell-state': {
+        name: 'bell_state_example.py',
+        content: `import cirq
+def get_circuit():
+    q0, q1 = cirq.LineQubit.range(2)
+    circuit = cirq.Circuit(
+        cirq.H(q0),
+        cirq.CNOT(q0, q1),
+        cirq.measure(q0, key="m0"),
+        cirq.measure(q1, key="m1")
+    )
+    return circuit`
+      },
+      'quantum-teleportation': {
+        name: 'teleportation_example.py',
+        content: `from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+import numpy as np
+
+def create_teleportation_circuit():
+    # Create quantum and classical registers
+    qr = QuantumRegister(3, 'q')
+    cr = ClassicalRegister(3, 'c')
+    qc = QuantumCircuit(qr, cr)
+
+    # Prepare the state to teleport (qubit 0)
+    qc.ry(np.pi/4, qr[0])  # Create a superposition state
+
+    # Create entanglement between qubits 1 and 2
+    qc.h(qr[1])
+    qc.cx(qr[1], qr[2])
+
+    # Perform Bell measurement on qubits 0 and 1
+    qc.cx(qr[0], qr[1])
+    qc.h(qr[0])
+    qc.measure(qr[0], cr[0])
+    qc.measure(qr[1], cr[1])
+
+    # Apply conditional operations based on measurement results
+    qc.x(qr[2]).c_if(cr[1], 1)
+    qc.z(qr[2]).c_if(cr[0], 1)
+
+    # Measure the teleported qubit
+    qc.measure(qr[2], cr[2])
+
+    return qc`
+      },
+      'vqe-algorithm': {
+        name: 'vqe_example.py',
+        content: `import pennylane as qml
+import numpy as np
+
+# Define the Hamiltonian for H2 molecule (simplified)
+hamiltonian = qml.PauliSum([
+    qml.PauliWord({0: 'Z', 1: 'I'}: 0.5),
+    qml.PauliWord({0: 'I', 1: 'Z'}: 0.5),
+    qml.PauliWord({0: 'Z', 1: 'Z'}: 0.25),
+    qml.PauliWord({0: 'X', 1: 'X'}: 0.25)
+])
+
+# Define the ansatz (parameterized quantum circuit)
+def ansatz(params):
+    qml.RY(params[0], wires=0)
+    qml.RY(params[1], wires=1)
+    qml.CNOT(wires=[0, 1])
+
+# Create the VQE circuit
+dev = qml.device('default.qubit', wires=2)
+
+@qml.qnode(dev)
+def vqe_circuit(params):
+    ansatz(params)
+    return qml.expval(hamiltonian)
+
+# Optimization
+def cost_function(params):
+    return vqe_circuit(params)
+
+# Initial parameters
+params = np.random.random(2)
+
+# Run VQE (simplified - in practice you'd use an optimizer)
+print(f"Initial energy: {cost_function(params)}")
+print("VQE circuit ready for optimization!")`
+      }
+    }
+    return examples[exampleType as keyof typeof examples] || examples['bell-state']
+  }
+
+  // Handle trying an example
+  const handleTryExample = (example: { name: string, content: string }) => {
+    if (isAuthenticated) {
+      // If authenticated, store the example data and navigate to app
+      sessionStorage.setItem('pending-example', JSON.stringify(example))
+      window.location.href = '/app'
+    } else {
+      // If not authenticated, store the example data and go to login
+      sessionStorage.setItem('pending-example', JSON.stringify(example))
+      window.location.href = '/login'
+    }
   }
 
   return (
@@ -107,18 +218,29 @@ export default function HomePage() {
 
               {/* Auth Buttons */}
               <div className="flex items-center space-x-3">
-                <Link
-                  href="/login"
-                  className="text-editor-text hover:text-white transition-colors duration-200 font-medium"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/login"
-                  className="btn-quantum text-sm px-4 py-2"
-                >
-                  Get Started
-                </Link>
+                {isAuthenticated ? (
+                  <Link
+                    href="/app"
+                    className="btn-quantum text-sm px-4 py-2"
+                  >
+                    Go to App
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="text-editor-text hover:text-white transition-colors duration-200 font-medium"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/login"
+                      className="btn-quantum text-sm px-4 py-2"
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 
@@ -160,12 +282,20 @@ export default function HomePage() {
                     <span>Theme</span>
                   </button>
                   <div className="flex space-x-3">
-                    <Link href="/login" className="text-editor-text hover:text-white transition-colors duration-200">
-                      Sign In
-                    </Link>
-                    <Link href="/login" className="btn-quantum text-sm px-3 py-1">
-                      Get Started
-                    </Link>
+                    {isAuthenticated ? (
+                      <Link href="/app" className="btn-quantum text-sm px-3 py-1">
+                        Go to App
+                      </Link>
+                    ) : (
+                      <>
+                        <Link href="/login" className="text-editor-text hover:text-white transition-colors duration-200">
+                          Sign In
+                        </Link>
+                        <Link href="/login" className="btn-quantum text-sm px-3 py-1">
+                          Get Started
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -237,15 +367,15 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 transition-all duration-1000 delay-1000">
-              <Link
-                href="/app"
+              <button
+                onClick={() => handleTryExample(getExampleCode('bell-state'))}
                 className="btn-quantum text-lg px-8 py-4 flex items-center group hover-lift relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
                 <span className="relative z-10">Try QCanvas Now</span>
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300 relative z-10" />
-              </Link>
+              </button>
               <button
                 onClick={() => scrollToSection('features')}
                 className="btn-ghost text-lg px-8 py-4 flex items-center group hover-lift relative overflow-hidden"
@@ -425,7 +555,10 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 transition-all duration-1000 delay-600">
             {/* Example 1 */}
-            <div className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in">
+            <div
+              onClick={() => handleTryExample(getExampleCode('bell-state'))}
+              className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
+            >
               <div className="w-full h-32 bg-gradient-to-br from-quantum-blue-light/20 to-purple-500/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 <Code className="w-12 h-12 text-quantum-blue-light group-hover:scale-110 transition-transform duration-300" />
               </div>
@@ -440,7 +573,10 @@ export default function HomePage() {
             </div>
 
             {/* Example 2 */}
-            <div className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in">
+            <div
+              onClick={() => handleTryExample(getExampleCode('quantum-teleportation'))}
+              className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
+            >
               <div className="w-full h-32 bg-gradient-to-br from-purple-500/20 to-teal-500/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 <Play className="w-12 h-12 text-purple-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
@@ -455,7 +591,10 @@ export default function HomePage() {
             </div>
 
             {/* Example 3 */}
-            <div className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in">
+            <div
+              onClick={() => handleTryExample(getExampleCode('vqe-algorithm'))}
+              className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
+            >
               <div className="w-full h-32 bg-gradient-to-br from-teal-500/20 to-green-500/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 <Atom className="w-12 h-12 text-teal-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
@@ -496,7 +635,7 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center transition-all duration-1000 delay-600">
             <Link
-              href="/app"
+              href="/login"
               className="btn-quantum text-lg px-8 py-4 flex items-center justify-center group hover-lift relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
