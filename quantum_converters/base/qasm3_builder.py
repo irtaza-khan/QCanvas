@@ -123,13 +123,13 @@ class QASM3Builder:
         
         # Standard mathematical constants
         self.math_constants = {
-            'PI': '3.141592653589793',
-            'E': '2.718281828459045',
-            'PI_2': '1.5707963267948966',  # PI/2
-            'PI_4': '0.7853981633974483',  # PI/4
-            'TAU': '6.283185307179586',     # 2*PI
-            'SQRT2': '1.4142135623730951',
-            'SQRT1_2': '0.7071067811865476',  # 1/sqrt(2)
+            'pi': '3.141592653589793',
+            'e': '2.718281828459045',
+            'pi_2': '1.5707963267948966',  # pi/2
+            'pi_4': '0.7853981633974483',  # pi/4
+            'tau': '6.283185307179586',     # 2*pi
+            'sqrt2': '1.4142135623730951',
+            'sqrt1_2': '0.7071067811865476',  # 1/sqrt(2)
         }
         
         # Standard gate library
@@ -395,11 +395,11 @@ class QASM3Builder:
     def add_measurement(self, qubit: str, bit: str):
         """
         Add a measurement operation.
-        
+
         OpenQASM 3 uses the assignment form for measurements:
-            bit_expr = measure qubit_expr;
+            measure qubit_expr -> bit_expr;
         """
-        self.lines.append(f"{bit} = measure {qubit};")
+        self.lines.append(f"measure {qubit} -> {bit};")
         
     def add_reset(self, qubit: str):
         """
@@ -494,19 +494,19 @@ class QASM3Builder:
         Return a symbolic name if the float matches a well-known constant, else None.
         """
         if abs(value - np.pi) < 1e-10:
-            return "PI"
+            return "pi"
         if abs(value - np.pi/2) < 1e-10:
-            return "PI_2"
+            return "pi_2"
         if abs(value - np.pi/4) < 1e-10:
-            return "PI_4"
+            return "pi_4"
         if abs(value - 2*np.pi) < 1e-10:
-            return "TAU"
+            return "tau"
         if abs(value - np.e) < 1e-10:
-            return "E"
+            return "e"
         if abs(value - np.sqrt(2)) < 1e-10:
-            return "SQRT2"
+            return "sqrt2"
         if abs(value - 1/np.sqrt(2)) < 1e-10:
-            return "SQRT1_2"
+            return "sqrt1_2"
         return None
 
     def format_parameter(self, param: Any) -> str:
@@ -549,14 +549,16 @@ class QASM3Builder:
     def _identify_mathematical_constant(self, value: float) -> Optional[str]:
         """Identify common mathematical constants and return their QASM names."""
         constants = [
-            (np.pi, "PI"),
-            (np.pi/2, "PI_2"),
-            (np.pi/4, "PI_4"),
-            (np.pi/8, "PI/8"),
-            (2*np.pi, "TAU"),
-            (np.e, "E"),
-            (np.sqrt(2), "SQRT2"),
-            (1/np.sqrt(2), "SQRT1_2"),
+            (np.pi, "pi"),
+            (np.pi/2, "pi_2"),
+            (np.pi/3, "pi/3"),
+            (np.pi/4, "pi_4"),
+            (np.pi/6, "pi/6"),
+            (np.pi/8, "pi/8"),
+            (2*np.pi, "tau"),
+            (np.e, "e"),
+            (np.sqrt(2), "sqrt2"),
+            (1/np.sqrt(2), "sqrt1_2"),
         ]
 
         for constant_value, constant_name in constants:
