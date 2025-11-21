@@ -101,6 +101,9 @@ class QiskitToQASM3Converter:
         """
         self._ensure_qiskit_available()
 
+        # Apply preprocessing to handle compatibility issues
+        source = self._preprocess_qiskit_source(source)
+
         namespace = self._execute_source_code(source)
 
         # Try different strategies to extract the circuit
@@ -116,6 +119,28 @@ class QiskitToQASM3Converter:
             )
 
         return circuit
+
+    def _preprocess_qiskit_source(self, source: str) -> str:
+        """
+        Preprocess Qiskit source code to handle compatibility issues.
+
+        Args:
+            source: Original Qiskit source code
+
+        Returns:
+            Preprocessed source code
+        """
+        import re
+
+        # Replace qc.gphase(value) calls with qc.global_phase += value
+        # since gphase is not a method in older Qiskit versions
+        # Use regex to match variable.gphase( parameters )
+        pattern = r'(\w+)\.gphase\(([^)]+)\)'
+        replacement = r'\1.global_phase += \2'
+
+        processed_source = re.sub(pattern, replacement, source)
+
+        return processed_source
 
     def _ensure_qiskit_available(self) -> None:
         """Ensure Qiskit is available, raising ImportError if not."""
@@ -541,7 +566,7 @@ class QiskitToQASM3Converter:
             vprint(f"[QiskitToQASM3Converter] [{idx}] GateNode name={name} qubits={op.qubits} params={op.parameters} modifiers={getattr(op, 'modifiers', None)}")
 
         # Standard 1- and 2-qubit gates
-        if name in ['h','x','y','z','s','t','sx','id','i','swap','cx','cz','ccx']:
+        if name in ['h','x','y','z','s','t','sx','id','i','swap','cx','cz','cy','ch','ccx','ccz','cswap']:
             actual_name = 'cx' if name == 'cnot' else name
             modifiers = getattr(op, 'modifiers', None)
             builder.apply_gate(actual_name, qubits_str, modifiers=modifiers if modifiers else None)
@@ -559,6 +584,13 @@ class QiskitToQASM3Converter:
             if VERBOSE:
                 vprint(f"[QiskitToQASM3Converter]     controlled params_raw={raw_params} params_fmt={params}")
             builder.apply_gate(name, qubits_str, parameters=params)
+        # Global phase gate
+        elif name == 'gphase':
+            raw_params = (op.parameters or [])
+            params = [builder.format_parameter(p) for p in raw_params]
+            if VERBOSE:
+                vprint(f"[QiskitToQASM3Converter]     gphase params_raw={raw_params} params_fmt={params}")
+            builder.apply_gate('gphase', [], parameters=params)
         else:
             builder.add_comment(f"Unsupported gate: {name}")
 
@@ -593,22 +625,22 @@ class QiskitToQASM3Converter:
     def convert(self, qiskit_source: str) -> ConversionResult:
         """
         Convert Qiskit source code to OpenQASM 3.0 format using AST-based parsing.
-        
+
         This method now uses AST parsing instead of dynamic execution for improved
         security and reliability. It parses the source code to extract circuit operations
         without executing potentially unsafe code.
-        
+
         Args:
             qiskit_source (str): Complete Qiskit source code defining get_circuit() function
-            
+
         Returns:
             ConversionResult: Object containing QASM code and conversion statistics
-            
+
         Raises:
             ValueError: If source code is invalid or doesn't define required function
             ImportError: If Qiskit dependencies are missing
             RuntimeError: If conversion process fails
-            
+
         Example:
             >>> converter = QiskitToQASM3Converter()
             >>> source = '''
@@ -623,6 +655,9 @@ class QiskitToQASM3Converter:
             >>> result = converter.convert(source)
             >>> print(f"Circuit has {result.stats.n_qubits} qubits and depth {result.stats.depth}")
         """
+        # Preprocess source code for compatibility before any parsing or execution
+        qiskit_source = self._preprocess_qiskit_source(qiskit_source)
+
         # Try AST-based conversion first
         if VERBOSE:
             vprint("[QiskitToQASM3Converter] Attempt AST-based conversion")
