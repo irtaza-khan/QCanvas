@@ -66,8 +66,8 @@ async def convert_to_qasm(request: ConversionRequest):
         return ConversionResponse(
             success=False,
             error=f"Internal server error: {str(e)}",
-            framework=request.framework,
-            qasm_version=request.qasm_version
+            framework=getattr(request, 'framework', 'unknown'),
+            qasm_version=getattr(request, 'qasm_version', '3.0')
         )
 
 @router.get("/frameworks", response_model=List[str])
