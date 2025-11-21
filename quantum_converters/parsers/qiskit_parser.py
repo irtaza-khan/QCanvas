@@ -109,6 +109,21 @@ class QiskitASTVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
+    def visit_AugAssign(self, node: ast.AugAssign) -> None:
+        """Handle augmented assignments like qc.global_phase += value."""
+        if VERBOSE:
+            vprint("[QiskitASTVisitor] visit_AugAssign: inspecting augmented assignment node")
+        # Check for qc.global_phase += value
+        if isinstance(node.target, ast.Attribute) and isinstance(node.target.value, ast.Name) and node.target.value.id in self.circuit_vars and node.target.attr == 'global_phase':
+            if VERBOSE:
+                vprint("[QiskitASTVisitor] Detected global_phase assignment")
+            param = self._extract_parameter(node.value)
+            self.operations.append(GateNode(name='gphase', qubits=[], parameters=[param]))
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Added global phase gphase({param})")
+
+        self.generic_visit(node)
+
     def visit_Expr(self, node: ast.Expr) -> None:
         """Handle expression statements, typically method calls."""
         if VERBOSE:
@@ -179,8 +194,10 @@ class QiskitASTVisitor(ast.NodeVisitor):
             self._handle_parameterized_single_qubit_gate(method_name, args)
         elif method_name in ['sdg', 'tdg']:
             self._handle_inverse_gate(method_name, args)
-        elif method_name in ['ccx']:
+        elif method_name in ['ccx', 'ccz', 'cswap']:
             self._handle_three_qubit_gate(method_name, args)
+        elif method_name == 'gphase':
+            self._handle_global_phase(args)
         elif method_name in ['cp', 'crx', 'cry', 'crz', 'cu']:
             self._handle_controlled_two_qubit_gate(method_name, args)
         elif method_name == 'u':
@@ -253,12 +270,22 @@ class QiskitASTVisitor(ast.NodeVisitor):
                 vprint(f"[QiskitASTVisitor] Added rotation {method_name}({param}) on q[{qubit}]")
 
     def _handle_three_qubit_gate(self, method_name: str, args: List[ast.expr]) -> None:
-        """Handle three-qubit gates like ccx."""
+        """Handle three-qubit gates like ccx, ccz, cswap."""
         if len(args) >= 3:
             q0 = self._extract_qubit_index(args[0])
             q1 = self._extract_qubit_index(args[1])
             q2 = self._extract_qubit_index(args[2])
             self.operations.append(GateNode(name=method_name, qubits=[q0, q1, q2]))
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Added three-qubit gate {method_name} on q[{q0}], q[{q1}], q[{q2}]")
+
+    def _handle_global_phase(self, args: List[ast.expr]) -> None:
+        """Handle global phase gate."""
+        if args:
+            param = self._extract_parameter(args[0])
+            self.operations.append(GateNode(name='gphase', qubits=[], parameters=[param]))
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Added global phase gphase({param})")
 
     def _handle_inverse_gate(self, method_name: str, args: List[ast.expr]) -> None:
         """Handle inverse named gates like sdg/tdg by emitting inv modifier on s/t."""
@@ -275,9 +302,9 @@ class QiskitASTVisitor(ast.NodeVisitor):
         """Handle universal U gate."""
         if len(args) >= 4:
             if VERBOSE:
-                vprint("[QiskitASTVisitor]   rule=u_gate -> extract_qubit_index(args[0]); extract parameters args[1:4]")
-            qubit = self._extract_qubit_index(args[0])
-            params = [self._extract_parameter(arg) for arg in args[1:4]]
+                vprint("[QiskitASTVisitor]   rule=u_gate -> extract parameters args[0:3]; extract_qubit_index(args[3])")
+            params = [self._extract_parameter(arg) for arg in args[0:3]]
+            qubit = self._extract_qubit_index(args[3])
             self.operations.append(GateNode(
                 name='u',
                 qubits=[qubit],
@@ -385,8 +412,8 @@ class QiskitASTVisitor(ast.NodeVisitor):
             # Mathematical expression
             return self._extract_expression(node)
         elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.attr == 'pi' and node.value.id in ('np','numpy'):
-            return 'PI'
-        return 0
+            return 'pi'
+        return self._extract_parameter_value(node)
 
     def _extract_expression(self, node: ast.expr) -> str:
         """Extract simple numpy pi expressions into OpenQASM constants."""
@@ -394,6 +421,9 @@ class QiskitASTVisitor(ast.NodeVisitor):
         if text:
             return text
         text = self._extract_pi_fraction(node)
+        if text:
+            return text
+        text = self._extract_pi_multiplication(node)
         if text:
             return text
         if VERBOSE:
@@ -405,15 +435,15 @@ class QiskitASTVisitor(ast.NodeVisitor):
 
     def _extract_pi_constant(self, node: ast.expr) -> Optional[str]:
         if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.attr == 'pi' and node.value.id in ('np', 'numpy'):
-            return 'PI'
+            return 'pi'
         return None
 
     def _extract_pi_fraction(self, node: ast.expr) -> Optional[str]:
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
             left, right = node.left, node.right
             if isinstance(left, ast.Attribute) and isinstance(left.value, ast.Name) and left.attr == 'pi' and left.value.id in ('np','numpy'):
-                if isinstance(right, ast.Constant) and isinstance(right.value, int) and right.value in (2, 4, 8):
-                    return f"PI/{int(right.value)}"
+                if isinstance(right, ast.Constant) and isinstance(right.value, int) and right.value in (2, 3, 4, 6, 8):
+                    return f"pi/{int(right.value)}"
         return None
 
 
