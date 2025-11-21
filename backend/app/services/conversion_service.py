@@ -104,6 +104,7 @@ class ConversionService:
             "error": error_msg,
             "framework": framework,
             "qasm_code": None,
+            "qasm_version": "3",
             "conversion_stats": None
         }
 
