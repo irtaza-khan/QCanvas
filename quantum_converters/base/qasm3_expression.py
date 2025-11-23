@@ -13,7 +13,7 @@ HOW IT LINKS TO OTHER FILES:
     - Part of: Base module providing expression handling utilities
 
 INPUT:
-    - Expression strings: Python-style expressions (e.g., "theta + PI/2", "x == 0")
+    - Expression strings: Python-style expressions (e.g., "theta + pi/2", "x == 0")
     - Literal values: Numbers, booleans, constants
     - Used in: Parameter formatting, conditional statements, assignments
 
@@ -40,7 +40,7 @@ SUPPORTED OPERATIONS (Iteration I):
     - Comparison: <, >, <=, >=, ==, !=
     - Logical: &&, ||, !
     - Mathematical functions: sqrt, exp, log, sin, cos, tan, etc.
-    - Literals: Integers, floats, booleans, constants (PI, E, etc.)
+    - Literals: Integers, floats, booleans, constants (pi, E, etc.)
 
 ARCHITECTURE ROLE:
     Provides expression handling utilities for the code generation system.
@@ -142,11 +142,11 @@ class QASM3ExpressionParser:
             
         # Check for mathematical constants
         constants = {
-            'PI': (3.141592653589793, 'float'),
-            'E': (2.718281828459045, 'float'),
-            'PI_2': (1.5707963267948966, 'float'),
-            'PI_4': (0.7853981633974483, 'float'),
-            'TAU': (6.283185307179586, 'float'),
+            'pi': (3.141592653589793, 'float'),
+            'e': (2.718281828459045, 'float'),
+            'pi_2': (1.5707963267948966, 'float'),
+            'pi_4': (0.7853981633974483, 'float'),
+            'tau': (6.283185307179586, 'float'),
         }
         
         if value_str in constants:

@@ -96,7 +96,7 @@ This document details the full workflow in the QCanvas project starting from the
   - Variable declarations for parameters
   - Gate definitions and operations
   - Measurements, resets, barriers
-- Formats parameters with mathematical constants (PI, E, etc.)
+- Formats parameters with mathematical constants (pi, E, etc.)
 - Applies gate modifiers (control, inverse, power)
 - Returns the complete QASM code string.
 

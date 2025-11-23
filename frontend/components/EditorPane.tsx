@@ -61,11 +61,38 @@ export default function EditorPane() {
     }, 300)
   ).current
 
-  const handleEditorDidMount = (editor: any, monaco: any) => {
+  const handleEditorDidMount = (editor: any, monacoInstance: any) => {
     editorRef.current = editor
 
+    // Ensure Ctrl+A selects all text as a single continuous selection
+    // The issue: setSelection might not clear existing multi-cursor selections
+    // Solution: Use setSelections with exactly one selection to ensure a single continuous selection
+    editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyA, () => {
+      const model = editor.getModel()
+      if (!model) return
+      
+      // Get the full range of the document
+      const fullRange = model.getFullModelRange()
+      
+      // Create a Selection object from the Range
+      // This ensures we have exactly one selection, clearing any existing multi-cursor state
+      const selection = new monacoInstance.Selection(
+        fullRange.startLineNumber,
+        fullRange.startColumn,
+        fullRange.endLineNumber,
+        fullRange.endColumn
+      )
+      
+      // Use setSelections with a single selection array to ensure exactly one continuous selection
+      // This prevents the selection from being split into multiple parts
+      editor.setSelections([selection])
+      
+      // Reveal the selection to ensure it's visible
+      editor.revealRangeInCenter(fullRange)
+    })
+
     // Configure Monaco Editor themes
-    monaco.editor.defineTheme('quantum-dark', {
+    monacoInstance.editor.defineTheme('quantum-dark', {
       base: 'vs-dark',
       inherit: true,
       rules: [
@@ -87,7 +114,7 @@ export default function EditorPane() {
       },
     })
 
-    monaco.editor.defineTheme('quantum-light', {
+    monacoInstance.editor.defineTheme('quantum-light', {
       base: 'vs',
       inherit: true,
       rules: [
@@ -111,33 +138,33 @@ export default function EditorPane() {
 
     // Set theme based on current theme
     const currentTheme = document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark'
-    monaco.editor.setTheme(currentTheme)
+    monacoInstance.editor.setTheme(currentTheme)
 
     // Add keyboard shortcuts
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+    editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS, () => {
       // Save functionality will be handled by TopBar
       // This prevents default browser save dialog
     })
 
     // Find and Replace shortcuts
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF, () => {
+    editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyF, () => {
       setFindReplaceMode('find')
       setShowFindReplace(true)
     })
 
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyH, () => {
+    editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyH, () => {
       setFindReplaceMode('replace')
       setShowFindReplace(true)
     })
 
     // Add quantum-specific snippets for Python/Qiskit
-    monaco.languages.registerCompletionItemProvider('python', {
+    monacoInstance.languages.registerCompletionItemProvider('python', {
       provideCompletionItems: () => {
         return {
           suggestions: [
             {
               label: 'qiskit-bell',
-              kind: monaco.languages.CompletionItemKind.Snippet,
+              kind: monacoInstance.languages.CompletionItemKind.Snippet,
               insertText: [
                 'from qiskit import QuantumCircuit, execute, Aer',
                 '',
@@ -158,7 +185,7 @@ export default function EditorPane() {
             },
             {
               label: 'qiskit-grover',
-              kind: monaco.languages.CompletionItemKind.Snippet,
+              kind: monacoInstance.languages.CompletionItemKind.Snippet,
               insertText: [
                 'from qiskit import QuantumCircuit, execute, Aer',
                 'import numpy as np',
@@ -320,6 +347,7 @@ export default function EditorPane() {
       {/* Monaco Editor */}
       <div className="flex-1 overflow-hidden">
         <Editor
+          key={activeFile.id}
           height="100%"
           language={getMonacoLanguage(activeFile.language)}
           value={activeFile.content}

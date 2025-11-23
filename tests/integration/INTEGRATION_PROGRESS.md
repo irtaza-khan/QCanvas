@@ -28,7 +28,7 @@
 ### Sample Output Features
 
 ✅ **Types**: qubit, bit, int, uint, float, angle, bool  
-✅ **Constants**: PI, E, PI_2, PI_4, TAU, SQRT2, SQRT1_2  
+✅ **Constants**: pi, E, pi_2, pi_4, TAU, SQRT2, SQRT1_2  
 ✅ **Gate Modifiers**: `inv @ rz(PI_2) q[0];` (inverse gates)  
 ✅ **Control Flow**: if/else statements, for loops  
 ✅ **Statistics**: Gate counts, depth, measurements tracked  

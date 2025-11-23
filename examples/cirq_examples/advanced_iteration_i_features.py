@@ -19,7 +19,7 @@ def get_circuit():
     Create a Cirq circuit demonstrating advanced OpenQASM 3.0 features.
 
     This circuit should generate OpenQASM 3.0 code with:
-    - Mathematical constants (PI, E)
+    - Mathematical constants (pi, E)
     - Constants and variables
     - Classical operations
     - Control flow
@@ -41,9 +41,9 @@ def get_circuit():
     circuit.append(cirq.Z(q3))  # Pauli-Z gate
 
     # Parameterized gates with mathematical constants
-    circuit.append(cirq.rx(np.pi/2)(q0))  # Should generate: rx(PI/2) q[0];
-    circuit.append(cirq.ry(np.pi/4)(q1))  # Should generate: ry(PI/4) q[1];
-    circuit.append(cirq.rz(np.pi)(q2))    # Should generate: rz(PI) q[2];
+    circuit.append(cirq.rx(np.pi/2)(q0))  # Should generate: rx(pi/2) q[0];
+    circuit.append(cirq.ry(np.pi/4)(q1))  # Should generate: ry(pi/4) q[1];
+    circuit.append(cirq.rz(np.pi)(q2))    # Should generate: rz(pi) q[2];
 
     # Controlled gates
     circuit.append(cirq.CNOT(q0, q1))  # CNOT gate
@@ -72,10 +72,10 @@ OPENQASM 3.0;
 include "stdgates.inc";
 
 // Mathematical constants
-const float PI = 3.141592653589793;
+const float pi = 3.141592653589793;
 const float E = 2.718281828459045;
-const float PI_2 = 1.5707963267948966;  // PI/2
-const float PI_4 = 0.7853981633974483;  // PI/4
+const float pi_2 = 1.5707963267948966;  // pi/2
+const float pi_4 = 0.7853981633974483;  // pi/4
 
 // Quantum registers
 qubit[4] q;
@@ -93,7 +93,7 @@ float temp_angle;
 
 // Classical operations examples
 // Assignment statements
-temp_angle = PI/2;
+temp_angle = pi/2;
 loop_index = 0;
 
 // Circuit operations
@@ -102,9 +102,9 @@ h q[0];
 x q[1];
 y q[2];
 z q[3];
-rx(PI/2) q[0];
-ry(PI/4) q[1];
-rz(PI) q[2];
+rx(pi/2) q[0];
+ry(pi/4) q[1];
+rz(pi) q[2];
 cx q[0], q[1];
 cz q[2], q[3];
 swap q[0], q[3];

@@ -34,7 +34,7 @@ STAGE OF USE:
 
 TOOLS USED:
     - re (regex): Identifier validation, slice parsing
-    - numpy: Mathematical constant detection (PI, E, etc.)
+    - numpy: Mathematical constant detection (pi, e, etc.)
     - typing: Type hints for parameters and return values
     - dataclasses: Internal data structures (QASMVariable, QASMGateDefinition, QASMAlias)
 
@@ -459,12 +459,13 @@ class QASM3Builder:
         Add a for loop.
         
         Args:
-            variable: Loop variable name
+            variable: Loop variable name (can include type, e.g., "uint i")
             range_spec: Range specification (e.g., "[0:10]" or "{0, 2, 4, 6}")
             body: List of statements in loop body
         """
         self.lines.append(f"for {variable} in {range_spec} {{")
         for stmt in body:
+            # Statements are already indented by the builder, so we add them as-is
             self.lines.append(f"    {stmt}")
         self.lines.append("}")
         

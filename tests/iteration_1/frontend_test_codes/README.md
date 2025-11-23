@@ -65,7 +65,7 @@ angle theta;
 bool condition_result;
 
 // Constants
-const float PI = 3.141592653589793;
+const float pi = 3.141592653589793;
 const float E = 2.718281828459045;
 const float PI_2 = 1.5707963267948966;
 const float PI_4 = 0.7853981633974483;
@@ -94,11 +94,11 @@ id q[4];    // Identity
 
 ### 5. **Gates - Parameterized**
 ```qasm
-rx(PI/2) q[0];           // Rotation-X
-ry(PI/4) q[1];           // Rotation-Y
-rz(PI) q[2];             // Rotation-Z
-p(PI/3) q[3];            // Phase
-u(PI/2, 0, PI) q[4];     // Universal gate
+rx(pi/2) q[0];           // Rotation-X
+ry(pi/4) q[1];           // Rotation-Y
+rz(pi) q[2];             // Rotation-Z
+p(pi/3) q[3];            // Phase
+u(pi/2, 0, pi) q[4];     // Universal gate
 ```
 
 ### 6. **Gates - Two-Qubit**
@@ -119,7 +119,7 @@ ccz q[0], q[1], q[2];    // Controlled-Controlled-Z
 
 ### 8. **Gates - Special**
 ```qasm
-gphase(PI/4);  // Global phase
+gphase(pi/4);  // Global phase
 ```
 
 ### 9. **Gate Modifiers**
@@ -150,20 +150,20 @@ gate my_gate(theta) a, b {
 }
 
 // Use the custom gate
-my_gate(PI/2) q[0], q[1];
+my_gate(pi/2) q[0], q[1];
 ```
 
 ### 12. **Built-in Quantum Instructions**
 ```qasm
 reset q[0];             // Reset
-c[0] = measure q[0];    // Measurement
+measure q[0] -> c[0];    // Measurement
 barrier q[0], q[1];     // Barrier
 ```
 
 ### 13. **Classical Operations**
 ```qasm
 // Assignment
-temp_angle = PI/2;
+temp_angle = pi/2;
 loop_index = 0;
 counter = 10;
 
@@ -218,7 +218,7 @@ for i in [0:2:10] {  // Start:Step:End
 ### 17. **Built-in Mathematical Functions** (If used in parameters)
 ```qasm
 temp_angle = sqrt(2.0);
-result = sin(PI/4);
+result = sin(pi/4);
 value = cos(angle);
 ```
 
@@ -228,7 +228,7 @@ When testing each file, verify the converted OpenQASM 3.0 code includes:
 
 - [ ] Correct version header (`OPENQASM 3.0;`)
 - [ ] Include statement (`include "stdgates.inc";`)
-- [ ] Mathematical constants (PI, E, etc.)
+- [ ] Mathematical constants (pi, E, etc.)
 - [ ] Proper register declarations (qubit[], bit[])
 - [ ] Classical variable declarations (int, uint, float, angle, bool)
 - [ ] All basic gates correctly converted

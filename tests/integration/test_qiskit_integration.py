@@ -65,9 +65,9 @@ def get_circuit():
         result = converter.convert(source)
         
         qasm = result.qasm_code
-        assert "rx(PI_2) q[0];" in qasm or "rx(PI/2) q[0];" in qasm
-        assert "ry(PI_4) q[0];" in qasm or "ry(PI/4) q[0];" in qasm
-        assert "rz(PI) q[0];" in qasm
+        assert "rx(pi_2) q[0];" in qasm or "rx(pi/2) q[0];" in qasm
+        assert "ry(pi_4) q[0];" in qasm or "ry(pi/4) q[0];" in qasm
+        assert "rz(pi) q[0];" in qasm
         
     def test_measurements(self):
         """Test Qiskit circuit with measurements"""
@@ -86,8 +86,8 @@ def get_circuit():
         
         qasm = result.qasm_code
         assert "bit[2] c;" in qasm
-        assert "c[0] = measure q[0];" in qasm
-        assert "c[1] = measure q[1];" in qasm
+        assert "measure q[0] -> c[0];" in qasm
+        assert "measure q[1] -> c[1];" in qasm
         
     def test_inverse_modifier(self):
         """Test inverse gate modifier"""

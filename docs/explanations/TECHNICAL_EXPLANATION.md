@@ -202,7 +202,7 @@ Comprehensive OpenQASM 3.0 code generator with:
 build_standard_prelude(num_qubits, num_clbits)
 apply_gate(gate_name, qubits, parameters, modifiers)
 add_measurement(qubit, bit)
-format_parameter(param)  # Handles PI, E, etc.
+format_parameter(param)  # Handles pi, E, etc.
 ```
 
 ##### CircuitAST (`quantum_converters/base/circuit_ast.py`)
@@ -394,7 +394,7 @@ class QiskitToQASM3Converter:
 def format_parameter(self, param: Any) -> str:
     # Handles mathematical constants
     if abs(value - np.pi) < 1e-10:
-        return "PI"
+        return "pi"
     # ... other constants
 ```
 

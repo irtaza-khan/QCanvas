@@ -19,7 +19,7 @@ def get_circuit():
     Create a PennyLane circuit demonstrating advanced OpenQASM 3.0 features.
 
     This circuit should generate OpenQASM 3.0 code with:
-    - Mathematical constants (PI, E)
+    - Mathematical constants (pi, E)
     - Constants and variables
     - Classical operations
     - Control flow
@@ -41,9 +41,9 @@ def get_circuit():
         qml.PauliZ(wires=3)    # Pauli-Z gate
 
         # Parameterized gates with mathematical constants
-        qml.RX(np.pi/2, wires=0)  # Should generate: rx(PI/2) q[0];
-        qml.RY(np.pi/4, wires=1)  # Should generate: ry(PI/4) q[1];
-        qml.RZ(np.pi, wires=2)    # Should generate: rz(PI) q[2];
+        qml.RX(np.pi/2, wires=0)  # Should generate: rx(pi/2) q[0];
+        qml.RY(np.pi/4, wires=1)  # Should generate: ry(pi/4) q[1];
+        qml.RZ(np.pi, wires=2)    # Should generate: rz(pi) q[2];
         qml.PhaseShift(np.e, wires=3)  # Should generate: p(E) q[3];
 
         # Controlled gates
@@ -65,7 +65,7 @@ OPENQASM 3.0;
 include "stdgates.inc";
 
 // Mathematical constants
-const float PI = 3.141592653589793;
+const float pi = 3.141592653589793;
 const float E = 2.718281828459045;
 
 // Quantum registers
@@ -83,13 +83,13 @@ h q[0];
 x q[1];
 y q[2];
 z q[3];
-rx(PI/2) q[0];
-ry(PI/4) q[1];
-rz(PI) q[2];
+rx(pi/2) q[0];
+ry(pi/4) q[1];
+rz(pi) q[2];
 p(E) q[3];
 cx q[0], q[1];
 cz q[2], q[3];
-cp(PI/8) q[1], q[2];
+cp(pi/8) q[1], q[2];
 swap q[0], q[3];
 c[0] = measure q[0];
 c[1] = measure q[1];

@@ -106,7 +106,7 @@ def get_circuit_ops():
 # Expected OpenQASM 3.0 features in output:
 # ✓ OPENQASM 3.0;
 # ✓ include "stdgates.inc";
-# ✓ Mathematical constants (PI, E, PI_2, PI_4)
+# ✓ Mathematical constants (pi, E, pi_2, pi_4)
 # ✓ qubit[5] q;
 # ✓ bit[5] c;
 # ✓ Classical variables declarations

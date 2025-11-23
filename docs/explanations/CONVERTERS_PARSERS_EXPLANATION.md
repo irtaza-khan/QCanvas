@@ -216,7 +216,7 @@ def _extract_parameter(self, node: ast.expr) -> Any:
         # Mathematical expression
         return self._extract_expression(node)
     elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.attr == 'pi' and node.value.id in ('np','numpy'):
-        return 'PI'
+        return 'pi'
     return 0
 ```
 
@@ -594,19 +594,19 @@ def format_parameter(self, param: Any) -> str:
     """Format a parameter value, recognizing mathematical constants."""
     if isinstance(param, str):
         # Check for mathematical constants
-        if param.upper() == 'PI':
-            return 'PI'
+        if param.lower() == 'pi':
+            return 'pi'
         elif param.upper() == 'E':
             return 'E'
         return param
     elif isinstance(param, (int, float)):
         # Check for common constants
         if abs(param - np.pi) < 1e-10:
-            return "PI"
+            return "pi"
         elif abs(param - np.pi/2) < 1e-10:
-            return "PI_2"
+            return "pi_2"
         elif abs(param - np.pi/4) < 1e-10:
-            return "PI_4"
+            return "pi_4"
         elif abs(param - np.e) < 1e-10:
             return "E"
         else:

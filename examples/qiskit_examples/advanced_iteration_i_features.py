@@ -19,7 +19,7 @@ def get_circuit():
     Create a quantum circuit demonstrating advanced OpenQASM 3.0 features.
 
     This circuit should generate OpenQASM 3.0 code with:
-    - Mathematical constants (PI, E)
+    - Mathematical constants (pi, E)
     - Constants and variables
     - Classical operations
     - Control flow
@@ -42,9 +42,9 @@ def get_circuit():
     qc.z(3)  # Pauli-Z gate
 
     # Parameterized gates with mathematical constants
-    qc.rx(np.pi/2, 0)  # Should generate: rx(PI/2) q[0];
-    qc.ry(np.pi/4, 1)  # Should generate: ry(PI/4) q[1];
-    qc.rz(np.pi, 2)    # Should generate: rz(PI) q[2];
+    qc.rx(np.pi/2, 0)  # Should generate: rx(pi/2) q[0];
+    qc.ry(np.pi/4, 1)  # Should generate: ry(pi/4) q[1];
+    qc.rz(np.pi, 2)    # Should generate: rz(pi) q[2];
     qc.p(np.e, 3)      # Should generate: p(E) q[3];
 
     # Controlled gates
@@ -77,7 +77,7 @@ OPENQASM 3.0;
 include "stdgates.inc";
 
 // Mathematical constants
-const float PI = 3.141592653589793;
+const float pi = 3.141592653589793;
 const float E = 2.718281828459045;
 
 // Quantum and classical registers
@@ -97,13 +97,13 @@ h q[0];
 x q[1];
 y q[2];
 z q[3];
-rx(PI/2) q[0];
-ry(PI/4) q[1];
-rz(PI) q[2];
+rx(pi/2) q[0];
+ry(pi/4) q[1];
+rz(pi) q[2];
 p(E) q[3];
 cx q[0], q[1];
 cz q[2], q[3];
-cp(PI/8) q[1], q[2];
+cp(pi/8) q[1], q[2];
 rx(theta) q[0];
 ry(phi) q[1];
 swap q[0], q[3];

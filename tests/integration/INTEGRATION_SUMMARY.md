@@ -216,7 +216,7 @@ OPENQASM 3.0;
 include "stdgates.inc";
 
 // Mathematical constants
-const float PI = 3.141592653589793;
+const float pi = 3.141592653589793;
 const float E = 2.718281828459045;
 const float PI_2 = 1.5707963267948966;
 const float PI_4 = 0.7853981633974483;

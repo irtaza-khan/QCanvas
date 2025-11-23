@@ -175,7 +175,7 @@ def create_custom_gates():
     # Use the gates
     builder.declare_qubit_register("q", 4)
     builder.apply_gate("bell", ["q[0]", "q[1]"])
-    builder.apply_gate("my_rot", ["q[2]"], parameters=["PI/2", "PI/4"])
+    builder.apply_gate("my_rot", ["q[2]"], parameters=["pi/2", "pi/4"])
     
     return builder.get_code()
 ```
@@ -240,7 +240,7 @@ def demonstrate_broadcasting():
     builder.apply_gate_broadcast("x", "first_five")
     
     # Parameterized gate broadcasting
-    builder.apply_gate_broadcast("rx", "q", parameters=["PI/2"])
+    builder.apply_gate_broadcast("rx", "q", parameters=["pi/2"])
     
     return builder.get_code()
 ```

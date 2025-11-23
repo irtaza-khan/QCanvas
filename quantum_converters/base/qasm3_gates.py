@@ -34,7 +34,7 @@ STAGE OF USE:
     - Used throughout: Anywhere gates need to be formatted or validated
 
 TOOLS USED:
-    - numpy: Mathematical constant detection (PI, E, etc.)
+    - numpy: Mathematical constant detection (pi, E, etc.)
     - dataclasses: GateModifier dataclass
     - typing: Type hints for parameters and return values
 
@@ -264,14 +264,14 @@ class QASM3GateLibrary:
     def _identify_mathematical_constant(self, value: float) -> Optional[str]:
         """Identify common mathematical constants and return their QASM names."""
         constants = [
-            (np.pi, "PI"),
-            (np.pi/2, "PI_2"),
-            (np.pi/4, "PI_4"),
-            (2*np.pi, "TAU"),
-            (np.e, "E"),
-            (3*np.pi/4, "3*PI_4"),
-            (np.pi/3, "PI/3"),
-            (np.pi/6, "PI/6"),
+            (np.pi, "pi"),
+            (np.pi/2, "pi_2"),
+            (np.pi/4, "pi_4"),
+            (2*np.pi, "tau"),
+            (np.e, "e"),
+            (3*np.pi/4, "3*pi_4"),
+            (np.pi/3, "pi/3"),
+            (np.pi/6, "pi/6"),
             (0, "0"),
         ]
 

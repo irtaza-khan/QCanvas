@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, Settings } from 'lucide-react'
 import { InputLanguage } from '@/types'
 
@@ -22,6 +22,13 @@ export default function SimulationControls({
   setShots
 }: Readonly<SimulationControlsProps>) {
   const [hoveredControl, setHoveredControl] = useState<string | null>(null)
+  // Local state for shots input to allow empty string during editing
+  const [shotsInput, setShotsInput] = useState<string>(shots.toString())
+
+  // Sync local state when shots prop changes from outside
+  useEffect(() => {
+    setShotsInput(shots.toString())
+  }, [shots])
 
   return (
     <div className="min-h-[72px] bg-gradient-to-r from-editor-sidebar via-editor-bg to-editor-sidebar border-b border-editor-border flex items-center justify-between px-6 py-3 animate-fade-in">
@@ -118,9 +125,33 @@ export default function SimulationControls({
           </div>
           <div className="relative">
             <input
-              type="number"
-              value={shots}
-              onChange={(e) => setShots(Math.max(1, Number.parseInt(e.target.value) || 1024))}
+              type="text"
+              value={shotsInput}
+              onChange={(e) => {
+                const value = e.target.value
+                // Allow empty string or valid numbers
+                if (value === '' || /^\d+$/.test(value)) {
+                  setShotsInput(value)
+                }
+              }}
+              onBlur={(e) => {
+                // When user leaves the field, validate and set the actual shots value
+                const numValue = Number.parseInt(e.target.value)
+                if (isNaN(numValue) || numValue < 1) {
+                  setShotsInput('1024')
+                  setShots(1024)
+                } else {
+                  const clampedValue = Math.min(Math.max(1, numValue), 100000)
+                  setShotsInput(clampedValue.toString())
+                  setShots(clampedValue)
+                }
+              }}
+              onKeyDown={(e) => {
+                // Allow Enter to blur and validate
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur()
+                }
+              }}
               min="1"
               max="100000"
               className={`bg-editor-bg border text-xs text-white rounded-lg px-4 py-2.5 w-32 text-center focus-quantum transition-all duration-300 font-mono font-semibold shadow-lg hover:shadow-green-500/20 ${

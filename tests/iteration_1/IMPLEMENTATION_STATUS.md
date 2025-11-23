@@ -108,7 +108,7 @@
 |------|--------|-------|
 | Standard Gate Library | ✅ Implemented | All stdgates.inc gates |
 | Built-in Functions | ✅ Implemented | Math functions defined |
-| Mathematical Constants | ✅ Implemented | PI, E, TAU, etc. |
+| Mathematical Constants | ✅ Implemented | pi, E, TAU, etc. |
 
 ---
 

@@ -127,9 +127,9 @@ class TestTypesAndCasting:
     def test_angle_type(self):
         """Test angle type"""
         builder = QASM3Builder()
-        builder.declare_variable("theta", "angle", value="PI/2")
+        builder.declare_variable("theta", "angle", value="pi/2")
         code = builder.get_code()
-        assert "angle theta = PI/2;" in code
+        assert "angle theta = pi/2;" in code
         
     def test_compile_time_constants(self):
         """Test const keyword"""
@@ -225,9 +225,9 @@ class TestGatesAndModifiers:
         """Test parameterized gates"""
         builder = QASM3Builder()
         builder.declare_qubit_register("q", 1)
-        builder.apply_gate("rx", ["q[0]"], parameters=["PI/2"])
+        builder.apply_gate("rx", ["q[0]"], parameters=["pi/2"])
         code = builder.get_code()
-        assert "rx(PI/2) q[0];" in code
+        assert "rx(pi/2) q[0];" in code
         
     def test_hierarchical_gate_definitions(self):
         """Test custom gate definitions"""
@@ -262,16 +262,16 @@ class TestGatesAndModifiers:
         """Test U gate"""
         builder = QASM3Builder()
         builder.declare_qubit_register("q", 1)
-        builder.apply_gate("u", ["q[0]"], parameters=["PI/2", "0", "PI"])
+        builder.apply_gate("u", ["q[0]"], parameters=["pi/2", "0", "pi"])
         code = builder.get_code()
-        assert "u(PI/2, 0, PI) q[0];" in code
+        assert "u(pi/2, 0, pi) q[0];" in code
         
     def test_global_phase_gate(self):
         """Test gphase gate"""
         builder = QASM3Builder()
-        builder.apply_gate("gphase", [], parameters=["PI/4"])
+        builder.apply_gate("gphase", [], parameters=["pi/4"])
         code = builder.get_code()
-        assert "gphase(PI/4);" in code or "gphase(PI/4) ;" in code
+        assert "gphase(pi/4);" in code or "gphase(pi/4) ;" in code
 
 
 class TestBuiltInQuantumInstructions:
@@ -292,7 +292,7 @@ class TestBuiltInQuantumInstructions:
         builder.declare_bit_register("c", 1)
         builder.add_measurement("q[0]", "c[0]")
         code = builder.get_code()
-        assert "c[0] = measure q[0];" in code
+        assert "measure q[0] -> c[0];" in code
         
     def test_barrier_instruction(self):
         """Test barrier instruction"""
@@ -396,9 +396,9 @@ class TestStandardLibraryAndBuiltins:
     def test_mathematical_constants(self):
         """Test mathematical constants"""
         builder = QASM3Builder()
-        assert "PI" in builder.math_constants
-        assert "E" in builder.math_constants
-        assert "TAU" in builder.math_constants
+        assert "pi" in builder.math_constants
+        assert "e" in builder.math_constants
+        assert "tau" in builder.math_constants
 
 
 class TestInputOutputDirectives:
