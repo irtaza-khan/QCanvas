@@ -111,6 +111,42 @@ class BarrierNode:
 
 
 @dataclass
+class ForLoopNode:
+    """
+    Represents a for loop in the circuit AST.
+
+    Attributes:
+        variable: Loop variable name (e.g., 'i')
+        range_start: Start of range (inclusive)
+        range_end: End of range (exclusive, for Python-style range)
+        body: List of operations inside the loop body
+        metadata: Additional loop metadata
+    """
+    variable: str
+    range_start: int
+    range_end: int
+    body: List[Union[GateNode, MeasurementNode, ResetNode, BarrierNode, 'ForLoopNode', 'IfStatementNode']] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class IfStatementNode:
+    """
+    Represents an if statement in the circuit AST.
+
+    Attributes:
+        condition: Condition expression (as string representation)
+        body: List of operations in the if block
+        else_body: Optional list of operations in the else block
+        metadata: Additional if statement metadata
+    """
+    condition: str
+    body: List[Union[GateNode, MeasurementNode, ResetNode, BarrierNode, 'ForLoopNode', 'IfStatementNode']] = field(default_factory=list)
+    else_body: Optional[List[Union[GateNode, MeasurementNode, ResetNode, BarrierNode, 'ForLoopNode', 'IfStatementNode']]] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class CircuitAST:
     """
     Abstract Syntax Tree representation of a quantum circuit.
@@ -127,7 +163,7 @@ class CircuitAST:
     """
     qubits: int = 0
     clbits: int = 0
-    operations: List[Union[GateNode, MeasurementNode, ResetNode, BarrierNode]] = field(default_factory=list)
+    operations: List[Union[GateNode, MeasurementNode, ResetNode, BarrierNode, 'ForLoopNode', 'IfStatementNode']] = field(default_factory=list)
     parameters: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -146,6 +182,14 @@ class CircuitAST:
     def add_barrier(self, barrier: BarrierNode) -> None:
         """Add a barrier operation to the circuit."""
         self.operations.append(barrier)
+
+    def add_for_loop(self, for_loop: 'ForLoopNode') -> None:
+        """Add a for loop to the circuit."""
+        self.operations.append(for_loop)
+
+    def add_if_statement(self, if_stmt: 'IfStatementNode') -> None:
+        """Add an if statement to the circuit."""
+        self.operations.append(if_stmt)
 
     def get_gate_count(self) -> Dict[str, int]:
         """Get count of each gate type in the circuit."""
