@@ -61,7 +61,7 @@ from qiskit import QuantumCircuit
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
 from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
-from quantum_converters.base.circuit_ast import GateNode, MeasurementNode, ResetNode, BarrierNode
+from quantum_converters.base.circuit_ast import GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
 import time
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary
 from quantum_converters.parsers.qiskit_parser import QiskitASTParser
@@ -554,6 +554,10 @@ class QiskitToQASM3Converter:
                 self._convert_reset_node(builder, idx, op)
             elif isinstance(op, BarrierNode):
                 self._convert_barrier_node(builder, idx, op)
+            elif isinstance(op, ForLoopNode):
+                self._convert_for_loop_node(builder, idx, op)
+            elif isinstance(op, IfStatementNode):
+                self._convert_if_statement_node(builder, idx, op)
             else:
                 builder.add_comment("Unsupported AST operation")
 
@@ -616,6 +620,100 @@ class QiskitToQASM3Converter:
             if VERBOSE:
                 vprint(f"[QiskitToQASM3Converter] [{idx}] Barrier on all qubits")
             builder.add_barrier(None)
+
+    def _convert_for_loop_node(self, builder: QASM3Builder, idx: int, op: ForLoopNode) -> None:
+        """Convert a for loop node to QASM."""
+        if VERBOSE:
+            vprint(f"[QiskitToQASM3Converter] [{idx}] ForLoop: {op.variable} in range({op.range_start}, {op.range_end})")
+        
+        # OpenQASM 3.0 for loop syntax: for uint i in [0:7] { ... }
+        # Note: range_end is exclusive in Python, but inclusive in OpenQASM range syntax
+        # So Python range(8) = [0,1,2,3,4,5,6,7] becomes [0:7] in OpenQASM
+        openqasm_end = op.range_end - 1 if op.range_end > op.range_start else op.range_start
+        range_spec = f"[{op.range_start}:{openqasm_end}]"
+        variable_decl = f"uint {op.variable}"
+        
+        # Convert loop body operations to QASM statements
+        body_statements = []
+        saved_lines = builder.lines
+        builder.lines = body_statements
+        
+        # Recursively convert all operations in the loop body
+        for body_op in op.body:
+            if isinstance(body_op, GateNode):
+                self._convert_gate_node(builder, 0, body_op)
+            elif isinstance(body_op, MeasurementNode):
+                self._convert_measurement_node(builder, 0, body_op)
+            elif isinstance(body_op, ResetNode):
+                self._convert_reset_node(builder, 0, body_op)
+            elif isinstance(body_op, BarrierNode):
+                self._convert_barrier_node(builder, 0, body_op)
+            elif isinstance(body_op, ForLoopNode):
+                self._convert_for_loop_node(builder, 0, body_op)
+            elif isinstance(body_op, IfStatementNode):
+                self._convert_if_statement_node(builder, 0, body_op)
+        
+        # Extract statements (they're already indented by the builder)
+        body_statements = builder.lines
+        builder.lines = saved_lines
+        
+        # Add the for loop using the builder
+        builder.add_for_loop(variable_decl, range_spec, body_statements)
+
+    def _convert_if_statement_node(self, builder: QASM3Builder, idx: int, op: IfStatementNode) -> None:
+        """Convert an if statement node to QASM."""
+        if VERBOSE:
+            vprint(f"[QiskitToQASM3Converter] [{idx}] IfStatement: {op.condition}")
+        
+        # Convert if body operations to QASM statements
+        if_body_statements = []
+        saved_lines = builder.lines
+        builder.lines = if_body_statements
+        
+        # Recursively convert all operations in the if body
+        for body_op in op.body:
+            if isinstance(body_op, GateNode):
+                self._convert_gate_node(builder, 0, body_op)
+            elif isinstance(body_op, MeasurementNode):
+                self._convert_measurement_node(builder, 0, body_op)
+            elif isinstance(body_op, ResetNode):
+                self._convert_reset_node(builder, 0, body_op)
+            elif isinstance(body_op, BarrierNode):
+                self._convert_barrier_node(builder, 0, body_op)
+            elif isinstance(body_op, ForLoopNode):
+                self._convert_for_loop_node(builder, 0, body_op)
+            elif isinstance(body_op, IfStatementNode):
+                self._convert_if_statement_node(builder, 0, body_op)
+        
+        # Extract statements
+        if_body_statements = builder.lines
+        builder.lines = saved_lines
+        
+        # Convert else body if present
+        else_body_statements = None
+        if op.else_body:
+            else_body_statements = []
+            builder.lines = else_body_statements
+            
+            for body_op in op.else_body:
+                if isinstance(body_op, GateNode):
+                    self._convert_gate_node(builder, 0, body_op)
+                elif isinstance(body_op, MeasurementNode):
+                    self._convert_measurement_node(builder, 0, body_op)
+                elif isinstance(body_op, ResetNode):
+                    self._convert_reset_node(builder, 0, body_op)
+                elif isinstance(body_op, BarrierNode):
+                    self._convert_barrier_node(builder, 0, body_op)
+                elif isinstance(body_op, ForLoopNode):
+                    self._convert_for_loop_node(builder, 0, body_op)
+                elif isinstance(body_op, IfStatementNode):
+                    self._convert_if_statement_node(builder, 0, body_op)
+            
+            else_body_statements = builder.lines
+            builder.lines = saved_lines
+        
+        # Add the if statement using the builder
+        builder.add_if_statement(op.condition, if_body_statements, else_body_statements)
 
     def _log_ast_conversion_complete(self, start_time: float) -> None:
         """Log completion of AST conversion."""

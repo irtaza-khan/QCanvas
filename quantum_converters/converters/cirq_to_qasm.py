@@ -60,7 +60,7 @@ from typing import Dict, Any, Optional, Union, List
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
-from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode
+from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
 from quantum_converters.parsers.cirq_parser import CirqASTParser
 from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
 import time
@@ -614,6 +614,10 @@ class CirqToQASM3Converter:
             builder.add_reset(f"q[{operation.qubit}]")
         elif isinstance(operation, BarrierNode):
             self._add_ast_barrier_operation(builder, operation)
+        elif isinstance(operation, ForLoopNode):
+            self._add_ast_for_loop(builder, operation)
+        elif isinstance(operation, IfStatementNode):
+            self._add_ast_if_statement(builder, operation)
 
     def _add_ast_gate_operation(self, builder: QASM3Builder, operation: GateNode):
         """Add a gate operation from AST to QASM builder."""
@@ -672,6 +676,60 @@ class CirqToQASM3Converter:
         else:
             builder.add_barrier(None)
 
+    def _add_ast_for_loop(self, builder: QASM3Builder, operation: ForLoopNode):
+        """Add a for loop from AST to QASM builder."""
+        # OpenQASM 3.0 for loop syntax: for uint i in [0:7] { ... }
+        # Note: range_end is exclusive in Python, but inclusive in OpenQASM range syntax
+        openqasm_end = operation.range_end - 1 if operation.range_end > operation.range_start else operation.range_start
+        range_spec = f"[{operation.range_start}:{openqasm_end}]"
+        variable_decl = f"uint {operation.variable}"
+        
+        # Convert loop body operations to QASM statements
+        body_statements = []
+        saved_lines = builder.lines
+        builder.lines = body_statements
+        
+        # Recursively convert all operations in the loop body
+        for body_op in operation.body:
+            self._add_ast_operation(builder, body_op)
+        
+        # Extract statements
+        body_statements = builder.lines
+        builder.lines = saved_lines
+        
+        # Add the for loop using the builder
+        builder.add_for_loop(variable_decl, range_spec, body_statements)
+
+    def _add_ast_if_statement(self, builder: QASM3Builder, operation: IfStatementNode):
+        """Add an if statement from AST to QASM builder."""
+        # Convert if body operations to QASM statements
+        if_body_statements = []
+        saved_lines = builder.lines
+        builder.lines = if_body_statements
+        
+        # Recursively convert all operations in the if body
+        for body_op in operation.body:
+            self._add_ast_operation(builder, body_op)
+        
+        # Extract statements
+        if_body_statements = builder.lines
+        builder.lines = saved_lines
+        
+        # Convert else body if present
+        else_body_statements = None
+        if operation.else_body:
+            else_body_statements = []
+            builder.lines = else_body_statements
+            
+            for body_op in operation.else_body:
+                self._add_ast_operation(builder, body_op)
+            
+            else_body_statements = builder.lines
+            builder.lines = saved_lines
+        
+        # Add the if statement using the builder
+        builder.add_if_statement(operation.condition, if_body_statements, else_body_statements)
+
     def _convert_ast_to_qasm3(self, circuit_ast: CircuitAST) -> str:
         builder = QASM3Builder()
         builder.build_standard_prelude(
@@ -696,7 +754,7 @@ class CirqToQASM3Converter:
                 builder.add_section_comment("Classical control flow examples")
                 builder.add_if_statement("c[0] == 1", ["x q[1];"], else_body=None)
                 builder.add_blank_line()
-                builder.add_for_loop("loop_index", "[0:2]", ["ry(PI_4) q[loop_index];"])
+                builder.add_for_loop("loop_index", "[0:2]", ["ry(pi_4) q[loop_index];"])
         except Exception:
             pass
         return builder.get_code()

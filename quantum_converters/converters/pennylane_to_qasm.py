@@ -60,7 +60,7 @@ from typing import List, Dict, Any, Union, Optional
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
-from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode
+from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
 from quantum_converters.parsers.pennylane_parser import PennyLaneASTParser
 from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
 from quantum_converters.config import get_pl_inverse_qasm_map
@@ -302,7 +302,7 @@ class PennyLaneToQASM3Converter:
         # Handle complex expressions with symbolic constants
         symbolic_expr = self._process_symbolic_constants(param_str)
         # Check if symbolic constants are present in the processed expression
-        if 'PI' in symbolic_expr or 'E' in symbolic_expr:
+        if 'pi' in symbolic_expr or 'e' in symbolic_expr or 'E' in symbolic_expr:
             return symbolic_expr
 
         # Evaluate numerical expressions
@@ -313,10 +313,10 @@ class PennyLaneToQASM3Converter:
         stripped = param_str.strip()
 
         constants = {
-            ('np.pi', 'numpy.pi', 'pi', 'math.pi'): "PI",
-            ('np.e', 'numpy.e', 'e', 'math.e'): "E",
-            ('np.pi/2', 'pi/2'): "PI/2",
-            ('np.pi/4', 'pi/4'): "PI/4"
+            ('np.pi', 'numpy.pi', 'pi', 'math.pi'): "pi",
+            ('np.e', 'numpy.e', 'e', 'math.e'): "e",
+            ('np.pi/2', 'pi/2'): "pi/2",
+            ('np.pi/4', 'pi/4'): "pi/4"
         }
 
         for constant_names, qasm_name in constants.items():
@@ -328,10 +328,10 @@ class PennyLaneToQASM3Converter:
     def _process_symbolic_constants(self, param_str: str) -> str:
         """Replace numpy constants with symbolic versions."""
         # Replace numpy constants with symbolic versions
-        processed_str = param_str.replace('np.pi', 'PI')
-        processed_str = processed_str.replace('numpy.pi', 'PI')
-        processed_str = processed_str.replace('np.e', 'E')
-        processed_str = processed_str.replace('numpy.e', 'E')
+        processed_str = param_str.replace('np.pi', 'pi')
+        processed_str = processed_str.replace('numpy.pi', 'pi')
+        processed_str = processed_str.replace('np.e', 'e')
+        processed_str = processed_str.replace('numpy.e', 'e')
 
         # Return the processed string (will be different if symbolic constants were replaced)
         return processed_str
@@ -370,10 +370,10 @@ class PennyLaneToQASM3Converter:
         if isinstance(result, float):
             # Check for common mathematical constants
             constant_checks = [
-                (np.pi, "PI"),
-                (np.pi/2, "PI/2"),
-                (np.pi/4, "PI/4"),
-                (np.e, "E")
+                (np.pi, "pi"),
+                (np.pi/2, "pi/2"),
+                (np.pi/4, "pi/4"),
+                (np.e, "e")
             ]
 
             for constant_value, constant_name in constant_checks:
@@ -491,6 +491,10 @@ class PennyLaneToQASM3Converter:
             builder.add_reset(f"q[{operation.qubit}]")
         elif isinstance(operation, BarrierNode):
             self._add_ast_barrier_operation(builder, operation)
+        elif isinstance(operation, ForLoopNode):
+            self._add_ast_for_loop(builder, operation)
+        elif isinstance(operation, IfStatementNode):
+            self._add_ast_if_statement(builder, operation)
 
     def _add_ast_gate_operation(self, builder: QASM3Builder, operation: GateNode):
         """Add a gate operation from AST to QASM builder."""
@@ -528,6 +532,60 @@ class PennyLaneToQASM3Converter:
             builder.add_barrier([f"q[{i}]" for i in operation.qubits])
         else:
             builder.add_barrier(None)
+
+    def _add_ast_for_loop(self, builder: QASM3Builder, operation: ForLoopNode):
+        """Add a for loop from AST to QASM builder."""
+        # OpenQASM 3.0 for loop syntax: for uint i in [0:7] { ... }
+        # Note: range_end is exclusive in Python, but inclusive in OpenQASM range syntax
+        openqasm_end = operation.range_end - 1 if operation.range_end > operation.range_start else operation.range_start
+        range_spec = f"[{operation.range_start}:{openqasm_end}]"
+        variable_decl = f"uint {operation.variable}"
+        
+        # Convert loop body operations to QASM statements
+        body_statements = []
+        saved_lines = builder.lines
+        builder.lines = body_statements
+        
+        # Recursively convert all operations in the loop body
+        for body_op in operation.body:
+            self._add_ast_operation(builder, body_op)
+        
+        # Extract statements
+        body_statements = builder.lines
+        builder.lines = saved_lines
+        
+        # Add the for loop using the builder
+        builder.add_for_loop(variable_decl, range_spec, body_statements)
+
+    def _add_ast_if_statement(self, builder: QASM3Builder, operation: IfStatementNode):
+        """Add an if statement from AST to QASM builder."""
+        # Convert if body operations to QASM statements
+        if_body_statements = []
+        saved_lines = builder.lines
+        builder.lines = if_body_statements
+        
+        # Recursively convert all operations in the if body
+        for body_op in operation.body:
+            self._add_ast_operation(builder, body_op)
+        
+        # Extract statements
+        if_body_statements = builder.lines
+        builder.lines = saved_lines
+        
+        # Convert else body if present
+        else_body_statements = None
+        if operation.else_body:
+            else_body_statements = []
+            builder.lines = else_body_statements
+            
+            for body_op in operation.else_body:
+                self._add_ast_operation(builder, body_op)
+            
+            else_body_statements = builder.lines
+            builder.lines = saved_lines
+        
+        # Add the if statement using the builder
+        builder.add_if_statement(operation.condition, if_body_statements, else_body_statements)
 
     def _convert_ast_to_qasm3(self, circuit_ast: CircuitAST) -> str:
         builder = QASM3Builder()
@@ -621,7 +679,7 @@ class PennyLaneToQASM3Converter:
         builder.add_blank_line()
 
         builder.add_section_comment("Classical operations")
-        builder.add_assignment("temp_angle", "PI_2")
+        builder.add_assignment("temp_angle", "pi_2")
         builder.add_assignment("loop_index", "0")
         builder.add_blank_line()
 
