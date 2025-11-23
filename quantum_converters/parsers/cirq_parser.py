@@ -56,9 +56,9 @@ Version: 1.0.0
 import ast
 import logging
 from config.config import VERBOSE, vprint
-from typing import List, Set, Any, Optional, Dict
+from typing import List, Set, Any, Optional, Dict, Tuple
 from quantum_converters.base.circuit_ast import (
-    CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode
+    CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
 )
 
 # VERBOSE is imported from config.config
@@ -133,6 +133,168 @@ class CirqASTVisitor(ast.NodeVisitor):
         if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Attribute):
             self._handle_circuit_method_call(node.value)
         self.generic_visit(node)
+
+    def visit_For(self, node: ast.For) -> None:
+        """Handle for loops in Cirq code."""
+        if VERBOSE:
+            vprint("[CirqASTVisitor] visit_For: inspecting for loop")
+        
+        # Extract loop variable
+        if not isinstance(node.target, ast.Name):
+            self.generic_visit(node)
+            return
+        
+        loop_var = node.target.id
+        
+        # Extract range information
+        range_start, range_end = self._extract_range(node.iter)
+        if range_start is None or range_end is None:
+            # Not a simple range() call, skip for now
+            self.generic_visit(node)
+            return
+        
+        # Collect operations in the loop body
+        loop_body = []
+        saved_operations = self.operations
+        self.operations = loop_body
+        
+        # Visit all statements in the loop body
+        for stmt in node.body:
+            self.visit(stmt)
+        
+        # Restore operations list
+        self.operations = saved_operations
+        
+        # Create ForLoopNode
+        for_loop = ForLoopNode(
+            variable=loop_var,
+            range_start=range_start,
+            range_end=range_end,
+            body=loop_body
+        )
+        self.operations.append(for_loop)
+        
+        if VERBOSE:
+            vprint(f"[CirqASTVisitor] Added for loop: {loop_var} in range({range_start}, {range_end})")
+
+    def visit_If(self, node: ast.If) -> None:
+        """Handle if statements in Cirq code."""
+        if VERBOSE:
+            vprint("[CirqASTVisitor] visit_If: inspecting if statement")
+        
+        # Extract condition
+        condition = self._extract_condition(node.test)
+        
+        # Collect operations in the if body
+        if_body = []
+        saved_operations = self.operations
+        self.operations = if_body
+        
+        # Visit all statements in the if body
+        for stmt in node.body:
+            self.visit(stmt)
+        
+        # Collect operations in the else body (if present)
+        else_body = None
+        if node.orelse:
+            else_body = []
+            self.operations = else_body
+            for stmt in node.orelse:
+                self.visit(stmt)
+        
+        # Restore operations list
+        self.operations = saved_operations
+        
+        # Create IfStatementNode
+        if_stmt = IfStatementNode(
+            condition=condition,
+            body=if_body,
+            else_body=else_body
+        )
+        self.operations.append(if_stmt)
+        
+        if VERBOSE:
+            vprint(f"[CirqASTVisitor] Added if statement: {condition}")
+
+    def _extract_range(self, node: ast.expr) -> Tuple[Optional[int], Optional[int]]:
+        """Extract range start and end from a range() call."""
+        if not isinstance(node, ast.Call):
+            return None, None
+        
+        if not isinstance(node.func, ast.Name) or node.func.id != 'range':
+            return None, None
+        
+        # Handle range(n) -> [0:n]
+        if len(node.args) == 1:
+            end = self._extract_constant_value(node.args[0])
+            if end is not None:
+                return 0, end
+        
+        # Handle range(start, end) -> [start:end]
+        if len(node.args) == 2:
+            start = self._extract_constant_value(node.args[0])
+            end = self._extract_constant_value(node.args[1])
+            if start is not None and end is not None:
+                return start, end
+        
+        return None, None
+
+    def _extract_constant_value(self, node: ast.expr) -> Optional[int]:
+        """Extract a constant integer value from an AST node."""
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, int):
+                return node.value
+        elif isinstance(node, ast.Name):
+            # Could be a variable, but for now we only support constants
+            return None
+        return None
+
+    def _extract_condition(self, node: ast.expr) -> str:
+        """Extract condition expression as a string representation."""
+        # For now, handle simple comparisons
+        if isinstance(node, ast.Compare):
+            left = self._extract_condition_operand(node.left)
+            ops = [self._extract_comparison_op(op) for op in node.ops]
+            comparators = [self._extract_condition_operand(comp) for comp in node.comparators]
+            
+            if len(ops) == 1 and len(comparators) == 1:
+                return f"{left} {ops[0]} {comparators[0]}"
+        
+        # Fallback: return a string representation
+        try:
+            return ast.unparse(node) if hasattr(ast, 'unparse') else str(node)
+        except:
+            return str(node)
+
+    def _extract_condition_operand(self, node: ast.expr) -> str:
+        """Extract an operand from a condition."""
+        if isinstance(node, ast.Constant):
+            return str(node.value)
+        elif isinstance(node, ast.Name):
+            return node.id
+        elif isinstance(node, ast.Subscript):
+            # Handle array indexing like r[i]
+            value = self._extract_condition_operand(node.value)
+            if isinstance(node.slice, ast.Index):  # Python < 3.9
+                index = self._extract_condition_operand(node.slice.value)
+            elif isinstance(node.slice, ast.Constant):  # Python 3.9+
+                index = str(node.slice.value)
+            else:
+                index = self._extract_condition_operand(node.slice)
+            return f"{value}[{index}]"
+        return str(node)
+
+    def _extract_comparison_op(self, op: ast.cmpop) -> str:
+        """Extract comparison operator as string."""
+        op_map = {
+            ast.Eq: "==",
+            ast.NotEq: "!=",
+            ast.Lt: "<",
+            ast.LtE: "<=",
+            ast.Gt: ">",
+            ast.GtE: ">=",
+        }
+        return op_map.get(type(op), "==")
 
     def _is_cirq_circuit_call(self, node: ast.Call) -> bool:
         """Check if a call creates a Cirq Circuit."""
@@ -453,7 +615,7 @@ class CirqASTVisitor(ast.NodeVisitor):
         import numpy as np
         if isinstance(param, (int, float)):
             return param * np.pi
-        return f"({param})*PI"
+        return f"({param})*pi"
 
     def _handle_zpow_gate_cirq(self, args: List[ast.expr], call_node: ast.Call) -> None:
         """Handle ZPowGate in Cirq."""
@@ -465,8 +627,8 @@ class CirqASTVisitor(ast.NodeVisitor):
             keywords = call_node.keywords if call_node.keywords else (call_node.func.keywords if isinstance(call_node.func, ast.Call) else [])
             exponent = self._extract_keyword_arg(keywords, 'exponent', 1.0)
             gate_name = 'rz'  # ZPowGate with exponent corresponds to rz gate
-            # ZPowGate exponent is in units of π, so multiply by PI
-            param = f"{exponent}*PI"
+            # ZPowGate exponent is in units of π, so multiply by pi
+            param = f"{exponent}*pi"
             self.operations.append(GateNode(
                 name=gate_name,
                 qubits=[qubit],
@@ -489,9 +651,9 @@ class CirqASTVisitor(ast.NodeVisitor):
             # PhasedXPowGate(phase_exponent, exponent) decomposition:
             # Rz(phase_exponent * π) followed by Rx(exponent * π) followed by Rz(-phase_exponent * π)
             # In Cirq, phase_exponent and exponent are in units of π
-            phase_param = f"{phase_exponent}*PI"
-            rx_param = f"{exponent}*PI"
-            neg_phase_param = f"-{phase_exponent}*PI"
+            phase_param = f"{phase_exponent}*pi"
+            rx_param = f"{exponent}*pi"
+            neg_phase_param = f"-{phase_exponent}*pi"
 
             self.operations.append(GateNode(
                 name='rz',
@@ -629,7 +791,7 @@ class CirqASTVisitor(ast.NodeVisitor):
             return f"{left}{op}{right}"
         elif isinstance(node, ast.Attribute):
             if isinstance(node.value, ast.Name) and node.value.id == 'np' and node.attr == 'pi':
-                return 'PI'
+                return 'pi'
             else:
                 return f"{self._extract_expression(node.value)}.{node.attr}"
         elif isinstance(node, ast.Name):
