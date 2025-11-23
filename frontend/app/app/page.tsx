@@ -83,7 +83,7 @@ export default function AppPage() {
         try {
           const example = JSON.parse(pendingExample)
           const newFile = useFileStore.getState().addFile(example.name, example.content)
-          setActiveFileId(newFile.id)
+          useFileStore.getState().setActiveFile(newFile.id)
           toast.success(`Loaded example: ${example.name}`)
           sessionStorage.removeItem('pending-example')
         } catch (error) {
