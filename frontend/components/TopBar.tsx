@@ -145,6 +145,53 @@ export default function TopBar({
     },
   ];
 
+  // Helper function to format error messages for user display
+  const formatErrorMessage = (error: string | undefined | null): string => {
+    if (!error) return "Run failed";
+    
+    const errorLower = error.toLowerCase();
+    
+    // Handle HTTP errors
+    if (errorLower.includes("http error") || errorLower.includes("status:")) {
+      return "Run failed";
+    }
+    
+    // Handle network errors
+    if (errorLower.includes("network error") || errorLower.includes("fetch")) {
+      return "Run failed: Network connection issue";
+    }
+    
+    // Handle timeout errors
+    if (errorLower.includes("timeout")) {
+      return "Run failed: Request timed out";
+    }
+    
+    // Handle server errors (500, 502, 503, etc.)
+    if (errorLower.includes("500") || errorLower.includes("502") || errorLower.includes("503")) {
+      return "Run failed: Server error occurred";
+    }
+    
+    // Handle client errors (400, 401, 403, 404, etc.)
+    if (errorLower.includes("400")) {
+      return "Run failed: Invalid request";
+    }
+    if (errorLower.includes("401") || errorLower.includes("403")) {
+      return "Run failed: Authentication error";
+    }
+    if (errorLower.includes("404")) {
+      return "Run failed: Resource not found";
+    }
+    
+    // If error contains technical details, try to extract meaningful part
+    // Otherwise return a generic message
+    if (error.length > 100 || error.includes("Error:") || error.includes("Exception:")) {
+      return "Run failed";
+    }
+    
+    // Return the error as-is if it's short and user-friendly
+    return error;
+  };
+
   const handleRun = async () => {
     if (!activeFile) {
       toast.error("No file selected");
@@ -177,9 +224,6 @@ export default function TopBar({
 
     setIsRunning(true);
     try {
-      // Dispatch custom event for results panel
-      window.dispatchEvent(new CustomEvent("circuit-execute"));
-
       toast.loading("Running quantum circuit...", { id: "execution" });
 
       let qasmCode = "";
@@ -187,6 +231,8 @@ export default function TopBar({
       if (isQasmFile) {
         // Use QASM directly
         qasmCode = activeFile.content;
+        // Store for display in results pane
+        setCompiledQasm(qasmCode);
       } else {
         // Use the selected input framework for conversion
         const sourceFramework = inputLanguage;
@@ -200,15 +246,43 @@ export default function TopBar({
         );
 
         if (!conversionResult.success || !conversionResult.data?.success) {
-          const errorMsg =
+          const rawError =
             conversionResult.data?.error ||
             conversionResult.error ||
-            "Conversion failed";
-          toast.error(`Conversion failed: ${errorMsg}`, { id: "execution" });
+            "Compilation failed";
+          const errorMsg = formatErrorMessage(rawError);
+          // Clear any previous simulation results on compilation failure
+          useFileStore.getState().setSimulationResults(null);
+          toast.error(`Compilation failed: ${errorMsg}`, { id: "execution" });
+          // Dispatch compile failure event
+          window.dispatchEvent(new CustomEvent("circuit-compile", { 
+            detail: { success: false, error: errorMsg } 
+          }));
           return;
         }
 
         qasmCode = conversionResult.data.qasm_code;
+        
+        // Store compiled QASM for display in results pane (without creating file)
+        setCompiledQasm(qasmCode);
+        
+        // Store conversion stats
+        const stats = conversionResult.data;
+        useFileStore.getState().setConversionStats({
+          qubits: stats.qubits,
+          gates: stats.gates,
+          depth: stats.depth,
+          conversion_time: stats.conversion_time,
+          framework: sourceFramework,
+          qasm_version: '3.0',
+          success: true
+        });
+        
+        // Dispatch compile success event
+        window.dispatchEvent(new CustomEvent("circuit-compile", { 
+          detail: { success: true, stats: conversionResult.data } 
+        }));
+        
         toast.loading("Running simulation with QSim...", { id: "execution" });
       }
 
@@ -219,13 +293,29 @@ export default function TopBar({
         shots,
       );
 
-      if (executionResult.success && executionResult.data?.success) {
+      // Check if the request itself failed (network error, etc.)
+      if (!executionResult.success) {
+        // Clear any previous simulation results on execution failure
+        useFileStore.getState().setSimulationResults(null);
+        const rawError = executionResult.error || executionResult.data?.error || "Run failed";
+        const errorMsg = formatErrorMessage(rawError);
+        toast.error(`Compilation successful. ${errorMsg}`, { id: "execution" });
+        // Dispatch event with failure status
+        window.dispatchEvent(new CustomEvent("circuit-execute", { detail: { success: false, error: errorMsg } }));
+        return;
+      }
+
+      // API call succeeded, check if simulation succeeded
+      if (executionResult.data?.success) {
         const simResult = executionResult.data.results;
         
         // Store results in the store for ResultsPane to display
         useFileStore.getState().setSimulationResults(simResult);
 
-        toast.success(`Simulation completed on ${simBackend} backend!`, {
+        // Dispatch custom event for results panel only on success
+        window.dispatchEvent(new CustomEvent("circuit-execute", { detail: { success: true } }));
+
+        toast.success(`Compilation successful. Simulation completed on ${simBackend} backend!`, {
           id: "execution",
         });
 
@@ -243,15 +333,28 @@ export default function TopBar({
           }, 1000);
         }
       } else {
-        const errorMsg =
+        // API call succeeded but simulation failed
+        // Clear any previous simulation results on execution failure
+        useFileStore.getState().setSimulationResults(null);
+        // Extract error from response data - the backend returns error in data.error
+        const rawError =
           executionResult.data?.error ||
+          executionResult.data?.detail ||
           executionResult.error ||
-          "Execution failed";
-        toast.error(`Execution failed: ${errorMsg}`, { id: "execution" });
+          "Run failed";
+        const errorMsg = formatErrorMessage(rawError);
+        toast.error(`Compilation successful. ${errorMsg}`, { id: "execution" });
+        // Dispatch event with failure status
+        window.dispatchEvent(new CustomEvent("circuit-execute", { detail: { success: false, error: errorMsg } }));
       }
     } catch (error) {
-      toast.error("Execution failed: Network error", { id: "execution" });
+      // Clear any previous simulation results on network error
+      useFileStore.getState().setSimulationResults(null);
+      const errorMsg = formatErrorMessage(error instanceof Error ? error.message : String(error));
+      toast.error(`Compilation successful. ${errorMsg}`, { id: "execution" });
       console.error("Execution error:", error);
+      // Dispatch event with failure status
+      window.dispatchEvent(new CustomEvent("circuit-execute", { detail: { success: false, error: errorMsg } }));
     } finally {
       setIsRunning(false);
     }
@@ -401,6 +504,11 @@ export default function TopBar({
 
       // Focus QASM tab in results
       window.dispatchEvent(new CustomEvent("show-qasm"));
+      
+      // Dispatch compilation success event for console logging
+      window.dispatchEvent(new CustomEvent("circuit-compile", { 
+        detail: { success: true, stats } 
+      }));
 
       // Display conversion stats from backend
       if (stats && stats.qubits) {

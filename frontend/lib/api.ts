@@ -41,11 +41,29 @@ async function apiRequest<T>(
       ...options,
     })
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    // Try to parse response body even if status is not ok
+    let data: any
+    try {
+      data = await response.json()
+    } catch (e) {
+      // If response is not JSON, use status text
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`)
+      }
+      throw new Error('Invalid JSON response')
     }
 
-    const data = await response.json()
+    // If response is not ok, check if we have error details in the body
+    if (!response.ok) {
+      // Check if the response body has error information
+      const errorMsg = data?.error || data?.detail || data?.message || `HTTP error! status: ${response.status}`
+      return {
+        error: errorMsg,
+        success: false,
+        data: data, // Include the full response data in case it has useful info
+      }
+    }
+
     return { data, success: true }
   } catch (error) {
     console.error('API request failed:', error)

@@ -64,70 +64,29 @@ export default function ResultsPane() {
   
   // Helper function to get display stats from backend conversion stats
   const getDisplayStats = () => {
-    if (!conversionStats) {
-      // Default empty stats when no conversion has been done
-      return {
-        compilation: {
-          status: 'pending',
-          time: '-',
-          originalGates: 0,
-          optimizedGates: 0,
-          reductionPercentage: 0,
-          circuitDepth: 0,
-          qubits: 0,
-          classicalBits: 0,
-          warnings: 0,
-          errors: 0
-        },
-        circuit: {
-          gates: {},
-          depth: 0,
-          width: 0,
-          complexity: 'Unknown',
-          entanglingGates: 0,
-          singleQubitGates: 0
-        },
-        execution: {
-          status: 'pending',
-          totalTime: '-',
-          simulationTime: '-',
-          postProcessingTime: '-',
-          shots: 0,
-          successfulShots: 0,
-          backend: 'N/A',
-          memoryUsage: '-',
-          cpuUsage: '-',
-          fidelity: 0
-        },
-        optimization: {
-          level: 0,
-          timeSpent: '-',
-          gatesReduced: 0,
-          depthReduced: 0,
-          techniques: [] as string[]
-        }
-      }
-    }
-
-    // Convert backend stats to display format
-    const gates = conversionStats.gates || {}
+    // Convert backend stats to display format (handle null conversionStats)
+    const gates = conversionStats?.gates || {}
     const totalGates = Object.values(gates).reduce((sum: number, count) => sum + (count || 0), 0)
     const entanglingGates = ['cx', 'cnot', 'cz', 'swap', 'ccx'].reduce((sum, gate) => sum + (gates[gate] || 0), 0)
     const singleQubitGates = totalGates - entanglingGates
 
-    // Use simulation results if available
+    // Use simulation results if available (even when conversionStats is null)
     const executionData = simulationResults ? {
       status: 'completed',
-      totalTime: simulationResults.metadata.execution_time || 'N/A',
+      totalTime: simulationResults.metadata.execution_time || 
+                 (simulationResults.metadata.simulation_time ? simulationResults.metadata.simulation_time : 'N/A'),
       simulationTime: simulationResults.metadata.simulation_time || 'N/A',
-      postProcessingTime: simulationResults.metadata.postprocessing_time || 'N/A',
+      postProcessingTime: simulationResults.metadata.postprocessing_time || '<1ms',
       shots: simulationResults.metadata.shots || 0,
-      successfulShots: Object.values(simulationResults.counts).reduce((a, b) => a + b, 0),
+      successfulShots: simulationResults.metadata.successful_shots || 
+                       Object.values(simulationResults.counts || {}).reduce((a, b) => a + b, 0),
       backend: simulationResults.metadata.backend || 'N/A',
-      visitor: simulationResults.metadata.visitor || 'N/A',
-      memoryUsage: simulationResults.metadata.memory_usage || '-',
-      cpuUsage: simulationResults.metadata.cpu_usage || '-',
-      fidelity: simulationResults.metadata.fidelity || 100.0
+      visitor: simulationResults.metadata.visitor || simulationResults.metadata.backend || 'N/A',
+      memoryUsage: simulationResults.metadata.memory_usage || 'N/A',
+      cpuUsage: simulationResults.metadata.cpu_usage || 'N/A',
+      fidelity: typeof simulationResults.metadata.fidelity === 'number' 
+                ? simulationResults.metadata.fidelity 
+                : 100.0
     } : {
       status: 'pending',
       totalTime: '-',
@@ -143,24 +102,29 @@ export default function ResultsPane() {
     };
 
     // Use qubits from simulation results if available, otherwise from conversion stats
-    const numQubits = simulationResults?.metadata.n_qubits || conversionStats.qubits || 0;
+    const numQubits = simulationResults?.metadata.n_qubits || conversionStats?.qubits || 0;
+
+    // Determine compilation status
+    const compilationStatus = conversionStats 
+      ? (conversionStats.success ? 'success' : 'failed')
+      : (simulationResults ? 'success' : 'pending');
     
     return {
       compilation: {
-        status: conversionStats.success ? 'success' : 'failed',
-        time: conversionStats.conversion_time || 'N/A',
+        status: compilationStatus,
+        time: conversionStats?.conversion_time || 'N/A',
         originalGates: totalGates,
         optimizedGates: totalGates, // Same for now
         reductionPercentage: 0,
-        circuitDepth: conversionStats.depth || 0,
+        circuitDepth: conversionStats?.depth || 0,
         qubits: numQubits,
         classicalBits: 0, // Not tracked yet
         warnings: 0,
-        errors: conversionStats.error ? 1 : 0
+        errors: conversionStats?.error ? 1 : 0
       },
       circuit: {
         gates: gates,
-        depth: conversionStats.depth || 0,
+        depth: conversionStats?.depth || 0,
         width: numQubits,
         complexity: totalGates > 10 ? 'High' : totalGates > 5 ? 'Medium' : 'Low',
         entanglingGates: entanglingGates,
@@ -240,7 +204,7 @@ export default function ResultsPane() {
     }
   })
 
-  // Use simulation results from store if available, otherwise use mock data
+  // Use simulation results from store if available, otherwise null (no mock data)
   const quantumResults = simulationResults ? {
     counts: simulationResults.counts,
     shots: simulationResults.metadata.shots || 1024,
@@ -253,42 +217,74 @@ export default function ResultsPane() {
     },
     metadata: simulationResults.metadata,
     probs: simulationResults.probs
-  } : {
-    counts: { '00': 512, '11': 512 },
-    shots: 1024,
-    backend: 'qasm_simulator',
-    execution_time: '2.1s',
-    circuit_info: {
-      depth: 2,
-      qubits: 2,
-      gates: 3
+  } : null
+
+  // Helper function to add an error entry
+  const addError = (message: string, severity: 'error' | 'warning' | 'info' = 'error', details?: string) => {
+    const newError: ErrorEntry = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      severity,
+      message,
+      line: 0,
+      column: 0,
+      file: 'circuit',
+      code: details || message,
+      suggestion: severity === 'error' ? 'Check your code syntax and ensure all gates are supported.' : undefined
     }
+    setErrors(prev => [...prev, newError])
   }
+
+  // Listen for compilation events
+  useEffect(() => {
+    const handleCompile = (event: any) => {
+      const { success, error } = event.detail || {}
+      
+      if (success) {
+        // Clear previous errors on successful compilation
+        setErrors([])
+        addLog('success', 'Code compiled to OpenQASM 3.0')
+        addLog('info', 'Starting quantum simulation...')
+      } else if (error) {
+        addLog('error', `Compilation failed: ${error}`)
+        // Add to errors tab
+        addError('Compilation Failed', 'error', error)
+        setActiveTab('errors')
+      }
+    }
+
+    window.addEventListener('circuit-compile', handleCompile)
+    return () => window.removeEventListener('circuit-compile', handleCompile)
+  }, [])
 
   // Listen for execution events
   useEffect(() => {
-    const handleExecution = () => {
+    const handleExecution = (event: any) => {
+      const { success, error } = event.detail || {}
+      
       addLog('info', 'Starting quantum circuit execution...')
       
-      setTimeout(() => {
-        if (simulationResults) {
-          addLog('success', 'Circuit executed successfully with QSim')
-          addLog('info', `Backend: ${simulationResults.metadata.backend}`)
-          addLog('info', `Shots: ${simulationResults.metadata.shots}`)
-        } else {
-          addLog('success', 'Circuit executed successfully')
-        }
-        
-        // Automatically switch to histogram tab after execution
-        setActiveTab('histogram')
-        toast.success('Execution complete! View results.')
-      }, 500)
+      if (!success && error) {
+        addLog('error', `Execution failed: ${error}`)
+        // Add to errors tab
+        addError('Simulation Failed', 'error', error)
+        setActiveTab('errors')
+      }
     }
 
     // Listen for custom events from TopBar
     window.addEventListener('circuit-execute', handleExecution)
     return () => window.removeEventListener('circuit-execute', handleExecution)
+  }, [])
+
+  // Log when simulation completes
+  useEffect(() => {
+    if (simulationResults) {
+      addLog('success', 'Simulation completed successfully')
+      addLog('success', 'Results displayed in Histogram tab')
+      setActiveTab('histogram')
+    }
   }, [simulationResults])
+
 
   useEffect(() => {
     const showQasm = () => setActiveTab('qasm')
@@ -297,8 +293,9 @@ export default function ResultsPane() {
   }, [])
 
   const addLog = (type: LogEntry['type'], message: string) => {
+    // Use timestamp + random number to ensure unique IDs even for simultaneous logs
     const newLog: LogEntry = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
       type,
       message
@@ -317,6 +314,11 @@ export default function ResultsPane() {
   }
 
   const downloadResults = () => {
+    if (!quantumResults || !simulationResults) {
+      toast.error('No results to download')
+      return
+    }
+    
     const results = {
       timestamp: new Date().toISOString(),
       quantum_results: quantumResults,
@@ -583,34 +585,10 @@ export default function ResultsPane() {
                   </div>
                 </>
               ) : (
-                <>
-                  <div>
-                    <h4 className="text-sm font-medium text-white mb-2">Quantum Results</h4>
-                    <div className="bg-editor-bg border border-editor-border rounded p-3">
-                      <pre className="text-sm text-editor-text">
-                        {JSON.stringify(quantumResults, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium text-white mb-2">Circuit Information</h4>
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-400">Qubits:</span>
-                        <span className="text-white ml-2">{quantumResults.circuit_info.qubits}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">Depth:</span>
-                        <span className="text-white ml-2">{quantumResults.circuit_info.depth}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">Gates:</span>
-                        <span className="text-white ml-2">{quantumResults.circuit_info.gates}</span>
-                      </div>
-                    </div>
-                  </div>
-                </>
+                <div className="text-center py-8 text-gray-500">
+                  <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50 text-yellow-400" />
+                  <p className="text-sm">No execution results available. Run the circuit to see output.</p>
+                </div>
               )}
             </div>
           </div>
@@ -618,109 +596,116 @@ export default function ResultsPane() {
 
         {activeTab === 'histogram' && (
           <div className="h-full overflow-y-auto results-content">
-            <div>
-              <h4 className="text-sm font-medium text-white mb-4">Measurement Results</h4>
-              
-              {/* Chart.js Histogram */}
-              <div className="h-64 mb-4">
-                <Bar
-                  data={{
-                    labels: Object.keys(quantumResults.counts).map(state => `|${state}⟩`),
-                    datasets: [
-                      {
-                        label: 'Measurement Counts',
-                        data: Object.values(quantumResults.counts),
-                        backgroundColor: 'rgba(99, 102, 241, 0.6)',
-                        borderColor: 'rgba(99, 102, 241, 1)',
-                        borderWidth: 1,
-                        borderRadius: 4,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                      title: {
-                        display: false,
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: (context) => {
-                            const count = context.parsed.y
-                            const percentage = ((count / quantumResults.shots) * 100).toFixed(1)
-                            return `${count} ("${percentage}"%)`
+            {quantumResults && simulationResults ? (
+              <div>
+                <h4 className="text-sm font-medium text-white mb-4">Measurement Results</h4>
+                
+                {/* Chart.js Histogram */}
+                <div className="h-64 mb-4">
+                  <Bar
+                    data={{
+                      labels: Object.keys(quantumResults.counts).map(state => `|${state}⟩`),
+                      datasets: [
+                        {
+                          label: 'Measurement Counts',
+                          data: Object.values(quantumResults.counts),
+                          backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                          borderColor: 'rgba(99, 102, 241, 1)',
+                          borderWidth: 1,
+                          borderRadius: 4,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          display: false,
+                        },
+                        title: {
+                          display: false,
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: (context) => {
+                              const count = context.parsed.y
+                              const percentage = ((count / quantumResults.shots) * 100).toFixed(1)
+                              return `${count} ("${percentage}"%)`
+                            },
                           },
                         },
                       },
-                    },
-                    scales: {
-                      x: {
-                        grid: {
-                          color: 'rgba(255, 255, 255, 0.1)',
-                        },
-                        ticks: {
-                          color: 'rgba(255, 255, 255, 0.8)',
-                          font: {
-                            family: 'monospace',
+                      scales: {
+                        x: {
+                          grid: {
+                            color: 'rgba(255, 255, 255, 0.1)',
+                          },
+                          ticks: {
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            font: {
+                              family: 'monospace',
+                            },
                           },
                         },
-                      },
-                      y: {
-                        grid: {
-                          color: 'rgba(255, 255, 255, 0.1)',
+                        y: {
+                          grid: {
+                            color: 'rgba(255, 255, 255, 0.1)',
+                          },
+                          ticks: {
+                            color: 'rgba(255, 255, 255, 0.8)',
+                          },
+                          beginAtZero: true,
                         },
-                        ticks: {
-                          color: 'rgba(255, 255, 255, 0.8)',
-                        },
-                        beginAtZero: true,
                       },
-                    },
-                  }}
-                />
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-editor-border">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-400">Total Shots:</span>
-                    <span className="text-white ml-2 font-mono">{quantumResults.shots}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Backend:</span>
-                    <span className="text-white ml-2 font-mono">{quantumResults.backend}</span>
-                  </div>
-                  {simulationResults?.metadata.visitor && (
+                    }}
+                  />
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-editor-border">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-400">Visitor:</span>
-                      <span className="text-white ml-2 font-mono">{simulationResults.metadata.visitor}</span>
+                      <span className="text-gray-400">Total Shots:</span>
+                      <span className="text-white ml-2 font-mono">{quantumResults.shots}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Backend:</span>
+                      <span className="text-white ml-2 font-mono">{quantumResults.backend}</span>
+                    </div>
+                    {simulationResults?.metadata.visitor && (
+                      <div>
+                        <span className="text-gray-400">Visitor:</span>
+                        <span className="text-white ml-2 font-mono">{simulationResults.metadata.visitor}</span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-gray-400">States:</span>
+                      <span className="text-white ml-2 font-mono">{Object.keys(quantumResults.counts).length}</span>
+                    </div>
+                  </div>
+
+                  {/* Show probabilities if available */}
+                  {simulationResults?.probs && (
+                    <div className="mt-4 pt-4 border-t border-editor-border">
+                      <h5 className="text-xs font-medium text-gray-400 mb-2">State Probabilities</h5>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                        {Object.entries(simulationResults.probs).map(([state, prob]) => (
+                          <div key={state} className="bg-editor-bg border border-editor-border rounded px-2 py-1">
+                            <span className="text-gray-400">|{state}⟩:</span>
+                            <span className="text-white ml-1 font-mono">{(prob * 100).toFixed(2)}%</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  <div>
-                    <span className="text-gray-400">States:</span>
-                    <span className="text-white ml-2 font-mono">{Object.keys(quantumResults.counts).length}</span>
-                  </div>
                 </div>
-
-                {/* Show probabilities if available */}
-                {simulationResults?.probs && (
-                  <div className="mt-4 pt-4 border-t border-editor-border">
-                    <h5 className="text-xs font-medium text-gray-400 mb-2">State Probabilities</h5>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                      {Object.entries(simulationResults.probs).map(([state, prob]) => (
-                        <div key={state} className="bg-editor-bg border border-editor-border rounded px-2 py-1">
-                          <span className="text-gray-400">|{state}⟩:</span>
-                          <span className="text-white ml-1 font-mono">{(prob * 100).toFixed(2)}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50 text-yellow-400" />
+                <p className="text-sm">No execution results available. Run the circuit to see histogram.</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -788,8 +773,8 @@ export default function ResultsPane() {
                                 {error.message}
                               </p>
                               <div className="flex items-center space-x-4 mt-1 text-xs text-gray-400">
-                                <span>📁 {error.file}</span>
-                                <span>📍 Line {error.line}:{error.column}</span>
+                                <span>File: {error.file}</span>
+                                {error.line > 0 && <span>Line {error.line}:{error.column}</span>}
                                 <span className="px-2 py-1 bg-editor-border rounded text-white capitalize">
                                   {error.severity}
                                 </span>
@@ -804,13 +789,15 @@ export default function ResultsPane() {
                             </button>
                           </div>
 
-                          {/* Code snippet */}
+                          {/* Error details */}
                           <div className="mt-3 bg-gray-900 border border-gray-700 rounded p-2">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-gray-400">Problematic code:</span>
-                              <span className="text-xs text-gray-500">Line {error.line}</span>
+                              <span className="text-xs text-gray-400">Error Details:</span>
+                              {error.line > 0 && (
+                                <span className="text-xs text-gray-500">Line {error.line}</span>
+                              )}
                             </div>
-                            <pre className="text-xs text-red-300 font-mono bg-red-900/20 px-2 py-1 rounded">
+                            <pre className="text-xs text-red-300 font-mono bg-red-900/20 px-2 py-1 rounded whitespace-pre-wrap break-words">
                               {error.code}
                             </pre>
                           </div>
@@ -837,22 +824,18 @@ export default function ResultsPane() {
 
         {activeTab === 'stats' && (
           <div className="h-full overflow-y-auto results-content">
-            <div className="space-y-6">
-              {/* Execution Summary */}
-              <div className="bg-editor-bg border border-editor-border rounded-lg p-4">
-                <h4 className="text-sm font-medium text-white mb-4 flex items-center">
-                  <Activity className="w-4 h-4 mr-2" />
-                  Execution Summary
-                </h4>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className={`${
-                    executionStats.execution.status === 'completed' 
-                      ? 'bg-green-500/10 border-green-500/20' 
-                      : executionStats.execution.status === 'pending'
-                      ? 'bg-yellow-500/10 border-yellow-500/20'
-                      : 'bg-red-500/10 border-red-500/20'
-                  } border rounded-lg p-3 text-center`}>
-                    <div className={`text-lg font-bold capitalize ${
+            <div className="space-y-4 p-1">
+              {/* Execution Summary - Hero Cards */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className={`relative overflow-hidden rounded-xl p-4 ${
+                  executionStats.execution.status === 'completed' 
+                    ? 'bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30' 
+                    : executionStats.execution.status === 'pending'
+                    ? 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border border-yellow-500/30'
+                    : 'bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30'
+                }`}>
+                  <div className="flex flex-col items-center justify-center">
+                    <div className={`text-2xl font-bold capitalize ${
                       executionStats.execution.status === 'completed' 
                         ? 'text-green-400' 
                         : executionStats.execution.status === 'pending'
@@ -861,248 +844,247 @@ export default function ResultsPane() {
                     }`}>
                       {executionStats.execution.status}
                     </div>
-                    <div className={`text-xs ${
-                      executionStats.execution.status === 'completed' 
-                        ? 'text-green-300' 
-                        : executionStats.execution.status === 'pending'
-                        ? 'text-yellow-300'
-                        : 'text-red-300'
-                    }`}>
-                      Status
-                    </div>
+                    <div className="text-xs text-gray-400 mt-1">Status</div>
                   </div>
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-center">
-                    <div className="text-lg font-bold text-blue-400">{executionStats.execution.totalTime}</div>
-                    <div className="text-xs text-blue-300">Total Time</div>
+                </div>
+                <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="text-2xl font-bold text-blue-400">{executionStats.execution.totalTime}</div>
+                    <div className="text-xs text-gray-400 mt-1">Total Time</div>
                   </div>
-                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 text-center">
-                    <div className="text-lg font-bold text-purple-400">
+                </div>
+                <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="text-2xl font-bold text-purple-400">
                       {executionStats.execution.fidelity !== 0 
-                        ? `${executionStats.execution.fidelity.toFixed(2)}%` 
+                        ? `${executionStats.execution.fidelity.toFixed(1)}%` 
                         : 'N/A'}
                     </div>
-                    <div className="text-xs text-purple-300">Fidelity</div>
+                    <div className="text-xs text-gray-400 mt-1">Fidelity</div>
                   </div>
                 </div>
               </div>
 
-              {/* Performance Metrics */}
-              <div className="bg-editor-bg border border-editor-border rounded-lg p-4">
-                <h4 className="text-sm font-medium text-white mb-4 flex items-center">
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Performance Metrics
-                </h4>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h5 className="text-xs font-medium text-gray-400 mb-3">Timing Breakdown</h5>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Simulation:</span>
-                        <span className="text-sm text-white">{executionStats.execution.simulationTime}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Post-processing:</span>
-                        <span className="text-sm text-white">{executionStats.execution.postProcessingTime}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Memory Usage:</span>
-                        <span className="text-sm text-white">{executionStats.execution.memoryUsage}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">CPU Usage:</span>
-                        <span className="text-sm text-white">{executionStats.execution.cpuUsage}</span>
-                      </div>
+              {/* Performance & Shot Stats - Combined Card */}
+              <div className="rounded-xl border border-editor-border bg-gradient-to-br from-editor-bg to-gray-900/50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-editor-border bg-white/5">
+                  <h4 className="text-sm font-semibold text-white flex items-center">
+                    <TrendingUp className="w-4 h-4 mr-2 text-cyan-400" />
+                    Performance Overview
+                  </h4>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-3 rounded-lg bg-white/5">
+                      <div className="text-lg font-semibold text-cyan-400">{executionStats.execution.simulationTime}</div>
+                      <div className="text-xs text-gray-400">Simulation</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-white/5">
+                      <div className="text-lg font-semibold text-emerald-400">{executionStats.execution.shots.toLocaleString()}</div>
+                      <div className="text-xs text-gray-400">Total Shots</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-white/5">
+                      <div className="text-lg font-semibold text-amber-400">{executionStats.execution.memoryUsage}</div>
+                      <div className="text-xs text-gray-400">Memory</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-white/5">
+                      <div className="text-lg font-semibold text-rose-400">{executionStats.execution.cpuUsage}</div>
+                      <div className="text-xs text-gray-400">CPU</div>
                     </div>
                   </div>
-                  <div>
-                    <h5 className="text-xs font-medium text-gray-400 mb-3">Shot Statistics</h5>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Total Shots:</span>
-                        <span className="text-sm text-white">{executionStats.execution.shots.toLocaleString()}</span>
+                  
+                  {/* Backend Info */}
+                  <div className="mt-4 pt-4 border-t border-editor-border flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center">
+                        <span className="text-xs text-gray-400 mr-2">Backend:</span>
+                        <span className="px-2 py-1 rounded-md bg-indigo-500/20 text-indigo-300 text-xs font-mono">{executionStats.execution.backend}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Successful:</span>
-                        <span className="text-sm text-green-400">{executionStats.execution.successfulShots.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Backend:</span>
-                        <span className="text-sm text-white font-mono">{executionStats.execution.backend}</span>
-                      </div>
-                      {simulationResults && simulationResults.metadata.visitor && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-editor-text">Visitor:</span>
-                          <span className="text-sm text-white font-mono">{simulationResults.metadata.visitor}</span>
+                      {simulationResults?.metadata.visitor && (
+                        <div className="flex items-center">
+                          <span className="text-xs text-gray-400 mr-2">Visitor:</span>
+                          <span className="px-2 py-1 rounded-md bg-violet-500/20 text-violet-300 text-xs font-mono">{simulationResults.metadata.visitor}</span>
                         </div>
                       )}
                     </div>
+                    <div className="flex items-center">
+                      <span className="text-xs text-gray-400 mr-2">Successful:</span>
+                      <span className="text-sm font-medium text-green-400">{executionStats.execution.successfulShots.toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* QSim Simulation Details (only show if we have simulation results) */}
+              {/* Measurement Results - Only show if we have simulation results */}
               {simulationResults && (
-                <div className="bg-editor-bg border border-editor-border rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-white mb-4 flex items-center">
-                    <Zap className="w-4 h-4 mr-2" />
-                    QSim Simulation Details
-                  </h4>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h5 className="text-xs font-medium text-gray-400 mb-3">Measurement Results</h5>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-editor-text">Total States Measured:</span>
-                          <span className="text-sm text-white">{Object.keys(simulationResults.counts).length}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-editor-text">Total Counts:</span>
-                          <span className="text-sm text-white">{Object.values(simulationResults.counts).reduce((a, b) => a + b, 0)}</span>
-                        </div>
-                        {simulationResults.probs && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-editor-text">Has Probabilities:</span>
-                            <span className="text-sm text-green-400">Yes</span>
-                          </div>
-                        )}
+                <div className="rounded-xl border border-editor-border bg-gradient-to-br from-editor-bg to-gray-900/50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-editor-border bg-white/5">
+                    <h4 className="text-sm font-semibold text-white flex items-center">
+                      <Zap className="w-4 h-4 mr-2 text-yellow-400" />
+                      Measurement Results
+                    </h4>
+                  </div>
+                  <div className="p-4">
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="text-center p-3 rounded-lg bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 border border-indigo-500/20">
+                        <div className="text-xl font-bold text-indigo-400">{Object.keys(simulationResults.counts).length}</div>
+                        <div className="text-xs text-gray-400">Unique States</div>
+                      </div>
+                      <div className="text-center p-3 rounded-lg bg-gradient-to-br from-teal-500/10 to-teal-600/5 border border-teal-500/20">
+                        <div className="text-xl font-bold text-teal-400">{Object.values(simulationResults.counts).reduce((a, b) => a + b, 0).toLocaleString()}</div>
+                        <div className="text-xs text-gray-400">Total Counts</div>
+                      </div>
+                      <div className="text-center p-3 rounded-lg bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20">
+                        <div className="text-xl font-bold text-pink-400">{simulationResults.metadata.n_qubits}</div>
+                        <div className="text-xs text-gray-400">Qubits</div>
                       </div>
                     </div>
-                    <div>
-                      <h5 className="text-xs font-medium text-gray-400 mb-3">Execution Metadata</h5>
-                      <div className="space-y-2">
-                        {Object.entries(simulationResults.metadata).map(([key, value]) => {
-                          // Skip already displayed fields
-                          if (['n_qubits', 'backend', 'shots', 'visitor'].includes(key)) return null;
+                    
+                    {/* Top States */}
+                    <div className="space-y-2">
+                      <h5 className="text-xs font-medium text-gray-400">Top Measurement Outcomes</h5>
+                      {Object.entries(simulationResults.counts)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 4)
+                        .map(([state, count]) => {
+                          const total = Object.values(simulationResults.counts).reduce((a, b) => a + b, 0)
+                          const percentage = (count / total) * 100
                           return (
-                            <div key={key} className="flex justify-between items-center">
-                              <span className="text-sm text-editor-text capitalize">{key.replace(/_/g, ' ')}:</span>
-                              <span className="text-sm text-white font-mono text-right truncate max-w-[200px]" title={String(value)}>
-                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                              </span>
+                            <div key={state} className="flex items-center space-x-3">
+                              <span className="text-sm font-mono text-white w-16">|{state}⟩</span>
+                              <div className="flex-1 h-2 bg-editor-border rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                              <span className="text-sm text-gray-300 w-20 text-right">{percentage.toFixed(1)}%</span>
                             </div>
-                          );
+                          )
                         })}
-                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Circuit Analysis */}
-              <div className="bg-editor-bg border border-editor-border rounded-lg p-4">
-                <h4 className="text-sm font-medium text-white mb-4 flex items-center">
-                  <Cpu className="w-4 h-4 mr-2" />
-                  Circuit Analysis
-                </h4>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h5 className="text-xs font-medium text-gray-400 mb-3">Circuit Properties</h5>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Depth:</span>
-                        <span className="text-sm text-white">{executionStats.circuit.depth}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Width:</span>
-                        <span className="text-sm text-white">{executionStats.circuit.width} qubits</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Complexity:</span>
-                        <span className="text-sm text-yellow-400">{executionStats.circuit.complexity}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Entangling Gates:</span>
-                        <span className="text-sm text-white">{executionStats.circuit.entanglingGates}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Single-Qubit Gates:</span>
-                        <span className="text-sm text-white">{executionStats.circuit.singleQubitGates}</span>
-                      </div>
+              <div className="rounded-xl border border-editor-border bg-gradient-to-br from-editor-bg to-gray-900/50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-editor-border bg-white/5">
+                  <h4 className="text-sm font-semibold text-white flex items-center">
+                    <Cpu className="w-4 h-4 mr-2 text-orange-400" />
+                    Circuit Analysis
+                  </h4>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                    <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
+                      <div className="text-lg font-semibold text-white">{executionStats.circuit.depth}</div>
+                      <div className="text-xs text-gray-400">Depth</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
+                      <div className="text-lg font-semibold text-white">{executionStats.circuit.width}</div>
+                      <div className="text-xs text-gray-400">Qubits</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
+                      <div className={`text-lg font-semibold ${
+                        executionStats.circuit.complexity === 'High' ? 'text-red-400' :
+                        executionStats.circuit.complexity === 'Medium' ? 'text-yellow-400' : 'text-green-400'
+                      }`}>{executionStats.circuit.complexity}</div>
+                      <div className="text-xs text-gray-400">Complexity</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
+                      <div className="text-lg font-semibold text-cyan-400">{executionStats.circuit.entanglingGates}</div>
+                      <div className="text-xs text-gray-400">Entangling</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
+                      <div className="text-lg font-semibold text-violet-400">{executionStats.circuit.singleQubitGates}</div>
+                      <div className="text-xs text-gray-400">Single-Qubit</div>
                     </div>
                   </div>
-                  <div>
-                    <h5 className="text-xs font-medium text-gray-400 mb-3">Gate Distribution</h5>
-                    {Object.keys(executionStats.circuit.gates).length > 0 ? (
-                      <div className="space-y-2">
+                  
+                  {/* Gate Distribution */}
+                  {Object.keys(executionStats.circuit.gates).length > 0 && (
+                    <div className="pt-3 border-t border-editor-border">
+                      <h5 className="text-xs font-medium text-gray-400 mb-3">Gate Distribution</h5>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {Object.entries(executionStats.circuit.gates).map(([gate, count]) => (
-                          <div key={gate} className="flex justify-between items-center">
-                            <span className="text-sm text-editor-text font-mono">{gate.toUpperCase()}:</span>
-                            <div className="flex items-center space-x-2">
-                              <div className="w-16 h-2 bg-editor-border rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full bg-quantum-blue-light rounded-full"
-                                  style={{ 
-                                    width: `${(count / Math.max(...Object.values(executionStats.circuit.gates))) * 100}%` 
-                                  }}
-                                />
-                              </div>
-                              <span className="text-sm text-white w-6">{count}</span>
-                            </div>
+                          <div key={gate} className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5">
+                            <span className="text-xs font-mono text-gray-300">{gate.toUpperCase()}</span>
+                            <span className="text-sm font-semibold text-white">{count}</span>
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <div className="text-sm text-gray-500 text-center py-4">
-                        No gate data available
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Compilation & Optimization */}
-              <div className="bg-editor-bg border border-editor-border rounded-lg p-4">
-                <h4 className="text-sm font-medium text-white mb-4 flex items-center">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Compilation & Optimization
-                </h4>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h5 className="text-xs font-medium text-gray-400 mb-3">Compilation Results</h5>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Status:</span>
-                        <span className="text-sm text-green-400">{executionStats.compilation.status}</span>
+              <div className="rounded-xl border border-editor-border bg-gradient-to-br from-editor-bg to-gray-900/50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-editor-border bg-white/5">
+                  <h4 className="text-sm font-semibold text-white flex items-center">
+                    <Zap className="w-4 h-4 mr-2 text-emerald-400" />
+                    Compilation & Optimization
+                  </h4>
+                </div>
+                <div className="p-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Compilation Stats */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                        <span className="text-sm text-gray-400">Status</span>
+                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                          executionStats.compilation.status === 'success' || executionStats.compilation.status === 'completed'
+                            ? 'bg-green-500/20 text-green-400'
+                            : executionStats.compilation.status === 'pending'
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-red-500/20 text-red-400'
+                        }`}>{executionStats.compilation.status}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Time:</span>
-                        <span className="text-sm text-white">{executionStats.compilation.time}</span>
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                        <span className="text-sm text-gray-400">Time</span>
+                        <span className="text-sm font-medium text-white">{executionStats.compilation.time}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Warnings:</span>
-                        <span className="text-sm text-yellow-400">{executionStats.compilation.warnings}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Errors:</span>
-                        <span className="text-sm text-red-400">{executionStats.compilation.errors}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-medium text-gray-400 mb-3">Optimization (Level {executionStats.optimization.level})</h5>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Gates Reduced:</span>
-                        <span className="text-sm text-green-400">-{executionStats.optimization.gatesReduced} ({executionStats.compilation.reductionPercentage}%)</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Depth Reduced:</span>
-                        <span className="text-sm text-green-400">-{executionStats.optimization.depthReduced}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-editor-text">Time Spent:</span>
-                        <span className="text-sm text-white">{executionStats.optimization.timeSpent}</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
+                          <div className="text-lg font-bold text-yellow-400">{executionStats.compilation.warnings}</div>
+                          <div className="text-xs text-gray-400">Warnings</div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
+                          <div className="text-lg font-bold text-red-400">{executionStats.compilation.errors}</div>
+                          <div className="text-xs text-gray-400">Errors</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-3">
-                      <h6 className="text-xs font-medium text-gray-400 mb-2">Techniques Used:</h6>
-                      <div className="flex flex-wrap gap-1">
-                        {executionStats.optimization.techniques.map((technique: string, index: number) => (
-                          <span key={index} className="px-2 py-1 text-xs bg-quantum-blue-light/20 text-quantum-blue-light rounded">
-                            {technique}
-                          </span>
-                        ))}
+                    
+                    {/* Optimization Stats */}
+                    <div className="space-y-3">
+                      <div className="p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                        <div className="text-xs text-gray-400 mb-2">Optimization Level {executionStats.optimization.level}</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <div className="text-lg font-bold text-green-400">-{executionStats.optimization.gatesReduced}</div>
+                            <div className="text-xs text-gray-400">Gates Reduced</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-green-400">-{executionStats.optimization.depthReduced}</div>
+                            <div className="text-xs text-gray-400">Depth Reduced</div>
+                          </div>
+                        </div>
                       </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                        <span className="text-sm text-gray-400">Opt. Time</span>
+                        <span className="text-sm font-medium text-white">{executionStats.optimization.timeSpent}</span>
+                      </div>
+                      {executionStats.optimization.techniques.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {executionStats.optimization.techniques.map((technique: string, index: number) => (
+                            <span key={index} className="px-2 py-1 text-xs bg-indigo-500/20 text-indigo-300 rounded-md border border-indigo-500/30">
+                              {technique}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
