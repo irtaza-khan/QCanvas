@@ -1,0 +1,56 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Quantum gradient background -->
+    <linearGradient id="quantumBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="50%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
+    </linearGradient>
+
+    <!-- Circuit pattern -->
+    <pattern id="circuit" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="20" height="20" fill="none"/>
+      <circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.3)"/>
+      <line x1="10" y1="0" x2="10" y2="8" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      <line x1="10" y1="12" x2="10" y2="20" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      <line x1="0" y1="10" x2="8" y2="10" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      <line x1="12" y1="10" x2="20" y2="10" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+    </pattern>
+
+    <!-- Glow effect -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background circle with circuit pattern -->
+  <circle cx="100" cy="100" r="95" fill="url(#circuit)" stroke="url(#quantumBg)" stroke-width="2" opacity="0.1"/>
+
+  <!-- Quantum gate representation -->
+  <g transform="translate(100,100)">
+    <!-- Central qubit -->
+    <circle cx="0" cy="0" r="25" fill="url(#quantumBg)" filter="url(#glow)"/>
+
+    <!-- Quantum state visualization rings -->
+    <circle cx="0" cy="0" r="35" fill="none" stroke="url(#quantumBg)" stroke-width="1" opacity="0.6" stroke-dasharray="5,5"/>
+    <circle cx="0" cy="0" r="45" fill="none" stroke="url(#quantumBg)" stroke-width="1" opacity="0.4" stroke-dasharray="3,7"/>
+    <circle cx="0" cy="0" r="55" fill="none" stroke="url(#quantumBg)" stroke-width="1" opacity="0.3" stroke-dasharray="2,8"/>
+
+    <!-- Qubit state indicators -->
+    <circle cx="-15" cy="-15" r="4" fill="#FFFFFF" opacity="0.8"/>
+    <circle cx="15" cy="-15" r="4" fill="#FFFFFF" opacity="0.8"/>
+    <circle cx="-15" cy="15" r="4" fill="#FFFFFF" opacity="0.8"/>
+    <circle cx="15" cy="15" r="4" fill="#FFFFFF" opacity="0.8"/>
+
+    <!-- Quantum entanglement lines -->
+    <line x1="-15" y1="-15" x2="15" y2="15" stroke="#FFFFFF" stroke-width="1" opacity="0.6"/>
+    <line x1="15" y1="-15" x2="-15" y2="15" stroke="#FFFFFF" stroke-width="1" opacity="0.6"/>
+  </g>
+
+  <!-- QCanvas text -->
+  <text x="100" y="175" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="bold" opacity="0.9">QCanvas</text>
+</svg>

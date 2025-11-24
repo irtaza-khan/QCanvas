@@ -1,0 +1,74 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Quantum gradient for about -->
+    <linearGradient id="aboutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="50%" stop-color="#EC4899"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+
+    <!-- Network pattern for community -->
+    <pattern id="networkPattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+      <rect width="30" height="30" fill="none"/>
+      <circle cx="15" cy="15" r="2" fill="rgba(255,255,255,0.2)"/>
+      <circle cx="5" cy="5" r="1" fill="rgba(255,255,255,0.15)"/>
+      <circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.15)"/>
+      <circle cx="5" cy="25" r="1" fill="rgba(255,255,255,0.15)"/>
+      <circle cx="25" cy="5" r="1" fill="rgba(255,255,255,0.15)"/>
+      <line x1="15" y1="15" x2="5" y2="5" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+      <line x1="15" y1="15" x2="25" y2="25" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+      <line x1="15" y1="15" x2="5" y2="25" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+      <line x1="15" y1="15" x2="25" y2="5" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    </pattern>
+
+    <!-- Glow effect -->
+    <filter id="glowAbout">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background with network pattern -->
+  <circle cx="100" cy="100" r="90" fill="url(#networkPattern)" stroke="url(#aboutGradient)" stroke-width="2" opacity="0.1"/>
+
+  <!-- Central quantum hub -->
+  <circle cx="100" cy="100" r="30" fill="url(#aboutGradient)" filter="url(#glowAbout)" opacity="0.9"/>
+
+  <!-- Quantum wave function -->
+  <path d="M 70 100 Q 85 80 100 100 Q 115 120 130 100" stroke="url(#aboutGradient)" stroke-width="3" fill="none" opacity="0.7"/>
+  <path d="M 70 95 Q 85 75 100 95 Q 115 115 130 95" stroke="url(#aboutGradient)" stroke-width="2" fill="none" opacity="0.5"/>
+  <path d="M 70 105 Q 85 125 100 105 Q 115 85 130 105" stroke="url(#aboutGradient)" stroke-width="2" fill="none" opacity="0.5"/>
+
+  <!-- Community nodes -->
+  <g opacity="0.8">
+    <!-- Top node -->
+    <circle cx="100" cy="40" r="8" fill="url(#aboutGradient)" filter="url(#glowAbout)"/>
+    <circle cx="100" cy="40" r="12" fill="none" stroke="url(#aboutGradient)" stroke-width="1" opacity="0.4"/>
+    <line x1="100" y1="48" x2="100" y2="70" stroke="url(#aboutGradient)" stroke-width="2" opacity="0.6"/>
+
+    <!-- Bottom left node -->
+    <circle cx="65" cy="135" r="8" fill="url(#aboutGradient)" filter="url(#glowAbout)"/>
+    <circle cx="65" cy="135" r="12" fill="none" stroke="url(#aboutGradient)" stroke-width="1" opacity="0.4"/>
+    <line x1="73" y1="135" x2="90" y2="130" stroke="url(#aboutGradient)" stroke-width="2" opacity="0.6"/>
+
+    <!-- Bottom right node -->
+    <circle cx="135" cy="135" r="8" fill="url(#aboutGradient)" filter="url(#glowAbout)"/>
+    <circle cx="135" cy="135" r="12" fill="none" stroke="url(#aboutGradient)" stroke-width="1" opacity="0.4"/>
+    <line x1="127" y1="135" x2="110" y2="130" stroke="url(#aboutGradient)" stroke-width="2" opacity="0.6"/>
+  </g>
+
+  <!-- Quantum computing icons -->
+  <g transform="translate(100,100)">
+    <!-- Circuit symbol -->
+    <rect x="-8" y="-8" width="4" height="4" fill="#FFFFFF" opacity="0.9"/>
+    <rect x="4" y="-8" width="4" height="4" fill="#FFFFFF" opacity="0.9"/>
+    <line x1="-6" y1="-6" x2="6" y2="-6" stroke="#FFFFFF" stroke-width="1" opacity="0.8"/>
+    <line x1="-6" y1="-2" x2="6" y2="-2" stroke="#FFFFFF" stroke-width="1" opacity="0.8"/>
+  </g>
+
+  <!-- About title -->
+  <text x="100" y="175" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="14" font-weight="bold" opacity="0.9">About</text>
+</svg>

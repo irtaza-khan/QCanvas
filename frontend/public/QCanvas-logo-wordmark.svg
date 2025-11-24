@@ -1,0 +1,43 @@
+<svg viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Quantum gradient for text -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="50%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
+    </linearGradient>
+
+    <!-- Glow effect -->
+    <filter id="glowText">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Q letter with quantum circuit -->
+  <g transform="translate(20,50)">
+    <!-- Q base -->
+    <path d="M 0 0 Q 15 -15 30 0 L 30 20 Q 15 35 0 20 Z" fill="url(#textGradient)" opacity="0.8"/>
+    <!-- Q tail -->
+    <path d="M 15 15 Q 25 20 30 15" stroke="url(#textGradient)" stroke-width="3" fill="none" opacity="0.9"/>
+
+    <!-- Quantum circuit in Q -->
+    <circle cx="15" cy="10" r="2" fill="#FFFFFF" opacity="0.8"/>
+    <line x1="15" y1="0" x2="15" y2="6" stroke="#FFFFFF" stroke-width="1" opacity="0.6"/>
+    <line x1="15" y1="14" x2="15" y2="20" stroke="#FFFFFF" stroke-width="1" opacity="0.6"/>
+  </g>
+
+  <!-- Canvas text -->
+  <text x="70" y="35" fill="url(#textGradient)" font-family="Arial, sans-serif" font-size="32" font-weight="bold" filter="url(#glowText)">Canvas</text>
+
+  <!-- Quantum computing tagline -->
+  <text x="70" y="60" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="12" opacity="0.8">Quantum Unified Simulator</text>
+
+  <!-- Decorative quantum waves -->
+  <path d="M 250 20 Q 265 10 280 20 Q 295 30 310 20" stroke="url(#textGradient)" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M 250 40 Q 265 30 280 40 Q 295 50 310 40" stroke="url(#textGradient)" stroke-width="2" fill="none" opacity="0.3"/>
+  <path d="M 250 60 Q 265 50 280 60 Q 295 70 310 60" stroke="url(#textGradient)" stroke-width="2" fill="none" opacity="0.2"/>
+</svg>
