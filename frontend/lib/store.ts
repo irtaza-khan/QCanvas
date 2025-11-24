@@ -20,9 +20,18 @@ interface SimulationResult {
   counts: { [state: string]: number }
   metadata: {
     n_qubits: number
-    visitor: string
+    visitor?: string
     backend: string
     shots: number
+    success?: boolean
+    // Performance metrics (populated by backend)
+    execution_time?: string
+    simulation_time?: string
+    postprocessing_time?: string
+    memory_usage?: string
+    cpu_usage?: string
+    fidelity?: number
+    successful_shots?: number
     [key: string]: any
   }
   probs?: { [state: string]: number } | null
@@ -54,20 +63,27 @@ interface FileStore extends EditorState {
   compileActiveToQasm: () => string | null
 }
 
-// Initial files sourced from tests/unit/test_converters
+// Initial files - quantum algorithm examples from different frameworks
 const initialFiles: File[] = [
   (() => {
-    const content = `from qiskit import QuantumCircuit
-def get_circuit():
-    qc = QuantumCircuit(2, 2)
-    qc.h(0)
-    qc.cx(0, 1)
-    qc.measure([0, 1], [0, 1])
-    return qc
+    const content = `import cirq
+
+# Create qubits
+q0, q1 = cirq.LineQubit.range(2)
+
+# Create Bell state circuit
+circuit = cirq.Circuit(
+    cirq.H(q0),           # Hadamard on first qubit
+    cirq.CNOT(q0, q1),    # CNOT with q0 as control
+    cirq.measure(q0, q1)  # Measure both qubits
+)
+
+print("Bell State Circuit (Cirq):")
+print(circuit)
 `;
     return {
       id: 'file-1',
-      name: 'test_qiskit_converter.py',
+      name: 'bell_state_cirq.py',
       content,
       language: 'python',
       createdAt: new Date().toISOString(),
@@ -76,20 +92,33 @@ def get_circuit():
     };
   })(),
   (() => {
-    const content = `import cirq
-def get_circuit():
-    q0, q1 = cirq.LineQubit.range(2)
-    circuit = cirq.Circuit(
-        cirq.H(q0),
-        cirq.CNOT(q0, q1),
-        cirq.measure(q0, key="m0"),
-        cirq.measure(q1, key="m1")
-    )
-    return circuit
+    const content = `from qiskit import QuantumCircuit
+
+# 3 qubits, 2 classical bits (only measure input qubits)
+qc = QuantumCircuit(3, 2)
+
+# STEP 1: Initialize ancilla to |1⟩
+qc.x(2)
+
+# STEP 2: Hadamard on all qubits
+for i in range(3):
+    qc.h(i)
+
+# STEP 3: Balanced Oracle
+qc.cx(0, 2)
+qc.cx(1, 2)
+
+# STEP 4: Hadamard on input qubits
+qc.h(0)
+qc.h(1)
+
+# STEP 5: Measure input qubits
+qc.measure(0, 0)
+qc.measure(1, 1)
 `;
     return {
       id: 'file-2',
-      name: 'test_cirq_converter.py',
+      name: 'deutsch_jozsa_qiskit.py',
       content,
       language: 'python',
       createdAt: new Date().toISOString(),
@@ -99,23 +128,36 @@ def get_circuit():
   })(),
   (() => {
     const content = `import pennylane as qml
-import numpy as np
 
-dev = qml.device('default.qubit', wires=3)
+dev = qml.device("default.qubit", wires=2)
 
 @qml.qnode(dev)
-def circuit():
+def grover_circuit():
+    # STEP 1: Initialize superposition
     qml.Hadamard(wires=0)
-    qml.RX(np.pi/4, wires=0)
-    qml.RY(np.pi/2, wires=1)
-    qml.CNOT(wires=[0, 1])
-    qml.RZ(np.pi/3, wires=2)
-    qml.CZ(wires=[1, 2])
-    return qml.expval(qml.PauliZ(0))
+    qml.Hadamard(wires=1)
+    
+    # STEP 2: Oracle - mark |11⟩
+    qml.CZ(wires=[0, 1])
+    
+    # STEP 3: Diffusion Operator
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    qml.PauliX(wires=0)
+    qml.PauliX(wires=1)
+    qml.CZ(wires=[0, 1])
+    qml.PauliX(wires=0)
+    qml.PauliX(wires=1)
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    
+    # STEP 4: Measure
+    qml.measure(wires=0)
+    qml.measure(wires=1)
 `;
     return {
       id: 'file-3',
-      name: 'test_pennylane_converter.py',
+      name: 'grovers_search_pennylane.py',
       content,
       language: 'python',
       createdAt: new Date().toISOString(),

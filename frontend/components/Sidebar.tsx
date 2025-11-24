@@ -41,94 +41,117 @@ interface FileTemplate {
 
 const fileTemplates: FileTemplate[] = [
   {
-    name: 'Bell State (Qiskit)',
-    description: 'Create a Bell state using Qiskit',
-    content: `from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+    name: 'Quantum Teleportation (Qiskit)',
+    description: 'Transfer quantum state using entanglement',
+    content: `from qiskit import QuantumCircuit
 
-# Create quantum and classical registers
-qr = QuantumRegister(2, 'q')
-cr = ClassicalRegister(2, 'c')
+# Create circuit with 3 qubits and 3 classical bits
+qc = QuantumCircuit(3, 3)
 
-# Create quantum circuit
-qc = QuantumCircuit(qr, cr)
+# STEP 1: Prepare the state to teleport (|+⟩ state as example)
+qc.h(0)
 
-# Apply Hadamard gate to first qubit
-qc.h(qr[0])
+# STEP 2: Create Bell pair between q1 and q2
+qc.h(1)
+qc.cx(1, 2)
 
-# Apply CNOT gate between qubits 0 and 1
-qc.cx(qr[0], qr[1])
+# STEP 3: Bell measurement
+qc.cx(0, 1)
+qc.h(0)
 
-# Measure both qubits
-qc.measure(qr, cr)
+# STEP 4: Measure qubits 0 and 1
+qc.measure(0, 0)
+qc.measure(1, 1)
 
-print("Bell State Circuit (Qiskit):")
-print(qc)`,
+# STEP 5: Conditional corrections (classical control)
+c = [0, 0, 0]
+if c[1] == 1:
+    qc.x(2)
+if c[0] == 1:
+    qc.z(2)
+
+# STEP 6: Final measurement
+qc.measure(2, 2)`,
     language: 'python',
     icon: <Code className="w-4 h-4 text-blue-400" />
   },
   {
-    name: 'Bell State (Cirq)',
-    description: 'Create a Bell state using Cirq',
+    name: 'QRNG (Cirq)',
+    description: 'Generate truly random numbers using quantum mechanics',
     content: `import cirq
 
-# Create qubits
-q0, q1 = cirq.LineQubit.range(2)
+# Number of random bits to generate
+n_bits = 8
 
-# Create Bell state circuit
-circuit = cirq.Circuit(
-    cirq.H(q0),           # Hadamard on first qubit
-    cirq.CNOT(q0, q1),    # CNOT with q0 as control
-    cirq.measure(q0, q1)  # Measure both qubits
-)
+# Create n_bits qubits
+qubits = cirq.LineQubit.range(n_bits)
 
-print("Bell State Circuit (Cirq):")
-print(circuit)`,
+circuit = cirq.Circuit()
+
+# Put each qubit in superposition
+for i in range(n_bits):
+    circuit.append(cirq.H(cirq.LineQubit(i)))
+
+# Measure all qubits
+for i in range(n_bits):
+    circuit.append(cirq.measure(cirq.LineQubit(i), key=f'c{i}'))`,
     language: 'python',
     icon: <Code className="w-4 h-4 text-purple-400" />
   },
   {
-    name: 'Quantum Fourier Transform',
-    description: 'Implement QFT algorithm',
-    content: `from qiskit import QuantumCircuit
-import numpy as np
+    name: 'XOR Demonstration (PennyLane)',
+    description: 'Quantum entanglement producing XOR correlations',
+    content: `import pennylane as qml
 
-def create_qft_circuit(n_qubits):
-    qc = QuantumCircuit(n_qubits)
-    
-    for i in range(n_qubits):
-        qc.h(i)
-        
-        for j in range(i + 1, n_qubits):
-            angle = 2 * np.pi / (2 ** (j - i + 1))
-            qc.cp(angle, j, i)
-    
-    # Swap qubits to get correct order
-    for i in range(n_qubits // 2):
-        qc.swap(i, n_qubits - 1 - i)
-    
-    return qc
+dev = qml.device("default.qubit", wires=2)
 
-# Create 4-qubit QFT
-qft_circuit = create_qft_circuit(4)
-print("Quantum Fourier Transform (4 qubits):")
-print(qft_circuit)`,
+@qml.qnode(dev)
+def xor_demo_circuit():
+    # STEP 1: Create Bell state (|00⟩ + |11⟩)/√2
+    # Hadamard creates superposition, CNOT entangles qubits
+    qml.Hadamard(wires=0)
+    qml.CNOT(wires=[0, 1])
+    
+    # STEP 2: Flip qubit 0 to get (|10⟩ + |01⟩)/√2
+    # Now qubits are always opposite (XOR = 1)
+    qml.PauliX(wires=0)
+    
+    # STEP 3: Measure both qubits
+    # Results will be either |01⟩ or |10⟩
+    qml.measure(wires=0)
+    qml.measure(wires=1)`,
     language: 'python',
     icon: <Code className="w-4 h-4 text-green-400" />
   },
   {
-    name: 'OpenQASM Circuit',
-    description: 'Basic OpenQASM 3 circuit',
-    content: `OPENQASM 3.0;
-include "stdgates.inc";
+    name: 'QML XOR Classifier (PennyLane)',
+    description: 'Variational quantum circuit that learns XOR function',
+    content: `import pennylane as qml
+import numpy as np
 
-qubit[2] q;
-bit[2] c;
+dev = qml.device("default.qubit", wires=2)
 
-h q[0];
-cx q[0], q[1];
-c = measure q;`,
-    language: 'qasm',
-    icon: <FileIcon className="w-4 h-4 text-purple-400" />
+@qml.qnode(dev)
+def qml_xor_classifier():
+    # ENCODING LAYER: Convert classical inputs to quantum states
+    # Testing XOR(0, 1) - expect output = 1
+    qml.RX(0, wires=0)              # Input x1=0: RX(0*π) = no rotation
+    qml.RX(np.pi, wires=1)          # Input x2=1: RX(1*π) = flip to |1⟩
+    
+    # VARIATIONAL LAYER: Trainable gates that learn XOR pattern
+    # Weights = 0.5 radians (found through gradient descent training)
+    qml.RY(0.5, wires=0)            # Trainable rotation on qubit 0
+    qml.RY(0.5, wires=1)            # Trainable rotation on qubit 1
+    qml.CNOT(wires=[0, 1])          # Entanglement creates non-linear behavior
+    qml.RY(0.5, wires=0)            # Second layer of trainable rotations
+    qml.RY(0.5, wires=1)
+    
+    # MEASUREMENT: Read the XOR prediction from qubit 1
+    # q[1] = 1 means XOR(x1, x2) = 1
+    qml.measure(wires=0)
+    qml.measure(wires=1)`,
+    language: 'python',
+    icon: <Code className="w-4 h-4 text-green-400" />
   }
 ]
 
@@ -152,6 +175,11 @@ export default function Sidebar() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'python' | 'qasm' | 'javascript' | 'json'>('all')
   const [showAddLanguage, setShowAddLanguage] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; fileId: string; fileName: string }>({
+    show: false,
+    fileId: '',
+    fileName: ''
+  })
 
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -200,14 +228,21 @@ export default function Sidebar() {
   }
 
   const handleDeleteFile = (fileId: string, fileName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${fileName}"?`)) {
-      try {
-        deleteFile(fileId)
-        toast.success(`Deleted ${fileName}`)
-      } catch (error) {
-        toast.error('Failed to delete file')
-      }
+    setDeleteConfirm({ show: true, fileId, fileName })
+  }
+
+  const confirmDelete = () => {
+    try {
+      deleteFile(deleteConfirm.fileId)
+      toast.success(`Deleted ${deleteConfirm.fileName}`)
+    } catch (error) {
+      toast.error('Failed to delete file')
     }
+    setDeleteConfirm({ show: false, fileId: '', fileName: '' })
+  }
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ show: false, fileId: '', fileName: '' })
   }
 
   const handleRenameFile = (fileId: string) => {
@@ -522,8 +557,14 @@ export default function Sidebar() {
 
       {/* Templates Modal */}
       {showTemplates && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="quantum-glass-dark rounded-2xl p-6 max-w-2xl w-full max-h-96 overflow-y-auto backdrop-blur-xl border border-white/10 shadow-2xl">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowTemplates(false)}
+        >
+          <div 
+            className="quantum-glass-dark rounded-2xl p-6 max-w-2xl w-full max-h-[32rem] overflow-y-auto backdrop-blur-xl border border-white/10 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">File Templates</h3>
               <button
@@ -554,6 +595,46 @@ export default function Sidebar() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.show && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={cancelDelete}
+        >
+          <div 
+            className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full backdrop-blur-xl border border-white/10 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-red-500/20 rounded-lg">
+                <Trash2 className="w-6 h-6 text-red-400" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Delete File</h3>
+            </div>
+            
+            <p className="text-editor-text mb-6">
+              Are you sure you want to delete <span className="text-white font-medium">"{deleteConfirm.fileName}"</span>? 
+              This action cannot be undone.
+            </p>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 text-sm font-medium text-editor-text hover:text-white bg-editor-border/50 hover:bg-editor-border rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
