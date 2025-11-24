@@ -79,8 +79,8 @@ class MeasurementNode:
         clbit: Classical bit index storing the result
         metadata: Additional measurement metadata
     """
-    qubit: int
-    clbit: int
+    qubit: Union[int, str]
+    clbit: Union[int, str]
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -106,7 +106,7 @@ class BarrierNode:
         qubits: List of qubit indices for the barrier (None for all qubits)
         metadata: Additional barrier metadata
     """
-    qubits: Optional[List[int]] = None
+    qubits: Optional[List[Union[int, str]]] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
