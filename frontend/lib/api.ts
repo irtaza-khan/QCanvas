@@ -1,6 +1,29 @@
 import { File, ApiResponse, CreateFileRequest, UpdateFileRequest } from '@/types'
 
+// const API_BASE = "http://127.0.0.1:8000"
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://qcanvas-nextjs-production.up.railway.app'
+
+let cachedApiBase: string | null = null
+
+async function getApiBase(): Promise<string> {
+  if (cachedApiBase) return cachedApiBase
+
+  const localUrl = 'http://127.0.0.1:8000'
+  const railwayUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://qcanvas-nextjs-production.up.railway.app'
+
+  try {
+    const response = await fetch(`${localUrl}/api/health`, { method: 'GET' })
+    if (response.ok) {
+      cachedApiBase = localUrl
+      return localUrl
+    }
+  } catch (error) {
+    // Local backend not available
+  }
+
+  cachedApiBase = railwayUrl
+  return railwayUrl
+}
 
 // Generic API helper
 async function apiRequest<T>(
@@ -8,6 +31,7 @@ async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   try {
+    const API_BASE = await getApiBase()
     const url = `${API_BASE}${endpoint}`
     const response = await fetch(url, {
       headers: {
