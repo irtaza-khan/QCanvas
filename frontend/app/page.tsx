@@ -59,88 +59,80 @@ export default function HomePage() {
   const getExampleCode = (exampleType: string) => {
     const examples = {
       'bell-state': {
-        name: 'bell_state_example.py',
+        name: 'bell_state_cirq.py',
         content: `import cirq
-def get_circuit():
-    q0, q1 = cirq.LineQubit.range(2)
-    circuit = cirq.Circuit(
-        cirq.H(q0),
-        cirq.CNOT(q0, q1),
-        cirq.measure(q0, key="m0"),
-        cirq.measure(q1, key="m1")
-    )
-    return circuit`
+
+# Create qubits
+q0, q1 = cirq.LineQubit.range(2)
+
+# Create Bell State circuit
+circuit = cirq.Circuit()
+circuit.append(cirq.H(q0))          # Hadamard gate
+circuit.append(cirq.CNOT(q0, q1))   # CNOT gate
+circuit.append(cirq.measure(q0, key='m0'))
+circuit.append(cirq.measure(q1, key='m1'))
+
+# Expected: 50% |00⟩, 50% |11⟩`
       },
       'quantum-teleportation': {
-        name: 'teleportation_example.py',
-        content: `from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
-import numpy as np
+        name: 'teleportation_qiskit.py',
+        content: `from qiskit import QuantumCircuit
 
-def create_teleportation_circuit():
-    # Create quantum and classical registers
-    qr = QuantumRegister(3, 'q')
-    cr = ClassicalRegister(3, 'c')
-    qc = QuantumCircuit(qr, cr)
+# Quantum Teleportation Circuit
+qc = QuantumCircuit(3, 3)
 
-    # Prepare the state to teleport (qubit 0)
-    qc.ry(np.pi/4, qr[0])  # Create a superposition state
+# STEP 1: Prepare state to teleport
+qc.h(0)
 
-    # Create entanglement between qubits 1 and 2
-    qc.h(qr[1])
-    qc.cx(qr[1], qr[2])
+# STEP 2: Create Bell pair (q1, q2)
+qc.h(1)
+qc.cx(1, 2)
 
-    # Perform Bell measurement on qubits 0 and 1
-    qc.cx(qr[0], qr[1])
-    qc.h(qr[0])
-    qc.measure(qr[0], cr[0])
-    qc.measure(qr[1], cr[1])
+# STEP 3: Bell measurement
+qc.cx(0, 1)
+qc.h(0)
+qc.measure(0, 0)
+qc.measure(1, 1)
 
-    # Apply conditional operations based on measurement results
-    qc.x(qr[2]).c_if(cr[1], 1)
-    qc.z(qr[2]).c_if(cr[0], 1)
+# STEP 4: Classical corrections
+c = [0, 0, 0]  # Placeholder for conditions
+if c[1] == 1:
+    qc.x(2)
+if c[0] == 1:
+    qc.z(2)
 
-    # Measure the teleported qubit
-    qc.measure(qr[2], cr[2])
-
-    return qc`
+# Measure teleported qubit
+qc.measure(2, 2)`
       },
-      'vqe-algorithm': {
-        name: 'vqe_example.py',
+      'grovers-search': {
+        name: 'grovers_pennylane.py',
         content: `import pennylane as qml
-import numpy as np
 
-# Define the Hamiltonian for H2 molecule (simplified)
-hamiltonian = qml.PauliSum([
-    qml.PauliWord({0: 'Z', 1: 'I'}: 0.5),
-    qml.PauliWord({0: 'I', 1: 'Z'}: 0.5),
-    qml.PauliWord({0: 'Z', 1: 'Z'}: 0.25),
-    qml.PauliWord({0: 'X', 1: 'X'}: 0.25)
-])
-
-# Define the ansatz (parameterized quantum circuit)
-def ansatz(params):
-    qml.RY(params[0], wires=0)
-    qml.RY(params[1], wires=1)
-    qml.CNOT(wires=[0, 1])
-
-# Create the VQE circuit
-dev = qml.device('default.qubit', wires=2)
+dev = qml.device("default.qubit", wires=2)
 
 @qml.qnode(dev)
-def vqe_circuit(params):
-    ansatz(params)
-    return qml.expval(hamiltonian)
+def grovers_search():
+    # Initialize superposition
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    
+    # Oracle: mark |11⟩
+    qml.CZ(wires=[0, 1])
+    
+    # Diffusion operator
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    qml.PauliX(wires=0)
+    qml.PauliX(wires=1)
+    qml.CZ(wires=[0, 1])
+    qml.PauliX(wires=0)
+    qml.PauliX(wires=1)
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    
+    return qml.probs(wires=[0, 1])
 
-# Optimization
-def cost_function(params):
-    return vqe_circuit(params)
-
-# Initial parameters
-params = np.random.random(2)
-
-# Run VQE (simplified - in practice you'd use an optimizer)
-print(f"Initial energy: {cost_function(params)}")
-print("VQE circuit ready for optimization!")`
+# Expected: High probability for |11⟩`
       }
     }
     return examples[exampleType as keyof typeof examples] || examples['bell-state']
@@ -562,9 +554,9 @@ print("VQE circuit ready for optimization!")`
               <div className="w-full h-32 bg-gradient-to-br from-quantum-blue-light/20 to-purple-500/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 <Code className="w-12 h-12 text-quantum-blue-light group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-quantum-blue-light transition-colors duration-300">Bell State Preparation</h3>
+              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-quantum-blue-light transition-colors duration-300">Bell State (Cirq)</h3>
               <p className="text-editor-text text-sm mb-4 group-hover:text-gray-200 transition-colors duration-300">
-                Create quantum entanglement with a simple 2-qubit circuit using Cirq
+                Create quantum entanglement with H + CNOT gates. Expect 50% |00⟩ and 50% |11⟩
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-xs bg-quantum-blue-light/20 text-quantum-blue-light px-2 py-1 rounded group-hover:bg-quantum-blue-light/40 transition-colors duration-300">Beginner</span>
@@ -580,9 +572,9 @@ print("VQE circuit ready for optimization!")`
               <div className="w-full h-32 bg-gradient-to-br from-purple-500/20 to-teal-500/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 <Play className="w-12 h-12 text-purple-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-purple-400 transition-colors duration-300">Quantum Teleportation</h3>
+              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-purple-400 transition-colors duration-300">Teleportation (Qiskit)</h3>
               <p className="text-editor-text text-sm mb-4 group-hover:text-gray-200 transition-colors duration-300">
-                Implement quantum teleportation protocol with Qiskit and measure fidelity
+                Transfer quantum states using entanglement with Bell measurement and classical corrections
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded group-hover:bg-purple-500/40 transition-colors duration-300">Intermediate</span>
@@ -592,15 +584,15 @@ print("VQE circuit ready for optimization!")`
 
             {/* Example 3 */}
             <div
-              onClick={() => handleTryExample(getExampleCode('vqe-algorithm'))}
+              onClick={() => handleTryExample(getExampleCode('grovers-search'))}
               className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
             >
               <div className="w-full h-32 bg-gradient-to-br from-teal-500/20 to-green-500/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 <Atom className="w-12 h-12 text-teal-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-teal-400 transition-colors duration-300">Variational Algorithm</h3>
+              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-teal-400 transition-colors duration-300">Grover&apos;s Search (PennyLane)</h3>
               <p className="text-editor-text text-sm mb-4 group-hover:text-gray-200 transition-colors duration-300">
-                Build a VQE algorithm for molecular energy calculation using PennyLane
+                Quantum search algorithm with oracle and diffusion operator for quadratic speedup
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-xs bg-teal-500/20 text-teal-400 px-2 py-1 rounded group-hover:bg-teal-500/40 transition-colors duration-300">Advanced</span>

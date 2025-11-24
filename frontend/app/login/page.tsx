@@ -146,10 +146,10 @@ export default function LoginPage() {
               Welcome to <span className="quantum-gradient bg-clip-text text-transparent">QCanvas</span>
             </h1>
             <p className="text-editor-text text-lg">
-              Quantum Code Editor & Simulation Platform
+              Quantum Unified Simulator
             </p>
             <p className="text-gray-400 text-sm mt-2">
-              Convert, simulate, and visualize quantum circuits
+              Write in Qiskit, Cirq, or PennyLane • Compile to OpenQASM 3.0 • Simulate with QSim
             </p>
           </div>
         </div>

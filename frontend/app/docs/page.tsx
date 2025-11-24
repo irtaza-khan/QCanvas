@@ -661,26 +661,26 @@ print(qc)`}
               <div className="space-y-4">
                 <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-white font-medium">POST /api/convert</span>
+                    <span className="text-white font-medium">POST /api/converter/convert</span>
                     <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
                   </div>
-                  <p className="text-editor-text text-sm mb-3">Convert quantum circuits between frameworks</p>
+                  <p className="text-editor-text text-sm mb-3">Convert framework code to OpenQASM 3.0</p>
                   <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 p-2 rounded">
 {`{
+  "source_code": "from qiskit import...",
   "source_framework": "qiskit",
-  "target_framework": "cirq",
-  "source_code": "your_circuit_code",
-  "optimization_level": 1
-}`}
+  "conversion_type": "classic"
+}
+// Response includes: qasm_code, gates, depth, qubits`}
                   </pre>
                 </div>
 
                 <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-white font-medium">GET /api/convert/frameworks</span>
-                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Info</span>
+                    <span className="text-white font-medium">GET /api/health</span>
+                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Health</span>
                   </div>
-                  <p className="text-editor-text text-sm">Get supported frameworks and versions</p>
+                  <p className="text-editor-text text-sm">Check API health status</p>
                 </div>
               </div>
             </div>
@@ -688,94 +688,95 @@ print(qc)`}
             <div className="quantum-glass-dark rounded-xl p-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
                 <Play className="w-5 h-5 mr-2 text-green-400" />
-                Simulation API
+                Simulation API (QSim)
               </h3>
               <div className="space-y-4">
                 <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-white font-medium">POST /api/simulate</span>
+                    <span className="text-white font-medium">POST /api/simulator/execute</span>
                     <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
                   </div>
-                  <p className="text-editor-text text-sm mb-3">Execute quantum circuit simulation</p>
+                  <p className="text-editor-text text-sm mb-3">Execute OpenQASM 3.0 with QSim</p>
                   <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 p-2 rounded">
 {`{
   "qasm_code": "OPENQASM 3.0; ...",
-  "backend": "statevector",
-  "shots": 1000
-}`}
+  "backend": "cirq",  // cirq, qiskit, pennylane
+  "shots": 1024
+}
+// Response includes: counts, metadata, probs`}
                   </pre>
                 </div>
 
                 <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-white font-medium">GET /api/simulate/backends</span>
-                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Info</span>
+                    <span className="text-white font-medium">Response Metadata</span>
+                    <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Stats</span>
                   </div>
-                  <p className="text-editor-text text-sm">Get available simulation backends</p>
+                  <p className="text-editor-text text-sm">execution_time, simulation_time, memory_usage, cpu_usage, fidelity</p>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="quantum-glass-dark rounded-xl p-8">
-            <h3 className="text-2xl font-bold text-white mb-6">Available Backends</h3>
+            <h3 className="text-2xl font-bold text-white mb-6">QSim Simulation Backends</h3>
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border hover:border-blue-500/50 transition-colors">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                     <Database className="w-5 h-5 text-blue-400" />
                   </div>
-                  <h4 className="text-lg font-semibold text-white ml-3">Statevector</h4>
+                  <h4 className="text-lg font-semibold text-white ml-3">Cirq</h4>
                 </div>
-                <p className="text-editor-text text-sm mb-3">Perfect simulation with full quantum state representation</p>
+                <p className="text-editor-text text-sm mb-3">Google&apos;s quantum computing framework with statevector simulation</p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Max Qubits:</span>
-                    <span className="text-white">32</span>
+                    <span className="text-gray-400">Shots:</span>
+                    <span className="text-white">1 - 10,000</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-400">Best for:</span>
-                    <span className="text-white">Exact results</span>
+                    <span className="text-white">Near-term devices</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border hover:border-purple-500/50 transition-colors">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                     <Layers className="w-5 h-5 text-purple-400" />
                   </div>
-                  <h4 className="text-lg font-semibold text-white ml-3">Density Matrix</h4>
+                  <h4 className="text-lg font-semibold text-white ml-3">Qiskit</h4>
                 </div>
-                <p className="text-editor-text text-sm mb-3">Supports noise modeling and mixed quantum states</p>
+                <p className="text-editor-text text-sm mb-3">IBM&apos;s comprehensive quantum SDK with QASM simulator backend</p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Max Qubits:</span>
-                    <span className="text-white">16</span>
+                    <span className="text-gray-400">Shots:</span>
+                    <span className="text-white">1 - 10,000</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-400">Best for:</span>
-                    <span className="text-white">Noise simulation</span>
+                    <span className="text-white">IBM Quantum</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border hover:border-green-500/50 transition-colors">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                     <Zap className="w-5 h-5 text-green-400" />
                   </div>
-                  <h4 className="text-lg font-semibold text-white ml-3">Stabilizer</h4>
+                  <h4 className="text-lg font-semibold text-white ml-3">PennyLane</h4>
                 </div>
-                <p className="text-editor-text text-sm mb-3">Efficient simulation for Clifford circuits</p>
+                <p className="text-editor-text text-sm mb-3">Xanadu&apos;s quantum ML framework with default.qubit device</p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Max Qubits:</span>
-                    <span className="text-white">64</span>
+                    <span className="text-gray-400">Shots:</span>
+                    <span className="text-white">1 - 10,000</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-400">Best for:</span>
-                    <span className="text-white">Clifford circuits</span>
+                    <span className="text-white">QML & Variational</span>
                   </div>
                 </div>
               </div>
