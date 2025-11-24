@@ -724,18 +724,18 @@ class QiskitToQASM3Converter:
         """
         Convert Qiskit source code to OpenQASM 3.0 format using AST-based parsing.
 
-        This method now uses AST parsing instead of dynamic execution for improved
-        security and reliability. It parses the source code to extract circuit operations
-        without executing potentially unsafe code.
+        This method uses AST parsing for secure translation without code execution.
+        It parses the source code to extract circuit operations without executing
+        potentially unsafe code.
 
         Args:
-            qiskit_source (str): Complete Qiskit source code defining get_circuit() function
+            qiskit_source (str): Complete Qiskit source code defining circuit operations
 
         Returns:
             ConversionResult: Object containing QASM code and conversion statistics
 
         Raises:
-            ValueError: If source code is invalid or doesn't define required function
+            ValueError: If source code is invalid or cannot be parsed
             ImportError: If Qiskit dependencies are missing
             RuntimeError: If conversion process fails
 
@@ -743,22 +743,21 @@ class QiskitToQASM3Converter:
             >>> converter = QiskitToQASM3Converter()
             >>> source = '''
             ... from qiskit import QuantumCircuit
-            ... def get_circuit():
-            ...     qc = QuantumCircuit(2, 2)
-            ...     qc.h(0)
-            ...     qc.cx(0, 1)
-            ...     qc.measure([0, 1], [0, 1])
-            ...     return qc
+            ... n_bits = 8
+            ... qc = QuantumCircuit(n_bits, n_bits)
+            ... for i in range(n_bits):
+            ...     qc.h(i)
+            ... qc.measure(range(n_bits), range(n_bits))
             ... '''
             >>> result = converter.convert(source)
-            >>> print(f"Circuit has {result.stats.n_qubits} qubits and depth {result.stats.depth}")
+            >>> print(f"Circuit has {result.stats.n_qubits} qubits")
         """
-        # Preprocess source code for compatibility before any parsing or execution
+        # Preprocess source code for compatibility
         qiskit_source = self._preprocess_qiskit_source(qiskit_source)
 
-        # Try AST-based conversion first
+        # Use AST-based conversion only (no execution fallback)
         if VERBOSE:
-            vprint("[QiskitToQASM3Converter] Attempt AST-based conversion")
+            vprint("[QiskitToQASM3Converter] Using AST-based translation")
         try:
             parser = QiskitASTParser()
             t_parse = time.time()
@@ -771,16 +770,10 @@ class QiskitToQASM3Converter:
                 vprint(f"[QiskitToQASM3Converter] AST analyzed in {(time.time()-t_ana)*1000:.1f} ms")
             qasm3_program = self._convert_ast_to_qasm3(circuit_ast)
             return ConversionResult(qasm_code=qasm3_program, stats=stats)
-        except Exception:
-            pass
-
-        # Fallback: execute and use runtime circuit to QASM
-        if VERBOSE:
-            vprint("[QiskitToQASM3Converter] AST failed, fallback to runtime execution path")
-        qc = self._execute_qiskit_source(qiskit_source)
-        stats = self._analyze_qiskit_circuit(qc)
-        qasm3_program = self._convert_to_qasm3(qc)
-        return ConversionResult(qasm_code=qasm3_program, stats=stats)
+        except Exception as e:
+            if VERBOSE:
+                vprint(f"[QiskitToQASM3Converter] AST parsing failed: {e}")
+            raise ValueError(f"Failed to parse Qiskit source code: {str(e)}. Please ensure the code contains valid Qiskit circuit operations.")
 
 
 # Public API function for easy module usage
