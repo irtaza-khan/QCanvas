@@ -20,10 +20,506 @@ interface Example {
 }
 
 const examples: Example[] = [
+  // ============================================================================
+  // QUANTUM TELEPORTATION
+  // ============================================================================
+  {
+    id: 'teleportation-cirq',
+    title: 'Quantum Teleportation (Cirq)',
+    description: 'Transfer a quantum state using entanglement and classical communication.',
+    framework: 'cirq',
+    difficulty: 'intermediate',
+    category: 'Quantum Algorithms',
+    code: `import cirq
+
+# Create 3 qubits: q0 (state to teleport), q1 & q2 (Bell pair)
+q0, q1, q2 = cirq.LineQubit.range(3)
+
+# Classical bits placeholder for conditional operations
+c = [0, 0, 0]
+
+# Initialize empty circuit
+circuit = cirq.Circuit()
+
+# STEP 1: Prepare the state to teleport (|+⟩ state as example)
+circuit.append(cirq.H(q0))
+
+# STEP 2: Create Bell pair between q1 and q2 (|00⟩ + |11⟩)/√2
+circuit.append(cirq.H(q1))
+circuit.append(cirq.CNOT(q1, q2))
+
+# STEP 3: Bell measurement - entangle q0 with the Bell pair
+circuit.append(cirq.CNOT(q0, q1))
+circuit.append(cirq.H(q0))
+
+# STEP 4: Measure qubits 0 and 1 (Alice's measurements)
+circuit.append(cirq.measure(q0, key='c0'))
+circuit.append(cirq.measure(q1, key='c1'))
+
+# STEP 5: Apply corrections based on measurement results (Bob's operations)
+if c[1] == 1:
+    circuit.append(cirq.X(q2))
+if c[0] == 1:
+    circuit.append(cirq.Z(q2))
+
+# STEP 6: Final measurement to verify teleportation
+circuit.append(cirq.measure(q2, key='c2'))`,
+    tags: ['teleportation', 'entanglement', 'bell-state', 'protocol']
+  },
+  {
+    id: 'teleportation-qiskit',
+    title: 'Quantum Teleportation (Qiskit)',
+    description: 'Transfer a quantum state using entanglement and classical communication.',
+    framework: 'qiskit',
+    difficulty: 'intermediate',
+    category: 'Quantum Algorithms',
+    code: `from qiskit import QuantumCircuit
+
+# Create circuit with 3 qubits and 3 classical bits
+qc = QuantumCircuit(3, 3)
+
+# STEP 1: Prepare the state to teleport (|+⟩ state as example)
+qc.h(0)
+
+# STEP 2: Create Bell pair between q1 and q2
+qc.h(1)
+qc.cx(1, 2)
+
+# STEP 3: Bell measurement
+qc.cx(0, 1)
+qc.h(0)
+
+# STEP 4: Measure qubits 0 and 1
+qc.measure(0, 0)
+qc.measure(1, 1)
+
+# STEP 5: Conditional corrections (classical control)
+c = [0, 0, 0]
+if c[1] == 1:
+    qc.x(2)
+if c[0] == 1:
+    qc.z(2)
+
+# STEP 6: Final measurement
+qc.measure(2, 2)`,
+    tags: ['teleportation', 'entanglement', 'bell-state', 'protocol']
+  },
+  {
+    id: 'teleportation-pennylane',
+    title: 'Quantum Teleportation (PennyLane)',
+    description: 'Transfer a quantum state using entanglement and classical communication.',
+    framework: 'pennylane',
+    difficulty: 'intermediate',
+    category: 'Quantum Algorithms',
+    code: `import pennylane as qml
+
+# Define quantum device with 3 wires (qubits)
+dev = qml.device("default.qubit", wires=3)
+
+# Classical bits placeholder for conditional operations
+c = [0, 0, 0]
+
+@qml.qnode(dev)
+def teleportation_circuit():
+    # STEP 1: Prepare the state to teleport
+    qml.Hadamard(wires=0)
+    
+    # STEP 2: Create Bell pair between wires 1 and 2
+    qml.Hadamard(wires=1)
+    qml.CNOT(wires=[1, 2])
+    
+    # STEP 3: Bell measurement
+    qml.CNOT(wires=[0, 1])
+    qml.Hadamard(wires=0)
+    
+    # STEP 4: Measure qubits 0 and 1
+    qml.measure(wires=0)
+    qml.measure(wires=1)
+    
+    # STEP 5: Conditional corrections
+    if c[1] == 1:
+        qml.PauliX(wires=2)
+    if c[0] == 1:
+        qml.PauliZ(wires=2)
+    
+    # STEP 6: Final measurement
+    qml.measure(wires=2)`,
+    tags: ['teleportation', 'entanglement', 'bell-state', 'protocol']
+  },
+
+  // ============================================================================
+  // DEUTSCH-JOZSA ALGORITHM
+  // ============================================================================
+  {
+    id: 'deutsch-jozsa-pennylane',
+    title: 'Deutsch-Jozsa (PennyLane)',
+    description: 'Determine if a function is constant or balanced with one quantum query.',
+    framework: 'pennylane',
+    difficulty: 'intermediate',
+    category: 'Quantum Algorithms',
+    code: `import pennylane as qml
+
+# 3 qubits: 2 input qubits + 1 ancilla qubit
+dev = qml.device("default.qubit", wires=3)
+
+@qml.qnode(dev)
+def deutsch_jozsa_circuit():
+    # STEP 1: Initialize ancilla qubit to |1⟩
+    qml.PauliX(wires=2)
+    
+    # STEP 2: Apply Hadamard to ALL qubits (create superposition)
+    for i in range(3):
+        qml.Hadamard(wires=i)
+    
+    # STEP 3: Oracle - implements a BALANCED function
+    # This oracle flips ancilla when input qubits differ
+    qml.CNOT(wires=[0, 2])
+    qml.CNOT(wires=[1, 2])
+    
+    # STEP 4: Apply Hadamard to INPUT qubits only (not ancilla)
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    
+    # STEP 5: Measure input qubits
+    # Result ≠ |00⟩ means BALANCED function
+    qml.measure(wires=0)
+    qml.measure(wires=1)`,
+    tags: ['deutsch-jozsa', 'oracle', 'quantum-advantage', 'algorithm']
+  },
+  {
+    id: 'deutsch-jozsa-qiskit',
+    title: 'Deutsch-Jozsa (Qiskit)',
+    description: 'Determine if a function is constant or balanced with one quantum query.',
+    framework: 'qiskit',
+    difficulty: 'intermediate',
+    category: 'Quantum Algorithms',
+    code: `from qiskit import QuantumCircuit
+
+# 3 qubits, 2 classical bits (only measure input qubits)
+qc = QuantumCircuit(3, 2)
+
+# STEP 1: Initialize ancilla to |1⟩
+qc.x(2)
+
+# STEP 2: Hadamard on all qubits
+for i in range(3):
+    qc.h(i)
+
+# STEP 3: Balanced Oracle
+qc.cx(0, 2)
+qc.cx(1, 2)
+
+# STEP 4: Hadamard on input qubits
+qc.h(0)
+qc.h(1)
+
+# STEP 5: Measure input qubits
+qc.measure(0, 0)
+qc.measure(1, 1)`,
+    tags: ['deutsch-jozsa', 'oracle', 'quantum-advantage', 'algorithm']
+  },
+  {
+    id: 'deutsch-jozsa-cirq',
+    title: 'Deutsch-Jozsa (Cirq)',
+    description: 'Determine if a function is constant or balanced with one quantum query.',
+    framework: 'cirq',
+    difficulty: 'intermediate',
+    category: 'Quantum Algorithms',
+    code: `import cirq
+
+# Create 3 qubits
+q0, q1, q2 = cirq.LineQubit.range(3)
+
+# Classical bits placeholder
+c = [0, 0]
+
+circuit = cirq.Circuit()
+
+# STEP 1: Initialize ancilla to |1⟩
+circuit.append(cirq.X(q2))
+
+# STEP 2: Hadamard on all qubits
+for i in range(3):
+    circuit.append(cirq.H(cirq.LineQubit(i)))
+
+# STEP 3: Balanced Oracle
+circuit.append(cirq.CNOT(q0, q2))
+circuit.append(cirq.CNOT(q1, q2))
+
+# STEP 4: Hadamard on input qubits
+circuit.append(cirq.H(q0))
+circuit.append(cirq.H(q1))
+
+# STEP 5: Measure input qubits
+circuit.append(cirq.measure(q0, key='c0'))
+circuit.append(cirq.measure(q1, key='c1'))`,
+    tags: ['deutsch-jozsa', 'oracle', 'quantum-advantage', 'algorithm']
+  },
+
+  // ============================================================================
+  // QUANTUM RANDOM NUMBER GENERATOR (QRNG)
+  // ============================================================================
+  {
+    id: 'qrng-qiskit',
+    title: 'QRNG (Qiskit)',
+    description: 'Generate truly random numbers using quantum mechanics.',
+    framework: 'qiskit',
+    difficulty: 'beginner',
+    category: 'Basic Circuits',
+    code: `from qiskit import QuantumCircuit, execute, Aer
+
+# Number of random bits to generate
+n_bits = 8
+
+# Create circuit with n_bits qubits and classical bits
+qc = QuantumCircuit(n_bits, n_bits)
+
+# Put each qubit in superposition (50/50 probability of 0 or 1)
+for i in range(n_bits):
+    qc.h(i)
+
+# Measure all qubits to collapse superposition into random values
+qc.measure(range(n_bits), range(n_bits))`,
+    tags: ['qrng', 'random', 'superposition', 'hadamard']
+  },
+  {
+    id: 'qrng-cirq',
+    title: 'QRNG (Cirq)',
+    description: 'Generate truly random numbers using quantum mechanics.',
+    framework: 'cirq',
+    difficulty: 'beginner',
+    category: 'Basic Circuits',
+    code: `import cirq
+
+# Number of random bits to generate
+n_bits = 8
+
+# Create n_bits qubits
+qubits = cirq.LineQubit.range(n_bits)
+
+circuit = cirq.Circuit()
+
+# Put each qubit in superposition
+for i in range(n_bits):
+    circuit.append(cirq.H(cirq.LineQubit(i)))
+
+# Measure all qubits
+for i in range(n_bits):
+    circuit.append(cirq.measure(cirq.LineQubit(i), key=f'c{i}'))`,
+    tags: ['qrng', 'random', 'superposition', 'hadamard']
+  },
+  {
+    id: 'qrng-pennylane',
+    title: 'QRNG (PennyLane)',
+    description: 'Generate truly random numbers using quantum mechanics.',
+    framework: 'pennylane',
+    difficulty: 'beginner',
+    category: 'Basic Circuits',
+    code: `import pennylane as qml
+
+# Number of random bits to generate
+n_bits = 8
+
+# Define device with n_bits wires
+dev = qml.device("default.qubit", wires=n_bits)
+
+@qml.qnode(dev)
+def qrng_circuit():
+    # Put each qubit in superposition
+    for i in range(n_bits):
+        qml.Hadamard(wires=i)
+    
+    # Measure all qubits
+    for i in range(n_bits):
+        qml.measure(wires=i)`,
+    tags: ['qrng', 'random', 'superposition', 'hadamard']
+  },
+
+  // ============================================================================
+  // GROVER'S SEARCH ALGORITHM
+  // ============================================================================
+  {
+    id: 'grover-qiskit',
+    title: "Grover's Search (Qiskit)",
+    description: 'Search an unsorted database in O(√N) time - finds |11⟩ state.',
+    framework: 'qiskit',
+    difficulty: 'advanced',
+    category: 'Quantum Algorithms',
+    code: `from qiskit import QuantumCircuit
+
+# 2 qubits = 4 possible states to search
+qc = QuantumCircuit(2, 2)
+
+# STEP 1: Initialize superposition (equal probability for all states)
+qc.h(0)
+qc.h(1)
+
+# STEP 2: Oracle - mark target state |11⟩ with phase flip
+# CZ applies -1 phase only when both qubits are |1⟩
+qc.cz(0, 1)
+
+# STEP 3: Diffusion Operator (Grover's diffusion)
+# Reflects amplitude about the mean, amplifying marked state
+qc.h(0)
+qc.h(1)
+qc.x(0)
+qc.x(1)
+qc.cz(0, 1)    # Phase flip on |00⟩ (which was |11⟩ before X gates)
+qc.x(0)
+qc.x(1)
+qc.h(0)
+qc.h(1)
+
+# STEP 4: Measure - should get |11⟩ with high probability
+qc.measure([0, 1], [0, 1])`,
+    tags: ['grover', 'search', 'oracle', 'diffusion', 'amplitude-amplification']
+  },
+  {
+    id: 'grover-cirq',
+    title: "Grover's Search (Cirq)",
+    description: 'Search an unsorted database in O(√N) time - finds |11⟩ state.',
+    framework: 'cirq',
+    difficulty: 'advanced',
+    category: 'Quantum Algorithms',
+    code: `import cirq
+
+# Create 2 qubits
+q0, q1 = cirq.LineQubit.range(2)
+
+circuit = cirq.Circuit()
+
+# STEP 1: Initialize superposition
+circuit.append(cirq.H(q0))
+circuit.append(cirq.H(q1))
+
+# STEP 2: Oracle - mark |11⟩
+circuit.append(cirq.CZ(q0, q1))
+
+# STEP 3: Diffusion Operator
+circuit.append(cirq.H(q0))
+circuit.append(cirq.H(q1))
+circuit.append(cirq.X(q0))
+circuit.append(cirq.X(q1))
+circuit.append(cirq.CZ(q0, q1))
+circuit.append(cirq.X(q0))
+circuit.append(cirq.X(q1))
+circuit.append(cirq.H(q0))
+circuit.append(cirq.H(q1))
+
+# STEP 4: Measure
+circuit.append(cirq.measure(q0, key='c0'))
+circuit.append(cirq.measure(q1, key='c1'))`,
+    tags: ['grover', 'search', 'oracle', 'diffusion', 'amplitude-amplification']
+  },
+  {
+    id: 'grover-pennylane',
+    title: "Grover's Search (PennyLane)",
+    description: 'Search an unsorted database in O(√N) time - finds |11⟩ state.',
+    framework: 'pennylane',
+    difficulty: 'advanced',
+    category: 'Quantum Algorithms',
+    code: `import pennylane as qml
+
+dev = qml.device("default.qubit", wires=2)
+
+@qml.qnode(dev)
+def grover_circuit():
+    # STEP 1: Initialize superposition
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    
+    # STEP 2: Oracle - mark |11⟩
+    qml.CZ(wires=[0, 1])
+    
+    # STEP 3: Diffusion Operator
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    qml.PauliX(wires=0)
+    qml.PauliX(wires=1)
+    qml.CZ(wires=[0, 1])
+    qml.PauliX(wires=0)
+    qml.PauliX(wires=1)
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    
+    # STEP 4: Measure
+    qml.measure(wires=0)
+    qml.measure(wires=1)`,
+    tags: ['grover', 'search', 'oracle', 'diffusion', 'amplitude-amplification']
+  },
+
+  // ============================================================================
+  // XOR DEMONSTRATION & QML XOR CLASSIFIER
+  // ============================================================================
+  {
+    id: 'xor-demo-pennylane',
+    title: 'XOR Demonstration',
+    description: 'Quantum entanglement producing XOR-like correlations (|01⟩ + |10⟩).',
+    framework: 'pennylane',
+    difficulty: 'beginner',
+    category: 'Basic Circuits',
+    code: `import pennylane as qml
+
+dev = qml.device("default.qubit", wires=2)
+
+@qml.qnode(dev)
+def xor_demo_circuit():
+    # STEP 1: Create Bell state (|00⟩ + |11⟩)/√2
+    # Hadamard creates superposition, CNOT entangles qubits
+    qml.Hadamard(wires=0)
+    qml.CNOT(wires=[0, 1])
+    
+    # STEP 2: Flip qubit 0 to get (|10⟩ + |01⟩)/√2
+    # Now qubits are always opposite (XOR = 1)
+    qml.PauliX(wires=0)
+    
+    # STEP 3: Measure both qubits
+    # Results will be either |01⟩ or |10⟩
+    qml.measure(wires=0)
+    qml.measure(wires=1)`,
+    tags: ['xor', 'entanglement', 'bell-state', 'correlation']
+  },
+  {
+    id: 'qml-xor-classifier',
+    title: 'QML XOR Classifier',
+    description: 'Variational quantum circuit that learns XOR function - actual Quantum ML.',
+    framework: 'pennylane',
+    difficulty: 'advanced',
+    category: 'Quantum Machine Learning',
+    code: `import pennylane as qml
+import numpy as np
+
+dev = qml.device("default.qubit", wires=2)
+
+@qml.qnode(dev)
+def qml_xor_classifier():
+    # ENCODING LAYER: Convert classical inputs to quantum states
+    # Testing XOR(0, 1) - expect output = 1
+    qml.RX(0, wires=0)              # Input x1=0: RX(0*π) = no rotation
+    qml.RX(np.pi, wires=1)          # Input x2=1: RX(1*π) = flip to |1⟩
+    
+    # VARIATIONAL LAYER: Trainable gates that learn XOR pattern
+    # Weights = 0.5 radians (found through gradient descent training)
+    qml.RY(0.5, wires=0)            # Trainable rotation on qubit 0
+    qml.RY(0.5, wires=1)            # Trainable rotation on qubit 1
+    qml.CNOT(wires=[0, 1])          # Entanglement creates non-linear behavior
+    qml.RY(0.5, wires=0)            # Second layer of trainable rotations
+    qml.RY(0.5, wires=1)
+    
+    # MEASUREMENT: Read the XOR prediction from qubit 1
+    # q[1] = 1 means XOR(x1, x2) = 1
+    qml.measure(wires=0)
+    qml.measure(wires=1)`,
+    tags: ['qml', 'xor', 'variational', 'classifier', 'machine-learning']
+  },
+
+  // ============================================================================
+  // BELL STATE EXAMPLES
+  // ============================================================================
   {
     id: 'bell-state-qiskit',
     title: 'Bell State (Qiskit)',
-    description: 'Create a Bell state using Qiskit - a fundamental quantum entangled state.',
+    description: 'Create a Bell state - a fundamental quantum entangled state.',
     framework: 'qiskit',
     difficulty: 'beginner',
     category: 'Basic Circuits',
@@ -48,109 +544,6 @@ qc.measure(qr, cr)
 print("Bell State Circuit (Qiskit):")
 print(qc)`,
     tags: ['entanglement', 'bell-state', 'hadamard', 'cnot']
-  },
-  {
-    id: 'grover-qiskit',
-    title: "Grover's Search (Qiskit)",
-    description: 'A minimal Grover iteration on 2 qubits using a hard-coded oracle.',
-    framework: 'qiskit',
-    difficulty: 'advanced',
-    category: 'Quantum Algorithms',
-    code: `from qiskit import QuantumCircuit
-
-def grover_oracle(qc: QuantumCircuit):
-    # Mark state |11>
-    qc.cz(0, 1)
-
-def diffusion(qc: QuantumCircuit):
-    qc.h([0,1])
-    qc.x([0,1])
-    qc.h(1)
-    qc.cx(0,1)
-    qc.h(1)
-    qc.x([0,1])
-    qc.h([0,1])
-
-def create_grover():
-    qc = QuantumCircuit(2, 2)
-    qc.h([0,1])
-    grover_oracle(qc)
-    diffusion(qc)
-    qc.measure([0,1],[0,1])
-    return qc
-
-qc = create_grover()
-print(qc)`,
-    tags: ['grover', 'oracle', 'diffusion']
-  },
-  {
-    id: 'qft-cirq',
-    title: 'QFT (Cirq)',
-    description: 'Quantum Fourier Transform implemented with Cirq.',
-    framework: 'cirq',
-    difficulty: 'advanced',
-    category: 'Quantum Algorithms',
-    code: `import cirq, numpy as np
-
-def qft(qubits):
-    circuit = cirq.Circuit()
-    n = len(qubits)
-    for i in range(n):
-        circuit.append(cirq.H(qubits[i]))
-        for j in range(i+1, n):
-            angle = np.pi / (2 ** (j - i))
-            circuit.append(cirq.CZ(qubits[j], qubits[i]) ** (angle/np.pi))
-    # swap
-    for i in range(n//2):
-        circuit.append(cirq.SWAP(qubits[i], qubits[n-1-i]))
-    return circuit
-
-q0, q1, q2 = cirq.LineQubit.range(3)
-circuit = qft([q0,q1,q2])
-print(circuit)`,
-    tags: ['qft', 'fourier']
-  },
-  {
-    id: 'vqe-pennylane-simple',
-    title: 'VQE Simple (PennyLane)',
-    description: 'A two-qubit ansatz with ZZ and XX expectation.',
-    framework: 'pennylane',
-    difficulty: 'intermediate',
-    category: 'Variational Algorithms',
-    code: `import pennylane as qml, numpy as np
-
-dev = qml.device('default.qubit', wires=2)
-
-@qml.qnode(dev)
-def ansatz(theta):
-    qml.RY(theta, wires=0)
-    qml.CNOT(wires=[0,1])
-    return qml.expval(qml.PauliZ(0) @ qml.PauliZ(1)) + qml.expval(qml.PauliX(0) @ qml.PauliX(1))
-
-val = ansatz(np.pi/4)
-print(val)`,
-    tags: ['vqe', 'variational']
-  },
-  {
-    id: 'random-circuit-qiskit',
-    title: 'Random Param Circuit (Qiskit)',
-    description: 'A small random parameterized circuit for testing converters.',
-    framework: 'qiskit',
-    difficulty: 'intermediate',
-    category: 'Basic Circuits',
-    code: `from qiskit import QuantumCircuit
-import numpy as np
-
-qc = QuantumCircuit(3,3)
-qc.ry(np.pi/3, 0)
-qc.rz(0.7, 1)
-qc.rx(1.2, 2)
-qc.cx(0,1)
-qc.cz(1,2)
-qc.swap(0,2)
-qc.measure([0,1,2],[0,1,2])
-print(qc)`,
-    tags: ['random', 'param']
   },
   {
     id: 'bell-state-cirq',
@@ -198,6 +591,10 @@ print("Bell State Circuit (PennyLane):")
 print(f"Expectation values: {result}")`,
     tags: ['entanglement', 'bell-state', 'hadamard', 'cnot']
   },
+
+  // ============================================================================
+  // ADDITIONAL ALGORITHMS
+  // ============================================================================
   {
     id: 'ghz-state-qiskit',
     title: 'GHZ State (Qiskit)',
@@ -263,54 +660,8 @@ print(qft_circuit)`,
     tags: ['qft', 'fourier-transform', 'quantum-algorithm', 'phase-gates']
   },
   {
-    id: 'quantum-teleportation',
-    title: 'Quantum Teleportation',
-    description: 'Implement quantum teleportation protocol to transfer quantum information.',
-    framework: 'cirq',
-    difficulty: 'advanced',
-    category: 'Quantum Algorithms',
-    code: `import cirq
-
-def create_teleportation_circuit():
-    # Create qubits: Alice's qubit, Bell pair, and Bob's qubit
-    alice = cirq.LineQubit(0)
-    bell_1 = cirq.LineQubit(1)
-    bell_2 = cirq.LineQubit(2)
-    bob = cirq.LineQubit(3)
-    
-    circuit = cirq.Circuit()
-    
-    # Prepare Bell pair between Bell_1 and Bell_2
-    circuit.append(cirq.H(bell_1))
-    circuit.append(cirq.CNOT(bell_1, bell_2))
-    
-    # Prepare Alice's qubit in some state (e.g., |1⟩)
-    circuit.append(cirq.X(alice))
-    
-    # Alice performs Bell measurement
-    circuit.append(cirq.CNOT(alice, bell_1))
-    circuit.append(cirq.H(alice))
-    
-    # Measure Alice's qubit and Bell_1
-    circuit.append(cirq.measure(alice, bell_1))
-    
-    # Bob applies corrections based on measurement results
-    circuit.append(cirq.CNOT(bell_1, bell_2))
-    circuit.append(cirq.CZ(alice, bell_2))
-    
-    # Measure Bob's qubit
-    circuit.append(cirq.measure(bell_2))
-    
-    return circuit
-
-teleport_circuit = create_teleportation_circuit()
-print("Quantum Teleportation Circuit:")
-print(teleport_circuit)`,
-    tags: ['teleportation', 'bell-measurement', 'quantum-protocol', 'entanglement']
-  },
-  {
     id: 'variational-quantum-eigensolver',
-    title: 'Variational Quantum Eigensolver (VQE)',
+    title: 'VQE (PennyLane)',
     description: 'Implement VQE to find the ground state energy of quantum systems.',
     framework: 'pennylane',
     difficulty: 'advanced',
@@ -349,7 +700,7 @@ print(f"Energy: {result}")`,
   },
   {
     id: 'quantum-approximate-optimization',
-    title: 'Quantum Approximate Optimization Algorithm (QAOA)',
+    title: 'QAOA (PennyLane)',
     description: 'Implement QAOA for combinatorial optimization problems.',
     framework: 'pennylane',
     difficulty: 'advanced',
@@ -369,7 +720,6 @@ def create_qaoa_circuit(n_qubits=4, p=2):
         # QAOA layers
         for layer in range(p):
             # Phase separation operator (problem Hamiltonian)
-            # For MaxCut: apply ZZ gates between connected vertices
             for i in range(n_qubits - 1):
                 qml.CNOT(wires=[i, i + 1])
                 qml.RZ(gamma[layer], wires=i + 1)
@@ -397,50 +747,6 @@ print("QAOA Circuit (4 qubits, 2 layers):")
 print(f"Parameters: gamma={gamma}, beta={beta}")
 print(f"Expectation values: {result}")`,
     tags: ['qaoa', 'optimization', 'maxcut', 'variational', 'combinatorial']
-  },
-  {
-    id: 'error-correction',
-    title: '3-Qubit Bit-Flip Error Correction',
-    description: 'Implement a simple quantum error correction code that can detect and correct bit-flip errors.',
-    framework: 'qiskit',
-    difficulty: 'intermediate',
-    category: 'Error Correction',
-    code: `from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
-
-def create_error_correction_circuit():
-    # Create quantum and classical registers
-    qr = QuantumRegister(5, 'q')  # 3 data qubits + 2 ancilla qubits
-    cr = ClassicalRegister(3, 'c')  # Measure only data qubits
-    
-    # Create quantum circuit
-    qc = QuantumCircuit(qr, cr)
-    
-    # Encoding: Prepare logical |1⟩ state
-    qc.x(qr[0])  # Flip first qubit to |1⟩
-    
-    # Apply CNOT gates to create encoded state
-    qc.cx(qr[0], qr[1])
-    qc.cx(qr[0], qr[2])
-    
-    # Error detection: Apply syndrome measurement
-    qc.cx(qr[0], qr[3])
-    qc.cx(qr[1], qr[3])
-    qc.cx(qr[1], qr[4])
-    qc.cx(qr[2], qr[4])
-    
-    # Measure ancilla qubits (syndrome)
-    qc.measure(qr[3], cr[0])
-    qc.measure(qr[4], cr[1])
-    
-    # Measure data qubits
-    qc.measure(qr[0], cr[2])
-    
-    return qc
-
-error_correction_circuit = create_error_correction_circuit()
-print("3-Qubit Bit-Flip Error Correction Circuit:")
-print(error_correction_circuit)`,
-    tags: ['error-correction', 'syndrome', 'ancilla', 'encoding', 'detection']
   },
   {
     id: 'quantum-neural-network',
@@ -495,175 +801,48 @@ print(f"Output: {result}")`,
     tags: ['quantum-ml', 'neural-network', 'classification', 'variational', 'layers']
   },
   {
-    id: 'deutsch-jozsa-algorithm',
-    title: 'Deutsch-Jozsa Algorithm',
-    description: 'Demonstrates quantum advantage over classical algorithms for function evaluation.',
+    id: 'error-correction',
+    title: '3-Qubit Bit-Flip Error Correction',
+    description: 'Implement a simple quantum error correction code.',
     framework: 'qiskit',
-    difficulty: 'advanced',
-    category: 'Quantum Algorithms',
-    code: `from qiskit import QuantumCircuit, Aer, execute
-from qiskit.visualization import plot_histogram
-import numpy as np
+    difficulty: 'intermediate',
+    category: 'Error Correction',
+    code: `from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
-def create_deutsch_jozsa_circuit(n_qubits, oracle_type='constant'):
-    """
-    Create Deutsch-Jozsa circuit for n-qubit function evaluation
-    oracle_type: 'constant' or 'balanced'
-    """
-    qc = QuantumCircuit(n_qubits + 1, n_qubits)
+def create_error_correction_circuit():
+    # Create quantum and classical registers
+    qr = QuantumRegister(5, 'q')  # 3 data qubits + 2 ancilla qubits
+    cr = ClassicalRegister(3, 'c')  # Measure only data qubits
     
-    # Initialize ancilla qubit to |1⟩
-    qc.x(n_qubits)
+    # Create quantum circuit
+    qc = QuantumCircuit(qr, cr)
     
-    # Apply Hadamard gates to all qubits
-    for i in range(n_qubits + 1):
-        qc.h(i)
+    # Encoding: Prepare logical |1⟩ state
+    qc.x(qr[0])  # Flip first qubit to |1⟩
     
-    # Apply oracle (function evaluation)
-    if oracle_type == 'balanced':
-        # Balanced function: f(x) = x_0 ⊕ x_1 ⊕ ... ⊕ x_{n-1}
-        for i in range(n_qubits):
-            qc.cx(i, n_qubits)
-    # For constant function, no additional gates needed
+    # Apply CNOT gates to create encoded state
+    qc.cx(qr[0], qr[1])
+    qc.cx(qr[0], qr[2])
     
-    # Apply Hadamard gates to first n qubits
-    for i in range(n_qubits):
-        qc.h(i)
+    # Error detection: Apply syndrome measurement
+    qc.cx(qr[0], qr[3])
+    qc.cx(qr[1], qr[3])
+    qc.cx(qr[1], qr[4])
+    qc.cx(qr[2], qr[4])
     
-    # Measure first n qubits
-    qc.measure(range(n_qubits), range(n_qubits))
+    # Measure ancilla qubits (syndrome)
+    qc.measure(qr[3], cr[0])
+    qc.measure(qr[4], cr[1])
+    
+    # Measure data qubits
+    qc.measure(qr[0], cr[2])
     
     return qc
 
-# Create and run Deutsch-Jozsa circuit
-n = 3  # Number of input qubits
-qc_balanced = create_deutsch_jozsa_circuit(n, 'balanced')
-qc_constant = create_deutsch_jozsa_circuit(n, 'constant')
-
-print("Deutsch-Jozsa Algorithm:")
-print("Balanced function circuit:")
-print(qc_balanced)
-print("\nConstant function circuit:")
-print(qc_constant)`,
-    tags: ['deutsch-jozsa', 'quantum-advantage', 'oracle', 'algorithm']
-  },
-  {
-    id: 'quantum-key-distribution',
-    title: 'BB84 Quantum Key Distribution',
-    description: 'Implement the BB84 protocol for secure quantum key distribution.',
-    framework: 'cirq',
-    difficulty: 'advanced',
-    category: 'Quantum Algorithms',
-    code: `import cirq
-import numpy as np
-
-def bb84_protocol(n_bits=10):
-    """
-    Simulate BB84 quantum key distribution protocol
-    """
-    # Alice's random bits and bases
-    alice_bits = np.random.randint(2, size=n_bits)
-    alice_bases = np.random.randint(2, size=n_bits)
-    
-    # Bob's random bases
-    bob_bases = np.random.randint(2, size=n_bits)
-    
-    # Create qubits
-    qubits = [cirq.LineQubit(i) for i in range(n_bits)]
-    
-    # Alice prepares qubits
-    circuit = cirq.Circuit()
-    for i in range(n_bits):
-        if alice_bits[i] == 1:
-            circuit.append(cirq.X(qubits[i]))
-        if alice_bases[i] == 1:
-            circuit.append(cirq.H(qubits[i]))
-    
-    # Bob measures qubits
-    for i in range(n_bits):
-        if bob_bases[i] == 1:
-            circuit.append(cirq.H(qubits[i]))
-        circuit.append(cirq.measure(qubits[i], key=f'bob_{i}'))
-    
-    # Simulate the circuit
-    simulator = cirq.Simulator()
-    result = simulator.run(circuit, repetitions=1)
-    
-    # Extract Bob's results
-    bob_results = []
-    for i in range(n_bits):
-        bob_results.append(result.measurements[f'bob_{i}'][0][0])
-    
-    # Sifted key (where bases match)
-    sifted_key = []
-    for i in range(n_bits):
-        if alice_bases[i] == bob_bases[i]:
-            sifted_key.append(bob_results[i])
-    
-    return {
-        'alice_bits': alice_bits,
-        'alice_bases': alice_bases,
-        'bob_bases': bob_bases,
-        'bob_results': bob_results,
-        'sifted_key': sifted_key
-    }
-
-# Run BB84 protocol
-bb84_result = bb84_protocol(10)
-print("BB84 Quantum Key Distribution:")
-print(f"Alice's bits: {bb84_result['alice_bits']}")
-print(f"Alice's bases: {bb84_result['alice_bases']}")
-print(f"Bob's bases: {bb84_result['bob_bases']}")
-print(f"Bob's results: {bb84_result['bob_results']}")
-print(f"Sifted key: {bb84_result['sifted_key']}")`,
-    tags: ['bb84', 'quantum-cryptography', 'key-distribution', 'security']
-  },
-  {
-    id: 'quantum-phase-estimation',
-    title: 'Quantum Phase Estimation',
-    description: 'Estimate the phase of an eigenvalue using quantum phase estimation algorithm.',
-    framework: 'qiskit',
-    difficulty: 'advanced',
-    category: 'Quantum Algorithms',
-    code: `from qiskit import QuantumCircuit, Aer, execute
-from qiskit.circuit.library import QFT
-import numpy as np
-
-def create_phase_estimation_circuit(n_counting_qubits, phase_angle):
-    """
-    Create quantum phase estimation circuit
-    """
-    n = n_counting_qubits
-    qc = QuantumCircuit(n + 1, n)
-    
-    # Initialize counting qubits
-    for i in range(n):
-        qc.h(i)
-    
-    # Apply controlled-U operations
-    # For this example, U = |1⟩⟨1| + e^(iφ)|0⟩⟨0|
-    for i in range(n):
-        angle = phase_angle * (2 ** (n - i - 1))
-        qc.cp(angle, i, n)
-    
-    # Apply inverse QFT
-    qc.append(QFT(n).inverse(), range(n))
-    
-    # Measure counting qubits
-    qc.measure(range(n), range(n))
-    
-    return qc
-
-# Create phase estimation circuit
-n_counting = 3
-phase = np.pi / 4  # Target phase to estimate
-qc = create_phase_estimation_circuit(n_counting, phase)
-
-print("Quantum Phase Estimation:")
-print(f"Target phase: {phase / np.pi}π")
-print("Circuit:")
-print(qc)`,
-    tags: ['phase-estimation', 'qft', 'eigenvalue', 'shor']
+error_correction_circuit = create_error_correction_circuit()
+print("3-Qubit Bit-Flip Error Correction Circuit:")
+print(error_correction_circuit)`,
+    tags: ['error-correction', 'syndrome', 'ancilla', 'encoding', 'detection']
   }
 ]
 
