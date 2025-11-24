@@ -4,11 +4,10 @@
 
 export interface TeamMember {
   name: string
-  role: string
-  profile: string
+  team: 'QCanvas' | 'QSim'
+  email?: string
   github?: string
   linkedin?: string
-  email?: string
 }
 
 export interface SocialLinks {
@@ -43,40 +42,65 @@ export interface TechnicalSpecs {
 // Main project configuration
 export const projectConfig: ProjectInfo = {
   name: 'QCanvas',
-  tagline: 'Quantum Code Editor & Simulation Platform',
-  description: 'A modern quantum computing platform that bridges quantum frameworks, enabling seamless conversion between Cirq, Qiskit, and PennyLane with real-time simulation and visualization.',
+  tagline: 'Quantum Unified Simulator',
+  description: 'A next-generation quantum computing IDE that unifies Cirq, Qiskit, and PennyLane through OpenQASM 3.0. Write quantum code in any framework, compile to OpenQASM, simulate with multiple backends, and visualize results in real-time.',
   year: 2025,
-  version: '1.0.0-beta',
-  status: 'development'
+  version: '1.0.0',
+  status: 'production'
 }
 
-// Team configuration
-export const teamConfig: TeamMember[] = [
+// Team configuration - QCanvas Team
+export const qcanvasTeam: TeamMember[] = [
   {
     name: 'Umer Farooq',
-    role: 'Project Lead & Backend Developer',
-    profile: '22I-0891',
+    team: 'QCanvas',
+    email: 'umer.farooq@nu.edu.pk',
     github: 'https://github.com/Umer-Farooq-CS',
-    linkedin: 'https://linkedin.com/in/umer-farooq',
-    email: 'umer.farooq@nu.edu.pk'
+    linkedin: 'https://linkedin.com/in/umer-farooq'
   },
   {
     name: 'Hussan Waseem Syed',
-    role: 'Frontend Developer',
-    profile: '22I-0893',
+    team: 'QCanvas',
+    email: 'hussan.syed@nu.edu.pk',
     github: 'https://github.com/hussan-waseem',
-    linkedin: 'https://linkedin.com/in/hussan-waseem',
-    email: 'hussan.syed@nu.edu.pk'
+    linkedin: 'https://linkedin.com/in/hussan-waseem'
   },
   {
     name: 'Muhammad Irtaza Khan',
-    role: 'Backend Developer',
-    profile: '22I-0911',
+    team: 'QCanvas',
+    email: 'irtaza.khan@nu.edu.pk',
     github: 'https://github.com/irtaza-khan',
-    linkedin: 'https://linkedin.com/in/irtaza-khan',
-    email: 'irtaza.khan@nu.edu.pk'
+    linkedin: 'https://linkedin.com/in/irtaza-khan'
   }
 ]
+
+// Team configuration - QSim Team
+export const qsimTeam: TeamMember[] = [
+  {
+    name: 'Aneeq Ahmed Malik',
+    team: 'QSim',
+    email: 'aneeq.malik@nu.edu.pk',
+    github: 'https://github.com/aneeq-malik',
+    linkedin: 'https://linkedin.com/in/aneeq-malik'
+  },
+  {
+    name: 'Abeer Noor',
+    team: 'QSim',
+    email: 'abeer.noor@nu.edu.pk',
+    github: 'https://github.com/abeer-noor',
+    linkedin: 'https://linkedin.com/in/abeer-noor'
+  },
+  {
+    name: 'Abdullah Mehmood',
+    team: 'QSim',
+    email: 'abdullah.mehmood@nu.edu.pk',
+    github: 'https://github.com/abdullah-mehmood',
+    linkedin: 'https://linkedin.com/in/abdullah-mehmood'
+  }
+]
+
+// Combined team configuration
+export const teamConfig: TeamMember[] = [...qcanvasTeam, ...qsimTeam]
 
 // Social and community links
 export const socialLinks: SocialLinks = {
@@ -96,15 +120,24 @@ export const contactInfo: ContactInfo = {
 
 // Technical specifications
 export const technicalSpecs: TechnicalSpecs = {
-  frameworks: ['Qiskit', 'Cirq', 'PennyLane', 'OpenQASM 3.0'],
-  standards: ['OpenQASM 3.0', 'Qiskit Runtime', 'Cirq Quantum', 'PennyLane Quantum'],
+  frameworks: ['Qiskit (IBM)', 'Cirq (Google)', 'PennyLane (Xanadu)', 'OpenQASM 3.0'],
+  standards: ['OpenQASM 3.0', 'Iteration I & II Features', 'QSim Integration'],
   features: [
-    'Framework Conversion',
-    'Real-time Simulation',
-    'Web IDE',
-    'Educational Platform',
-    'Community Sharing',
-    'OpenQASM 3.0 Support'
+    'Multi-Framework Compilation',
+    'AST-Based Code Parsing',
+    'Real-time QSim Simulation',
+    'Monaco Web IDE',
+    '25+ Quantum Examples',
+    'OpenQASM 3.0 Standard',
+    'Histogram Visualization',
+    'Circuit Statistics',
+    'Multiple Sim Backends',
+    'If-Else Control Flow',
+    'For Loop Support',
+    'Quantum Teleportation',
+    'Deutsch-Jozsa',
+    'Grover\'s Search',
+    'QML XOR Classifier'
   ]
 }
 
@@ -119,34 +152,32 @@ export const projectUrls = {
   api: '/api'
 }
 
-// University information
-export const universityInfo = {
-  name: 'National University of Computer and Emerging Sciences',
-  shortName: 'NUCES',
-  location: 'Islamabad, Pakistan',
-  department: 'Department of Computer Science'
+// Initiative information
+export const initiativeInfo = {
+  name: 'Open Quantum Workbench',
+  tagline: 'A FAST University Initiative'
 }
 
 // Supervisor information
 export const supervisors = [
   {
     name: 'Dr. Imran Ashraf',
-    role: 'Project Supervisor',
-    email: 'imran.ashraf@nu.edu.pk'
+    role: 'Project Supervisor'
   },
   {
     name: 'Dr. Muhammad Nouman Noor',
-    role: 'Co-Supervisor',
-    email: 'nouman.noor@nu.edu.pk'
+    role: 'Co-Supervisor'
   }
 ]
 
 // Project metrics and stats
 export const projectStats = {
-  frameworks: 3,
+  frameworks: '3+',
   standards: 'OpenQASM 3.0',
   simulations: 'Real-time',
-  users: '1000+'
+  examples: '25+',
+  gates: '50+',
+  backends: '3'
 }
 
 // SEO and meta information
@@ -166,7 +197,7 @@ export const seoConfig = {
   ],
   authors: teamConfig.map(member => ({ name: member.name })),
   creator: projectConfig.name,
-  publisher: universityInfo.name
+  publisher: initiativeInfo.name
 }
 
 // Navigation menu configuration
@@ -204,8 +235,8 @@ export const getTeamMemberByName = (name: string): TeamMember | undefined => {
   return teamConfig.find(member => member.name === name)
 }
 
-export const getTeamMemberByProfile = (profile: string): TeamMember | undefined => {
-  return teamConfig.find(member => member.profile === profile)
+export const getTeamByType = (team: 'QCanvas' | 'QSim'): TeamMember[] => {
+  return teamConfig.filter(member => member.team === team)
 }
 
 export const getFullProjectTitle = (): string => {
@@ -213,7 +244,7 @@ export const getFullProjectTitle = (): string => {
 }
 
 export const getProjectDescription = (): string => {
-  return `${projectConfig.description} Built by ${teamConfig.map(m => m.name).join(', ')} at ${universityInfo.name}.`
+  return `${projectConfig.description} Built under ${initiativeInfo.name}: ${initiativeInfo.tagline}.`
 }
 
 export const getCopyrightText = (): string => {
@@ -228,11 +259,13 @@ export const getVersionText = (): string => {
 export const config = {
   project: projectConfig,
   team: teamConfig,
+  qcanvasTeam,
+  qsimTeam,
   social: socialLinks,
   contact: contactInfo,
   technical: technicalSpecs,
   urls: projectUrls,
-  university: universityInfo,
+  initiative: initiativeInfo,
   supervisors,
   stats: projectStats,
   seo: seoConfig,

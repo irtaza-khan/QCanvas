@@ -1,22 +1,22 @@
 # Q-CANVAS Project Scope and Proposal
 
-## Project Team
-- Umer Farooq — 22I-0891
-- Hussan Waseem Syed — 22I-0893  
-- Muhammad Irtaza Khan — 22I-0911
+## Project Teams
 
-Session 2022-2026
+### QCanvas Team
+- Umer Farooq
+- Hussan Waseem Syed
+- Muhammad Irtaza Khan
 
-Supervised by
-- Dr. Imran Ashraf
+### QSim Team
+- Aneeq Ahmed Malik
+- Abeer Noor
+- Abdullah Mehmood
 
-Co-Supervised by
-- Dr. Muhammad Nouman Noor
+## Supervised by
+- Dr. Imran Ashraf (Project Supervisor)
+- Dr. Muhammad Nouman Noor (Co-Supervisor)
 
-Department of Computer Science
-National University of Computer and Emerging Sciences
-Islamabad, Pakistan
-June, 2026
+Built under **Open Quantum Workbench**: A FAST University Initiative
 
 ## Abstract
 This document presents the completed Q-CANVAS platform, a unified quantum simulation platform that successfully addresses the critical standardization gap in multi-framework quantum programming. The platform serves as a universal intermediary, translating quantum circuits written in popular frameworks (Qiskit, Cirq, PennyLane) into the standardized OpenQASM 3.0 intermediate representation. Q-CANVAS features a sophisticated web-based IDE with real-time circuit visualization, persistent user authentication, keyboard shortcuts, and an interactive example system. The platform integrates with the QSim quantum simulation backend via API to enable hybrid quantum-classical algorithm execution. This implementation unifies the quantum programming experience, accelerating development and learning while fostering collaboration in the quantum computing ecosystem.
@@ -150,6 +150,16 @@ As of November 2025, Q-CANVAS has been successfully implemented with the followi
 - **Real-time Feedback**: Toast notifications, progress indicators, error handling
 - **Responsive Design**: Mobile-first approach with adaptive layouts
 - **Performance**: Optimized rendering, efficient state management
+- **Expanded Example Library (November 2025)**: 25+ pre-built quantum examples
+  - Quantum Teleportation (all 3 frameworks)
+  - Deutsch-Jozsa Algorithm (all 3 frameworks)
+  - Quantum Random Number Generator (all 3 frameworks)
+  - Grover's Search (all 3 frameworks)
+  - XOR Demonstration (PennyLane)
+  - QML XOR Classifier (PennyLane) - Quantum Machine Learning
+  - Bell State, GHZ, QFT, VQE, QAOA, QNN, Error Correction
+- **File Templates System**: Separate initial files and templates for variety
+- **Parser Enhancements**: If-else support across all frameworks, variable tracking, loop variable handling
 
 ### 2.6 Updated Timeline
 The project execution has been completed with iterative development:

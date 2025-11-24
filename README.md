@@ -228,6 +228,24 @@ We welcome contributions! Please see our [Contributing Guide](docs/developer/con
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 👥 Teams
+
+### QCanvas Team
+- Umer Farooq
+- Hussan Waseem Syed
+- Muhammad Irtaza Khan
+
+### QSim Team
+- Aneeq Ahmed Malik
+- Abeer Noor
+- Abdullah Mehmood
+
+### Supervisors
+- Dr. Imran Ashraf (Project Supervisor)
+- Dr. Muhammad Nouman Noor (Co-Supervisor)
+
+**Built under Open Quantum Workbench: A FAST University Initiative**
+
 ## 🙏 Acknowledgments
 
 - [Cirq](https://github.com/quantumlib/Cirq) - Google's quantum computing framework

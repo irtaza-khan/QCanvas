@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Zap, Code, Cpu, BarChart3, Users, Github, Mail, Globe, BookOpen, Moon, Sun, Menu, X } from 'lucide-react'
+import { Zap, Code, Cpu, BarChart3, Users, Github, Globe, BookOpen, Moon, Sun, Menu, X, Linkedin, Mail } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import { config, getCopyrightText } from '@/lib/config'
 
@@ -158,8 +158,8 @@ export default function AboutPage() {
             About <span className="quantum-gradient bg-clip-text text-transparent">QCanvas</span>
           </h1>
           <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed">
-            A modern quantum computing platform that bridges the gap between different quantum frameworks,
-            enabling seamless conversion, simulation, and visualization of quantum circuits.
+            A next-generation Quantum Unified Simulator that bridges Qiskit, Cirq, and PennyLane through 
+            OpenQASM 3.0. Write quantum code in any framework, compile, simulate with QSim, and visualize results in real-time.
           </p>
         </div>
       </section>
@@ -175,10 +175,10 @@ export default function AboutPage() {
               <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
                 <Code className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Framework Conversion</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Multi-Framework Compilation</h3>
               <p className="text-editor-text">
-                Convert quantum circuits between Qiskit, Cirq, and PennyLane with automatic optimization 
-                and OpenQASM 3.0 generation.
+                AST-based parsing of Qiskit, Cirq, and PennyLane code with intelligent 
+                conversion to OpenQASM 3.0. Supports if-else, for loops, and variable tracking.
               </p>
             </div>
 
@@ -187,10 +187,10 @@ export default function AboutPage() {
               <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
                 <Cpu className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Quantum Simulation</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">QSim Integration</h3>
               <p className="text-editor-text">
-                Run quantum circuits on multiple backends including statevector, density matrix, 
-                and stabilizer simulations with noise modeling.
+                Execute OpenQASM 3.0 circuits with multiple simulation backends. Configure 
+                shots (1-10,000), view execution statistics, memory usage, and fidelity metrics.
               </p>
             </div>
 
@@ -199,46 +199,46 @@ export default function AboutPage() {
               <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
                 <BarChart3 className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Real-time Visualization</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Results Visualization</h3>
               <p className="text-editor-text">
-                Visualize quantum circuits, measurement results, and state vectors with 
-                interactive charts and diagrams.
+                Interactive histogram charts, measurement statistics, circuit analysis, 
+                gate distribution, and detailed performance metrics with gradient cards.
               </p>
             </div>
 
-            {/* Multi-language Support */}
+            {/* OpenQASM Standard */}
             <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300">
               <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
                 <Globe className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Multi-language Support</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">OpenQASM 3.0 Standard</h3>
               <p className="text-editor-text">
-                Support for Python quantum computing frameworks including Qiskit, Cirq, 
-                PennyLane, and Amazon Braket.
+                Full Iteration I & II feature support: 50+ gates, control flow, subroutines, 
+                gate modifiers (ctrl@, inv@, pow@), and classical expressions.
               </p>
             </div>
 
-            {/* Advanced Optimization */}
+            {/* Web IDE */}
             <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300">
               <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
                 <Zap className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Advanced Optimization</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Monaco Web IDE</h3>
               <p className="text-editor-text">
-                Circuit optimization with gate fusion, dead code elimination, and 
-                custom optimization algorithms for better performance.
+                Professional code editor with syntax highlighting, 10+ keyboard shortcuts, 
+                file templates, auto-save, and framework auto-detection.
               </p>
             </div>
 
-            {/* Collaborative Features */}
+            {/* Examples Library */}
             <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300">
               <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Collaborative Features</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">25+ Quantum Examples</h3>
               <p className="text-editor-text">
-                Share circuits, collaborate on projects, and access a library of 
-                pre-built quantum algorithms and examples.
+                Bell State, Teleportation, Deutsch-Jozsa, Grover&apos;s Search, QRNG, VQE, 
+                QAOA, QML XOR Classifier, and more across all frameworks.
               </p>
             </div>
           </div>
@@ -251,36 +251,36 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold text-white text-center mb-12">Technology Stack</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center group hover:scale-105 transition-transform duration-300">
+              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg">
                 <span className="text-white font-bold text-lg">Next.js</span>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Frontend</h3>
-              <p className="text-editor-text text-sm">React-based UI with TypeScript</p>
+              <p className="text-editor-text text-sm">Next.js 14 + React 18 + TypeScript + Monaco Editor</p>
             </div>
             
-            <div className="text-center">
-              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center group hover:scale-105 transition-transform duration-300">
+              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg">
                 <span className="text-white font-bold text-lg">FastAPI</span>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Backend</h3>
-              <p className="text-editor-text text-sm">Python API with async support</p>
+              <p className="text-editor-text text-sm">FastAPI + Pydantic + SQLAlchemy + WebSocket</p>
             </div>
             
-            <div className="text-center">
-              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-lg">QASM</span>
+            <div className="text-center group hover:scale-105 transition-transform duration-300">
+              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg">
+                <span className="text-white font-bold text-sm">QSim</span>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Quantum</h3>
-              <p className="text-editor-text text-sm">OpenQASM 3.0 standard</p>
+              <p className="text-editor-text text-sm">OpenQASM 3.0 + QSim + Cirq/Qiskit/PennyLane</p>
             </div>
             
-            <div className="text-center">
-              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center group hover:scale-105 transition-transform duration-300">
+              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg">
                 <span className="text-white font-bold text-lg">Docker</span>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Deployment</h3>
-              <p className="text-editor-text text-sm">Containerized architecture</p>
+              <p className="text-editor-text text-sm">Docker + Docker Compose + CI/CD</p>
             </div>
           </div>
         </div>
@@ -289,57 +289,92 @@ export default function AboutPage() {
       {/* Team Section */}
       <div className="px-4 py-16">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Our Team</h2>
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Our Teams</h2>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {config.team.map((member) => (
-              <div key={member.profile} className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center">
-                <div className="w-24 h-24 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Users className="w-12 h-12 text-white" />
+          {/* QCanvas Team */}
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold text-white text-center mb-8">QCanvas Team</h3>
+            <div className="grid md:grid-cols-3 gap-8">
+              {config.qcanvasTeam.map((member) => (
+                <div key={member.name} className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center hover:border-quantum-blue-light transition-all duration-300">
+                  <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Users className="w-10 h-10 text-white" />
+                  </div>
+                  <h4 className="text-xl font-semibold text-white mb-4">{member.name}</h4>
+                  <div className="flex justify-center space-x-3">
+                    {member.email && (
+                      <a href={`mailto:${member.email}`} className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-red-600 transition-colors" title="Email">
+                        <Mail className="w-5 h-5" />
+                      </a>
+                    )}
+                    {member.github && (
+                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-gray-700 transition-colors" title="GitHub">
+                        <Github className="w-5 h-5" />
+                      </a>
+                    )}
+                    {member.linkedin && (
+                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-blue-600 transition-colors" title="LinkedIn">
+                        <Linkedin className="w-5 h-5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">{member.name}</h3>
-                <p className="text-editor-text mb-2">{member.role}</p>
-                <p className="text-xs text-gray-400 mb-4">{member.profile}</p>
-                <div className="flex justify-center space-x-4">
-                  {member.github && (
-                    <a href={member.github} target="_blank" rel="noopener noreferrer" className="text-editor-text hover:text-white transition-colors">
-                      <Github className="w-5 h-5" />
-                    </a>
-                  )}
-                  {member.email && (
-                    <a href={`mailto:${member.email}`} className="text-editor-text hover:text-white transition-colors">
-                      <Mail className="w-5 h-5" />
-                    </a>
-                  )}
+              ))}
+            </div>
+          </div>
+
+          {/* QSim Team */}
+          <div>
+            <h3 className="text-2xl font-bold text-white text-center mb-8">QSim Team</h3>
+            <div className="grid md:grid-cols-3 gap-8">
+              {config.qsimTeam.map((member) => (
+                <div key={member.name} className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center hover:border-purple-500 transition-all duration-300">
+                  <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Users className="w-10 h-10 text-white" />
+                  </div>
+                  <h4 className="text-xl font-semibold text-white mb-4">{member.name}</h4>
+                  <div className="flex justify-center space-x-3">
+                    {member.email && (
+                      <a href={`mailto:${member.email}`} className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-red-600 transition-colors" title="Email">
+                        <Mail className="w-5 h-5" />
+                      </a>
+                    )}
+                    {member.github && (
+                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-gray-700 transition-colors" title="GitHub">
+                        <Github className="w-5 h-5" />
+                      </a>
+                    )}
+                    {member.linkedin && (
+                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-blue-600 transition-colors" title="LinkedIn">
+                        <Linkedin className="w-5 h-5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* University Section */}
+      {/* Initiative Section */}
       <div className="px-4 py-16 bg-gradient-to-b from-transparent to-editor-bg/20">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-8">Built at</h2>
+          <h2 className="text-3xl font-bold text-white mb-8">Built under</h2>
           <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10">
             <div className="text-4xl font-bold quantum-gradient bg-clip-text text-transparent mb-2">
-              {config.university.name}
+              {config.initiative.name}
             </div>
-            <p className="text-xl text-editor-text">{config.university.location}</p>
-            <p className="text-editor-text mt-4">{config.university.department}</p>
+            <p className="text-xl text-editor-text">{config.initiative.tagline}</p>
           </div>
 
           <div className="mt-12">
             <h3 className="text-2xl font-semibold text-white mb-6">Project Supervisors</h3>
             <div className="grid md:grid-cols-2 gap-6">
               {config.supervisors.map((supervisor) => (
-                <div key={supervisor.name} className="quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border border-white/10">
+                <div key={supervisor.name} className="quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border border-white/10 text-center">
                   <h4 className="text-lg font-semibold text-white mb-2">{supervisor.name}</h4>
                   <p className="text-editor-text">{supervisor.role}</p>
-                  <a href={`mailto:${supervisor.email}`} className="text-quantum-blue-light hover:text-white transition-colors mt-2 inline-block">
-                    {supervisor.email}
-                  </a>
                 </div>
               ))}
             </div>
