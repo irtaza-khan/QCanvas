@@ -41,10 +41,13 @@ class PennylaneBackend(BaseBackend):
         
         dev_name = self._get_dev_name()
         
+        # Extract only operations, ignoring any measurements in the tape
+        # (we'll add our own measurements based on shots parameter)
+        operations = list(tape.operations)
                 
         def tape_operations_wrapper():
             """Applies all operations from the input tape within the QNode context."""
-            for op in tape.operations:
+            for op in operations:
                 qml.apply(op)
         
         if shots > 0:
