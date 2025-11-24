@@ -80,6 +80,30 @@ See `docs/project-scope.md` for authoritative scope and exclusions. QCanvas orch
 - Enables better IDE support and validation
 - Simplifies API contract management
 
+### File Templates System
+**Decision**: Separate initial files from file templates for variety
+**Implementation**:
+- Initial files (auto-loaded): Bell State (Cirq), Deutsch-Jozsa (Qiskit), Grover's (PennyLane)
+- Templates (user-selected): Teleportation (Qiskit), QRNG (Cirq), XOR Demo (PennyLane), QML XOR (PennyLane)
+- Click-outside-to-close modal behavior
+- Templates cover all 6 main algorithms from different frameworks
+**Rationale**:
+- Users see variety without duplicates
+- Covers all major quantum algorithms
+- Different frameworks showcased in both sections
+
+### Parser Variable Tracking
+**Decision**: Track variable assignments for dynamic loop bounds and qubit counts
+**Implementation**:
+- `self.variables: Dict[str, Any]` in all parsers
+- Resolve `n_bits` from `range(n_bits)` or `wires=n_bits`
+- Support variable qubit indices in for loops (`q[i]` instead of `q[0]`)
+- Infer qubit count from ForLoopNode ranges as fallback
+**Rationale**:
+- Enables parsing of real-world quantum code patterns
+- Supports dynamic circuit construction
+- Accurate OpenQASM 3.0 generation for loop-based circuits
+
 ## Design Patterns in Use
 
 ### Converter Pattern
@@ -135,9 +159,24 @@ class ConverterFactory:
 ### Frontend Components
 - **EditorPane**: Circuit code input and editing
 - **ResultsPane**: Display conversion and simulation results
+  - Stats tab with gradient hero cards and visual metrics
+  - Console tab with step-by-step execution logging
+  - Errors tab with detailed error display (code snippets, suggestions)
+  - Histogram tab with Chart.js visualization
+  - Output tab with raw simulation results
 - **Sidebar**: Framework selection and options
+  - Custom themed delete confirmation modal
+  - File templates modal with click-outside-to-close
 - **TopBar**: Navigation and user controls
 - **ThemeWatcher**: Dark/light mode management
+
+### UI Patterns
+- **Custom Confirmation Modals**: Replace browser dialogs with themed modals
+- **Gradient Cards**: Status indicators with color-coded backgrounds
+- **Progress Bars**: Visual representation of measurement percentages
+- **Click-Outside-to-Close**: Modals dismiss when clicking backdrop
+- **Custom Events**: `circuit-compile` and `circuit-execute` for inter-component communication
+- **Real-time Metrics**: Execution time, memory, CPU usage calculated and displayed
 
 ### Backend Services
 - **ConverterService**: Handles circuit conversion logic

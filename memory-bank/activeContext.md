@@ -16,15 +16,47 @@
   - Comprehensive keyboard shortcuts (10+ commands)
   - Pre-built quantum examples with smart loading
   - Settings management (theme, auto-save, preferences)
+- ✅ **Parser Enhancements (November 24, 2025)**:
+  - Extended if-else support to Cirq and PennyLane (aligned with Qiskit)
+  - Fixed Cirq `circuit.append()` parsing for proper AST extraction
+  - Fixed variable qubit/wire indices in for loops (e.g., `q[i]` instead of `q[0]`)
+  - Added variable tracking for `n_bits = 8` style assignments
+  - Fixed classical bit counting based on actual measurements
+  - Changed for loop variable type from `uint` to `int` in OpenQASM output
+  - Fixed QASM3Builder measurement format (`c[i] = measure q[i];`)
+- ✅ **Examples Page Expansion (November 24, 2025)**:
+  - Added 15+ new quantum algorithm examples covering all 3 frameworks
+  - Quantum Teleportation (Cirq, Qiskit, PennyLane)
+  - Deutsch-Jozsa Algorithm (Cirq, Qiskit, PennyLane)
+  - Quantum Random Number Generator (Cirq, Qiskit, PennyLane)
+  - Grover's Search (Cirq, Qiskit, PennyLane)
+  - XOR Demonstration (PennyLane)
+  - QML XOR Classifier (PennyLane) - Quantum Machine Learning category
+- ✅ **File Templates Update (November 24, 2025)**:
+  - Reorganized initial files: Bell State (Cirq), Deutsch-Jozsa (Qiskit), Grover's (PennyLane)
+  - New templates: Teleportation (Qiskit), QRNG (Cirq), XOR Demo (PennyLane), QML XOR (PennyLane)
+  - Templates modal: click-outside-to-close, increased height
+- ✅ **UI/UX Improvements (November 24, 2025)**:
+  - Custom themed delete confirmation modal (replaces browser confirm dialog)
+  - Enhanced Stats panel with gradient cards and visual progress bars
+  - Performance metrics with colored indicators
+  - Measurement results visualization with percentages
+  - Console logging for compilation/execution steps (no emojis)
+  - Detailed error display in Errors tab with code snippets and suggestions
+  - Simulation statistics properly calculated and displayed (execution time, memory, CPU, fidelity)
 - ✅ **User Experience Enhancements**:
   - Responsive design with mobile support
   - Advanced animations and hover effects
-  - Click-outside-to-close dropdowns
+  - Click-outside-to-close dropdowns and modals
   - Toast notifications and progress feedback
   - Automatic file naming and management
 - ✅ **Integration Complete**: QCanvas + QSim fully integrated
 - ✅ **Testing**: Comprehensive test suite with 105+ passing tests
 - ✅ **Documentation**: Updated all docs and memory bank
+- ✅ **Project Info Updates (November 24, 2025)**:
+  - Two teams: QCanvas Team (Umer Farooq, Hussan Waseem Syed, Muhammad Irtaza Khan) and QSim Team (Aneeq Ahmed Malik, Abeer Noor, Abdullah Mehmood)
+  - Built under Open Quantum Workbench: A FAST University Initiative
+  - Team members have email, GitHub, and LinkedIn links
 
 ### Current Objectives
 1. ✅ **Full Implementation Complete**: All features implemented and production-ready

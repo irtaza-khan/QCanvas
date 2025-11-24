@@ -35,10 +35,20 @@
   - Cirq → OpenQASM 3.0 (using QASM3Builder)
   - Qiskit → OpenQASM 3.0 (using QASM3Builder)
   - PennyLane → OpenQASM 3.0 (using QASM3Builder)
+  - **Parser Enhancements (November 24, 2025)**:
+    - If-else support extended to all parsers (aligned with OpenQASM 3.0)
+    - Variable tracking for `n_bits = 8` style assignments
+    - Correct handling of variable qubit indices in for loops (`q[i]`)
+    - Fixed `circuit.append()` parsing in Cirq for proper AST extraction
+    - Fixed `qml.measure()` handling in PennyLane
+    - Classical bit counting based on actual measurements
 - **QASM3 Infrastructure**: ✅ COMPLETE - Unified OpenQASM 3.0 generation system
   - QASM3Builder: Clean API for code generation
   - QASM3GateLibrary: Comprehensive gate management
   - QASM3Expression: Classical expression handling
+  - **Fixes (November 24, 2025)**:
+    - Measurement format: `c[i] = measure q[i];` (OpenQASM 3.0 compliant)
+    - For loop variable type: `int` instead of `uint`
 - **Iteration I Features**: ✅ 100% COMPLETE (44/44 features implemented, 73 tests passing)
   - All standard gates and modifiers
   - Complete type system
@@ -65,11 +75,24 @@
   - Demo account support
   - Conditional UI rendering (login/logout buttons)
   - Automatic redirects for authenticated users
-- **Example System**: ✅ COMPLETE
-  - Pre-built quantum examples (Bell state, teleportation, VQE)
+- **Example System**: ✅ COMPLETE (Expanded November 24, 2025)
+  - 25+ pre-built quantum examples across all frameworks
+  - Comprehensive algorithm coverage:
+    - Quantum Teleportation (Cirq, Qiskit, PennyLane)
+    - Deutsch-Jozsa Algorithm (Cirq, Qiskit, PennyLane)
+    - QRNG - Quantum Random Number Generator (Cirq, Qiskit, PennyLane)
+    - Grover's Search (Cirq, Qiskit, PennyLane)
+    - XOR Demonstration (PennyLane)
+    - QML XOR Classifier (PennyLane) - Quantum Machine Learning
+    - Bell State, GHZ, QFT, VQE, QAOA, QNN, Error Correction
   - Smart loading with authentication awareness
   - Session-based example storage
   - Automatic code injection into editor
+- **File Templates System**: ✅ COMPLETE (Updated November 24, 2025)
+  - Initial files: Bell State (Cirq), Deutsch-Jozsa (Qiskit), Grover's (PennyLane)
+  - Templates: Teleportation (Qiskit), QRNG (Cirq), XOR Demo (PennyLane), QML XOR (PennyLane)
+  - Click-outside-to-close modal behavior
+  - Increased modal height for better visibility
 - **Keyboard Shortcuts**: ✅ COMPLETE
   - 10 comprehensive shortcuts implemented
   - Automatic file naming for new files
@@ -80,10 +103,17 @@
   - Auto-save toggle
   - Format on save toggle
   - Persistent settings storage
-- **UI Enhancements**: ✅ COMPLETE
+- **UI Enhancements**: ✅ COMPLETE (Updated November 24, 2025)
   - Responsive design improvements
   - Advanced animations and hover effects
-  - Dropdown menus with click-outside-to-close
+  - Dropdown menus and modals with click-outside-to-close
+  - Custom themed delete confirmation modal (replaces browser confirm)
+  - Enhanced Stats panel with gradient cards and visual progress bars
+  - Performance metrics with colored indicators (timing, memory, CPU)
+  - Measurement results visualization with percentages
+  - Console logging for compilation/execution steps
+  - Detailed error display with code snippets and suggestions
+  - Simulation statistics properly calculated and displayed
   - Improved error handling and feedback
 
 ### Development Tools ✅
@@ -92,6 +122,12 @@
 - **CI/CD Pipelines**: GitHub Actions for automated testing and deployment
 - **Docker Development**: Complete Docker Compose setup for local development
 - **Documentation**: Comprehensive API and user documentation
+
+### Project & Teams ✅
+- **Initiative**: Built under Open Quantum Workbench: A FAST University Initiative
+- **QCanvas Team**: Umer Farooq, Hussan Waseem Syed, Muhammad Irtaza Khan
+- **QSim Team**: Aneeq Ahmed Malik, Abeer Noor, Abdullah Mehmood
+- **Supervisors**: Dr. Imran Ashraf (Project Supervisor), Dr. Muhammad Nouman Noor (Co-Supervisor)
 
 ## What's Left to Build
 

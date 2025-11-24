@@ -40,9 +40,16 @@
 - **Authentication**: Persistent login with localStorage, demo accounts
 - **Keyboard Shortcuts**: Comprehensive shortcut system with 10+ commands
 - **Settings Management**: Theme selection, auto-save, format preferences
-- **Example System**: Pre-built quantum examples with smart loading
+- **Example System**: 25+ pre-built quantum examples across all frameworks
+  - Algorithms: Teleportation, Deutsch-Jozsa, QRNG, Grover's, XOR, QML XOR Classifier
+  - Categories: Basic Circuits, Quantum Algorithms, Variational Algorithms, Error Correction, Quantum Machine Learning
+  - All three frameworks (Cirq, Qiskit, PennyLane) represented
+- **File Templates**: Separate from initial files for maximum variety
+  - Initial files: Bell (Cirq), Deutsch-Jozsa (Qiskit), Grover's (PennyLane)
+  - Templates: Teleportation (Qiskit), QRNG (Cirq), XOR Demo (PennyLane), QML XOR (PennyLane)
 - **Responsive Design**: Mobile-first approach with adaptive layouts
 - **Real-time Feedback**: Toast notifications and progress indicators
+- **Modal Interactions**: Click-outside-to-close behavior for all modals
 
 ## Development Setup
 
