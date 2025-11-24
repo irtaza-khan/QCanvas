@@ -56,7 +56,7 @@ import ast
 import re
 import logging
 from config.config import VERBOSE, vprint
-from typing import List, Dict, Any, Optional, Set, Tuple
+from typing import List, Dict, Any, Optional, Set, Tuple, Union
 from quantum_converters.base.circuit_ast import (
     CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
 )
@@ -84,11 +84,21 @@ class QiskitASTVisitor(ast.NodeVisitor):
         self.qubits: int = 0  # Number of qubits
         self.clbits: int = 0  # Number of classical bits
         self.current_circuit: Optional[str] = None  # Current circuit variable being operated on
+        self.variables: Dict[str, Any] = {}  # Track variable values
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Handle variable assignments, particularly QuantumCircuit creation."""
         if VERBOSE:
             vprint("[QiskitASTVisitor] visit_Assign: inspecting assignment node")
+
+        # First, handle variable assignments (store values)
+        if isinstance(node.targets[0], ast.Name):
+            var_name = node.targets[0].id
+            if isinstance(node.value, ast.Constant):
+                self.variables[var_name] = node.value.value
+            elif isinstance(node.value, ast.Name) and node.value.id in self.variables:
+                self.variables[var_name] = self.variables[node.value.id]
+
         # Check if assigning a QuantumCircuit
         if isinstance(node.value, ast.Call) and self._is_quantum_circuit_call(node.value):
             if VERBOSE:
@@ -243,7 +253,9 @@ class QiskitASTVisitor(ast.NodeVisitor):
             if isinstance(node.value, int):
                 return node.value
         elif isinstance(node, ast.Name):
-            # Could be a variable, but for now we only support constants
+            # Check if it's a variable we know about
+            if node.id in self.variables:
+                return self.variables[node.id]
             return None
         return None
 
@@ -309,11 +321,15 @@ class QiskitASTVisitor(ast.NodeVisitor):
             # First argument is typically number of qubits
             if isinstance(args[0], ast.Constant):  # Python 3.8+
                 self.qubits = int(args[0].value)
+            elif isinstance(args[0], ast.Name) and args[0].id in self.variables:
+                self.qubits = self.variables[args[0].id]
 
         if len(args) >= 2:
             # Second argument is number of classical bits
             if isinstance(args[1], ast.Constant):
                 self.clbits = int(args[1].value)
+            elif isinstance(args[1], ast.Name) and args[1].id in self.variables:
+                self.clbits = self.variables[args[1].id]
 
     def _handle_circuit_method_call(self, node: ast.Call) -> None:
         """Handle method calls on circuit variables."""
@@ -485,12 +501,28 @@ class QiskitASTVisitor(ast.NodeVisitor):
 
         if self._is_batch_measurement(args):
             self._handle_batch_measurement(args)
+        elif self._is_range_call(args):
+            self._handle_range_call_measurement(args)
         else:
             self._handle_single_measurement(args)
 
     def _is_batch_measurement(self, args: List[ast.expr]) -> bool:
         """Check if this is a batch measurement with lists of qubits and clbits."""
         return (isinstance(args[0], ast.List) and isinstance(args[1], ast.List))
+
+    def _is_range_call(self, args: List[ast.expr]) -> bool:
+        """Check if this is a range call for measurement."""
+        return (isinstance(args[0], ast.Call) and isinstance(args[0].func, ast.Name) and args[0].func.id == 'range' and
+                isinstance(args[1], ast.Call) and isinstance(args[1].func, ast.Name) and args[1].func.id == 'range')
+
+    def _handle_range_call_measurement(self, args: List[ast.expr]) -> None:
+        """Handle measurement of range(n) to range(n)."""
+        end_q = self._extract_constant_value(args[0].args[0])
+        end_c = self._extract_constant_value(args[1].args[0])
+        if end_q is not None and end_c is not None and end_q == end_c:
+            body = [MeasurementNode(qubit='i', clbit='i')]
+            for_loop = ForLoopNode(variable='i', range_start=0, range_end=end_q, body=body)
+            self.operations.append(for_loop)
 
     def _handle_batch_measurement(self, args: List[ast.expr]) -> None:
         """Handle measurement of multiple qubits to multiple clbits."""
@@ -533,7 +565,7 @@ class QiskitASTVisitor(ast.NodeVisitor):
         if VERBOSE:
             vprint(f"[QiskitASTVisitor] Added barrier on {qubits if qubits else 'all qubits'}")
 
-    def _extract_qubit_index(self, node: ast.expr) -> int:
+    def _extract_qubit_index(self, node: ast.expr) -> Union[int, str]:
         """Extract qubit index from AST node."""
         if VERBOSE:
             try:
@@ -543,11 +575,11 @@ class QiskitASTVisitor(ast.NodeVisitor):
         if isinstance(node, ast.Constant):  # Python 3.8+
             return node.value if isinstance(node.value, int) else 0
         elif isinstance(node, ast.Name):
-            # Could be a parameter or variable, for now return 0
-            return 0
+            # Could be a parameter or variable, return the name
+            return node.id
         return 0
 
-    def _extract_clbit_index(self, node: ast.expr) -> int:
+    def _extract_clbit_index(self, node: ast.expr) -> Union[int, str]:
         """Extract classical bit index from AST node."""
         if VERBOSE:
             try:
