@@ -535,11 +535,11 @@ class PennyLaneToQASM3Converter:
 
     def _add_ast_for_loop(self, builder: QASM3Builder, operation: ForLoopNode):
         """Add a for loop from AST to QASM builder."""
-        # OpenQASM 3.0 for loop syntax: for uint i in [0:7] { ... }
+        # OpenQASM 3.0 for loop syntax: for int i in [0:7] { ... }
         # Note: range_end is exclusive in Python, but inclusive in OpenQASM range syntax
         openqasm_end = operation.range_end - 1 if operation.range_end > operation.range_start else operation.range_start
         range_spec = f"[{operation.range_start}:{openqasm_end}]"
-        variable_decl = f"uint {operation.variable}"
+        variable_decl = f"int {operation.variable}"
         
         # Convert loop body operations to QASM statements
         body_statements = []

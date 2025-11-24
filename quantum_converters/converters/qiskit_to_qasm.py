@@ -626,12 +626,12 @@ class QiskitToQASM3Converter:
         if VERBOSE:
             vprint(f"[QiskitToQASM3Converter] [{idx}] ForLoop: {op.variable} in range({op.range_start}, {op.range_end})")
         
-        # OpenQASM 3.0 for loop syntax: for uint i in [0:7] { ... }
+        # OpenQASM 3.0 for loop syntax: for int i in [0:7] { ... }
         # Note: range_end is exclusive in Python, but inclusive in OpenQASM range syntax
         # So Python range(8) = [0,1,2,3,4,5,6,7] becomes [0:7] in OpenQASM
         openqasm_end = op.range_end - 1 if op.range_end > op.range_start else op.range_start
         range_spec = f"[{op.range_start}:{openqasm_end}]"
-        variable_decl = f"uint {op.variable}"
+        variable_decl = f"int {op.variable}"
         
         # Convert loop body operations to QASM statements
         body_statements = []

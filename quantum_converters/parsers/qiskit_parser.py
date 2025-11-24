@@ -260,8 +260,26 @@ class QiskitASTVisitor(ast.NodeVisitor):
         return None
 
     def _extract_condition(self, node: ast.expr) -> str:
-        """Extract condition expression as a string representation."""
-        # For now, handle simple comparisons
+        """
+        Extract condition expression as a string representation.
+        Supports OpenQASM 3.0 condition syntax including:
+        - Comparisons (==, !=, <, >, <=, >=)
+        - Boolean operators (and, or, not)
+        - Classical register access (c[i], m[i])
+        - Variable references
+        """
+        # Handle boolean operators (and, or, not) - OpenQASM 3.0 supports &&, ||, !
+        if isinstance(node, ast.BoolOp):
+            op_str = "&&" if isinstance(node.op, ast.And) else "||"
+            values = [self._extract_condition(value) for value in node.values]
+            return f"({f' {op_str} '.join(values)})"
+        
+        # Handle unary not operator
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            operand = self._extract_condition(node.operand)
+            return f"!{operand}" if not operand.startswith("(") else f"!({operand})"
+        
+        # Handle comparisons
         if isinstance(node, ast.Compare):
             left = self._extract_condition_operand(node.left)
             ops = [self._extract_comparison_op(op) for op in node.ops]
@@ -269,6 +287,27 @@ class QiskitASTVisitor(ast.NodeVisitor):
             
             if len(ops) == 1 and len(comparators) == 1:
                 return f"{left} {ops[0]} {comparators[0]}"
+            # Handle chained comparisons (a < b < c) - not standard in OpenQASM but handle gracefully
+            elif len(ops) > 1:
+                parts = [left]
+                for i, (op, comp) in enumerate(zip(ops, comparators)):
+                    parts.append(f"{op} {comp}")
+                return " && ".join(parts)
+        
+        # Handle boolean constants
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, bool):
+                return "true" if node.value else "false"
+            return str(node.value)
+        
+        # Handle name references (variables, classical registers)
+        if isinstance(node, ast.Name):
+            # Map common Python boolean names to OpenQASM
+            if node.id == "True":
+                return "true"
+            elif node.id == "False":
+                return "false"
+            return node.id
         
         # Fallback: return a string representation
         try:
@@ -277,21 +316,45 @@ class QiskitASTVisitor(ast.NodeVisitor):
             return str(node)
 
     def _extract_condition_operand(self, node: ast.expr) -> str:
-        """Extract an operand from a condition."""
+        """
+        Extract an operand from a condition.
+        Handles constants, variables, array indexing, and classical register access.
+        """
         if isinstance(node, ast.Constant):
             return str(node.value)
         elif isinstance(node, ast.Name):
-            return node.id
+            # Check if it's a known variable that maps to a classical register
+            # In Qiskit, classical registers are often accessed via creg[i] or c[i]
+            var_name = node.id
+            # Map common classical register variable names to OpenQASM format
+            if var_name.startswith('c') and len(var_name) > 1 and var_name[1:].isdigit():
+                # Handle c0, c1, etc. -> c[0], c[1]
+                return f"c[{var_name[1:]}]"
+            return var_name
         elif isinstance(node, ast.Subscript):
-            # Handle array indexing like r[i]
+            # Handle array indexing like c[i], creg[0], m[i]
             value = self._extract_condition_operand(node.value)
             if isinstance(node.slice, ast.Index):  # Python < 3.9
                 index = self._extract_condition_operand(node.slice.value)
             elif isinstance(node.slice, ast.Constant):  # Python 3.9+
                 index = str(node.slice.value)
+            elif isinstance(node.slice, ast.Name):
+                # Handle variable indices like c[i]
+                index = node.slice.id
             else:
                 index = self._extract_condition_operand(node.slice)
             return f"{value}[{index}]"
+        elif isinstance(node, ast.Attribute):
+            # Handle attribute access like creg[i] or circuit.creg[i]
+            # For conditions, we typically want just the register name
+            if isinstance(node.value, ast.Name):
+                # Map common patterns: creg -> c, mreg -> m
+                attr_name = node.attr
+                if attr_name in ['creg', 'c']:
+                    return 'c'
+                elif attr_name in ['mreg', 'm']:
+                    return 'm'
+            return f"{self._extract_condition_operand(node.value)}.{node.attr}"
         return str(node)
 
     def _extract_comparison_op(self, op: ast.cmpop) -> str:
@@ -386,6 +449,9 @@ class QiskitASTVisitor(ast.NodeVisitor):
             self._handle_reset_qiskit(args)
         elif method_name == 'barrier':
             self._handle_barrier_qiskit(args)
+        elif method_name == 'if_else':
+            # Qiskit 2.1+ if_else method: qc.if_else(condition, true_body, false_body=None)
+            self._handle_if_else_qiskit(args)
 
     def _handle_single_qubit_gate(self, method_name: str, args: List[ast.expr]) -> None:
         """Handle single-qubit gates without parameters."""
@@ -564,6 +630,139 @@ class QiskitASTVisitor(ast.NodeVisitor):
         self.operations.append(BarrierNode(qubits=qubits))
         if VERBOSE:
             vprint(f"[QiskitASTVisitor] Added barrier on {qubits if qubits else 'all qubits'}")
+
+    def _handle_if_else_qiskit(self, args: List[ast.expr]) -> None:
+        """
+        Handle Qiskit 2.1+ if_else method: qc.if_else(condition, true_body, false_body=None)
+        
+        According to Qiskit 2.1 API (https://quantum.cloud.ibm.com/docs/en/api/qiskit/2.1/qiskit.circuit.IfElseOp):
+        - condition: (ClassicalRegister, int) | (Clbit, int/bool) | expr.Expr
+        - true_body: QuantumCircuit
+        - false_body: QuantumCircuit | None
+        """
+        if len(args) < 2:
+            if VERBOSE:
+                vprint("[QiskitASTVisitor] if_else requires at least 2 arguments (condition, true_body)")
+            return
+        
+        # Extract condition from first argument
+        condition = self._extract_qiskit_condition(args[0])
+        
+        # Extract true_body operations from second argument
+        true_body_ops = []
+        saved_operations = self.operations
+        self.operations = true_body_ops
+        
+        # Try to extract operations from true_body (could be a variable or QuantumCircuit call)
+        self._extract_circuit_body_operations(args[1])
+        true_body_ops = self.operations
+        
+        # Extract false_body operations if present
+        false_body_ops = None
+        if len(args) >= 3:
+            false_body_ops = []
+            self.operations = false_body_ops
+            self._extract_circuit_body_operations(args[2])
+            false_body_ops = self.operations
+        
+        # Restore operations list
+        self.operations = saved_operations
+        
+        # Create IfStatementNode
+        if_stmt = IfStatementNode(
+            condition=condition,
+            body=true_body_ops,
+            else_body=false_body_ops
+        )
+        self.operations.append(if_stmt)
+        
+        if VERBOSE:
+            vprint(f"[QiskitASTVisitor] Added Qiskit if_else: {condition}")
+
+    def _extract_qiskit_condition(self, node: ast.expr) -> str:
+        """
+        Extract condition from Qiskit if_else format.
+        Supports: (ClassicalRegister, int), (Clbit, int/bool), or expr.Expr
+        """
+        # Handle tuple condition: (creg, value) or (cbit, value)
+        if isinstance(node, ast.Tuple) and len(node.elts) == 2:
+            register_or_bit = node.elts[0]
+            value = node.elts[1]
+            
+            # Extract register/bit name
+            reg_name = self._extract_register_or_bit_name(register_or_bit)
+            
+            # Extract value
+            if isinstance(value, ast.Constant):
+                val = str(value.value)
+            elif isinstance(value, ast.Name):
+                val = value.id
+            else:
+                val = self._extract_condition_operand(value)
+            
+            # Format as OpenQASM condition: c[i] == value
+            # For now, assume single bit access - could be enhanced for full register comparison
+            if reg_name:
+                return f"{reg_name} == {val}"
+        
+        # Handle expression condition (fallback to general condition extraction)
+        return self._extract_condition(node)
+
+    def _extract_register_or_bit_name(self, node: ast.expr) -> str:
+        """Extract classical register or bit name from AST node."""
+        # Handle direct name: creg
+        if isinstance(node, ast.Name):
+            return node.id
+        
+        # Handle attribute access: circuit.creg
+        if isinstance(node, ast.Attribute):
+            return node.attr
+        
+        # Handle subscript: creg[0] -> creg[0]
+        if isinstance(node, ast.Subscript):
+            value = self._extract_register_or_bit_name(node.value)
+            if isinstance(node.slice, ast.Index):  # Python < 3.9
+                index = self._extract_condition_operand(node.slice.value)
+            elif isinstance(node.slice, ast.Constant):  # Python 3.9+
+                index = str(node.slice.value)
+            else:
+                index = self._extract_condition_operand(node.slice)
+            return f"{value}[{index}]"
+        
+        return str(node)
+
+    def _extract_circuit_body_operations(self, node: ast.expr) -> None:
+        """
+        Extract operations from a circuit body (true_body or false_body).
+        Handles both variable references and QuantumCircuit constructor calls.
+        Note: This is limited for AST parsing - we can't execute code to get circuit objects.
+        """
+        # If it's a variable name, we can't extract operations statically
+        # This is a limitation of AST parsing - we'd need execution to get the circuit
+        if isinstance(node, ast.Name):
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] if_else body is a variable '{node.id}' - cannot extract operations statically")
+            # For now, we'll skip this - in a full implementation, you might want to
+            # track circuit variables and their operations
+            return
+        
+        # If it's a QuantumCircuit constructor call, we could parse it
+        # but typically bodies are passed as variables, not inline
+        if isinstance(node, ast.Call):
+            if self._is_quantum_circuit_call(node):
+                if VERBOSE:
+                    vprint("[QiskitASTVisitor] if_else body is QuantumCircuit() - parsing inline circuit")
+                # Could parse the circuit constructor, but this is uncommon
+                # Usually bodies are pre-created variables
+                return
+        
+        # For other cases, try to visit the node to see if it contains operations
+        # This handles cases where the body might be a more complex expression
+        try:
+            self.visit(node)
+        except Exception:
+            if VERBOSE:
+                vprint(f"[QiskitASTVisitor] Could not extract operations from if_else body: {type(node).__name__}")
 
     def _extract_qubit_index(self, node: ast.expr) -> Union[int, str]:
         """Extract qubit index from AST node."""

@@ -397,9 +397,9 @@ class QASM3Builder:
         Add a measurement operation.
 
         OpenQASM 3 uses the assignment form for measurements:
-            measure qubit_expr -> bit_expr;
+            bit_expr = measure qubit_expr;
         """
-        self.lines.append(f"measure {qubit} -> {bit};")
+        self.lines.append(f"{bit} = measure {qubit};")
         
     def add_reset(self, qubit: str):
         """

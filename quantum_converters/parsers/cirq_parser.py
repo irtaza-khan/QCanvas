@@ -56,7 +56,7 @@ Version: 1.0.0
 import ast
 import logging
 from config.config import VERBOSE, vprint
-from typing import List, Set, Any, Optional, Dict, Tuple
+from typing import List, Set, Any, Optional, Dict, Tuple, Union
 from quantum_converters.base.circuit_ast import (
     CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
 )
@@ -87,11 +87,27 @@ class CirqASTVisitor(ast.NodeVisitor):
         self.qubit_vars: Dict[str, int] = {}  # Map variable names to qubit indices
         self.qubit_counter: int = 0  # Counter for qubit indices
         self.unsupported_operations: Set[str] = set()
+        self.variables: Dict[str, Any] = {}  # Track numeric variable assignments
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Handle variable assignments, particularly Circuit creation."""
         if VERBOSE:
             vprint("[CirqASTVisitor] visit_Assign: inspecting assignment node")
+        
+        # Track simple numeric variable assignments like n_bits = 8
+        if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            var_name = node.targets[0].id
+            # Handle ast.Constant (Python 3.8+)
+            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, (int, float)):
+                self.variables[var_name] = node.value.value
+                if VERBOSE:
+                    vprint(f"[CirqASTVisitor] Tracked variable: {var_name} = {node.value.value}")
+            # Handle ast.Num (deprecated, for older Python)
+            elif isinstance(node.value, ast.Num):
+                self.variables[var_name] = node.value.n
+                if VERBOSE:
+                    vprint(f"[CirqASTVisitor] Tracked variable (Num): {var_name} = {node.value.n}")
+        
         # Check if assigning a Circuit
         if isinstance(node.value, ast.Call) and self._is_cirq_circuit_call(node.value):
             if VERBOSE:
@@ -245,13 +261,38 @@ class CirqASTVisitor(ast.NodeVisitor):
             if isinstance(node.value, int):
                 return node.value
         elif isinstance(node, ast.Name):
-            # Could be a variable, but for now we only support constants
+            # Look up variable in tracked variables
+            var_name = node.id
+            if var_name in self.variables:
+                val = self.variables[var_name]
+                if isinstance(val, int):
+                    if VERBOSE:
+                        vprint(f"[CirqASTVisitor] Resolved range variable: {var_name} = {val}")
+                    return val
             return None
         return None
 
     def _extract_condition(self, node: ast.expr) -> str:
-        """Extract condition expression as a string representation."""
-        # For now, handle simple comparisons
+        """
+        Extract condition expression as a string representation.
+        Supports OpenQASM 3.0 condition syntax including:
+        - Comparisons (==, !=, <, >, <=, >=)
+        - Boolean operators (and, or, not)
+        - Classical register access (c[i], m[i])
+        - Variable references
+        """
+        # Handle boolean operators (and, or, not) - OpenQASM 3.0 supports &&, ||, !
+        if isinstance(node, ast.BoolOp):
+            op_str = "&&" if isinstance(node.op, ast.And) else "||"
+            values = [self._extract_condition(value) for value in node.values]
+            return f"({f' {op_str} '.join(values)})"
+        
+        # Handle unary not operator
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            operand = self._extract_condition(node.operand)
+            return f"!{operand}" if not operand.startswith("(") else f"!({operand})"
+        
+        # Handle comparisons
         if isinstance(node, ast.Compare):
             left = self._extract_condition_operand(node.left)
             ops = [self._extract_comparison_op(op) for op in node.ops]
@@ -259,6 +300,27 @@ class CirqASTVisitor(ast.NodeVisitor):
             
             if len(ops) == 1 and len(comparators) == 1:
                 return f"{left} {ops[0]} {comparators[0]}"
+            # Handle chained comparisons (a < b < c) - not standard in OpenQASM but handle gracefully
+            elif len(ops) > 1:
+                parts = [left]
+                for i, (op, comp) in enumerate(zip(ops, comparators)):
+                    parts.append(f"{op} {comp}")
+                return " && ".join(parts)
+        
+        # Handle boolean constants
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, bool):
+                return "true" if node.value else "false"
+            return str(node.value)
+        
+        # Handle name references (variables, classical registers)
+        if isinstance(node, ast.Name):
+            # Map common Python boolean names to OpenQASM
+            if node.id == "True":
+                return "true"
+            elif node.id == "False":
+                return "false"
+            return node.id
         
         # Fallback: return a string representation
         try:
@@ -267,21 +329,45 @@ class CirqASTVisitor(ast.NodeVisitor):
             return str(node)
 
     def _extract_condition_operand(self, node: ast.expr) -> str:
-        """Extract an operand from a condition."""
+        """
+        Extract an operand from a condition.
+        Handles constants, variables, array indexing, and classical register access.
+        """
         if isinstance(node, ast.Constant):
             return str(node.value)
         elif isinstance(node, ast.Name):
-            return node.id
+            # Check if it's a known variable that maps to a classical register
+            # In Cirq, measurement results are often accessed via key names
+            var_name = node.id
+            # Map common classical register variable names to OpenQASM format
+            if var_name.startswith('c') and len(var_name) > 1 and var_name[1:].isdigit():
+                # Handle c0, c1, etc. -> c[0], c[1]
+                return f"c[{var_name[1:]}]"
+            return var_name
         elif isinstance(node, ast.Subscript):
-            # Handle array indexing like r[i]
+            # Handle array indexing like c[i], m[i]
             value = self._extract_condition_operand(node.value)
             if isinstance(node.slice, ast.Index):  # Python < 3.9
                 index = self._extract_condition_operand(node.slice.value)
             elif isinstance(node.slice, ast.Constant):  # Python 3.9+
                 index = str(node.slice.value)
+            elif isinstance(node.slice, ast.Name):
+                # Handle variable indices like c[i]
+                index = node.slice.id
             else:
                 index = self._extract_condition_operand(node.slice)
             return f"{value}[{index}]"
+        elif isinstance(node, ast.Attribute):
+            # Handle attribute access like measurements[key]
+            # For conditions, we typically want just the register name
+            if isinstance(node.value, ast.Name):
+                # Map common patterns: creg -> c, mreg -> m
+                attr_name = node.attr
+                if attr_name in ['creg', 'c']:
+                    return 'c'
+                elif attr_name in ['mreg', 'm']:
+                    return 'm'
+            return f"{self._extract_condition_operand(node.value)}.{node.attr}"
         return str(node)
 
     def _extract_comparison_op(self, op: ast.cmpop) -> str:
@@ -345,8 +431,27 @@ class CirqASTVisitor(ast.NodeVisitor):
 
     def _handle_range_qubit_creation(self, var_name: str, call_node):
         """Handle range-based qubit creation like cirq.LineQubit.range(n)."""
-        if call_node.args and isinstance(call_node.args[0], ast.Num):
-            count = call_node.args[0].n
+        if not call_node.args:
+            return
+        
+        count = None
+        arg = call_node.args[0]
+        
+        # Handle ast.Num (deprecated) for older Python
+        if isinstance(arg, ast.Num):
+            count = arg.n
+        # Handle ast.Constant (Python 3.8+)
+        elif isinstance(arg, ast.Constant) and isinstance(arg.value, int):
+            count = arg.value
+        # Handle variable reference like n_bits
+        elif isinstance(arg, ast.Name):
+            var_name_ref = arg.id
+            if var_name_ref in self.variables:
+                count = self.variables[var_name_ref]
+                if VERBOSE:
+                    vprint(f"[CirqASTVisitor] Resolved LineQubit.range variable: {var_name_ref} = {count}")
+        
+        if count is not None and isinstance(count, int):
             for i in range(count):
                 self.qubit_vars[f"{var_name}[{i}]"] = self.qubit_counter
                 self.qubit_counter += 1
@@ -440,6 +545,27 @@ class CirqASTVisitor(ast.NodeVisitor):
         # Check if the method is called on a circuit variable
         if isinstance(node.func.value, ast.Name) and node.func.value.id in self.circuit_vars:
             method_name = node.func.attr
+            
+            # Handle circuit.append(cirq.Gate(qubit)) pattern
+            if method_name == 'append':
+                if node.args and isinstance(node.args[0], ast.Call):
+                    # Extract the inner gate call: cirq.H(q0), cirq.CNOT(q0, q1), etc.
+                    inner_call = node.args[0]
+                    inner_method = self._extract_method_name(inner_call)
+                    if inner_method:
+                        if VERBOSE:
+                            vprint(f"[CirqASTVisitor] Extracted from append: {inner_method}")
+                        self._parse_gate_operation(inner_method, inner_call.args, inner_call.keywords, inner_call)
+                    else:
+                        # Try parameterized gate pattern
+                        if isinstance(inner_call.func, ast.Call):
+                            param_method = self._extract_parameterized_gate_name(inner_call.func)
+                            if param_method:
+                                adjusted_args = inner_call.func.args + inner_call.args
+                                self._parse_gate_operation(param_method, adjusted_args, inner_call.keywords, inner_call)
+                return
+            
+            # For other methods, parse directly
             self._parse_gate_operation(method_name, node.args, node.keywords)
 
     def _parse_gate_operation(self, method_name: str, args: List[ast.expr], keywords: List[ast.keyword], call_node: ast.Call = None) -> None:
@@ -714,8 +840,8 @@ class CirqASTVisitor(ast.NodeVisitor):
             if VERBOSE:
                 vprint(f"[CirqASTVisitor] Added reset q[{qubit}]")
 
-    def _extract_qubit_index(self, node: ast.expr) -> int:
-        """Extract qubit index from AST node."""
+    def _extract_qubit_index(self, node: ast.expr) -> Union[int, str]:
+        """Extract qubit index from AST node. Returns int for concrete indices, str for variables."""
         if VERBOSE:
             try:
                 vprint(f"[CirqASTVisitor]   _extract_qubit_index node={ast.dump(node, include_attributes=False)}")
@@ -729,6 +855,9 @@ class CirqASTVisitor(ast.NodeVisitor):
             return self._handle_name_node(node)
         elif isinstance(node, ast.Subscript):
             return self._handle_subscript_node(node)
+        elif isinstance(node, ast.Call):
+            # Handle cirq.LineQubit(i) where i is a variable
+            return self._handle_call_qubit_node(node)
         else:
             return 0
 
@@ -738,15 +867,15 @@ class CirqASTVisitor(ast.NodeVisitor):
         """Handle constant nodes (Python 3.8+)."""
         return node.value
 
-    def _handle_name_node(self, node: ast.Name) -> int:
+    def _handle_name_node(self, node: ast.Name) -> Union[int, str]:
         """Handle name/variable nodes."""
         # Check if it's a known qubit variable
         if node.id in self.qubit_vars:
             return self.qubit_vars[node.id]
-        # Could be a parameter or variable, for now return 0
-        return 0
+        # Return variable name as string (for loop variables like 'i')
+        return node.id
 
-    def _handle_subscript_node(self, node: ast.Subscript) -> int:
+    def _handle_subscript_node(self, node: ast.Subscript) -> Union[int, str]:
         """Handle subscript/array access nodes."""
         # Handle array access like qubits[0]
         if isinstance(node.value, ast.Name) and isinstance(node.slice, ast.Index):
@@ -756,6 +885,22 @@ class CirqASTVisitor(ast.NodeVisitor):
                 key = f"{base_name}[{index}]"
                 if key in self.qubit_vars:
                     return self.qubit_vars[key]
+        return 0
+
+    def _handle_call_qubit_node(self, node: ast.Call) -> Union[int, str]:
+        """Handle qubit creation calls like cirq.LineQubit(i) where i may be a variable."""
+        # Check if it's cirq.LineQubit(something)
+        if (isinstance(node.func, ast.Attribute) and
+            isinstance(node.func.value, ast.Name) and
+            node.func.value.id == 'cirq' and
+            node.func.attr == 'LineQubit'):
+            if node.args:
+                arg = node.args[0]
+                if isinstance(arg, ast.Constant):
+                    return arg.value
+                elif isinstance(arg, ast.Name):
+                    # Variable index like cirq.LineQubit(i)
+                    return arg.id
         return 0
 
     def _extract_parameter(self, node: ast.expr) -> Any:
@@ -885,10 +1030,19 @@ class CirqASTParser:
         if not self.visitor.operations:
             raise ValueError("No circuit operations found in source code. Make sure to define a get_circuit() function or circuit operations.")
 
+        # Count actual measurements to determine classical bits needed
+        measurement_count = sum(1 for op in self.visitor.operations if isinstance(op, MeasurementNode))
+        
+        # Determine qubit count - use qubit_counter if available, otherwise infer
+        qubit_count = self.visitor.qubit_counter
+        if qubit_count == 0:
+            # Fallback: infer from for loop ranges and operations
+            qubit_count = self._infer_qubit_count()
+        
         # Create CircuitAST
         circuit_ast = CircuitAST(
-            qubits=self.visitor.qubit_counter,  # Use the counter as estimated qubits
-            clbits=self.visitor.qubit_counter,  # Assume same number for measurements
+            qubits=qubit_count,
+            clbits=measurement_count if measurement_count > 0 else qubit_count,
             operations=self.visitor.operations,
             parameters=list(self.visitor.parameters)
         )
@@ -897,6 +1051,32 @@ class CirqASTParser:
             vprint("[CirqASTParser] Built CircuitAST")
 
         return circuit_ast
+
+    def _infer_qubit_count(self) -> int:
+        """Infer qubit count from operations and for loop ranges."""
+        max_qubit = 0
+        
+        for op in self.visitor.operations:
+            # Check ForLoopNode ranges
+            if isinstance(op, ForLoopNode):
+                if op.range_end is not None:
+                    max_qubit = max(max_qubit, op.range_end)
+            # Check GateNode qubits
+            elif isinstance(op, GateNode):
+                for q in op.qubits:
+                    if isinstance(q, int):
+                        max_qubit = max(max_qubit, q + 1)
+            # Check MeasurementNode qubits
+            elif isinstance(op, MeasurementNode):
+                if isinstance(op.qubit, int):
+                    max_qubit = max(max_qubit, op.qubit + 1)
+        
+        # Also check variables for common patterns like n_bits
+        for var_name, value in self.visitor.variables.items():
+            if isinstance(value, int) and var_name in ['n_bits', 'n_qubits', 'num_qubits', 'qubits']:
+                max_qubit = max(max_qubit, value)
+        
+        return max_qubit if max_qubit > 0 else 1
 
     def get_supported_gates(self) -> List[str]:
         """Get list of supported gate operations."""

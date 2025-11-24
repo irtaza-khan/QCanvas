@@ -59,7 +59,7 @@ import ast
 import logging
 from config.config import VERBOSE, vprint
 from quantum_converters.config import get_pl_inverse_qasm_map
-from typing import List, Any, Set, Optional, Tuple
+from typing import List, Any, Set, Optional, Tuple, Dict
 
 from quantum_converters.base.circuit_ast import (
     CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
@@ -76,7 +76,7 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
     Assumptions (Iteration I):
     - Device declared via qml.device(..., wires=N)
     - Gates are called as qml.<Gate>(..., wires=...)
-    - Measurements via qml.measure or return qml.state()/qml.expval are ignored (no classical mapping yet)
+    - Measurements via qml.measure(wires=i) are mapped to classical bits
     - We support a core set of gates consistent with Iteration I
     """
 
@@ -85,10 +85,25 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         self.parameters: Set[str] = set()
         self.qubits: int = 0
         self.clbits: int = 0
+        self.variables: Dict[str, Any] = {}  # Track variable assignments
 
-    # Detect qml.device(..., wires=N)
+    # Detect qml.device(..., wires=N) and track variable assignments
     def visit_Assign(self, node: ast.Assign) -> None:
         try:
+            # Track simple variable assignments like n_bits = 8
+            if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                var_name = node.targets[0].id
+                # Handle ast.Constant (Python 3.8+)
+                if isinstance(node.value, ast.Constant):
+                    self.variables[var_name] = node.value.value
+                    if VERBOSE:
+                        vprint(f"[PennyLaneASTVisitor] Tracked variable: {var_name} = {node.value.value}")
+                # Handle ast.Num (deprecated, for older Python)
+                elif isinstance(node.value, ast.Num):
+                    self.variables[var_name] = node.value.n
+                    if VERBOSE:
+                        vprint(f"[PennyLaneASTVisitor] Tracked variable (Num): {var_name} = {node.value.n}")
+            
             if isinstance(node.value, ast.Call) and self._is_qml_call(node.value, 'device'):
                 self._extract_wires_from_device(node.value)
         except Exception:
@@ -220,13 +235,38 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             if isinstance(node.value, int):
                 return node.value
         elif isinstance(node, ast.Name):
-            # Could be a variable, but for now we only support constants
+            # Look up variable in tracked variables
+            var_name = node.id
+            if var_name in self.variables:
+                val = self.variables[var_name]
+                if isinstance(val, int):
+                    if VERBOSE:
+                        vprint(f"[PennyLaneASTVisitor] Resolved range variable: {var_name} = {val}")
+                    return val
             return None
         return None
 
     def _extract_condition(self, node: ast.expr) -> str:
-        """Extract condition expression as a string representation."""
-        # For now, handle simple comparisons
+        """
+        Extract condition expression as a string representation.
+        Supports OpenQASM 3.0 condition syntax including:
+        - Comparisons (==, !=, <, >, <=, >=)
+        - Boolean operators (and, or, not)
+        - Classical register access (c[i], m[i])
+        - Variable references
+        """
+        # Handle boolean operators (and, or, not) - OpenQASM 3.0 supports &&, ||, !
+        if isinstance(node, ast.BoolOp):
+            op_str = "&&" if isinstance(node.op, ast.And) else "||"
+            values = [self._extract_condition(value) for value in node.values]
+            return f"({f' {op_str} '.join(values)})"
+        
+        # Handle unary not operator
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            operand = self._extract_condition(node.operand)
+            return f"!{operand}" if not operand.startswith("(") else f"!({operand})"
+        
+        # Handle comparisons
         if isinstance(node, ast.Compare):
             left = self._extract_condition_operand(node.left)
             ops = [self._extract_comparison_op(op) for op in node.ops]
@@ -234,6 +274,27 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             
             if len(ops) == 1 and len(comparators) == 1:
                 return f"{left} {ops[0]} {comparators[0]}"
+            # Handle chained comparisons (a < b < c) - not standard in OpenQASM but handle gracefully
+            elif len(ops) > 1:
+                parts = [left]
+                for i, (op, comp) in enumerate(zip(ops, comparators)):
+                    parts.append(f"{op} {comp}")
+                return " && ".join(parts)
+        
+        # Handle boolean constants
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, bool):
+                return "true" if node.value else "false"
+            return str(node.value)
+        
+        # Handle name references (variables, classical registers)
+        if isinstance(node, ast.Name):
+            # Map common Python boolean names to OpenQASM
+            if node.id == "True":
+                return "true"
+            elif node.id == "False":
+                return "false"
+            return node.id
         
         # Fallback: return a string representation
         try:
@@ -242,21 +303,45 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             return str(node)
 
     def _extract_condition_operand(self, node: ast.expr) -> str:
-        """Extract an operand from a condition."""
+        """
+        Extract an operand from a condition.
+        Handles constants, variables, array indexing, and classical register access.
+        """
         if isinstance(node, ast.Constant):
             return str(node.value)
         elif isinstance(node, ast.Name):
-            return node.id
+            # Check if it's a known variable that maps to a classical register
+            # In PennyLane, measurement results are accessed via wires
+            var_name = node.id
+            # Map common classical register variable names to OpenQASM format
+            if var_name.startswith('c') and len(var_name) > 1 and var_name[1:].isdigit():
+                # Handle c0, c1, etc. -> c[0], c[1]
+                return f"c[{var_name[1:]}]"
+            return var_name
         elif isinstance(node, ast.Subscript):
-            # Handle array indexing like r[i]
+            # Handle array indexing like c[i], m[i]
             value = self._extract_condition_operand(node.value)
             if isinstance(node.slice, ast.Index):  # Python < 3.9
                 index = self._extract_condition_operand(node.slice.value)
             elif isinstance(node.slice, ast.Constant):  # Python 3.9+
                 index = str(node.slice.value)
+            elif isinstance(node.slice, ast.Name):
+                # Handle variable indices like c[i]
+                index = node.slice.id
             else:
                 index = self._extract_condition_operand(node.slice)
             return f"{value}[{index}]"
+        elif isinstance(node, ast.Attribute):
+            # Handle attribute access like measurements[key]
+            # For conditions, we typically want just the register name
+            if isinstance(node.value, ast.Name):
+                # Map common patterns: creg -> c, mreg -> m
+                attr_name = node.attr
+                if attr_name in ['creg', 'c']:
+                    return 'c'
+                elif attr_name in ['mreg', 'm']:
+                    return 'm'
+            return f"{self._extract_condition_operand(node.value)}.{node.attr}"
         return str(node)
 
     def _extract_comparison_op(self, op: ast.cmpop) -> str:
@@ -281,6 +366,13 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             if kw.arg == 'wires':
                 if isinstance(kw.value, ast.Constant):
                     self.qubits = int(kw.value.value)
+                elif isinstance(kw.value, ast.Name):
+                    # Handle variable reference like wires=n_bits
+                    var_name = kw.value.id
+                    if var_name in self.variables:
+                        self.qubits = int(self.variables[var_name])
+                        if VERBOSE:
+                            vprint(f"[PennyLaneASTVisitor] Resolved wires from variable: {var_name} = {self.qubits}")
                 return
 
     def _handle_qml_call(self, call: ast.Call) -> None:
@@ -289,8 +381,9 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
 
         method_name = call.func.attr
 
-        # Measurements are not mapped to classical bits in Iteration I
-        if method_name in ['measure']:
+        # Handle measurements - qml.measure(wires=i)
+        if method_name == 'measure':
+            self._handle_measurement_pennylane(call)
             return
 
         gate_map = self._get_gate_mapping()
@@ -314,6 +407,33 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         return (isinstance(call.func, ast.Attribute) and
                 isinstance(call.func.value, ast.Name) and
                 call.func.value.id == 'qml')
+
+    def _handle_measurement_pennylane(self, call: ast.Call) -> None:
+        """
+        Handle qml.measure() calls and create MeasurementNode.
+        
+        PennyLane measurements: qml.measure(wires=i)
+        Maps to OpenQASM: c[clbit_index] = measure q[qubit_index];
+        """
+        wires = self._extract_wires(call)
+        if not wires:
+            if VERBOSE:
+                vprint("[PennyLaneASTVisitor] qml.measure() with no wires found")
+            return
+        
+        for wire in wires:
+            # If wire is a variable (string), use same variable for clbit
+            # This handles for loop cases like: for i in range(n): qml.measure(wires=i)
+            if isinstance(wire, str):
+                # Variable wire - clbit should use same variable
+                clbit = wire
+            else:
+                # Constant wire - use sequential clbit index
+                clbit = self.clbits
+                self.clbits += 1
+            self.operations.append(MeasurementNode(qubit=wire, clbit=clbit))
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor] Added measurement q[{wire}] -> c[{clbit}]")
 
     def _get_gate_mapping(self) -> dict:
         """Get mapping of PennyLane gate names to OpenQASM mnemonics."""
@@ -340,7 +460,7 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         vprint(f"[PennyLaneASTVisitor] qml.{method_name} raw.args={args_dump}")
         vprint(f"[PennyLaneASTVisitor] qml.{method_name} raw.keywords={kw_dump}")
 
-    def _extract_wires(self, call: ast.Call) -> List[int]:
+    def _extract_wires(self, call: ast.Call) -> List[Any]:
         # wires may appear as keyword or positional last arg
         # Prefer keyword 'wires'
         if VERBOSE:
@@ -356,7 +476,7 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
                 return parsed
         return []
 
-    def _parse_wires_value(self, node: ast.AST) -> List[int]:
+    def _parse_wires_value(self, node: ast.AST) -> List[Any]:
         if VERBOSE:
             try:
                 vprint(f"[PennyLaneASTVisitor]     _parse_wires_value node={ast.dump(node, include_attributes=False)}")
@@ -364,13 +484,16 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
                 vprint("[PennyLaneASTVisitor]     _parse_wires_value node=<dump failed>")
         if isinstance(node, ast.Constant) and isinstance(node.value, int):
             return [int(node.value)]
-        if isinstance(node, ast.Constant) and isinstance(node.value, int):
-            return [int(node.value)]
+        if isinstance(node, ast.Name):
+            # Variable wire index (e.g., wires=i in a for loop)
+            return [node.id]
         if isinstance(node, ast.List):
-            result: List[int] = []
+            result: List[Any] = []
             for elt in node.elts:
                 if isinstance(elt, ast.Constant) and isinstance(elt.value, int):
                     result.append(int(elt.value))
+                elif isinstance(elt, ast.Name):
+                    result.append(elt.id)
             return result
         # Unsupported dynamic wires
         return []
@@ -492,24 +615,46 @@ class PennyLaneASTParser:
 
         # Determine qubit count: prefer device wires; else infer from max wire index
         if self.visitor.qubits <= 0:
-            try:
-                max_index = -1
-                for op in self.visitor.operations:
-                    if hasattr(op, 'qubits') and op.qubits:
-                        max_index = max(max_index, max(int(i) for i in op.qubits))
-                self.visitor.qubits = (max_index + 1) if max_index >= 0 else 1
-            except Exception:
-                self.visitor.qubits = 1
+            self.visitor.qubits = self._infer_qubit_count()
+
+        # Determine classical bit count: use clbits if set, else infer from qubits
+        clbit_count = self.visitor.clbits if self.visitor.clbits > 0 else self.visitor.qubits
 
         circuit_ast = CircuitAST(
             qubits=self.visitor.qubits,
-            clbits=self.visitor.clbits,
+            clbits=clbit_count,
             operations=self.visitor.operations,
             parameters=list(self.visitor.parameters)
         )
 
         vprint("[PennyLaneASTParser] Built CircuitAST")
         return circuit_ast
+
+    def _infer_qubit_count(self) -> int:
+        """Infer qubit count from operations, for loop ranges, and variables."""
+        max_qubit = 0
+        
+        for op in self.visitor.operations:
+            # Check ForLoopNode ranges
+            if isinstance(op, ForLoopNode):
+                if op.range_end is not None:
+                    max_qubit = max(max_qubit, op.range_end)
+            # Check GateNode qubits
+            elif isinstance(op, GateNode):
+                for q in op.qubits:
+                    if isinstance(q, int):
+                        max_qubit = max(max_qubit, q + 1)
+            # Check MeasurementNode qubits
+            elif isinstance(op, MeasurementNode):
+                if isinstance(op.qubit, int):
+                    max_qubit = max(max_qubit, op.qubit + 1)
+        
+        # Also check variables for common patterns like n_bits
+        for var_name, value in self.visitor.variables.items():
+            if isinstance(value, int) and var_name in ['n_bits', 'n_qubits', 'num_qubits', 'wires']:
+                max_qubit = max(max_qubit, value)
+        
+        return max_qubit if max_qubit > 0 else 1
 
     def get_supported_gates(self) -> List[str]:
         return [
