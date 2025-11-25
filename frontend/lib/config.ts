@@ -54,23 +54,23 @@ export const qcanvasTeam: TeamMember[] = [
   {
     name: 'Umer Farooq',
     team: 'QCanvas',
-    email: 'umer.farooq@nu.edu.pk',
+    email: 'umerfarooqcs0891@gmail.com',
     github: 'https://github.com/Umer-Farooq-CS',
-    linkedin: 'https://linkedin.com/in/umer-farooq'
+    linkedin: 'https://www.linkedin.com/in/umer-farooq-a0838a2a1/'
   },
   {
     name: 'Hussan Waseem Syed',
     team: 'QCanvas',
-    email: 'hussan.syed@nu.edu.pk',
+    email: 'hussainwaseemsyed@gmail.com',
     github: 'https://github.com/hussan-waseem',
-    linkedin: 'https://linkedin.com/in/hussan-waseem'
+    linkedin: 'https://www.linkedin.com/in/hussain-waseem-syed-323948361/'
   },
   {
     name: 'Muhammad Irtaza Khan',
     team: 'QCanvas',
-    email: 'irtaza.khan@nu.edu.pk',
+    email: 'muhammadirtazakhan2003@gmail.com',
     github: 'https://github.com/irtaza-khan',
-    linkedin: 'https://linkedin.com/in/irtaza-khan'
+    linkedin: 'https://www.linkedin.com/in/muhammad-irtaza-khan-35589a1b8/'
   }
 ]
 
@@ -87,15 +87,15 @@ export const qsimTeam: TeamMember[] = [
     name: 'Abeer Noor',
     team: 'QSim',
     email: 'abeer.noor@nu.edu.pk',
-    github: 'https://github.com/abeer-noor',
-    linkedin: 'https://linkedin.com/in/abeer-noor'
+    github: 'https://github.com/abeernoor05',
+    linkedin: 'https://www.linkedin.com/in/abeernoor/'
   },
   {
     name: 'Abdullah Mehmood',
     team: 'QSim',
     email: 'abdullah.mehmood@nu.edu.pk',
-    github: 'https://github.com/abdullah-mehmood',
-    linkedin: 'https://linkedin.com/in/abdullah-mehmood'
+    github: 'https://github.com/NoOne619',
+    linkedin: 'https://www.linkedin.com/in/abdullah-mehmood-12548a228/'
   }
 ]
 
@@ -162,11 +162,17 @@ export const initiativeInfo = {
 export const supervisors = [
   {
     name: 'Dr. Imran Ashraf',
-    role: 'Project Supervisor'
+    role: 'Project Supervisor',
+    email: 'iimran.aashraf@gmail.com',
+    github: 'https://github.com/imranashraf',
+    linkedin: 'https://www.linkedin.com/in/iimranaashraf/'
   },
   {
     name: 'Dr. Muhammad Nouman Noor',
-    role: 'Co-Supervisor'
+    role: 'Co-Supervisor',
+    email: 'abdullah.mehmood@nu.edu.pk',
+    github: 'https://github.com/noumannoor',
+    linkedin: 'https://www.linkedin.com/in/muhammad-nouman-noor-phd-266644a2/'
   }
 ]
 

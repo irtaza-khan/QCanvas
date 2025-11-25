@@ -368,13 +368,44 @@ export default function AboutPage() {
             <p className="text-xl text-editor-text">{config.initiative.tagline}</p>
           </div>
 
-          <div className="mt-12">
+          {/* <div className="mt-12">
             <h3 className="text-2xl font-semibold text-white mb-6">Project Supervisors</h3>
             <div className="grid md:grid-cols-2 gap-6">
               {config.supervisors.map((supervisor) => (
                 <div key={supervisor.name} className="quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border border-white/10 text-center">
                   <h4 className="text-lg font-semibold text-white mb-2">{supervisor.name}</h4>
                   <p className="text-editor-text">{supervisor.role}</p>
+                </div>
+              ))}
+            </div>
+          </div> */}
+
+          <div className='mt-12'>
+            <h3 className="text-2xl font-bold text-white text-center mb-6">Supervisors</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {config.supervisors.map((supervisor) => (
+                <div key={supervisor.name} className="quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border border-white/10 text-center hover:border-purple-500 transition-all duration-300">
+                  {/* <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Users className="w-10 h-10 text-white" />
+                  </div> */}
+                  <h4 className="text-xl font-semibold text-white mb-4">{supervisor.name}</h4>
+                  <div className="flex justify-center space-x-3">
+                    {supervisor.email && (
+                      <a href={`mailto:${supervisor.email}`} className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-red-600 transition-colors" title="Email">
+                        <Mail className="w-5 h-5" />
+                      </a>
+                    )}
+                    {supervisor.github && (
+                      <a href={supervisor.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-gray-700 transition-colors" title="GitHub">
+                        <Github className="w-5 h-5" />
+                      </a>
+                    )}
+                    {supervisor.linkedin && (
+                      <a href={supervisor.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-blue-600 transition-colors" title="LinkedIn">
+                        <Linkedin className="w-5 h-5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
