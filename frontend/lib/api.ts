@@ -15,9 +15,11 @@ async function getApiBase(): Promise<string> {
     const response = await fetch(`${localUrl}/api/health`, { method: 'GET' })
     if (response.ok) {
       cachedApiBase = localUrl
+      console.log("Local URL Working")
       return localUrl
     }
   } catch (error) {
+    console.log("Local URL Not Working")
     // Local backend not available
   }
 

@@ -349,6 +349,7 @@ export default function EditorPane() {
         <Editor
           key={activeFile.id}
           height="100%"
+          path={activeFile.id}
           language={getMonacoLanguage(activeFile.language)}
           value={activeFile.content}
           onChange={handleEditorChange}
