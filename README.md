@@ -70,7 +70,45 @@ QCanvas/
 - Node.js 18+ (for Next.js)
 - Docker (optional, for containerized deployment)
 
-### Quick Start
+> **Note**: The helper scripts described below (`setup.sh`, `run.sh`) are designed for **Linux** environments with `bash` and `apt`. On Windows, use the manual steps instead.
+
+### Linux Quick Setup (Recommended)
+
+For a fresh Linux machine, you can install all requirements and start QCanvas using the provided scripts:
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/qcanvas.git
+   cd qcanvas
+   ```
+
+2. **Run first‑time setup**
+   ```bash
+   # Installs system packages, creates venv, installs backend + frontend deps
+   bash setup.sh
+   ```
+
+3. **Configure environment**
+   ```bash
+   cp environment.env.example environment.env
+   # Edit environment.env with your configuration
+   ```
+
+4. **Start/stop QCanvas in the background**
+   ```bash
+   # Start Next.js frontend and FastAPI backend in background
+   ./run.sh start
+
+   # Stop all QCanvas services (kills node/next/uvicorn and clears PID files)
+   ./run.sh stop
+   ```
+
+   - Background logs are written to `logs/frontend.log` and `logs/backend.log`.
+   - PID files `frontend.pid` and `backend.pid` are used to avoid double‑starting services.
+
+### Manual Setup (All Platforms)
+
+If you prefer not to use the scripts or are on a non‑Linux platform, you can start services manually:
 
 1. **Clone the repository**
    ```bash
@@ -87,6 +125,7 @@ QCanvas/
    ```bash
    cd frontend
    npm install
+   cd ..
    ```
 
 4. **Set up environment variables**
@@ -102,7 +141,7 @@ QCanvas/
    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    
    # Terminal 2: Start Next.js frontend
-   cd frontend
+   cd ../frontend
    npm run dev
    ```
 

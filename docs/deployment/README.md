@@ -178,7 +178,7 @@ QCanvas uses a hybrid architecture combining:
 
 ## 🛠️ Deployment Commands
 
-### Development
+### Development (Docker)
 ```bash
 # Start development environment
 docker-compose up -d
@@ -189,6 +189,24 @@ docker-compose logs -f
 # Stop services
 docker-compose down
 ```
+
+### Local Linux Development (Helper Scripts)
+
+For a non‑Docker local Linux setup, QCanvas includes helper scripts in the repository root:
+
+- `setup.sh` – **one-time** installation script
+  - Installs core system packages via `apt` (Node.js, npm, Python venv tooling, build tools)
+  - Creates and activates a Python virtual environment
+  - Installs backend requirements from `requirements.txt`
+  - Installs frontend dependencies in `frontend/`
+
+- `run.sh` – service manager for local development
+  - `./run.sh start`: builds and starts the Next.js frontend and FastAPI backend in the background
+    - Writes logs to `logs/frontend.log` and `logs/backend.log`
+    - Tracks processes via `frontend.pid` and `backend.pid`
+  - `./run.sh stop`: stops all QCanvas services (kills node/next/uvicorn) and clears PID files
+
+> These scripts are intended for Linux environments with `bash`, `sudo`, and `apt`. On Windows or other platforms, use Docker or the manual commands in the main README.
 
 ### Production
 ```bash

@@ -18,13 +18,36 @@ QCanvas is a **Quantum Unified Simulator** that provides:
 
 ## Quick Start
 
-### 1. Access QCanvas
+### 1. Start QCanvas Locally
 
-**Web Application**: Visit `http://localhost:3000` (after starting the application)
+You can run QCanvas locally either with the provided Linux helper scripts or with manual commands:
+
+- **Linux (bash)**:
+  ```bash
+  # From the project root
+  bash setup.sh      # one-time: installs system packages, venv, and dependencies
+  ./run.sh start     # starts Next.js frontend + FastAPI backend in the background
+  # ./run.sh stop    # stops all QCanvas services when you're done
+  ```
+
+- **Manual (all platforms)**:
+  ```bash
+  # Backend
+  cd backend
+  uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+  # Frontend (new terminal)
+  cd ../frontend
+  npm run dev
+  ```
+
+### 2. Access QCanvas
+
+**Web Application**: Visit `http://localhost:3000` after starting the application
 
 **API Documentation**: Visit `http://localhost:8000/docs` for interactive API documentation
 
-### 2. Authentication
+### 3. Authentication
 
 QCanvas supports both full user accounts and demo access:
 
@@ -32,7 +55,7 @@ QCanvas supports both full user accounts and demo access:
 - **Full Account**: Register with email and password (any valid email works for demo purposes)
 - **Persistent Login**: Once logged in, you'll stay authenticated until you explicitly log out
 
-### 3. Try Examples
+### 4. Try Examples
 
 QCanvas includes pre-built examples to help you learn:
 
@@ -42,7 +65,7 @@ QCanvas includes pre-built examples to help you learn:
 
 Click any example card on the homepage to load it directly into the editor!
 
-### 2. Your First Circuit Conversion
+### 5. Your First Circuit Conversion
 
 Let's convert a simple Bell state circuit from Cirq to Qiskit:
 
@@ -65,7 +88,7 @@ circuit = cirq.Circuit(
 5. **Click Convert**: Watch the real-time conversion process
 6. **View Results**: See the converted Qiskit code and intermediate OpenQASM 3.0
 
-### 4. Keyboard Shortcuts
+### 6. Keyboard Shortcuts
 
 QCanvas supports comprehensive keyboard shortcuts for power users:
 
@@ -82,7 +105,7 @@ QCanvas supports comprehensive keyboard shortcuts for power users:
 | `Ctrl/Cmd + Tab` | Next file |
 | `Ctrl/Cmd + Shift + Tab` | Previous file |
 
-### 5. Settings & Preferences
+### 7. Settings & Preferences
 
 Customize your QCanvas experience:
 
@@ -91,7 +114,7 @@ Customize your QCanvas experience:
 - **Format on save**: Auto-format code when saving
 - **Simulation Settings**: Configure backend and shots for quantum execution
 
-### 3. Your First Simulation
+### 8. Your First Simulation
 
 Let's simulate a quantum circuit:
 
@@ -123,7 +146,7 @@ c[1] = measure q[1];
 - **Home**: Overview and quick access to features
 - **Circuit Converter**: Convert between quantum frameworks
 - **Quantum Simulator**: Execute and analyze quantum circuits
-- **Documentation**: Comprehensive guides and examples
+- **Documentation**: Comprehensive guides and examples (opens in new tab)
 - **About**: Project information and resources
 
 ### Circuit Converter Interface
@@ -144,7 +167,8 @@ The simulator interface includes:
 2. **Backend Selection**: Choose simulation backend
 3. **Parameter Controls**: Shots, noise models, optimization
 4. **Real-time Progress**: Live simulation updates
-5. **Results Visualization**: Interactive result displays
+5. **Results Visualization**: Interactive result displays (Histogram, Output, QASM)
+6. **Clear Button**: Reset the results pane to its default state
 
 ## Supported Frameworks
 

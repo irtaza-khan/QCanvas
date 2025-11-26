@@ -104,3 +104,11 @@ All previously outstanding items have been implemented and tested:
 
 See `docs/iteration-ii-implementation-summary.md` for detailed implementation documentation.
 
+
+## Post-Iteration II Bug Fixes (Nov 26, 2025)
+
+Several critical bugs were identified and fixed after the Iteration II release:
+
+1.  **Cirq Multi-Qubit Measurement**: Fixed `CirqASTVisitor` to correctly handle multi-qubit measurements (e.g., `cirq.measure(q0, q1)`). Previously, only the first qubit was measured.
+2.  **Qiskit Multi-Qubit Measurement**: Fixed `QiskitToQASM3Converter` to correctly iterate over all qubit-clbit pairs in a batch measurement.
+3.  **Runtime QRNG Bug**: Fixed `_circuit_to_code` in `backend/qcanvas_runtime/core.py` to correctly generate single-qubit Cirq code (`q0 = cirq.LineQubit(0)` instead of `range(1)`), resolving a `NameError`.

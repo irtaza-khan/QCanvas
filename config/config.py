@@ -108,8 +108,183 @@ def vprint(*args: Any, **kwargs: Any) -> None:
     # Always write to log file without the trailing end
     _write_log_line(msg)
 
-# Placeholder for future configuration keys, e.g.:
-# ENABLE_CONTROL_FLOW_SNIPPETS: bool = False
-# INCLUDE_CONSTANTS_IN_PREAMBLE: bool = False
+# =============================================================================
+# FRONTEND / API ROUTING SETTINGS
+# =============================================================================
+# These flags control how the frontend should talk to the backend API.
+# NOTE: The Next.js frontend cannot import this Python module directly, so you
+# should keep the equivalent setting in `frontend/lib/api.ts` in sync manually.
+#
+# When DISABLE_REMOTE_API_FALLBACK is True:
+#   - The frontend should ONLY use the local backend
+#   - No automatic fallback to the Railway/production URL
+# When False:
+#   - The frontend may fall back to NEXT_PUBLIC_API_BASE / Railway when
+#     the local backend is not reachable.
 
+DISABLE_REMOTE_API_FALLBACK: bool = True
+
+
+# =============================================================================
+# HYBRID EXECUTION SECURITY SETTINGS
+# =============================================================================
+# These settings control security restrictions for hybrid CPU-QPU execution.
+# By default, all restrictions are ENABLED (True = blocked/restricted).
+# Set to False to disable specific restrictions (use with caution!).
+
+# Block dangerous imports (os, subprocess, sys, socket, shutil, pickle, etc.)
+HYBRID_BLOCK_DANGEROUS_IMPORTS: bool = False
+
+# Block file system access (open(), pathlib, io, tempfile, glob)
+HYBRID_BLOCK_FILE_ACCESS: bool = True
+
+# Block network access (socket, urllib, requests, http, ftplib)
+HYBRID_BLOCK_NETWORK: bool = True
+
+# Block shell/subprocess execution (subprocess, os.system, os.popen)
+HYBRID_BLOCK_SHELL: bool = True
+
+# Restrict builtins to safe functions only
+HYBRID_RESTRICT_BUILTINS: bool = True
+
+# Block code execution functions (exec, eval, compile, __import__)
+HYBRID_BLOCK_CODE_EXECUTION: bool = True
+
+# =============================================================================
+# HYBRID EXECUTION LIMITS
+# =============================================================================
+# Maximum execution time in seconds (0 = no limit)
+HYBRID_MAX_EXECUTION_TIME: int = 30
+
+# Maximum memory usage in MB (0 = no limit)
+HYBRID_MAX_MEMORY_MB: int = 512
+
+# Maximum number of simulation runs per execution (0 = no limit)
+HYBRID_MAX_SIMULATION_RUNS: int = 100
+
+# Maximum output size in characters (0 = no limit)
+HYBRID_MAX_OUTPUT_SIZE: int = 100000
+
+# =============================================================================
+# HYBRID EXECUTION ALLOWED MODULES
+# =============================================================================
+# List of allowed module prefixes for import
+HYBRID_ALLOWED_MODULES: list = [
+    'cirq',
+    'qiskit', 
+    'pennylane',
+    'qml',
+    'numpy',
+    'math',
+    'typing',
+    'dataclasses',
+    'collections',
+    'functools',
+    'itertools',
+    'operator',
+    're',
+    'json',
+    'copy',
+    'random',
+    'time',  # Only time.sleep limited by timeout
+    'datetime',
+    'decimal',
+    'fractions',
+    'cmath',
+    'statistics',
+]
+
+# =============================================================================
+# HYBRID EXECUTION BLOCKED MODULES
+# =============================================================================
+# Explicit list of blocked modules (checked before allowed list)
+HYBRID_BLOCKED_MODULES: list = [
+    # OS / process / low-level system
+    'os',
+    'subprocess',
+    'socket',
+    'shutil',
+    'pickle',
+    'marshal',
+    'ctypes',
+    'multiprocessing',
+    'threading',
+    'signal',
+    'resource',
+    'pty',
+    'tty',
+    'termios',
+    'fcntl',
+    'pwd',
+    'grp',
+    'crypt',
+    # File system helpers (additional to HYBRID_BLOCK_FILE_ACCESS)
+    'tempfile',
+    'glob',
+    'pathlib',
+    'io',
+    # Network / HTTP
+    'urllib',
+    'http',
+    'ftplib',
+    'smtplib',
+    'poplib',
+    'imaplib',
+    'nntplib',
+    'telnetlib',
+    'requests',
+    'aiohttp',
+    'httpx',
+    'websocket',
+    # Remote access / SSH / automation
+    'paramiko',
+    'fabric',
+    'pexpect',
+    'ptyprocess',
+]
+
+# =============================================================================
+# HYBRID EXECUTION BLOCKED BUILTINS
+# =============================================================================
+# Builtin functions that are blocked when HYBRID_RESTRICT_BUILTINS is True
+HYBRID_BLOCKED_BUILTINS: list = [
+    'exec',
+    'eval', 
+    'compile',
+    '__import__',
+    'open',
+    'input',
+    'breakpoint',
+    'help',
+    'credits',
+    'license',
+    'copyright',
+    'quit',
+    'exit',
+    'globals',
+    'locals',
+    'vars',
+    'dir',
+    'getattr',
+    'setattr',
+    'delattr',
+    'hasattr',
+    'memoryview',
+    'bytearray',
+]
+
+# =============================================================================
+# HYBRID EXECUTION FEATURE FLAGS
+# =============================================================================
+# Enable/disable hybrid execution feature entirely
+HYBRID_EXECUTION_ENABLED: bool = True
+
+# Enable verbose logging for hybrid execution (for debugging)
+HYBRID_VERBOSE_LOGGING: bool = False
+
+# Allow print() statements in hybrid code
+HYBRID_ALLOW_PRINT: bool = True
+
+# Capture and return simulation results automatically
+HYBRID_CAPTURE_RESULTS: bool = True
 

@@ -482,7 +482,14 @@ class CirqToQASM3Converter:
         if gate_name == 'MatrixGate':
             builder.add_comment(f"Matrix gate: {gate}")
         elif gate_name == 'MeasurementGate' or hasattr(gate, '_measurement_key'):
-            builder.add_measurement(qubits_str[0], f"c[{qubit_indices[0]}]")
+            # Support multi-qubit measurements by emitting one measurement per qubit.
+            # Example:
+            #   cirq.measure(q0, q1, key='m')
+            # becomes:
+            #   c[0] = measure q[0];
+            #   c[1] = measure q[1];
+            for q_str, c_idx in zip(qubits_str, qubit_indices):
+                builder.add_measurement(q_str, f"c[{c_idx}]")
         elif gate_name in ['ResetChannel', '_ResetGate'] or str(gate) == 'reset':
             builder.add_reset(qubits_str[0])
         elif gate_name == 'IdentityGate' or str(gate) == 'I':

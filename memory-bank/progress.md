@@ -68,6 +68,16 @@
   - Real-time execution with configurable shots
   - Circuit visualization and results display
 - **Circuit Validation**: ✅ COMPLETE - Comprehensive validation systems
+- **Hybrid CPU-QPU Execution**: ✅ NEW (November 26, 2025)
+  - Execute Python code with qcanvas/qsim APIs
+  - `qcanvas.compile(circuit, framework)` - Compile circuits to OpenQASM 3.0
+  - `qsim.run(qasm, shots, backend)` - Execute QASM with full result object
+  - `print()` statements captured and displayed in Output tab
+  - Loop-based multi-simulation support
+  - Sandboxed execution with configurable security settings
+  - Security features: blocked imports, file/network/shell access restrictions
+  - Configurable via `config/config.py`
+  - Three execution modes: Compile Only, Full Execute, Execute Hybrid
 
 ### User Experience & Interface ✅
 - **Authentication System**: ✅ COMPLETE
@@ -122,6 +132,7 @@
 - **CI/CD Pipelines**: GitHub Actions for automated testing and deployment
 - **Docker Development**: Complete Docker Compose setup for local development
 - **Documentation**: Comprehensive API and user documentation
+- **Local Dev Scripts (Linux)**: `setup.sh` for first-time installation (system packages, venv, Python + frontend deps) and `run.sh` for starting/stopping frontend + backend in the background with log files and PID tracking
 
 ### Project & Teams ✅
 - **Initiative**: Built under Open Quantum Workbench: A FAST University Initiative

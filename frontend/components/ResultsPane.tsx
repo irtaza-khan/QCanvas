@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  Terminal, 
-  BarChart3, 
-  Minimize2, 
-  Maximize2, 
+import {
+  Terminal,
+  BarChart3,
+  Minimize2,
+  Maximize2,
   Trash2,
   Copy,
   Download,
@@ -60,8 +60,8 @@ interface ErrorEntry {
 }
 
 export default function ResultsPane() {
-  const { resultsCollapsed, toggleResults, compiledQasm, getActiveFile, conversionStats, simulationResults } = useFileStore()
-  
+  const { resultsCollapsed, toggleResults, compiledQasm, getActiveFile, conversionStats, simulationResults, hybridResult, executionMode } = useFileStore()
+
   // Helper function to get display stats from backend conversion stats
   const getDisplayStats = () => {
     // Convert backend stats to display format (handle null conversionStats)
@@ -73,20 +73,20 @@ export default function ResultsPane() {
     // Use simulation results if available (even when conversionStats is null)
     const executionData = simulationResults ? {
       status: 'completed',
-      totalTime: simulationResults.metadata.execution_time || 
-                 (simulationResults.metadata.simulation_time ? simulationResults.metadata.simulation_time : 'N/A'),
+      totalTime: simulationResults.metadata.execution_time ||
+        (simulationResults.metadata.simulation_time ? simulationResults.metadata.simulation_time : 'N/A'),
       simulationTime: simulationResults.metadata.simulation_time || 'N/A',
       postProcessingTime: simulationResults.metadata.postprocessing_time || '<1ms',
       shots: simulationResults.metadata.shots || 0,
-      successfulShots: simulationResults.metadata.successful_shots || 
-                       Object.values(simulationResults.counts || {}).reduce((a, b) => a + b, 0),
+      successfulShots: simulationResults.metadata.successful_shots ||
+        Object.values(simulationResults.counts || {}).reduce((a, b) => a + b, 0),
       backend: simulationResults.metadata.backend || 'N/A',
       visitor: simulationResults.metadata.visitor || simulationResults.metadata.backend || 'N/A',
       memoryUsage: simulationResults.metadata.memory_usage || 'N/A',
       cpuUsage: simulationResults.metadata.cpu_usage || 'N/A',
-      fidelity: typeof simulationResults.metadata.fidelity === 'number' 
-                ? simulationResults.metadata.fidelity 
-                : 100.0
+      fidelity: typeof simulationResults.metadata.fidelity === 'number'
+        ? simulationResults.metadata.fidelity
+        : 100.0
     } : {
       status: 'pending',
       totalTime: '-',
@@ -105,10 +105,10 @@ export default function ResultsPane() {
     const numQubits = simulationResults?.metadata.n_qubits || conversionStats?.qubits || 0;
 
     // Determine compilation status
-    const compilationStatus = conversionStats 
+    const compilationStatus = conversionStats
       ? (conversionStats.success ? 'success' : 'failed')
       : (simulationResults ? 'success' : 'pending');
-    
+
     return {
       compilation: {
         status: compilationStatus,
@@ -204,7 +204,7 @@ export default function ResultsPane() {
     }
   })
 
-  // Use simulation results from store if available, otherwise null (no mock data)
+  // Use simulation results from store if available, otherwise check hybrid results
   const quantumResults = simulationResults ? {
     counts: simulationResults.counts,
     shots: simulationResults.metadata.shots || 1024,
@@ -217,6 +217,24 @@ export default function ResultsPane() {
     },
     metadata: simulationResults.metadata,
     probs: simulationResults.probs
+  } : (hybridResult && hybridResult.simulation_results && hybridResult.simulation_results.length > 0) ? {
+    // Use the first simulation result from hybrid execution
+    counts: hybridResult.simulation_results[0].counts,
+    shots: hybridResult.simulation_results[0].shots,
+    backend: hybridResult.simulation_results[0].backend,
+    execution_time: hybridResult.execution_time || 'N/A',
+    circuit_info: {
+      depth: 0, // Unknown for hybrid
+      qubits: 0, // Unknown for hybrid
+      gates: 0 // Unknown for hybrid
+    },
+    metadata: {
+      backend: hybridResult.simulation_results[0].backend,
+      shots: hybridResult.simulation_results[0].shots,
+      n_qubits: 0,
+      simulation_time: 0
+    },
+    probs: null
   } : null
 
   // Helper function to add an error entry
@@ -238,7 +256,7 @@ export default function ResultsPane() {
   useEffect(() => {
     const handleCompile = (event: any) => {
       const { success, error } = event.detail || {}
-      
+
       if (success) {
         // Clear previous errors on successful compilation
         setErrors([])
@@ -260,9 +278,9 @@ export default function ResultsPane() {
   useEffect(() => {
     const handleExecution = (event: any) => {
       const { success, error } = event.detail || {}
-      
+
       addLog('info', 'Starting quantum circuit execution...')
-      
+
       if (!success && error) {
         addLog('error', `Execution failed: ${error}`)
         // Add to errors tab
@@ -280,10 +298,35 @@ export default function ResultsPane() {
   useEffect(() => {
     if (simulationResults) {
       addLog('success', 'Simulation completed successfully')
-      addLog('success', 'Results displayed in Histogram tab')
-      setActiveTab('histogram')
+      addLog('success', 'Results displayed in Output and Histogram tabs')
+      // Switch to output tab to show the summary
+      setActiveTab('output')
     }
   }, [simulationResults])
+
+  // Listen for hybrid execution events
+  useEffect(() => {
+    const handleHybridExecution = (event: any) => {
+      const { success, error, result } = event.detail || {}
+
+      if (success) {
+        addLog('success', 'Hybrid execution completed')
+        if (result?.simulation_results?.length > 0) {
+          addLog('info', `${result.simulation_results.length} simulation(s) executed`)
+        }
+        if (result?.stdout) {
+          addLog('info', `Output captured: ${result.stdout.split('\n').length} lines`)
+        }
+        setActiveTab('output')
+      } else {
+        addLog('error', `Hybrid execution failed: ${error || 'Unknown error'}`)
+        setActiveTab('output')
+      }
+    }
+
+    window.addEventListener('hybrid-execute', handleHybridExecution)
+    return () => window.removeEventListener('hybrid-execute', handleHybridExecution)
+  }, [])
 
 
   useEffect(() => {
@@ -305,7 +348,11 @@ export default function ResultsPane() {
 
   const clearLogs = () => {
     setLogs([])
-    toast.success('Console cleared')
+    // Also clear all results from store
+    useFileStore.getState().setSimulationResults(null)
+    useFileStore.getState().setHybridResult(null)
+    useFileStore.getState().setCompiledQasm(null)
+    toast.success('Results and console cleared')
   }
 
   const copyToClipboard = (text: string) => {
@@ -318,23 +365,23 @@ export default function ResultsPane() {
       toast.error('No results to download')
       return
     }
-    
+
     const results = {
       timestamp: new Date().toISOString(),
       quantum_results: quantumResults,
       logs: logs
     }
-    
+
     const dataStr = JSON.stringify(results, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
-    
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+
     const exportFileDefaultName = `qcanvas-results-${Date.now()}.json`
-    
+
     const linkElement = document.createElement('a')
     linkElement.setAttribute('href', dataUri)
     linkElement.setAttribute('download', exportFileDefaultName)
     linkElement.click()
-    
+
     toast.success('Results downloaded')
   }
 
@@ -426,7 +473,7 @@ export default function ResultsPane() {
             <Terminal className="w-4 h-4 text-editor-text" />
             <span className="text-sm font-medium text-white">Results</span>
           </div>
-          
+
           {/* Tabs */}
           <div className="flex items-center space-x-1">
             {[
@@ -440,11 +487,10 @@ export default function ResultsPane() {
               <button
                 key={id}
                 onClick={() => setActiveTab(id as any)}
-                className={`px-3 py-1 text-xs rounded-md transition-colors flex items-center ${
-                  activeTab === id
-                    ? 'bg-editor-accent text-white'
-                    : 'text-editor-text hover:bg-editor-border'
-                }`}
+                className={`px-3 py-1 text-xs rounded-md transition-colors flex items-center ${activeTab === id
+                  ? 'bg-editor-accent text-white'
+                  : 'text-editor-text hover:bg-editor-border'
+                  }`}
               >
                 <Icon className="w-3 h-3 mr-1" />
                 {label}
@@ -466,7 +512,7 @@ export default function ResultsPane() {
           >
             <Download className="w-4 h-4" />
           </button>
-          
+
           {activeTab === 'errors' ? (
             <button
               onClick={clearErrors}
@@ -484,7 +530,7 @@ export default function ResultsPane() {
               <Trash2 className="w-4 h-4" />
             </button>
           )}
-          
+
           <button
             onClick={toggleResults}
             className="btn-ghost p-1"
@@ -534,38 +580,172 @@ export default function ResultsPane() {
         {activeTab === 'output' && (
           <div className="h-full overflow-y-auto results-content">
             <div className="space-y-4">
-              {simulationResults ? (
+              {/* Hybrid Execution Output */}
+              {hybridResult ? (
                 <>
-                  <div>
-                    <h4 className="text-sm font-medium text-white mb-2">QSim Simulation Results</h4>
-                    <div className="bg-editor-bg border border-editor-border rounded p-3">
-                      <div className="space-y-3">
-                        <div>
-                          <h5 className="text-xs font-medium text-gray-400 mb-2">Measurement Counts</h5>
-                          <pre className="text-sm text-editor-text">
-                            {JSON.stringify(simulationResults.counts, null, 2)}
-                          </pre>
+                  {/* Execution Status */}
+                  <div className={`p-3 rounded-lg border ${hybridResult.success
+                    ? 'bg-green-500/10 border-green-500/30'
+                    : 'bg-red-500/10 border-red-500/30'
+                    }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        {hybridResult.success ? (
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-red-400" />
+                        )}
+                        <span className={`text-sm font-medium ${hybridResult.success ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                          {hybridResult.success ? 'Execution Successful' : 'Execution Failed'}
+                        </span>
+                      </div>
+                      {hybridResult.execution_time && (
+                        <span className="text-xs text-gray-400">
+                          {hybridResult.execution_time}
+                        </span>
+                      )}
+                    </div>
+                    {hybridResult.error && (
+                      <div className="mt-2">
+                        <div className="text-sm text-red-300">
+                          <span className="font-medium">{hybridResult.error_type || 'Error'}</span>
+                          {hybridResult.error_line && (
+                            <span className="text-red-400"> (line {hybridResult.error_line})</span>
+                          )}
+                          : {hybridResult.error}
                         </div>
-                        
-                        {simulationResults.probs && (
-                          <div className="mt-3 pt-3 border-t border-editor-border">
-                            <h5 className="text-xs font-medium text-gray-400 mb-2">State Probabilities</h5>
-                            <pre className="text-sm text-editor-text">
-                              {JSON.stringify(simulationResults.probs, null, 2)}
-                            </pre>
+                        {/* Show helpful hints based on error type */}
+                        {hybridResult.error_type === 'SecurityViolationError' && (
+                          <div className="mt-2 text-xs text-yellow-400 bg-yellow-900/20 p-2 rounded">
+                            <strong>Security Note:</strong> Certain imports and operations are blocked in hybrid mode for safety.
+                            Blocked: os, sys, subprocess, socket, file operations, network access.
                           </div>
                         )}
+                        {hybridResult.error_type === 'TimeoutError' && (
+                          <div className="mt-2 text-xs text-yellow-400 bg-yellow-900/20 p-2 rounded">
+                            <strong>Tip:</strong> Code execution is limited to 30 seconds. Try reducing the number of simulations or iterations.
+                          </div>
+                        )}
+                        {hybridResult.error_type === 'ImportError' && (
+                          <div className="mt-2 text-xs text-blue-400 bg-blue-900/20 p-2 rounded">
+                            <strong>Allowed imports:</strong> cirq, qiskit, pennylane, numpy, math, qcanvas, qsim, typing, dataclasses
+                          </div>
+                        )}
+                        {hybridResult.error_type === 'ConnectionError' && (
+                          <div className="mt-2 text-xs text-orange-400 bg-orange-900/20 p-2 rounded">
+                            <strong>Note:</strong> Make sure the backend server is running with hybrid execution support enabled.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                        <div className="mt-3 pt-3 border-t border-editor-border">
-                          <h5 className="text-xs font-medium text-gray-400 mb-2">Simulation Metadata</h5>
-                          <pre className="text-sm text-editor-text">
-                            {JSON.stringify(simulationResults.metadata, null, 2)}
-                          </pre>
-                        </div>
+                  {/* Print Output */}
+                  {hybridResult.stdout && (
+                    <div>
+                      <h4 className="text-sm font-medium text-white mb-2 flex items-center">
+                        <Terminal className="w-4 h-4 mr-2 text-green-400" />
+                        Print Output
+                      </h4>
+                      <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 font-mono text-sm">
+                        <pre className="text-green-400 whitespace-pre-wrap break-words">
+                          {hybridResult.stdout}
+                        </pre>
                       </div>
                     </div>
+                  )}
+
+                  {/* Error Output (stderr) */}
+                  {hybridResult.stderr && !hybridResult.success && (
+                    <div>
+                      <h4 className="text-sm font-medium text-white mb-2 flex items-center">
+                        <AlertCircle className="w-4 h-4 mr-2 text-red-400" />
+                        Error Details
+                      </h4>
+                      <div className="bg-red-900/20 border border-red-700/30 rounded-lg p-3 font-mono text-sm">
+                        <pre className="text-red-300 whitespace-pre-wrap break-words">
+                          {hybridResult.stderr}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Simulation Results */}
+                  {hybridResult.simulation_results && hybridResult.simulation_results.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-white mb-2 flex items-center">
+                        <BarChart3 className="w-4 h-4 mr-2 text-blue-400" />
+                        Simulation Results ({hybridResult.simulation_results.length})
+                      </h4>
+                      <div className="space-y-3">
+                        {hybridResult.simulation_results.map((result, idx) => (
+                          <div key={idx} className="bg-editor-bg border border-editor-border rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-medium text-gray-400">
+                                Simulation #{idx + 1}
+                              </span>
+                              <div className="flex items-center space-x-2 text-xs">
+                                <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded">
+                                  {result.backend}
+                                </span>
+                                <span className="text-gray-400">
+                                  {result.shots} shots
+                                </span>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {Object.entries(result.counts).map(([state, count]) => (
+                                <div key={state} className="flex items-center justify-between px-2 py-1 bg-gray-800 rounded">
+                                  <span className="font-mono text-white">|{state}⟩</span>
+                                  <span className="text-gray-300">
+                                    {count} ({((count / result.shots) * 100).toFixed(1)}%)
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Generated QASM */}
+                  {hybridResult.qasm_generated && (
+                    <div>
+                      <h4 className="text-sm font-medium text-white mb-2 flex items-center">
+                        <FileCode2 className="w-4 h-4 mr-2 text-purple-400" />
+                        Generated QASM
+                      </h4>
+                      <div className="bg-editor-bg border border-editor-border rounded-lg p-3">
+                        <pre className="text-sm text-editor-text whitespace-pre-wrap">
+                          {hybridResult.qasm_generated}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : simulationResults ? (
+                <>
+                  {/* Standard Execution Output - Text Summary */}
+                  <div>
+                    <h4 className="text-sm font-medium text-white mb-2 flex items-center">
+                      <Terminal className="w-4 h-4 mr-2 text-green-400" />
+                      Execution Summary
+                    </h4>
+                    <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 font-mono text-sm">
+                      <pre className="text-green-400 whitespace-pre-wrap break-words">
+                        {`Execution completed successfully.\n`}
+                        {`Backend: ${simulationResults.metadata.backend || 'unknown'}\n`}
+                        {`Shots: ${simulationResults.metadata.shots || 0}\n\n`}
+                        {`Measurement Results:\n`}
+                        {Object.entries(simulationResults.counts || {}).map(([state, count]) =>
+                          `  |${state}⟩: ${count} (${((count / (simulationResults.metadata.shots || 1)) * 100).toFixed(1)}%)`
+                        ).join('\n')}
+                      </pre>
+                    </div>
                   </div>
-                  
+
                   <div>
                     <h4 className="text-sm font-medium text-white mb-2">Circuit Information</h4>
                     <div className="grid grid-cols-3 gap-4 text-sm">
@@ -587,7 +767,33 @@ export default function ResultsPane() {
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50 text-yellow-400" />
-                  <p className="text-sm">No execution results available. Run the circuit to see output.</p>
+                  <p className="text-sm">
+                    {executionMode === 'hybrid'
+                      ? 'No hybrid execution results yet.'
+                      : 'No execution results available. Run the circuit to see output.'}
+                  </p>
+                  {executionMode === 'hybrid' && (
+                    <div className="mt-4 text-left max-w-md mx-auto bg-editor-bg p-4 rounded-lg border border-editor-border">
+                      <p className="text-xs text-gray-400 mb-3">Example hybrid code:</p>
+                      <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap">
+                        {`import cirq
+from qcanvas import compile
+import qsim
+
+# Create circuit
+q = cirq.LineQubit.range(2)
+circuit = cirq.Circuit([
+    cirq.H(q[0]),
+    cirq.CNOT(q[0], q[1])
+])
+
+# Compile and run
+qasm = compile(circuit, framework="cirq")
+result = qsim.run(qasm, shots=100)
+print(result.counts)`}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -596,10 +802,10 @@ export default function ResultsPane() {
 
         {activeTab === 'histogram' && (
           <div className="h-full overflow-y-auto results-content">
-            {quantumResults && simulationResults ? (
+            {quantumResults ? (
               <div>
                 <h4 className="text-sm font-medium text-white mb-4">Measurement Results</h4>
-                
+
                 {/* Chart.js Histogram */}
                 <div className="h-64 mb-4">
                   <Bar
@@ -661,7 +867,7 @@ export default function ResultsPane() {
                     }}
                   />
                 </div>
-                
+
                 <div className="mt-4 pt-4 border-t border-editor-border">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
@@ -827,21 +1033,19 @@ export default function ResultsPane() {
             <div className="space-y-4 p-1">
               {/* Execution Summary - Hero Cards */}
               <div className="grid grid-cols-3 gap-3">
-                <div className={`relative overflow-hidden rounded-xl p-4 ${
-                  executionStats.execution.status === 'completed' 
-                    ? 'bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30' 
-                    : executionStats.execution.status === 'pending'
+                <div className={`relative overflow-hidden rounded-xl p-4 ${executionStats.execution.status === 'completed'
+                  ? 'bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30'
+                  : executionStats.execution.status === 'pending'
                     ? 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border border-yellow-500/30'
                     : 'bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30'
-                }`}>
+                  }`}>
                   <div className="flex flex-col items-center justify-center">
-                    <div className={`text-2xl font-bold capitalize ${
-                      executionStats.execution.status === 'completed' 
-                        ? 'text-green-400' 
-                        : executionStats.execution.status === 'pending'
+                    <div className={`text-2xl font-bold capitalize ${executionStats.execution.status === 'completed'
+                      ? 'text-green-400'
+                      : executionStats.execution.status === 'pending'
                         ? 'text-yellow-400'
                         : 'text-red-400'
-                    }`}>
+                      }`}>
                       {executionStats.execution.status}
                     </div>
                     <div className="text-xs text-gray-400 mt-1">Status</div>
@@ -856,8 +1060,8 @@ export default function ResultsPane() {
                 <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
                   <div className="flex flex-col items-center justify-center">
                     <div className="text-2xl font-bold text-purple-400">
-                      {executionStats.execution.fidelity !== 0 
-                        ? `${executionStats.execution.fidelity.toFixed(1)}%` 
+                      {executionStats.execution.fidelity !== 0
+                        ? `${executionStats.execution.fidelity.toFixed(1)}%`
                         : 'N/A'}
                     </div>
                     <div className="text-xs text-gray-400 mt-1">Fidelity</div>
@@ -892,7 +1096,7 @@ export default function ResultsPane() {
                       <div className="text-xs text-gray-400">CPU</div>
                     </div>
                   </div>
-                  
+
                   {/* Backend Info */}
                   <div className="mt-4 pt-4 border-t border-editor-border flex items-center justify-between">
                     <div className="flex items-center space-x-4">
@@ -939,12 +1143,12 @@ export default function ResultsPane() {
                         <div className="text-xs text-gray-400">Qubits</div>
                       </div>
                     </div>
-                    
+
                     {/* Top States */}
                     <div className="space-y-2">
                       <h5 className="text-xs font-medium text-gray-400">Top Measurement Outcomes</h5>
                       {Object.entries(simulationResults.counts)
-                        .sort(([,a], [,b]) => b - a)
+                        .sort(([, a], [, b]) => b - a)
                         .slice(0, 4)
                         .map(([state, count]) => {
                           const total = Object.values(simulationResults.counts).reduce((a, b) => a + b, 0)
@@ -953,7 +1157,7 @@ export default function ResultsPane() {
                             <div key={state} className="flex items-center space-x-3">
                               <span className="text-sm font-mono text-white w-16">|{state}⟩</span>
                               <div className="flex-1 h-2 bg-editor-border rounded-full overflow-hidden">
-                                <div 
+                                <div
                                   className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
                                   style={{ width: `${percentage}%` }}
                                 />
@@ -986,10 +1190,9 @@ export default function ResultsPane() {
                       <div className="text-xs text-gray-400">Qubits</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
-                      <div className={`text-lg font-semibold ${
-                        executionStats.circuit.complexity === 'High' ? 'text-red-400' :
+                      <div className={`text-lg font-semibold ${executionStats.circuit.complexity === 'High' ? 'text-red-400' :
                         executionStats.circuit.complexity === 'Medium' ? 'text-yellow-400' : 'text-green-400'
-                      }`}>{executionStats.circuit.complexity}</div>
+                        }`}>{executionStats.circuit.complexity}</div>
                       <div className="text-xs text-gray-400">Complexity</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
@@ -1001,7 +1204,7 @@ export default function ResultsPane() {
                       <div className="text-xs text-gray-400">Single-Qubit</div>
                     </div>
                   </div>
-                  
+
                   {/* Gate Distribution */}
                   {Object.keys(executionStats.circuit.gates).length > 0 && (
                     <div className="pt-3 border-t border-editor-border">
@@ -1033,13 +1236,12 @@ export default function ResultsPane() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
                         <span className="text-sm text-gray-400">Status</span>
-                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-                          executionStats.compilation.status === 'success' || executionStats.compilation.status === 'completed'
-                            ? 'bg-green-500/20 text-green-400'
-                            : executionStats.compilation.status === 'pending'
+                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${executionStats.compilation.status === 'success' || executionStats.compilation.status === 'completed'
+                          ? 'bg-green-500/20 text-green-400'
+                          : executionStats.compilation.status === 'pending'
                             ? 'bg-yellow-500/20 text-yellow-400'
                             : 'bg-red-500/20 text-red-400'
-                        }`}>{executionStats.compilation.status}</span>
+                          }`}>{executionStats.compilation.status}</span>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
                         <span className="text-sm text-gray-400">Time</span>
@@ -1056,7 +1258,7 @@ export default function ResultsPane() {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Optimization Stats */}
                     <div className="space-y-3">
                       <div className="p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">

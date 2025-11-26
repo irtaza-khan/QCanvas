@@ -486,17 +486,6 @@ class QiskitToQASM3Converter:
 
     def _handle_fredkin_gate(self, builder: QASM3Builder, qubits_str: list, modifiers: dict):
         """Handle Fredkin gate."""
-        builder.apply_gate('cswap', qubits_str, modifiers=modifiers if modifiers else None)
-
-    def _handle_measurement(self, builder: QASM3Builder, qubits_str: list, clbit_indices: list):
-        """Handle measurement operations."""
-        if clbit_indices:
-            builder.add_measurement(qubits_str[0], f"c[{clbit_indices[0]}]")
-
-    def _handle_reset(self, builder: QASM3Builder, qubits_str: list):
-        """Handle reset operations."""
-        builder.add_reset(qubits_str[0])
-
     def _handle_barrier(self, builder: QASM3Builder, qubits_str: list):
         """Handle barrier operations."""
         builder.add_barrier(qubits_str if qubits_str else None)

@@ -1,7 +1,19 @@
 import { File, ApiResponse, CreateFileRequest, UpdateFileRequest } from '@/types'
 
-// const API_BASE = "http://127.0.0.1:8000"
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://qcanvas-nextjs-production.up.railway.app'
+// =============================================================================
+// API BASE CONFIGURATION
+// =============================================================================
+// Backend counterpart: config/config.py -> DISABLE_REMOTE_API_FALLBACK
+// Keep these in sync manually.
+//
+// When DISABLE_REMOTE_FALLBACK is true:
+//   - Only use the local backend (http://127.0.0.1:8000)
+//   - Do NOT fall back to Railway/production URL
+// When false:
+//   - Fall back to NEXT_PUBLIC_API_BASE/Railway when local is unavailable
+
+const DISABLE_REMOTE_FALLBACK =
+  process.env.NEXT_PUBLIC_DISABLE_REMOTE_FALLBACK === 'true' || true
 
 let cachedApiBase: string | null = null
 
@@ -11,19 +23,28 @@ async function getApiBase(): Promise<string> {
   const localUrl = 'http://127.0.0.1:8000'
   const railwayUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://qcanvas-nextjs-production.up.railway.app'
 
+  // Always prefer local when available
   try {
     const response = await fetch(`${localUrl}/api/health`, { method: 'GET' })
     if (response.ok) {
       cachedApiBase = localUrl
-      console.log("Local URL Working")
+      console.log('[API] Using local backend:', localUrl)
       return localUrl
     }
   } catch (error) {
-    console.log("Local URL Not Working")
-    // Local backend not available
+    console.log('[API] Local backend not reachable')
   }
 
+  // If remote fallback is disabled, always return local URL
+  if (DISABLE_REMOTE_FALLBACK) {
+    cachedApiBase = localUrl
+    console.warn('[API] Remote fallback disabled, forcing local backend even if unreachable')
+    return localUrl
+  }
+
+  // Remote fallback enabled: use Railway/production URL
   cachedApiBase = railwayUrl
+  console.log('[API] Falling back to remote backend:', railwayUrl)
   return railwayUrl
 }
 
@@ -189,6 +210,83 @@ export const quantumApi = {
   async getAvailableBackends(): Promise<ApiResponse<any>> {
     return apiRequest('/api/simulator/backends')
   },
+
+  // Execute hybrid Python code with qcanvas/qsim
+  async executeHybrid(
+    code: string, 
+    framework?: string,
+    timeout?: number
+  ): Promise<ApiResponse<HybridExecuteResult>> {
+    return apiRequest('/api/hybrid/execute', {
+      method: 'POST',
+      body: JSON.stringify({
+        code,
+        framework,
+        timeout: timeout ?? 30,
+      }),
+    })
+  },
+
+  // Validate hybrid code without executing
+  async validateHybrid(code: string): Promise<ApiResponse<HybridValidateResult>> {
+    return apiRequest('/api/hybrid/validate', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    })
+  },
+
+  // Get hybrid execution status/configuration
+  async getHybridStatus(): Promise<ApiResponse<HybridStatusResult>> {
+    return apiRequest('/api/hybrid/status')
+  },
+}
+
+// Hybrid execution result types
+export interface HybridExecuteResult {
+  success: boolean
+  stdout: string
+  stderr: string
+  qasm_generated?: string | null
+  simulation_results: HybridSimulationResult[]
+  execution_time: string
+  error?: string | null
+  error_line?: number | null
+  error_type?: string | null
+}
+
+export interface HybridSimulationResult {
+  counts: { [state: string]: number }
+  probabilities: { [state: string]: number }
+  shots: number
+  backend: string
+  execution_time: string
+  n_qubits: number
+  metadata: { [key: string]: any }
+}
+
+export interface HybridValidateResult {
+  valid: boolean
+  errors?: string[] | null
+  warnings?: string[] | null
+}
+
+export interface HybridStatusResult {
+  enabled: boolean
+  sandbox_available: boolean
+  security_settings: {
+    block_dangerous_imports: boolean
+    block_file_access: boolean
+    block_network: boolean
+    block_shell: boolean
+    restrict_builtins: boolean
+    block_code_execution: boolean
+  }
+  limits: {
+    max_execution_time: number
+    max_memory_mb: number
+    max_simulation_runs: number
+  }
+  allowed_modules: string[]
 }
 
 // Auth API (for future use)

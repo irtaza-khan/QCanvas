@@ -65,6 +65,21 @@
 git clone https://github.com/your-username/qcanvas.git
 cd qcanvas
 
+# --- Option 1: Linux helper scripts (recommended on Linux) ---
+
+# First-time installation: system packages, Python venv, backend + frontend deps
+bash setup.sh
+
+# Environment configuration
+cp environment.env.example environment.env
+# Edit environment.env with your settings
+
+# Start/stop services in background (Next.js + FastAPI)
+./run.sh start   # starts backend + frontend in background, writes logs/frontend.log and logs/backend.log
+./run.sh stop    # stops node/next/uvicorn processes and clears PID files
+
+# --- Option 2: Manual setup (all platforms, including Windows) ---
+
 # Python environment
 python -m venv qasm_env
 source qasm_env/bin/activate  # On Windows: qasm_env\Scripts\activate
@@ -75,7 +90,7 @@ cd frontend
 npm install
 cd ..
 
-# Environment configuration
+# Environment configuration (if not already done)
 cp environment.env.example environment.env
 # Edit environment.env with your settings
 ```
@@ -87,7 +102,7 @@ cd backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000  # exposes /api/converter/* and /api/simulator/* (QSim)
 
 # Frontend (Terminal 2)
-cd frontend
+cd ../frontend
 npm run dev
 ```
 

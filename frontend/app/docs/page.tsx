@@ -801,6 +801,425 @@ ws://localhost:8000/ws
         </div>
       )
     },
+    {
+      id: 'hybrid-execution',
+      title: 'Hybrid Execution API',
+      subtitle: 'Python API for hybrid CPU-QPU execution',
+      icon: <Cpu className="w-5 h-5" />,
+      badge: 'New',
+      category: 'Technical',
+      content: (
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
+              <Cpu className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">
+              <span className="quantum-gradient bg-clip-text text-transparent">Hybrid Execution API</span>
+            </h2>
+            <p className="text-lg text-editor-text max-w-2xl mx-auto">
+              Execute Python code with quantum circuits. Compile circuits, run simulations, and access results programmatically.
+            </p>
+          </div>
+
+          {/* API Functions */}
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <Code className="w-6 h-6 mr-3 text-quantum-blue-light" />
+              Available Functions
+            </h3>
+            
+            <div className="space-y-6">
+              {/* compile function */}
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xl font-semibold text-white flex items-center">
+                    <span className="text-quantum-blue-light mr-2">compile</span>
+                    <span className="text-sm font-normal text-gray-400">(circuit, framework=None)</span>
+                  </h4>
+                  <span className="text-xs bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full">Function</span>
+                </div>
+                <p className="text-editor-text mb-4">Compile a quantum circuit object to OpenQASM 3.0 format.</p>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Parameters:</p>
+                    <ul className="text-sm text-editor-text space-y-1 ml-4">
+                      <li><code className="text-quantum-blue-light">circuit</code> - Circuit object from Cirq, Qiskit, or PennyLane</li>
+                      <li><code className="text-quantum-blue-light">framework</code> - Optional: "cirq", "qiskit", "pennylane" (auto-detected if not provided)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Returns:</p>
+                    <p className="text-sm text-editor-text ml-4"><code className="text-quantum-blue-light">str</code> - OpenQASM 3.0 code</p>
+                  </div>
+                  <div className="bg-gray-900 rounded-lg p-4 mt-4">
+                    <pre className="text-xs text-editor-text overflow-x-auto">
+{`from qcanvas import compile
+import cirq
+
+q = cirq.LineQubit.range(2)
+circuit = cirq.Circuit([
+    cirq.H(q[0]),
+    cirq.CNOT(q[0], q[1]),
+    cirq.measure(q[0], q[1], key='result')
+])
+
+qasm = compile(circuit, framework="cirq")
+print(qasm)`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+
+              {/* qsim.run function */}
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xl font-semibold text-white flex items-center">
+                    <span className="text-quantum-blue-light mr-2">qsim.run</span>
+                    <span className="text-sm font-normal text-gray-400">(qasm_code, shots=1024, backend="cirq")</span>
+                  </h4>
+                  <span className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Function</span>
+                </div>
+                <p className="text-editor-text mb-4">Execute OpenQASM 3.0 code using QSim quantum simulator.</p>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Parameters:</p>
+                    <ul className="text-sm text-editor-text space-y-1 ml-4">
+                      <li><code className="text-quantum-blue-light">qasm_code</code> - OpenQASM 3.0 code string</li>
+                      <li><code className="text-quantum-blue-light">shots</code> - Number of measurement shots (default: 1024, use 0 for exact statevector)</li>
+                      <li><code className="text-quantum-blue-light">backend</code> - "cirq", "qiskit", or "pennylane" (default: "cirq")</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Returns:</p>
+                    <p className="text-sm text-editor-text ml-4"><code className="text-quantum-blue-light">SimulationResult</code> - Result object with counts, probabilities, and metadata</p>
+                  </div>
+                  <div className="bg-gray-900 rounded-lg p-4 mt-4">
+                    <pre className="text-xs text-editor-text overflow-x-auto">
+{`import qsim
+
+qasm = '''
+OPENQASM 3.0;
+include "stdgates.inc";
+qubit[2] q;
+bit[2] c;
+h q[0];
+cx q[0], q[1];
+c[0] = measure q[0];
+c[1] = measure q[1];
+'''
+
+result = qsim.run(qasm, shots=1000, backend="cirq")
+print(result.counts)
+print(result.probabilities)`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+
+              {/* compile_and_execute function */}
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xl font-semibold text-white flex items-center">
+                    <span className="text-quantum-blue-light mr-2">compile_and_execute</span>
+                    <span className="text-sm font-normal text-gray-400">(circuit, framework=None, shots=1024, backend="cirq")</span>
+                  </h4>
+                  <span className="text-xs bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full">Convenience</span>
+                </div>
+                <p className="text-editor-text mb-4">Compile a circuit and execute it in a single call.</p>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Parameters:</p>
+                    <ul className="text-sm text-editor-text space-y-1 ml-4">
+                      <li><code className="text-quantum-blue-light">circuit</code> - Circuit object from Cirq, Qiskit, or PennyLane</li>
+                      <li><code className="text-quantum-blue-light">framework</code> - Optional: auto-detected if not provided</li>
+                      <li><code className="text-quantum-blue-light">shots</code> - Number of measurement shots (default: 1024)</li>
+                      <li><code className="text-quantum-blue-light">backend</code> - Simulation backend (default: "cirq")</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Returns:</p>
+                    <p className="text-sm text-editor-text ml-4"><code className="text-quantum-blue-light">SimulationResult</code> - Result object with counts, probabilities, and metadata</p>
+                  </div>
+                  <div className="bg-gray-900 rounded-lg p-4 mt-4">
+                    <pre className="text-xs text-editor-text overflow-x-auto">
+{`from qcanvas import compile_and_execute
+import cirq
+
+q = cirq.LineQubit.range(2)
+circuit = cirq.Circuit([
+    cirq.H(q[0]),
+    cirq.CNOT(q[0], q[1]),
+    cirq.measure(q[0], q[1], key='result')
+])
+
+result = compile_and_execute(circuit, framework="cirq", shots=1000)
+print(result.counts)
+print(result.probabilities)`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SimulationResult Attributes Table */}
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <BarChart3 className="w-6 h-6 mr-3 text-quantum-blue-light" />
+              SimulationResult Attributes
+            </h3>
+            <p className="text-editor-text mb-6">
+              The <code className="text-quantum-blue-light">SimulationResult</code> object returned by <code className="text-quantum-blue-light">qsim.run()</code> and <code className="text-quantum-blue-light">compile_and_execute()</code> provides comprehensive access to simulation data.
+            </p>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-editor-border">
+                    <th className="text-left py-3 px-4 text-white font-semibold">Attribute</th>
+                    <th className="text-left py-3 px-4 text-white font-semibold">Type</th>
+                    <th className="text-left py-3 px-4 text-white font-semibold">Description</th>
+                    <th className="text-left py-3 px-4 text-white font-semibold">Example</th>
+                  </tr>
+                </thead>
+                <tbody className="text-editor-text">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">counts</code></td>
+                    <td className="py-3 px-4 text-sm"><code>Dict[str, int]</code></td>
+                    <td className="py-3 px-4">Measurement counts for each outcome</td>
+                    <td className="py-3 px-4 text-sm"><code>{`{'00': 512, '11': 512}`}</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">probabilities</code></td>
+                    <td className="py-3 px-4 text-sm"><code>Dict[str, float]</code></td>
+                    <td className="py-3 px-4">Probability of each measurement outcome</td>
+                    <td className="py-3 px-4 text-sm"><code>{`{'00': 0.5, '11': 0.5}`}</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">statevector</code></td>
+                    <td className="py-3 px-4 text-sm"><code>List[complex]</code></td>
+                    <td className="py-3 px-4">Full quantum statevector (only when shots=0)</td>
+                    <td className="py-3 px-4 text-sm"><code>{`[0.707+0j, 0+0j, ...]`}</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">n_qubits</code></td>
+                    <td className="py-3 px-4 text-sm"><code>int</code></td>
+                    <td className="py-3 px-4">Number of qubits in the circuit</td>
+                    <td className="py-3 px-4 text-sm"><code>2</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">shots</code></td>
+                    <td className="py-3 px-4 text-sm"><code>int</code></td>
+                    <td className="py-3 px-4">Number of measurement shots executed</td>
+                    <td className="py-3 px-4 text-sm"><code>1000</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">backend</code></td>
+                    <td className="py-3 px-4 text-sm"><code>str</code></td>
+                    <td className="py-3 px-4">Backend used for simulation</td>
+                    <td className="py-3 px-4 text-sm"><code>"cirq"</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">execution_time</code></td>
+                    <td className="py-3 px-4 text-sm"><code>str</code></td>
+                    <td className="py-3 px-4">Total execution time (human-readable)</td>
+                    <td className="py-3 px-4 text-sm"><code>"1.23ms"</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">simulation_time</code></td>
+                    <td className="py-3 px-4 text-sm"><code>str</code></td>
+                    <td className="py-3 px-4">Time spent in quantum simulation</td>
+                    <td className="py-3 px-4 text-sm"><code>"0.98ms"</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">memory_usage</code></td>
+                    <td className="py-3 px-4 text-sm"><code>str</code></td>
+                    <td className="py-3 px-4">Memory consumed during simulation</td>
+                    <td className="py-3 px-4 text-sm"><code>"45.2 MB"</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">cpu_usage</code></td>
+                    <td className="py-3 px-4 text-sm"><code>str</code></td>
+                    <td className="py-3 px-4">CPU utilization during simulation</td>
+                    <td className="py-3 px-4 text-sm"><code>"12.5%"</code></td>
+                  </tr>
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">fidelity</code></td>
+                    <td className="py-3 px-4 text-sm"><code>float</code></td>
+                    <td className="py-3 px-4">Simulation fidelity as percentage</td>
+                    <td className="py-3 px-4 text-sm"><code>100.0</code></td>
+                  </tr>
+                  <tr className="hover:bg-editor-bg/50 transition-colors">
+                    <td className="py-3 px-4"><code className="text-quantum-blue-light">metadata</code></td>
+                    <td className="py-3 px-4 text-sm"><code>Dict[str, Any]</code></td>
+                    <td className="py-3 px-4">Additional backend-specific metadata</td>
+                    <td className="py-3 px-4 text-sm"><code>{`{'gate_count': 5}`}</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Printing Circuits */}
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <FileText className="w-6 h-6 mr-3 text-quantum-blue-light" />
+              Printing Circuits
+            </h3>
+            <p className="text-editor-text mb-6">
+              You can print circuit objects directly to visualize their structure in all supported frameworks.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* Cirq */}
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+                <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
+                    <Code className="w-4 h-4 text-blue-400" />
+                  </div>
+                  Cirq
+                </h4>
+                <div className="bg-gray-900 rounded-lg p-4 mb-4">
+                  <pre className="text-xs text-editor-text overflow-x-auto">
+{`import cirq
+
+q = cirq.LineQubit.range(2)
+circuit = cirq.Circuit([
+    cirq.H(q[0]),
+    cirq.CNOT(q[0], q[1]),
+    cirq.measure(q[0], q[1])
+])
+
+print(circuit)`}
+                  </pre>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                  <pre className="text-xs text-gray-300 font-mono">
+{`0: ───H───@───M───
+           │
+1: ────────X───M───`}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Qiskit */}
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+                <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3">
+                    <Code className="w-4 h-4 text-purple-400" />
+                  </div>
+                  Qiskit
+                </h4>
+                <div className="bg-gray-900 rounded-lg p-4 mb-4">
+                  <pre className="text-xs text-editor-text overflow-x-auto">
+{`from qiskit import QuantumCircuit
+
+qc = QuantumCircuit(2, 2)
+qc.h(0)
+qc.cx(0, 1)
+qc.measure([0, 1], [0, 1])
+
+print(qc)`}
+                  </pre>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                  <pre className="text-xs text-gray-300 font-mono">
+{`     ┌───┐     ┌─┐
+q_0: ┤ H ├──■──┤M├
+     └───┘ │ ┌┴┐└╥┘
+q_1: ──────┼─┤M├─╫─
+           │ └╥┘ ║
+c: 2/══════╪══╬══╩═`}
+                  </pre>
+                </div>
+              </div>
+
+              {/* PennyLane */}
+              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+                <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center mr-3">
+                    <Code className="w-4 h-4 text-green-400" />
+                  </div>
+                  PennyLane
+                </h4>
+                <div className="bg-gray-900 rounded-lg p-4 mb-4">
+                  <pre className="text-xs text-editor-text overflow-x-auto">
+{`import pennylane as qml
+
+dev = qml.device('default.qubit', wires=2)
+
+@qml.qnode(dev)
+def circuit():
+    qml.Hadamard(wires=0)
+    qml.CNOT(wires=[0, 1])
+    return qml.expval(qml.PauliZ(0))
+
+print(qml.draw(circuit)())`}
+                  </pre>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                  <pre className="text-xs text-gray-300 font-mono">
+{`0: ──H──╭C──┤ ⟨Z⟩
+1: ──────╰X──┤`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Complete Example */}
+          <div className="quantum-glass-dark rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <Lightbulb className="w-6 h-6 mr-3 text-yellow-400" />
+              Complete Workflow Example
+            </h3>
+            <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-gray-900 rounded-lg p-4">
+                <pre className="text-sm text-editor-text overflow-x-auto">
+{`import cirq
+from qcanvas import compile, compile_and_execute
+import qsim
+
+# Step 1: Create circuit
+q = cirq.LineQubit.range(2)
+circuit = cirq.Circuit([
+    cirq.H(q[0]),
+    cirq.CNOT(q[0], q[1]),
+    cirq.measure(q[0], q[1], key='result')
+])
+
+# Step 2: Print circuit (optional)
+print("Circuit Structure:")
+print(circuit)
+
+# Step 3: Compile to QASM
+qasm = compile(circuit, framework="cirq")
+print("\\nGenerated QASM:")
+print(qasm)
+
+# Step 4: Execute simulation
+result = qsim.run(qasm, shots=1000, backend="cirq")
+
+# Step 5: Access results
+print("\\nSimulation Results:")
+print(f"  Counts: {result.counts}")
+print(f"  Probabilities: {result.probabilities}")
+print(f"  Execution time: {result.execution_time}")
+print(f"  Qubits: {result.n_qubits}")
+print(f"  Shots: {result.shots}")
+print(f"  Backend: {result.backend}")
+
+# Alternative: Compile and execute in one step
+result2 = compile_and_execute(circuit, framework="cirq", shots=1000)
+print(f"\\nOne-step result: {result2.counts}")`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
   ]
 
   return (
@@ -840,7 +1259,8 @@ ws://localhost:8000/ws
                 { id: 'getting-started', label: 'Getting Started', active: activeSection === 'getting-started' },
                 { id: 'features', label: 'Features', active: activeSection === 'features' },
                 { id: 'architecture', label: 'Architecture', active: activeSection === 'architecture' },
-                { id: 'api', label: 'API', active: activeSection === 'api' }
+                { id: 'api', label: 'API', active: activeSection === 'api' },
+                { id: 'hybrid-execution', label: 'Hybrid API', active: activeSection === 'hybrid-execution' }
               ].map((item) => (
                 <button
                   key={item.id}
@@ -891,7 +1311,8 @@ ws://localhost:8000/ws
                   { id: 'getting-started', label: 'Getting Started' },
                   { id: 'features', label: 'Features' },
                   { id: 'architecture', label: 'Architecture' },
-                  { id: 'api', label: 'API' }
+                  { id: 'api', label: 'API' },
+                  { id: 'hybrid-execution', label: 'Hybrid API' }
                 ].map((item) => (
                   <button
                     key={item.id}

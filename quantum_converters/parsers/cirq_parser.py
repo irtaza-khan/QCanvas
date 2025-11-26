@@ -823,12 +823,17 @@ class CirqASTVisitor(ast.NodeVisitor):
         """Handle measurement operations in Cirq."""
         if len(args) >= 1:
             if VERBOSE:
-                vprint("[CirqASTVisitor]   rule=measure -> extract_qubit_index(args[0]); find keyword 'key'")
-            qubit = self._extract_qubit_index(args[0])
-            # Key extraction not needed for simplified mapping
-            self.operations.append(MeasurementNode(qubit=qubit, clbit=qubit))  # Simplified mapping
-            if VERBOSE:
-                vprint(f"[CirqASTVisitor] Added measure q[{qubit}] -> c[{qubit}]")
+                vprint("[CirqASTVisitor]   rule=measure -> iterate over all args (qubits)")
+            
+            # Iterate over all arguments, as each is a qubit being measured
+            for arg in args:
+                qubit = self._extract_qubit_index(arg)
+                # For now, map to same index if possible, or just track it
+                # In Cirq, measure(q0, q1) means q0->c0, q1->c1 effectively in simple cases
+                # We'll use the qubit index as the clbit index for simplicity in this parser
+                self.operations.append(MeasurementNode(qubit=qubit, clbit=qubit))
+                if VERBOSE:
+                    vprint(f"[CirqASTVisitor] Added measure q[{qubit}] -> c[{qubit}]")
 
     def _handle_reset_cirq(self, args: List[ast.expr]) -> None:
         """Handle reset operations in Cirq."""

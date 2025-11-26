@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useFileStore } from '@/lib/store'
 import { fileApi } from '@/lib/api'
 import { InputLanguage } from '@/types'
+
+type ExecutionMode = 'compile' | 'execute' | 'hybrid'
 import EditorPane from '@/components/EditorPane'
 import ResultsPane from '@/components/ResultsPane'
 import TopBar from '@/components/TopBar'
@@ -19,18 +21,19 @@ export default function AppPage() {
   const [resultsHeight, setResultsHeight] = useState(320) // Default height
   const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  
+
   // Simulation settings state
   const [inputLanguage, setInputLanguage] = useState<InputLanguage | "">("");
   const [simBackend, setSimBackend] = useState<'cirq' | 'qiskit' | 'pennylane' | ''>('');
   const [shots, setShots] = useState(1024);
-  
-  const { 
-    setFiles, 
-    files, 
-    sidebarCollapsed, 
+
+  const {
+    setFiles,
+    files,
+    sidebarCollapsed,
     toggleSidebar,
-    resultsCollapsed 
+    resultsCollapsed,
+    executionMode
   } = useFileStore()
 
   // Check for mobile screen size
@@ -38,7 +41,7 @@ export default function AppPage() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
-    
+
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
@@ -54,7 +57,7 @@ export default function AppPage() {
   // Authentication check
   useEffect(() => {
     const authStatus = localStorage.getItem('qcanvas-auth')
-    
+
     if (!authStatus) {
       setIsAuthenticated(false)
     } else {
@@ -216,7 +219,7 @@ export default function AppPage() {
   // Authenticated - show main app
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <TopBar 
+      <TopBar
         inputLanguage={inputLanguage}
         setInputLanguage={setInputLanguage}
         simBackend={simBackend}
@@ -224,44 +227,57 @@ export default function AppPage() {
         shots={shots}
         setShots={setShots}
       />
-      <SimulationControls
-        inputLanguage={inputLanguage}
-        setInputLanguage={setInputLanguage}
-        simBackend={simBackend}
-        setSimBackend={setSimBackend}
-        shots={shots}
-        setShots={setShots}
-      />
-      
+      {/* Hide simulation controls in hybrid mode - user specifies in code */}
+      {executionMode !== 'hybrid' && (
+        <SimulationControls
+          inputLanguage={inputLanguage}
+          setInputLanguage={setInputLanguage}
+          simBackend={simBackend}
+          setSimBackend={setSimBackend}
+          shots={shots}
+          setShots={setShots}
+        />
+      )}
+      {/* Show hybrid mode info bar when in hybrid mode */}
+      {executionMode === 'hybrid' && (
+        <div className="min-h-[48px] bg-gradient-to-r from-green-900/30 via-emerald-900/20 to-green-900/30 border-b border-green-500/30 flex items-center justify-center px-6 py-2">
+          <div className="flex items-center space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-sm text-green-300 font-medium">Hybrid Mode</span>
+            <span className="text-xs text-green-400/70">
+              Use <code className="bg-green-900/40 px-1.5 py-0.5 rounded text-green-300">qcanvas.compile()</code> and <code className="bg-green-900/40 px-1.5 py-0.5 rounded text-green-300">qsim.run()</code> in your code
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Sidebar */}
-        <div className={`${
-          sidebarCollapsed 
-            ? 'w-0 md:w-12' 
+        <div className={`${sidebarCollapsed
+            ? 'w-0 md:w-12'
             : 'w-full md:w-80'
-        } transition-all duration-300 ${
-          isMobile && !sidebarCollapsed 
-            ? 'absolute inset-y-0 left-0 z-50 shadow-xl' 
+          } transition-all duration-300 ${isMobile && !sidebarCollapsed
+            ? 'absolute inset-y-0 left-0 z-50 shadow-xl'
             : ''
-        } overflow-hidden`}>
+          } overflow-hidden`}>
           <Sidebar />
         </div>
 
         {/* Mobile overlay when sidebar is open */}
         {isMobile && !sidebarCollapsed && (
-          <div 
+          <div
             className="absolute inset-0 bg-black bg-opacity-50 z-40"
             onClick={toggleSidebar}
           />
         )}
-        
+
         {/* Main content */}
         <main ref={containerRef} className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <div className="flex flex-col h-full overflow-hidden">
             {/* Editor Area */}
-            <div 
+            <div
               className="flex-1 overflow-hidden"
-              style={{ height: resultsCollapsed ? '100%' : `calc(100% - ${resultsHeight}px)` }}
+              style={{ height: resultsCollapsed ? 'calc(100% - 32px)' : `calc(100% - ${resultsHeight}px)` }}
             >
               <EditorPane />
             </div>
@@ -269,23 +285,20 @@ export default function AppPage() {
             {/* Drag Handle */}
             {!resultsCollapsed && (
               <div
-                className={`h-1 bg-editor-border hover:bg-quantum-blue-light cursor-row-resize transition-colors ${
-                  isDragging ? 'bg-quantum-blue-light' : ''
-                }`}
+                className={`h-1 bg-editor-border hover:bg-quantum-blue-light cursor-row-resize transition-colors ${isDragging ? 'bg-quantum-blue-light' : ''
+                  }`}
                 onMouseDown={handleDragStart}
                 title="Drag to resize"
               />
             )}
 
             {/* Results Panel */}
-            {!resultsCollapsed && (
-              <div 
-                className="overflow-hidden border-t border-editor-border"
-                style={{ height: `${resultsHeight}px` }}
-              >
-                <ResultsPane />
-              </div>
-            )}
+            <div
+              className="overflow-hidden border-t border-editor-border"
+              style={{ height: resultsCollapsed ? '32px' : `${resultsHeight}px` }}
+            >
+              <ResultsPane />
+            </div>
           </div>
         </main>
       </div>

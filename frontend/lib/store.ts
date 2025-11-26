@@ -38,10 +38,38 @@ interface SimulationResult {
   circuit?: any
 }
 
+// Hybrid execution result interface
+interface HybridResult {
+  success: boolean
+  stdout: string
+  stderr: string
+  qasm_generated?: string | null
+  simulation_results: Array<{
+    counts: { [state: string]: number }
+    probabilities: { [state: string]: number }
+    shots: number
+    backend: string
+    execution_time: string
+    n_qubits: number
+    metadata: { [key: string]: any }
+  }>
+  execution_time: string
+  error?: string | null
+  error_line?: number | null
+  error_type?: string | null
+}
+
+// Execution mode type
+type ExecutionMode = 'compile' | 'execute' | 'hybrid'
+
 interface FileStore extends EditorState {
   // Additional state for conversion stats and simulation results
   conversionStats: ConversionStats | null
   simulationResults: SimulationResult | null
+  
+  // Hybrid execution state
+  hybridResult: HybridResult | null
+  executionMode: ExecutionMode
   
   // Actions
   setActiveFile: (fileId: string | null) => void
@@ -60,6 +88,8 @@ interface FileStore extends EditorState {
   setCompiledQasm: (qasm: string | null) => void
   setConversionStats: (stats: ConversionStats | null) => void
   setSimulationResults: (results: SimulationResult | null) => void
+  setHybridResult: (result: HybridResult | null) => void
+  setExecutionMode: (mode: ExecutionMode) => void
   compileActiveToQasm: () => string | null
 }
 
@@ -84,6 +114,53 @@ print(circuit)
     return {
       id: 'file-1',
       name: 'bell_state_cirq.py',
+      content,
+      language: 'python',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      size: content.length,
+    };
+  })(),
+  // Hybrid execution example
+  (() => {
+    const content = `# Hybrid CPU-QPU Execution Example
+# Switch to "Hybrid" mode in the toolbar to run this code!
+
+import cirq
+from qcanvas import compile
+import qsim
+
+# Create a Bell state circuit
+q = cirq.LineQubit.range(2)
+circuit = cirq.Circuit([
+    cirq.H(q[0]),
+    cirq.CNOT(q[0], q[1]),
+    cirq.measure(q[0], q[1], key='result')
+])
+
+print("Circuit created:")
+print(circuit)
+print()
+
+# Compile circuit to OpenQASM 3.0
+qasm = compile(circuit, framework="cirq")
+print("Generated QASM:")
+print(qasm)
+print()
+
+# Run multiple simulations in a loop
+print("Running 3 simulations...")
+for i in range(3):
+    result = qsim.run(qasm, shots=100, backend="cirq")
+    print(f"Run {i+1}: {result.counts}")
+    print(f"  Probabilities: {result.probabilities}")
+
+print()
+print("Hybrid execution complete!")
+`;
+    return {
+      id: 'file-hybrid',
+      name: 'hybrid_example.py',
       content,
       language: 'python',
       createdAt: new Date().toISOString(),
@@ -179,6 +256,8 @@ export const useFileStore = create<FileStore>()(
       compiledQasm: null,
       conversionStats: null,
       simulationResults: null,
+      hybridResult: null,
+      executionMode: 'execute' as ExecutionMode,
       compileOptions: {
         inputLanguage: 'qasm',
         resultFormat: 'json',
@@ -388,6 +467,14 @@ export const useFileStore = create<FileStore>()(
 
       setSimulationResults: (results) => {
         set({ simulationResults: results }, false, 'setSimulationResults')
+      },
+
+      setHybridResult: (result) => {
+        set({ hybridResult: result }, false, 'setHybridResult')
+      },
+
+      setExecutionMode: (mode) => {
+        set({ executionMode: mode }, false, 'setExecutionMode')
       },
 
       compileActiveToQasm: () => {

@@ -8,6 +8,13 @@
 **Priority**: Complete - Full quantum IDE with authentication, shortcuts, and examples
 
 ### Recent Changes (November 2025)
+- ✅ **Hybrid CPU-QPU Execution** (November 26, 2025):
+  - Execute Python code with qcanvas.compile() and qsim.run() APIs
+  - Sandboxed execution environment with configurable security
+  - Three execution modes: Compile Only, Full Execute, Execute Hybrid
+  - Print statement capture displayed in Output tab
+  - Loop-based multi-simulation support
+  - Security settings in config/config.py (blocked imports, file/network access)
 - ✅ **Full System Implementation**: Complete quantum IDE with all features
   - Multi-framework compilation (Qiskit, Cirq, PennyLane)
   - Real-time quantum simulation with QSim backend

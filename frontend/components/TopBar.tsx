@@ -30,9 +30,11 @@ import {
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useFileStore } from "@/lib/store";
-import { fileApi, quantumApi } from "@/lib/api";
+import { fileApi, quantumApi, HybridExecuteResult } from "@/lib/api";
 import { InputLanguage, ResultFormat } from "@/types";
 import { detectFramework } from "@/lib/utils";
+
+type ExecutionMode = 'compile' | 'execute' | 'hybrid';
 
 interface TopBarProps {
   inputLanguage: InputLanguage | ""
@@ -78,6 +80,9 @@ export default function TopBar({
   const [autoSave, setAutoSave] = useState(true);
   const [formatOnSave, setFormatOnSave] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Execution mode state
+  const { executionMode, setExecutionMode, setHybridResult } = useFileStore();
 
   // Check authentication status
   useEffect(() => {
@@ -126,12 +131,12 @@ export default function TopBar({
     {
       icon: <BookOpen className="w-4 h-4" />,
       label: "Documentation",
-      action: () => router.push("/docs"),
+      action: () => window.open("/docs", "_blank"),
     },
     {
       icon: <Code className="w-4 h-4" />,
       label: "Examples",
-      action: () => router.push("/examples"),
+      action: () => window.open("/examples", "_blank"),
     },
     {
       icon: <Github className="w-4 h-4" />,
@@ -148,29 +153,29 @@ export default function TopBar({
   // Helper function to format error messages for user display
   const formatErrorMessage = (error: string | undefined | null): string => {
     if (!error) return "Run failed";
-    
+
     const errorLower = error.toLowerCase();
-    
+
     // Handle HTTP errors
     if (errorLower.includes("http error") || errorLower.includes("status:")) {
       return "Run failed";
     }
-    
+
     // Handle network errors
     if (errorLower.includes("network error") || errorLower.includes("fetch")) {
       return "Run failed: Network connection issue";
     }
-    
+
     // Handle timeout errors
     if (errorLower.includes("timeout")) {
       return "Run failed: Request timed out";
     }
-    
+
     // Handle server errors (500, 502, 503, etc.)
     if (errorLower.includes("500") || errorLower.includes("502") || errorLower.includes("503")) {
       return "Run failed: Server error occurred";
     }
-    
+
     // Handle client errors (400, 401, 403, 404, etc.)
     if (errorLower.includes("400")) {
       return "Run failed: Invalid request";
@@ -181,27 +186,224 @@ export default function TopBar({
     if (errorLower.includes("404")) {
       return "Run failed: Resource not found";
     }
-    
+
     // If error contains technical details, try to extract meaningful part
     // Otherwise return a generic message
     if (error.length > 100 || error.includes("Error:") || error.includes("Exception:")) {
       return "Run failed";
     }
-    
+
     // Return the error as-is if it's short and user-friendly
     return error;
   };
 
-  const handleRun = async () => {
+  // Helper to format hybrid error messages based on error type
+  const formatHybridError = (errorType: string | null | undefined, error: string | null | undefined, errorLine: number | null | undefined): string => {
+    const line = errorLine ? ` (line ${errorLine})` : "";
+
+    switch (errorType) {
+      case "SecurityViolationError":
+        return `Security Violation${line}: ${error || "Blocked operation detected"}`;
+      case "TimeoutError":
+        return `Timeout${line}: Code execution exceeded time limit`;
+      case "SyntaxError":
+        return `Syntax Error${line}: ${error || "Invalid Python syntax"}`;
+      case "ImportError":
+        return `Import Error${line}: ${error || "Module import failed"}`;
+      case "DisabledError":
+        return "Hybrid execution is disabled in server configuration";
+      case "NameError":
+        return `Name Error${line}: ${error || "Undefined variable or function"}`;
+      case "TypeError":
+        return `Type Error${line}: ${error || "Invalid type operation"}`;
+      case "ValueError":
+        return `Value Error${line}: ${error || "Invalid value"}`;
+      case "RuntimeError":
+        return `Runtime Error${line}: ${error || "Execution failed"}`;
+      default:
+        return error || "Unknown error occurred";
+    }
+  };
+
+  // Handle hybrid execution (Python code with qcanvas/qsim)
+  const handleRunHybrid = async () => {
     if (!activeFile) {
       toast.error("No file selected");
       return;
     }
 
+    // Clear previous results
+    useFileStore.getState().setSimulationResults(null);
+    useFileStore.getState().setHybridResult(null);
+    useFileStore.getState().setCompiledQasm(null);
+
+    // Check if file is already QASM - hybrid mode doesn't make sense for QASM
+    const isQasmFile = activeFile.name.endsWith(".qasm") ||
+      activeFile.content.trim().startsWith("OPENQASM");
+    if (isQasmFile) {
+      toast.error("Hybrid mode is for Python code with qcanvas/qsim APIs. Switch to 'Execute' mode for QASM files.", {
+        duration: 5000
+      });
+      return;
+    }
+
+    // Check if code has hybrid imports
+    const hasQcanvasImport = activeFile.content.includes("from qcanvas") ||
+      activeFile.content.includes("import qcanvas");
+    const hasQsimImport = activeFile.content.includes("import qsim");
+
+    if (!hasQcanvasImport && !hasQsimImport) {
+      // Just log to console instead of showing error toast
+      console.log("No qcanvas/qsim imports found in hybrid mode");
+    }
+
+    setIsRunning(true);
+    try {
+      toast.loading("Running hybrid Python code...", { id: "hybrid-execution" });
+
+      // Detect framework for hints
+      const detected = detectFramework(activeFile.content, activeFile.name);
+
+      // Execute hybrid code
+      const result = await quantumApi.executeHybrid(
+        activeFile.content,
+        detected || inputLanguage || undefined,
+        30  // timeout
+      );
+
+      // Handle API-level errors (404, network errors, etc.)
+      if (!result.success) {
+        let errorMsg = result.error || "Hybrid execution failed";
+
+        // Check for 404 - API not available
+        if (errorMsg.includes("404") || errorMsg.includes("not found")) {
+          errorMsg = "Hybrid execution API not available. Please ensure the backend is running with hybrid support.";
+        } else if (errorMsg.includes("network") || errorMsg.includes("fetch") || errorMsg.includes("connection")) {
+          errorMsg = "Cannot connect to backend server. Please check your connection.";
+        }
+
+        toast.error(errorMsg, { id: "hybrid-execution" });
+        setHybridResult({
+          success: false,
+          stdout: "",
+          stderr: errorMsg,
+          simulation_results: [],
+          execution_time: "",
+          error: errorMsg,
+          error_type: "ConnectionError"
+        });
+
+        window.dispatchEvent(new CustomEvent("hybrid-execute", {
+          detail: { success: false, error: errorMsg }
+        }));
+        return;
+      }
+
+      const hybridResult = result.data!;
+
+      // Store result in store
+      setHybridResult(hybridResult);
+
+      if (hybridResult.success) {
+        toast.success(
+          `Hybrid execution completed in ${hybridResult.execution_time}`,
+          { id: "hybrid-execution" }
+        );
+
+        // Show simulation count if any
+        if (hybridResult.simulation_results.length > 0) {
+          setTimeout(() => {
+            toast.success(
+              `${hybridResult.simulation_results.length} simulation(s) completed`,
+              { duration: 3000 }
+            );
+          }, 1000);
+        }
+
+        // Dispatch success event
+        window.dispatchEvent(new CustomEvent("hybrid-execute", {
+          detail: { success: true, result: hybridResult }
+        }));
+      } else {
+        // Format error message based on error type
+        const formattedError = formatHybridError(
+          hybridResult.error_type,
+          hybridResult.error,
+          hybridResult.error_line
+        );
+
+        toast.error(formattedError, {
+          id: "hybrid-execution",
+          duration: 6000
+        });
+
+        // Dispatch error event
+        window.dispatchEvent(new CustomEvent("hybrid-execute", {
+          detail: { success: false, error: formattedError, result: hybridResult }
+        }));
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      // Handle specific network errors
+      let displayError = errorMsg;
+      if (errorMsg.includes("Failed to fetch") || errorMsg.includes("NetworkError")) {
+        displayError = "Cannot connect to backend server. Please ensure it's running.";
+      }
+
+      toast.error(`Hybrid execution failed: ${displayError}`, { id: "hybrid-execution" });
+      console.error("Hybrid execution error:", error);
+
+      setHybridResult({
+        success: false,
+        stdout: "",
+        stderr: errorMsg,
+        simulation_results: [],
+        execution_time: "",
+        error: displayError,
+        error_type: "NetworkError"
+      });
+
+      window.dispatchEvent(new CustomEvent("hybrid-execute", {
+        detail: { success: false, error: displayError }
+      }));
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleRun = async () => {
+    // If in hybrid mode, use hybrid execution
+    if (executionMode === 'hybrid') {
+      return handleRunHybrid();
+    }
+
+    if (!activeFile) {
+      toast.error("No file selected");
+      return;
+    }
+
+    // Clear previous results
+    useFileStore.getState().setSimulationResults(null);
+    useFileStore.getState().setHybridResult(null);
+    useFileStore.getState().setCompiledQasm(null);
+
     // Determine if file is QASM or a framework code
     const isQasmFile =
       activeFile.name.endsWith(".qasm") ||
       activeFile.content.trim().startsWith("OPENQASM");
+
+    // If in compile mode, just convert to QASM
+    if (executionMode === 'compile') {
+      // If already QASM, just show it
+      if (isQasmFile) {
+        setCompiledQasm(activeFile.content);
+        toast.success("File is already OpenQASM format");
+        window.dispatchEvent(new CustomEvent("show-qasm"));
+        return;
+      }
+      return handleConvertToQASM();
+    }
 
     // Validate input framework selection (required for non-QASM files)
     if (!isQasmFile && !inputLanguage) {
@@ -255,17 +457,17 @@ export default function TopBar({
           useFileStore.getState().setSimulationResults(null);
           toast.error(`Compilation failed: ${errorMsg}`, { id: "execution" });
           // Dispatch compile failure event
-          window.dispatchEvent(new CustomEvent("circuit-compile", { 
-            detail: { success: false, error: errorMsg } 
+          window.dispatchEvent(new CustomEvent("circuit-compile", {
+            detail: { success: false, error: errorMsg }
           }));
           return;
         }
 
         qasmCode = conversionResult.data.qasm_code;
-        
+
         // Store compiled QASM for display in results pane (without creating file)
         setCompiledQasm(qasmCode);
-        
+
         // Store conversion stats
         const stats = conversionResult.data;
         useFileStore.getState().setConversionStats({
@@ -277,12 +479,12 @@ export default function TopBar({
           qasm_version: '3.0',
           success: true
         });
-        
+
         // Dispatch compile success event
-        window.dispatchEvent(new CustomEvent("circuit-compile", { 
-          detail: { success: true, stats: conversionResult.data } 
+        window.dispatchEvent(new CustomEvent("circuit-compile", {
+          detail: { success: true, stats: conversionResult.data }
         }));
-        
+
         toast.loading("Running simulation with QSim...", { id: "execution" });
       }
 
@@ -308,7 +510,7 @@ export default function TopBar({
       // API call succeeded, check if simulation succeeded
       if (executionResult.data?.success) {
         const simResult = executionResult.data.results;
-        
+
         // Store results in the store for ResultsPane to display
         useFileStore.getState().setSimulationResults(simResult);
 
@@ -390,15 +592,20 @@ export default function TopBar({
       return;
     }
 
+    // Clear previous results
+    useFileStore.getState().setSimulationResults(null);
+    useFileStore.getState().setHybridResult(null);
+    useFileStore.getState().setCompiledQasm(null);
+
     // Validate language selection
     const detected = detectFramework(activeFile.content, activeFile.name);
-    
+
     // Require framework selection if not detected
     if (!inputLanguage && !detected) {
       toast.error("Please select an input framework");
       return;
     }
-    
+
     if (inputLanguage && detected && detected !== inputLanguage) {
       toast.error(`Incorrect language selected.`);
       return;
@@ -504,18 +711,17 @@ export default function TopBar({
 
       // Focus QASM tab in results
       window.dispatchEvent(new CustomEvent("show-qasm"));
-      
+
       // Dispatch compilation success event for console logging
-      window.dispatchEvent(new CustomEvent("circuit-compile", { 
-        detail: { success: true, stats } 
+      window.dispatchEvent(new CustomEvent("circuit-compile", {
+        detail: { success: true, stats }
       }));
 
       // Display conversion stats from backend
       if (stats && stats.qubits) {
         setTimeout(() => {
           toast.success(
-            `Circuit: ${stats.qubits} qubits, ${
-              stats.depth || "unknown"
+            `Circuit: ${stats.qubits} qubits, ${stats.depth || "unknown"
             } depth`,
           );
         }, 1000);
@@ -675,296 +881,338 @@ export default function TopBar({
         <div className="topbar-content">
           {/* Left side - Logo and Navigation */}
           <div className="flex items-center space-x-2 md:space-x-4">
-          <button
-            onClick={toggleSidebar}
-            className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
-            title="Toggle Sidebar (Ctrl/Cmd+B)"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+            <button
+              onClick={toggleSidebar}
+              className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
+              title="Toggle Sidebar (Ctrl/Cmd+B)"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-          <a href="/" className="flex items-center space-x-2 group cursor-pointer">
-            {/* Logo — changes automatically with theme */}
-            <div className="flex items-center justify-center w-8 h-8">
-              {/* Light mode (violet) */}
-              <Image
-                src="/QCanvas-logo-Black.svg"
-                alt="App Logo"
-                width={32}
-                height={32}
-                className="object-contain block dark:hidden group-hover:scale-110 transition-transform"
-                priority
-              />
-              {/* Dark mode (light blue) */}
-              <Image
-                src="/QCanvas-logo-White.svg"
-                alt="App Logo"
-                width={32}
-                height={32}
-                className="object-contain hidden dark:block group-hover:scale-110 transition-transform"
-                priority
-              />
-            </div>
-            <span className="font-bold text-lg hidden sm:block quantum-gradient bg-clip-text text-transparent group-hover:scale-105 transition-transform">
-              QCanvas
-            </span>
-          </a>
+            <a href="/" className="flex items-center space-x-2 group cursor-pointer">
+              {/* Logo — changes automatically with theme */}
+              <div className="flex items-center justify-center w-8 h-8">
+                {/* Light mode (violet) */}
+                <Image
+                  src="/QCanvas-logo-Black.svg"
+                  alt="App Logo"
+                  width={32}
+                  height={32}
+                  className="object-contain block dark:hidden group-hover:scale-110 transition-transform"
+                  priority
+                />
+                {/* Dark mode (light blue) */}
+                <Image
+                  src="/QCanvas-logo-White.svg"
+                  alt="App Logo"
+                  width={32}
+                  height={32}
+                  className="object-contain hidden dark:block group-hover:scale-110 transition-transform"
+                  priority
+                />
+              </div>
+              <span className="font-bold text-lg hidden sm:block quantum-gradient bg-clip-text text-transparent group-hover:scale-105 transition-transform">
+                QCanvas
+              </span>
+            </a>
           </div>
 
           {/* Center - Compile/Run and Options */}
           <div className="flex items-center space-x-1 md:space-x-2">
-          <button
-            onClick={handleConvertToQASM}
-            disabled={!activeFile}
-            className="btn-ghost flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-2 md:px-3 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors hidden md:flex"
-            title="Convert to OpenQASM"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span className="hidden lg:inline">Compile to QASM</span>
-          </button>
+            <button
+              onClick={handleConvertToQASM}
+              disabled={!activeFile}
+              className="btn-ghost flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-2 md:px-3 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors hidden md:flex"
+              title="Convert to OpenQASM"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span className="hidden lg:inline">Compile to QASM</span>
+            </button>
 
-          <button
-            onClick={handleRun}
-            disabled={isRunning || !activeFile}
-            className="btn-quantum flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-3 md:px-4 py-1.5 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-            title="Run Circuit (Ctrl/Cmd+Shift+R)"
-          >
-            {isRunning ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full spinner" />
-                <span className="hidden sm:inline">Running...</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4" />
-                <span className="hidden sm:inline font-semibold">Run</span>
-              </>
-            )}
-          </button>
+            {/* Execution Mode Toggle */}
+            <div className="hidden md:flex items-center space-x-1 bg-editor-bg rounded-lg p-0.5 border border-editor-border">
+              <button
+                onClick={() => setExecutionMode('compile')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'compile'
+                  ? 'bg-quantum-blue-light text-white'
+                  : 'text-editor-text hover:bg-editor-border'
+                  }`}
+                title="Compile Only - Generate QASM without execution"
+              >
+                Compile
+              </button>
+              <button
+                onClick={() => setExecutionMode('execute')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'execute'
+                  ? 'bg-quantum-blue-light text-white'
+                  : 'text-editor-text hover:bg-editor-border'
+                  }`}
+                title="Full Execute - Compile and run simulation"
+              >
+                Execute
+              </button>
+              <button
+                onClick={() => setExecutionMode('hybrid')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'hybrid'
+                  ? 'bg-green-500 text-white'
+                  : 'text-editor-text hover:bg-editor-border'
+                  }`}
+                title="Hybrid Mode - Run Python code with qcanvas/qsim APIs"
+              >
+                Hybrid
+              </button>
+            </div>
 
-          <button
-            onClick={handleSave}
-            disabled={isSaving || !activeFile}
-            className="btn-ghost flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-2 md:px-3 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
-            title="Save File (Ctrl/Cmd+S)"
-          >
-            {isSaving ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full spinner" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            <span className="hidden md:inline">Save</span>
-          </button>
+            <button
+              onClick={handleRun}
+              disabled={isRunning || !activeFile}
+              className={`flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-3 md:px-4 py-1.5 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ${executionMode === 'hybrid'
+                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
+                : 'btn-quantum'
+                }`}
+              title={
+                executionMode === 'hybrid'
+                  ? "Run Hybrid Python Code (Ctrl/Cmd+Shift+R)"
+                  : executionMode === 'compile'
+                    ? "Compile to QASM (Ctrl/Cmd+Shift+R)"
+                    : "Run Circuit (Ctrl/Cmd+Shift+R)"
+              }
+            >
+              {isRunning ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full spinner" />
+                  <span className="hidden sm:inline">Running...</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  <span className="hidden sm:inline font-semibold">
+                    {executionMode === 'hybrid' ? 'Run Hybrid' : executionMode === 'compile' ? 'Compile' : 'Run'}
+                  </span>
+                </>
+              )}
+            </button>
 
-          <button
-            onClick={handleExport}
-            disabled={!activeFile}
-            className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors hidden lg:flex"
-            title="Export File"
-          >
-            <Download className="w-4 h-4" />
-          </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving || !activeFile}
+              className="btn-ghost flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-2 md:px-3 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
+              title="Save File (Ctrl/Cmd+S)"
+            >
+              {isSaving ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full spinner" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              <span className="hidden md:inline">Save</span>
+            </button>
 
-          <button
-            onClick={handleShare}
-            disabled={!activeFile}
-            className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors hidden lg:flex"
-            title="Share Code"
-          >
-            <Share2 className="w-4 h-4" />
-          </button>
+            <button
+              onClick={handleExport}
+              disabled={!activeFile}
+              className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors hidden lg:flex"
+              title="Export File"
+            >
+              <Download className="w-4 h-4" />
+            </button>
 
-          <div className="hidden md:block w-px h-6 bg-editor-border mx-2"></div>
+            <button
+              onClick={handleShare}
+              disabled={!activeFile}
+              className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors hidden lg:flex"
+              title="Share Code"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
 
-          <button
-            onClick={handleFind}
-            disabled={!activeFile}
-            className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
-            title="Find (Ctrl/Cmd+F)"
-          >
-            <Search className="w-4 h-4" />
-            <span className="hidden lg:inline">Find</span>
-          </button>
+            <div className="hidden md:block w-px h-6 bg-editor-border mx-2"></div>
 
-          <button
-            onClick={handleFindReplace}
-            disabled={!activeFile}
-            className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
-            title="Find and Replace (Ctrl/Cmd+H)"
-          >
-            <Replace className="w-4 h-4" />
-            <span className="hidden lg:inline">Replace</span>
-          </button>
+            <button
+              onClick={handleFind}
+              disabled={!activeFile}
+              className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
+              title="Find (Ctrl/Cmd+F)"
+            >
+              <Search className="w-4 h-4" />
+              <span className="hidden lg:inline">Find</span>
+            </button>
+
+            <button
+              onClick={handleFindReplace}
+              disabled={!activeFile}
+              className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
+              title="Find and Replace (Ctrl/Cmd+H)"
+            >
+              <Replace className="w-4 h-4" />
+              <span className="hidden lg:inline">Replace</span>
+            </button>
           </div>
 
           {/* Right side - Settings and Theme */}
           <div className="flex items-center space-x-1 md:space-x-2">
-          {/* Help Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setShowHelpMenu(!showHelpMenu)}
-              className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
-              title="Help & Resources"
-            >
-              <HelpCircle className="w-5 h-5" />
-            </button>
+            {/* Help Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowHelpMenu(!showHelpMenu)}
+                className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
+                title="Help & Resources"
+              >
+                <HelpCircle className="w-5 h-5" />
+              </button>
 
-            {showHelpMenu && (
-              <div className="absolute right-0 top-full mt-2 w-48 quantum-glass-dark rounded-lg shadow-xl border border-white/10 backdrop-blur-xl z-50">
-                <div className="py-2">
-                  {helpMenuItems.map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        item.action();
-                        setShowHelpMenu(false);
-                      }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-editor-text hover:text-white hover:bg-quantum-blue-light/20 transition-colors"
-                    >
-                      {item.icon}
-                      <span className="ml-3">{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={() => setShowShortcuts(true)}
-            className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors hidden md:block"
-            title="Keyboard Shortcuts"
-          >
-            <Keyboard className="w-5 h-5" />
-          </button>
-
-          {/* Settings Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-all duration-200"
-              title="Settings"
-            >
-              <Settings className={`w-5 h-5 transition-transform duration-300 ${
-                showSettings ? 'rotate-90' : ''
-              }`} />
-            </button>
-
-            {showSettings && (
-              <div className="absolute right-0 top-full mt-2 w-64 quantum-glass-dark rounded-xl shadow-2xl border border-white/10 backdrop-blur-xl overflow-hidden animate-fade-in z-50">
-                <div className="p-4">
-                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </h3>
-
-                  {/* Theme Selection */}
-                  <div className="space-y-2 mb-4 pb-4 border-b border-white/10">
-                    <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                      Theme
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
+              {showHelpMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 quantum-glass-dark rounded-lg shadow-xl border border-white/10 backdrop-blur-xl z-50">
+                  <div className="py-2">
+                    {helpMenuItems.map((item, index) => (
                       <button
+                        key={index}
                         onClick={() => {
-                          if (theme !== 'dark') {
-                            toggleTheme();
-                            toast.success('Switched to dark theme');
-                          }
+                          item.action();
+                          setShowHelpMenu(false);
                         }}
-                        className={`flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg border transition-all duration-200 ${
-                          theme === 'dark'
+                        className="w-full flex items-center px-4 py-2 text-sm text-editor-text hover:text-white hover:bg-quantum-blue-light/20 transition-colors"
+                      >
+                        {item.icon}
+                        <span className="ml-3">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowShortcuts(true)}
+              className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors hidden md:block"
+              title="Keyboard Shortcuts"
+            >
+              <Keyboard className="w-5 h-5" />
+            </button>
+
+            {/* Settings Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-all duration-200"
+                title="Settings"
+              >
+                <Settings className={`w-5 h-5 transition-transform duration-300 ${showSettings ? 'rotate-90' : ''
+                  }`} />
+              </button>
+
+              {showSettings && (
+                <div className="absolute right-0 top-full mt-2 w-64 quantum-glass-dark rounded-xl shadow-2xl border border-white/10 backdrop-blur-xl overflow-hidden animate-fade-in z-50">
+                  <div className="p-4">
+                    <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </h3>
+
+                    {/* Theme Selection */}
+                    <div className="space-y-2 mb-4 pb-4 border-b border-white/10">
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                        Theme
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            if (theme !== 'dark') {
+                              toggleTheme();
+                              toast.success('Switched to dark theme');
+                            }
+                          }}
+                          className={`flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg border transition-all duration-200 ${theme === 'dark'
                             ? 'bg-quantum-blue-light/20 border-quantum-blue-light text-white shadow-lg shadow-quantum-blue-light/20'
                             : 'bg-editor-bg/50 border-editor-border text-gray-400 hover:border-quantum-blue-light/50'
-                        }`}
-                      >
-                        <Moon className="w-4 h-4" />
-                        <span className="text-xs font-medium">Dark</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (theme !== 'light') {
-                            toggleTheme();
-                            toast.success('Switched to light theme');
-                          }
-                        }}
-                        className={`flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg border transition-all duration-200 ${
-                          theme === 'light'
+                            }`}
+                        >
+                          <Moon className="w-4 h-4" />
+                          <span className="text-xs font-medium">Dark</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (theme !== 'light') {
+                              toggleTheme();
+                              toast.success('Switched to light theme');
+                            }
+                          }}
+                          className={`flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg border transition-all duration-200 ${theme === 'light'
                             ? 'bg-yellow-500/20 border-yellow-500 text-white shadow-lg shadow-yellow-500/20'
                             : 'bg-editor-bg/50 border-editor-border text-gray-400 hover:border-yellow-500/50'
-                        }`}
+                            }`}
+                        >
+                          <Sun className="w-4 h-4" />
+                          <span className="text-xs font-medium">Light</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Additional Settings */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                        Preferences
+                      </label>
+
+                      {/* Auto-save */}
+                      <button
+                        onClick={() => {
+                          setAutoSave(!autoSave);
+                          toast.success(`Auto-save ${!autoSave ? 'enabled' : 'disabled'}`);
+                        }}
+                        className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
                       >
-                        <Sun className="w-4 h-4" />
-                        <span className="text-xs font-medium">Light</span>
+                        <div className="flex items-center space-x-2">
+                          <Save className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-white">Auto-save</span>
+                        </div>
+                        <div className="relative inline-flex items-center">
+                          <div className={`w-10 h-5 rounded-full shadow-inner transition-colors ${autoSave ? 'bg-quantum-blue-light' : 'bg-editor-border'}`}>
+                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${autoSave ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Format on Save */}
+                      <button
+                        onClick={() => {
+                          setFormatOnSave(!formatOnSave);
+                          toast.success(`Format on save ${!formatOnSave ? 'enabled' : 'disabled'}`);
+                        }}
+                        className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Code className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-white">Format on save</span>
+                        </div>
+                        <div className="relative inline-flex items-center">
+                          <div className={`w-10 h-5 rounded-full shadow-inner transition-colors ${formatOnSave ? 'bg-quantum-blue-light' : 'bg-editor-border'}`}>
+                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${formatOnSave ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                          </div>
+                        </div>
                       </button>
                     </div>
                   </div>
-
-                  {/* Additional Settings */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                      Preferences
-                    </label>
-
-                    {/* Auto-save */}
-                    <button
-                      onClick={() => {
-                        setAutoSave(!autoSave);
-                        toast.success(`Auto-save ${!autoSave ? 'enabled' : 'disabled'}`);
-                      }}
-                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <Save className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-white">Auto-save</span>
-                      </div>
-                      <div className="relative inline-flex items-center">
-                        <div className={`w-10 h-5 rounded-full shadow-inner transition-colors ${autoSave ? 'bg-quantum-blue-light' : 'bg-editor-border'}`}>
-                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${autoSave ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Format on Save */}
-                    <button
-                      onClick={() => {
-                        setFormatOnSave(!formatOnSave);
-                        toast.success(`Format on save ${!formatOnSave ? 'enabled' : 'disabled'}`);
-                      }}
-                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <Code className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-white">Format on save</span>
-                      </div>
-                      <div className="relative inline-flex items-center">
-                        <div className={`w-10 h-5 rounded-full shadow-inner transition-colors ${formatOnSave ? 'bg-quantum-blue-light' : 'bg-editor-border'}`}>
-                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${formatOnSave ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                        </div>
-                      </div>
-                    </button>
-                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="btn-ghost text-red-400 hover:text-red-300 hover:bg-red-500/20 p-2 rounded-lg transition-all duration-200 hover:scale-110"
-              title="Logout"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          ) : (
-            <Link
-              href="/login"
-              className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
-              title="Login"
-            >
-              <LogOut className="w-5 h-5 rotate-180" />
-            </Link>
-          )}
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="btn-ghost text-red-400 hover:text-red-300 hover:bg-red-500/20 p-2 rounded-lg transition-all duration-200 hover:scale-110"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="btn-ghost p-2 hover:bg-quantum-blue-light/20 transition-colors"
+                title="Login"
+              >
+                <LogOut className="w-5 h-5 rotate-180" />
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -973,14 +1221,14 @@ export default function TopBar({
       {showShortcuts && (
         <>
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 z-[55]"
             onClick={() => setShowShortcuts(false)}
           />
-          
+
           {/* Modal */}
           <div className="fixed inset-0 flex items-center justify-center z-[60] p-4 pointer-events-none">
-            <div 
+            <div
               className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full max-h-96 overflow-y-auto backdrop-blur-xl border border-white/10 shadow-2xl pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >

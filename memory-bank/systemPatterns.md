@@ -304,6 +304,40 @@ class ValidationError(QCanvasException):
 - Subroutines and functions
 - PennyLane Iteration II gates (CY, CH, CRX, CRY, CRZ, CP, CSWAP, CCZ, GlobalPhase)
 
+## Hybrid CPU-QPU Execution Pattern
+
+### User-Facing API
+```python
+# User code with hybrid execution
+import cirq
+from qcanvas import compile
+import qsim
+
+# Create circuit
+circuit = cirq.Circuit(...)
+
+# Compile to QASM
+qasm = compile(circuit, framework="cirq")
+print(f"Generated QASM:\n{qasm}")
+
+# Execute multiple simulations
+for i in range(3):
+    result = qsim.run(qasm, shots=100, backend="cirq")
+    print(f"Run {i+1}: {result.counts}")
+```
+
+### Sandboxed Execution
+- Security restrictions configurable in `config/config.py`
+- Blocked: os, subprocess, sys, socket, file access, network
+- Allowed: cirq, qiskit, pennylane, numpy, math, qcanvas, qsim
+- Timeout and memory limits enforced
+- Output capture with size limits
+
+### Execution Modes
+1. **Compile Only**: Generate QASM without execution
+2. **Full Execute**: Compile + run on QSim (current behavior)
+3. **Execute Hybrid**: Run Python code with qcanvas/qsim APIs
+
 ## Out-of-Scope (per project scope)
 - Pulse-level control/OpenPulse and calibration blocks
 - Circuit timing constructs (delay, duration, box)
