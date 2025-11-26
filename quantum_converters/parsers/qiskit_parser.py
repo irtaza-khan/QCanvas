@@ -85,6 +85,7 @@ class QiskitASTVisitor(ast.NodeVisitor):
         self.clbits: int = 0  # Number of classical bits
         self.current_circuit: Optional[str] = None  # Current circuit variable being operated on
         self.variables: Dict[str, Any] = {}  # Track variable values
+        self.classical_registers: Set[str] = set()  # Track classical register variable names (from measurements)
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Handle variable assignments, particularly QuantumCircuit creation."""
@@ -92,9 +93,16 @@ class QiskitASTVisitor(ast.NodeVisitor):
             vprint("[QiskitASTVisitor] visit_Assign: inspecting assignment node")
 
         # First, handle variable assignments (store values)
+        # BUT: Don't overwrite classical register names - they should refer to measurement results
         if isinstance(node.targets[0], ast.Name):
             var_name = node.targets[0].id
-            if isinstance(node.value, ast.Constant):
+            # Don't store Python variable assignments for classical register names
+            # (e.g., c = [0, 0, 0] should not overwrite that c is a classical register)
+            if var_name in self.classical_registers:
+                if VERBOSE:
+                    vprint(f"[QiskitASTVisitor] Ignoring Python assignment to classical register '{var_name}'")
+                # Still continue to check for QuantumCircuit creation, but don't store the variable
+            elif isinstance(node.value, ast.Constant):
                 self.variables[var_name] = node.value.value
             elif isinstance(node.value, ast.Name) and node.value.id in self.variables:
                 self.variables[var_name] = self.variables[node.value.id]
@@ -323,9 +331,11 @@ class QiskitASTVisitor(ast.NodeVisitor):
         if isinstance(node, ast.Constant):
             return str(node.value)
         elif isinstance(node, ast.Name):
-            # Check if it's a known variable that maps to a classical register
-            # In Qiskit, classical registers are often accessed via creg[i] or c[i]
+            # Check if it's a known classical register name (from measurements)
             var_name = node.id
+            if var_name in self.classical_registers:
+                # This is a classical register, return as-is (will be used in subscript like c[i])
+                return var_name
             # Map common classical register variable names to OpenQASM format
             if var_name.startswith('c') and len(var_name) > 1 and var_name[1:].isdigit():
                 # Handle c0, c1, etc. -> c[0], c[1]
@@ -334,6 +344,20 @@ class QiskitASTVisitor(ast.NodeVisitor):
         elif isinstance(node, ast.Subscript):
             # Handle array indexing like c[i], creg[0], m[i]
             value = self._extract_condition_operand(node.value)
+            # Check if the base value is a classical register
+            if isinstance(node.value, ast.Name) and node.value.id in self.classical_registers:
+                # This is a classical register access (e.g., c[1]), use it directly
+                if isinstance(node.slice, ast.Index):  # Python < 3.9
+                    index = self._extract_condition_operand(node.slice.value)
+                elif isinstance(node.slice, ast.Constant):  # Python 3.9+
+                    index = str(node.slice.value)
+                elif isinstance(node.slice, ast.Name):
+                    index = node.slice.id
+                else:
+                    index = self._extract_condition_operand(node.slice)
+                return f"{value}[{index}]"
+            
+            # Regular array indexing
             if isinstance(node.slice, ast.Index):  # Python < 3.9
                 index = self._extract_condition_operand(node.slice.value)
             elif isinstance(node.slice, ast.Constant):  # Python 3.9+
@@ -599,12 +623,19 @@ class QiskitASTVisitor(ast.NodeVisitor):
             self.operations.append(MeasurementNode(qubit=q, clbit=c))
             if VERBOSE:
                 vprint(f"[QiskitASTVisitor] Added measure q[{q}] -> c[{c}]")
+        
+        # Track that 'c' is a classical register (common Qiskit convention)
+        self.classical_registers.add('c')
 
     def _handle_single_measurement(self, args: List[ast.expr]) -> None:
         """Handle measurement of a single qubit to a single clbit."""
         qubit = self._extract_qubit_index(args[0])
         clbit = self._extract_clbit_index(args[1])
         self.operations.append(MeasurementNode(qubit=qubit, clbit=clbit))
+        
+        # Track that 'c' is a classical register (common Qiskit convention)
+        # This helps identify c[i] references in if statements as classical register access
+        self.classical_registers.add('c')
 
         if VERBOSE:
             vprint(f"[QiskitASTVisitor] Added measure q[{qubit}] -> c[{clbit}]")

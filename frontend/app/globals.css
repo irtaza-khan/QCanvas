@@ -666,6 +666,55 @@ html {
   background-color: #e2e8f0 !important;
 }
 
+/* Light theme for code blocks and circuit diagrams */
+.light .bg-gray-800 {
+  background-color: #f1f5f9 !important;
+}
+
+.light .bg-gray-900 {
+  background-color: #f8fafc !important;
+}
+
+.light .border-gray-700 {
+  border-color: #cbd5e1 !important;
+}
+
+.light .text-gray-300 {
+  color: #475569 !important;
+}
+
+/* Light theme hover effects - prevent block boxes */
+.light .hover\:bg-editor-bg\/50:hover {
+  background-color: rgba(241, 245, 249, 0.5) !important;
+}
+
+.light .hover\:border-blue-500\/50:hover {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+.light .hover\:border-purple-500\/50:hover {
+  border-color: rgba(168, 85, 247, 0.5) !important;
+}
+
+.light .hover\:border-green-500\/50:hover {
+  border-color: rgba(34, 197, 94, 0.5) !important;
+}
+
+/* Light theme for quantum glass dark */
+.light .quantum-glass-dark {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Light theme border overrides */
+.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.light .hover\:border-quantum-blue-light:hover {
+  border-color: rgba(59, 130, 246, 0.6) !important;
+}
+
 /* Light theme for find/replace */
 .light .find-replace-container {
   background-color: #f8fafc !important;

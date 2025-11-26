@@ -919,16 +919,6 @@ export default function TopBar({
 
           {/* Center - Compile/Run and Options */}
           <div className="flex items-center space-x-1 md:space-x-2">
-            <button
-              onClick={handleConvertToQASM}
-              disabled={!activeFile}
-              className="btn-ghost flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-2 md:px-3 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors hidden md:flex"
-              title="Convert to OpenQASM"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span className="hidden lg:inline">Compile to QASM</span>
-            </button>
-
             {/* Execution Mode Toggle */}
             <div className="hidden md:flex items-center space-x-1 bg-editor-bg rounded-lg p-0.5 border border-editor-border">
               <button

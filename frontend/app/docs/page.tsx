@@ -665,7 +665,7 @@ print(qc)`}
                     <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
                   </div>
                   <p className="text-editor-text text-sm mb-3">Convert framework code to OpenQASM 3.0</p>
-                  <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 p-2 rounded">
+                  <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 dark:bg-gray-900 bg-gray-100 p-2 rounded">
 {`{
   "source_code": "from qiskit import...",
   "source_framework": "qiskit",
@@ -697,7 +697,7 @@ print(qc)`}
                     <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
                   </div>
                   <p className="text-editor-text text-sm mb-3">Execute OpenQASM 3.0 with QSim</p>
-                  <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 p-2 rounded">
+                  <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 dark:bg-gray-900 bg-gray-100 p-2 rounded">
 {`{
   "qasm_code": "OPENQASM 3.0; ...",
   "backend": "cirq",  // cirq, qiskit, pennylane
@@ -788,7 +788,7 @@ print(qc)`}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
                 <h4 className="text-white font-medium mb-2">Connection</h4>
-                <pre className="text-xs text-editor-text bg-gray-900 p-2 rounded">
+                <pre className="text-xs text-editor-text bg-gray-900 dark:bg-gray-900 bg-gray-100 p-2 rounded">
 ws://localhost:8000/ws
                 </pre>
               </div>
@@ -852,7 +852,7 @@ ws://localhost:8000/ws
                     <p className="text-sm text-gray-400 mb-2">Returns:</p>
                     <p className="text-sm text-editor-text ml-4"><code className="text-quantum-blue-light">str</code> - OpenQASM 3.0 code</p>
                   </div>
-                  <div className="bg-gray-900 rounded-lg p-4 mt-4">
+                  <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mt-4">
                     <pre className="text-xs text-editor-text overflow-x-auto">
 {`from qcanvas import compile
 import cirq
@@ -894,7 +894,7 @@ print(qasm)`}
                     <p className="text-sm text-gray-400 mb-2">Returns:</p>
                     <p className="text-sm text-editor-text ml-4"><code className="text-quantum-blue-light">SimulationResult</code> - Result object with counts, probabilities, and metadata</p>
                   </div>
-                  <div className="bg-gray-900 rounded-lg p-4 mt-4">
+                  <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mt-4">
                     <pre className="text-xs text-editor-text overflow-x-auto">
 {`import qsim
 
@@ -941,7 +941,7 @@ print(result.probabilities)`}
                     <p className="text-sm text-gray-400 mb-2">Returns:</p>
                     <p className="text-sm text-editor-text ml-4"><code className="text-quantum-blue-light">SimulationResult</code> - Result object with counts, probabilities, and metadata</p>
                   </div>
-                  <div className="bg-gray-900 rounded-lg p-4 mt-4">
+                  <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mt-4">
                     <pre className="text-xs text-editor-text overflow-x-auto">
 {`from qcanvas import compile_and_execute
 import cirq
@@ -984,67 +984,67 @@ print(result.probabilities)`}
                   </tr>
                 </thead>
                 <tbody className="text-editor-text">
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">counts</code></td>
                     <td className="py-3 px-4 text-sm"><code>Dict[str, int]</code></td>
                     <td className="py-3 px-4">Measurement counts for each outcome</td>
                     <td className="py-3 px-4 text-sm"><code>{`{'00': 512, '11': 512}`}</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">probabilities</code></td>
                     <td className="py-3 px-4 text-sm"><code>Dict[str, float]</code></td>
                     <td className="py-3 px-4">Probability of each measurement outcome</td>
                     <td className="py-3 px-4 text-sm"><code>{`{'00': 0.5, '11': 0.5}`}</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">statevector</code></td>
                     <td className="py-3 px-4 text-sm"><code>List[complex]</code></td>
                     <td className="py-3 px-4">Full quantum statevector (only when shots=0)</td>
                     <td className="py-3 px-4 text-sm"><code>{`[0.707+0j, 0+0j, ...]`}</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">n_qubits</code></td>
                     <td className="py-3 px-4 text-sm"><code>int</code></td>
                     <td className="py-3 px-4">Number of qubits in the circuit</td>
                     <td className="py-3 px-4 text-sm"><code>2</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">shots</code></td>
                     <td className="py-3 px-4 text-sm"><code>int</code></td>
                     <td className="py-3 px-4">Number of measurement shots executed</td>
                     <td className="py-3 px-4 text-sm"><code>1000</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">backend</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Backend used for simulation</td>
                     <td className="py-3 px-4 text-sm"><code>"cirq"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">execution_time</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Total execution time (human-readable)</td>
                     <td className="py-3 px-4 text-sm"><code>"1.23ms"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">simulation_time</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Time spent in quantum simulation</td>
                     <td className="py-3 px-4 text-sm"><code>"0.98ms"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">memory_usage</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Memory consumed during simulation</td>
                     <td className="py-3 px-4 text-sm"><code>"45.2 MB"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">cpu_usage</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">CPU utilization during simulation</td>
                     <td className="py-3 px-4 text-sm"><code>"12.5%"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 transition-colors">
+                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">fidelity</code></td>
                     <td className="py-3 px-4 text-sm"><code>float</code></td>
                     <td className="py-3 px-4">Simulation fidelity as percentage</td>
@@ -1080,7 +1080,7 @@ print(result.probabilities)`}
                   </div>
                   Cirq
                 </h4>
-                <div className="bg-gray-900 rounded-lg p-4 mb-4">
+                <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mb-4">
                   <pre className="text-xs text-editor-text overflow-x-auto">
 {`import cirq
 
@@ -1094,8 +1094,8 @@ circuit = cirq.Circuit([
 print(circuit)`}
                   </pre>
                 </div>
-                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                  <pre className="text-xs text-gray-300 font-mono">
+                <div className="bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded-lg p-3 border border-gray-700 dark:border-gray-700 border-gray-300">
+                  <pre className="text-xs text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
 {`0: ───H───@───M───
            │
 1: ────────X───M───`}
@@ -1111,7 +1111,7 @@ print(circuit)`}
                   </div>
                   Qiskit
                 </h4>
-                <div className="bg-gray-900 rounded-lg p-4 mb-4">
+                <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mb-4">
                   <pre className="text-xs text-editor-text overflow-x-auto">
 {`from qiskit import QuantumCircuit
 
@@ -1123,8 +1123,8 @@ qc.measure([0, 1], [0, 1])
 print(qc)`}
                   </pre>
                 </div>
-                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                  <pre className="text-xs text-gray-300 font-mono">
+                <div className="bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded-lg p-3 border border-gray-700 dark:border-gray-700 border-gray-300">
+                  <pre className="text-xs text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
 {`     ┌───┐     ┌─┐
 q_0: ┤ H ├──■──┤M├
      └───┘ │ ┌┴┐└╥┘
@@ -1143,7 +1143,7 @@ c: 2/══════╪══╬══╩═`}
                   </div>
                   PennyLane
                 </h4>
-                <div className="bg-gray-900 rounded-lg p-4 mb-4">
+                <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mb-4">
                   <pre className="text-xs text-editor-text overflow-x-auto">
 {`import pennylane as qml
 
@@ -1158,8 +1158,8 @@ def circuit():
 print(qml.draw(circuit)())`}
                   </pre>
                 </div>
-                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                  <pre className="text-xs text-gray-300 font-mono">
+                <div className="bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded-lg p-3 border border-gray-700 dark:border-gray-700 border-gray-300">
+                  <pre className="text-xs text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
 {`0: ──H──╭C──┤ ⟨Z⟩
 1: ──────╰X──┤`}
                   </pre>
@@ -1175,7 +1175,7 @@ print(qml.draw(circuit)())`}
               Complete Workflow Example
             </h3>
             <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
-              <div className="bg-gray-900 rounded-lg p-4">
+              <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4">
                 <pre className="text-sm text-editor-text overflow-x-auto">
 {`import cirq
 from qcanvas import compile, compile_and_execute

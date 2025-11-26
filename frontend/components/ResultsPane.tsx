@@ -60,7 +60,7 @@ interface ErrorEntry {
 }
 
 export default function ResultsPane() {
-  const { resultsCollapsed, toggleResults, compiledQasm, getActiveFile, conversionStats, simulationResults, hybridResult, executionMode } = useFileStore()
+  const { resultsCollapsed, toggleResults, compiledQasm, getActiveFile, conversionStats, simulationResults, hybridResult, executionMode, theme } = useFileStore()
 
   // Helper function to get display stats from backend conversion stats
   const getDisplayStats = () => {
@@ -236,6 +236,44 @@ export default function ResultsPane() {
     },
     probs: null
   } : null
+
+  // Helper function to generate all possible states for n qubits and merge with actual counts
+  const getAllStatesWithCounts = (counts: { [state: string]: number }, nQubits: number, shots: number) => {
+    // Always infer n_qubits from actual state strings in counts (this handles cases where
+    // circuit has more qubits than measured qubits, e.g., 3 qubits but only 2 measured)
+    let inferredQubits = 0
+    if (Object.keys(counts).length > 0) {
+      // Get the length of the first state string (all should be the same length)
+      const firstState = Object.keys(counts)[0]
+      inferredQubits = firstState.length
+    } else if (nQubits > 0) {
+      // If no counts yet, use provided nQubits
+      inferredQubits = nQubits
+    }
+
+    // If still 0, default to 1 qubit
+    if (inferredQubits === 0) {
+      inferredQubits = 1
+    }
+
+    // Generate all possible states (binary strings)
+    const allStates: string[] = []
+    const maxState = Math.pow(2, inferredQubits)
+    for (let i = 0; i < maxState; i++) {
+      allStates.push(i.toString(2).padStart(inferredQubits, '0'))
+    }
+
+    // Merge actual counts with all possible states (fill 0 for missing states)
+    const mergedCounts: { [state: string]: number } = {}
+    allStates.forEach(state => {
+      mergedCounts[state] = counts[state] || 0
+    })
+
+    // Sort by count in descending order
+    const sortedEntries = Object.entries(mergedCounts).sort((a, b) => b[1] - a[1])
+
+    return sortedEntries
+  }
 
   // Helper function to add an error entry
   const addError = (message: string, severity: 'error' | 'warning' | 'info' = 'error', details?: string) => {
@@ -695,14 +733,18 @@ export default function ResultsPane() {
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                              {Object.entries(result.counts).map(([state, count]) => (
-                                <div key={state} className="flex items-center justify-between px-2 py-1 bg-gray-800 rounded">
-                                  <span className="font-mono text-white">|{state}⟩</span>
-                                  <span className="text-gray-300">
-                                    {count} ({((count / result.shots) * 100).toFixed(1)}%)
-                                  </span>
-                                </div>
-                              ))}
+                              {(() => {
+                                // Don't pass nQubits - let the function infer from actual state strings
+                                const sortedStates = getAllStatesWithCounts(result.counts, 0, result.shots)
+                                return sortedStates.map(([state, count]) => (
+                                  <div key={state} className="flex items-center justify-between px-2 py-1 bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded">
+                                    <span className="font-mono text-white dark:text-white text-gray-800">|{state}⟩</span>
+                                    <span className="text-gray-300 dark:text-gray-300 text-gray-700">
+                                      {count} ({((count / result.shots) * 100).toFixed(1)}%)
+                                    </span>
+                                  </div>
+                                ))
+                              })()}
                             </div>
                           </div>
                         ))}
@@ -739,9 +781,14 @@ export default function ResultsPane() {
                         {`Backend: ${simulationResults.metadata.backend || 'unknown'}\n`}
                         {`Shots: ${simulationResults.metadata.shots || 0}\n\n`}
                         {`Measurement Results:\n`}
-                        {Object.entries(simulationResults.counts || {}).map(([state, count]) =>
-                          `  |${state}⟩: ${count} (${((count / (simulationResults.metadata.shots || 1)) * 100).toFixed(1)}%)`
-                        ).join('\n')}
+                        {(() => {
+                          const shots = simulationResults.metadata.shots || 0
+                          // Don't pass nQubits - let the function infer from actual state strings
+                          const sortedStates = getAllStatesWithCounts(simulationResults.counts || {}, 0, shots)
+                          return sortedStates.map(([state, count]) =>
+                            `  |${state}⟩: ${count} (${((count / (shots || 1)) * 100).toFixed(1)}%)`
+                          ).join('\n')
+                        })()}
                       </pre>
                     </div>
                   </div>
@@ -809,19 +856,24 @@ print(result.counts)`}
                 {/* Chart.js Histogram */}
                 <div className="h-64 mb-4">
                   <Bar
-                    data={{
-                      labels: Object.keys(quantumResults.counts).map(state => `|${state}⟩`),
-                      datasets: [
-                        {
-                          label: 'Measurement Counts',
-                          data: Object.values(quantumResults.counts),
-                          backgroundColor: 'rgba(99, 102, 241, 0.6)',
-                          borderColor: 'rgba(99, 102, 241, 1)',
-                          borderWidth: 1,
-                          borderRadius: 4,
-                        },
-                      ],
-                    }}
+                    data={(() => {
+                      const shots = quantumResults.shots || 0
+                      // Don't pass nQubits - let the function infer from actual state strings
+                      const sortedStates = getAllStatesWithCounts(quantumResults.counts, 0, shots)
+                      return {
+                        labels: sortedStates.map(([state]) => `|${state}⟩`),
+                        datasets: [
+                          {
+                            label: 'Measurement Counts',
+                            data: sortedStates.map(([, count]) => count),
+                            backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                          },
+                        ],
+                      }
+                    })()}
                     options={{
                       responsive: true,
                       maintainAspectRatio: false,
@@ -836,8 +888,9 @@ print(result.counts)`}
                           callbacks: {
                             label: (context) => {
                               const count = context.parsed.y
-                              const percentage = ((count / quantumResults.shots) * 100).toFixed(1)
-                              return `${count} ("${percentage}"%)`
+                              const shots = quantumResults.shots || 1
+                              const percentage = ((count / shots) * 100).toFixed(1)
+                              return `${count} (${percentage}%)`
                             },
                           },
                         },
@@ -845,10 +898,10 @@ print(result.counts)`}
                       scales: {
                         x: {
                           grid: {
-                            color: 'rgba(255, 255, 255, 0.1)',
+                            color: theme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
                           },
                           ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)',
+                            color: theme === 'light' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
                             font: {
                               family: 'monospace',
                             },
@@ -856,10 +909,10 @@ print(result.counts)`}
                         },
                         y: {
                           grid: {
-                            color: 'rgba(255, 255, 255, 0.1)',
+                            color: theme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
                           },
                           ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)',
+                            color: theme === 'light' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
                           },
                           beginAtZero: true,
                         },
@@ -891,19 +944,32 @@ print(result.counts)`}
                   </div>
 
                   {/* Show probabilities if available */}
-                  {simulationResults?.probs && (
-                    <div className="mt-4 pt-4 border-t border-editor-border">
-                      <h5 className="text-xs font-medium text-gray-400 mb-2">State Probabilities</h5>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                        {Object.entries(simulationResults.probs).map(([state, prob]) => (
-                          <div key={state} className="bg-editor-bg border border-editor-border rounded px-2 py-1">
-                            <span className="text-gray-400">|{state}⟩:</span>
-                            <span className="text-white ml-1 font-mono">{(prob * 100).toFixed(2)}%</span>
-                          </div>
-                        ))}
+                  {simulationResults?.probs && (() => {
+                    const shots = simulationResults.metadata.shots || 0
+                    // Convert probs to counts format for sorting, then back to probs
+                    const probsAsCounts: { [state: string]: number } = {}
+                    Object.entries(simulationResults.probs).forEach(([state, prob]) => {
+                      probsAsCounts[state] = prob * shots
+                    })
+                    // Don't pass nQubits - let the function infer from actual state strings
+                    const sortedStates = getAllStatesWithCounts(probsAsCounts, 0, shots)
+                    return (
+                      <div className="mt-4 pt-4 border-t border-editor-border">
+                        <h5 className="text-xs font-medium text-gray-400 mb-2">State Probabilities</h5>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                          {sortedStates.map(([state]) => {
+                            const prob = simulationResults.probs![state] || 0
+                            return (
+                              <div key={state} className="bg-editor-bg border border-editor-border rounded px-2 py-1">
+                                <span className="text-gray-400">|{state}⟩:</span>
+                                <span className="text-white ml-1 font-mono">{(prob * 100).toFixed(2)}%</span>
+                              </div>
+                            )
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )
+                  })()}
                 </div>
               </div>
             ) : (
@@ -920,7 +986,7 @@ print(result.counts)`}
             {!compiledQasm ? (
               <div className="text-center py-8 text-gray-500">
                 <FileCode2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No compiled OpenQASM yet. Use &quot;Compile to QASM&quot; in the top bar.</p>
+                <p className="text-sm">No compiled OpenQASM yet. Select &quot;Compile&quot; mode and run to generate QASM.</p>
               </div>
             ) : (
               <div className="bg-editor-bg border border-editor-border rounded p-3">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Zap, Code, Cpu, BarChart3, Users, Github, Globe, BookOpen, Moon, Sun, Menu, X, Linkedin, Mail } from 'lucide-react'
+import { Zap, Users, Github, Moon, Sun, Menu, X, Linkedin, Mail } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import { config, getCopyrightText } from '@/lib/config'
 
@@ -63,7 +63,7 @@ export default function AboutPage() {
                 Documentation
               </Link>
               <Link href="/about" className="text-white font-medium underline decoration-quantum-blue-light decoration-2 underline-offset-4">
-                About
+                About Us
               </Link>
 
               {/* Theme Toggle */}
@@ -115,7 +115,7 @@ export default function AboutPage() {
                   Documentation
                 </Link>
                 <Link href="/about" className="block text-white font-medium transition-colors duration-200">
-                  About
+                  About Us
                 </Link>
 
                 <div className="flex items-center justify-between pt-4 border-t border-white/10">
@@ -155,136 +155,14 @@ export default function AboutPage() {
             <Zap className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            About <span className="quantum-gradient bg-clip-text text-transparent">QCanvas</span>
+            About <span className="quantum-gradient bg-clip-text text-transparent">Us</span>
           </h1>
           <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed">
-            A next-generation Quantum Unified Simulator that bridges Qiskit, Cirq, and PennyLane through 
-            OpenQASM 3.0. Write quantum code in any framework, compile, simulate with QSim, and visualize results in real-time.
+            Meet the passionate team behind QCanvas, dedicated to advancing quantum computing education 
+            and research through innovative simulation tools and framework unification.
           </p>
         </div>
       </section>
-
-      {/* Features Section */}
-      <main className="px-4 py-16">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Key Features</h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Framework Conversion */}
-            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300">
-              <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
-                <Code className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Multi-Framework Compilation</h3>
-              <p className="text-editor-text">
-                AST-based parsing of Qiskit, Cirq, and PennyLane code with intelligent 
-                conversion to OpenQASM 3.0. Supports if-else, for loops, and variable tracking.
-              </p>
-            </div>
-
-            {/* Quantum Simulation */}
-            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300">
-              <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
-                <Cpu className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">QSim Integration</h3>
-              <p className="text-editor-text">
-                Execute OpenQASM 3.0 circuits with multiple simulation backends. Configure 
-                shots (1-10,000), view execution statistics, memory usage, and fidelity metrics.
-              </p>
-            </div>
-
-            {/* Real-time Visualization */}
-            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300">
-              <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
-                <BarChart3 className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Results Visualization</h3>
-              <p className="text-editor-text">
-                Interactive histogram charts, measurement statistics, circuit analysis, 
-                gate distribution, and detailed performance metrics with gradient cards.
-              </p>
-            </div>
-
-            {/* OpenQASM Standard */}
-            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300">
-              <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
-                <Globe className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">OpenQASM 3.0 Standard</h3>
-              <p className="text-editor-text">
-                Full Iteration I & II feature support: 50+ gates, control flow, subroutines, 
-                gate modifiers (ctrl@, inv@, pow@), and classical expressions.
-              </p>
-            </div>
-
-            {/* Web IDE */}
-            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300">
-              <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
-                <Zap className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Monaco Web IDE</h3>
-              <p className="text-editor-text">
-                Professional code editor with syntax highlighting, 10+ keyboard shortcuts, 
-                file templates, auto-save, and framework auto-detection.
-              </p>
-            </div>
-
-            {/* Examples Library */}
-            <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300">
-              <div className="w-16 h-16 quantum-gradient rounded-xl flex items-center justify-center mb-6">
-                <Users className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">25+ Quantum Examples</h3>
-              <p className="text-editor-text">
-                Bell State, Teleportation, Deutsch-Jozsa, Grover&apos;s Search, QRNG, VQE, 
-                QAOA, QML XOR Classifier, and more across all frameworks.
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Technology Stack */}
-      <div className="px-4 py-16 bg-black/20">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Technology Stack</h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center group hover:scale-105 transition-transform duration-300">
-              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg">
-                <span className="text-white font-bold text-lg">Next.js</span>
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Frontend</h3>
-              <p className="text-editor-text text-sm">Next.js 14 + React 18 + TypeScript + Monaco Editor</p>
-            </div>
-            
-            <div className="text-center group hover:scale-105 transition-transform duration-300">
-              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg">
-                <span className="text-white font-bold text-lg">FastAPI</span>
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Backend</h3>
-              <p className="text-editor-text text-sm">FastAPI + Pydantic + SQLAlchemy + WebSocket</p>
-            </div>
-            
-            <div className="text-center group hover:scale-105 transition-transform duration-300">
-              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg">
-                <span className="text-white font-bold text-sm">QSim</span>
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Quantum</h3>
-              <p className="text-editor-text text-sm">OpenQASM 3.0 + QSim + Cirq/Qiskit/PennyLane</p>
-            </div>
-            
-            <div className="text-center group hover:scale-105 transition-transform duration-300">
-              <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg">
-                <span className="text-white font-bold text-lg">Docker</span>
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Deployment</h3>
-              <p className="text-editor-text text-sm">Docker + Docker Compose + CI/CD</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Team Section */}
       <div className="px-4 py-16">
@@ -328,8 +206,8 @@ export default function AboutPage() {
             <h3 className="text-2xl font-bold text-white text-center mb-8">QSim Team</h3>
             <div className="grid md:grid-cols-3 gap-8">
               {config.qsimTeam.map((member) => (
-                <div key={member.name} className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center hover:border-purple-500 transition-all duration-300">
-                  <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div key={member.name} className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 dark:border-white/10 border-gray-200 text-center hover:border-purple-500 dark:hover:border-purple-500 hover:border-purple-400 transition-all duration-300">
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg bg-gradient-to-r from-pink-500 to-rose-500 dark:from-purple-500 dark:to-pink-500">
                     <Users className="w-10 h-10 text-white" />
                   </div>
                   <h4 className="text-xl font-semibold text-white mb-4">{member.name}</h4>
@@ -384,7 +262,7 @@ export default function AboutPage() {
             <h3 className="text-2xl font-bold text-white text-center mb-6">Supervisors</h3>
             <div className="grid md:grid-cols-2 gap-6">
               {config.supervisors.map((supervisor) => (
-                <div key={supervisor.name} className="quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border border-white/10 text-center hover:border-purple-500 transition-all duration-300">
+                <div key={supervisor.name} className="quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border border-white/10 dark:border-white/10 border-gray-200 text-center hover:border-purple-500 dark:hover:border-purple-500 hover:border-purple-400 transition-all duration-300">
                   {/* <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Users className="w-10 h-10 text-white" />
                   </div> */}
