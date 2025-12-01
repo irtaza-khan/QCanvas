@@ -4,13 +4,13 @@ import { Toaster } from 'react-hot-toast'
 import './globals.css'
 import ThemeWatcher from '@/components/ThemeWatcher'
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
 })
 
-const jetbrainsMono = JetBrains_Mono({ 
+const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
@@ -22,9 +22,9 @@ export const metadata: Metadata = {
   keywords: ['quantum', 'qiskit', 'cirq', 'pennylane', 'quantum computing', 'code editor'],
   authors: [{ name: 'QCanvas Team' }],
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
+    icon: '/favicon.svg?v=2',
+    shortcut: '/favicon.svg?v=2',
+    apple: '/favicon.svg?v=2',
   },
 }
 

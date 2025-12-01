@@ -30,7 +30,7 @@ Install Python packages:
 
 ```bash
 # Install backend dependencies
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 
 # Install quantum computing frameworks
 pip install qiskit cirq pennylane numpy

@@ -5,11 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Github, BookOpen, Play, Moon, Sun } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
+import { useAuthStore } from '@/lib/authStore'
+import { authApi } from '@/lib/api'
 import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
   const { theme, toggleTheme } = useFileStore()
+  const { isAuthenticated, setAuth, setLoading } = useAuthStore()
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,20 +24,17 @@ export default function LoginPage() {
 
   // Check if already authenticated
   useEffect(() => {
-    const authStatus = localStorage.getItem('qcanvas-auth')
-    if (authStatus) {
+    if (isAuthenticated) {
       router.push('/app')
     }
-  }, [router])
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setLoading(true)
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
       // Basic validation
       if (!formData.email || !formData.password) {
         throw new Error('Please fill in all fields')
@@ -47,35 +48,70 @@ export default function LoginPage() {
         throw new Error('Password must be at least 6 characters')
       }
 
-      // Mock successful login
-      localStorage.setItem('qcanvas-auth', JSON.stringify({
-        email: formData.email,
-        loginTime: new Date().toISOString(),
-      }))
+      // Call backend login API
+      const response = await authApi.login(formData.email, formData.password)
 
-      toast.success('Login successful!')
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Login failed')
+      }
+
+      const { access_token, user } = response.data
+
+      // Store auth data
+      setAuth(user, access_token)
+
+      // Show success message with user's name
+      toast.success(`Welcome back, ${user.full_name}!`)
+
+      // Navigate to app
       router.push('/app')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed')
     } finally {
       setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleDemoLogin = () => {
+  const handleDemoLogin = async () => {
     setFormData({
       email: 'demo@qcanvas.dev',
       password: 'demo123',
     })
+
+    // Auto-submit after filling form
+    setIsLoading(true)
+    setLoading(true)
+
+    try {
+      const response = await authApi.login('demo@qcanvas.dev', 'demo123')
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Demo login failed')
+      }
+
+      const { access_token, user } = response.data
+      setAuth(user, access_token)
+
+      toast.success('Logged in as Demo User!')
+      toast('Demo data will be cleared on logout', { icon: 'ℹ️' })
+
+      router.push('/app')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Demo login failed')
+    } finally {
+      setIsLoading(false)
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg p-4 relative overflow-auto">
       {/* Theme Toggle Button */}
       <div className="absolute top-4 right-4 z-20">
-        <button 
-          onClick={toggleTheme} 
-          className="btn-ghost p-3 hover:bg-quantum-blue-light/20 rounded-lg" 
+        <button
+          onClick={toggleTheme}
+          className="btn-ghost p-3 hover:bg-quantum-blue-light/20 rounded-lg"
           title="Toggle theme"
         >
           {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -236,23 +272,23 @@ export default function LoginPage() {
           {/* Quick Links */}
           <div className="mt-6 pt-6 border-t border-editor-border">
             <div className="flex justify-center space-x-4">
-              <a 
-                href="/about" 
+              <a
+                href="/about"
                 className="flex items-center text-sm text-editor-text hover:text-white transition-colors"
               >
                 <BookOpen className="w-4 h-4 mr-1" />
                 About
               </a>
-              <a 
-                href="/examples" 
+              <a
+                href="/examples"
                 className="flex items-center text-sm text-editor-text hover:text-white transition-colors"
               >
                 <Play className="w-4 h-4 mr-1" />
                 Examples
               </a>
-              <a 
-                href="https://github.com" 
-                target="_blank" 
+              <a
+                href="https://github.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center text-sm text-editor-text hover:text-white transition-colors"
               >
@@ -265,9 +301,9 @@ export default function LoginPage() {
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-500">
-              This is a demo authentication system.
+              Secure authentication powered by JWT tokens.
               <br />
-              Use any email and password (6+ characters).
+              Demo account: demo@qcanvas.dev / demo123
             </p>
           </div>
         </div>

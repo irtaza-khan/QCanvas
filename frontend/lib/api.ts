@@ -213,7 +213,7 @@ export const quantumApi = {
 
   // Execute hybrid Python code with qcanvas/qsim
   async executeHybrid(
-    code: string, 
+    code: string,
     framework?: string,
     timeout?: number
   ): Promise<ApiResponse<HybridExecuteResult>> {
@@ -289,22 +289,63 @@ export interface HybridStatusResult {
   allowed_modules: string[]
 }
 
-// Auth API (for future use)
+// Auth API types
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface RegisterRequest {
+  email: string
+  username: string
+  password: string
+  full_name: string
+}
+
+export interface AuthResponse {
+  access_token: string
+  token_type: string
+  user: {
+    id: string
+    email: string
+    username: string
+    full_name: string
+    role: 'user' | 'admin' | 'demo'
+    is_active: boolean
+    is_verified: boolean
+    created_at: string
+    last_login_at: string | null
+  }
+}
+
+// Auth API
 export const authApi = {
-  async login(email: string, password: string): Promise<ApiResponse<{ token: string }>> {
-    return apiRequest('/api/auth/login', {
+  async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+    return apiRequest<AuthResponse>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })
   },
 
-  async logout(): Promise<ApiResponse<{ success: boolean }>> {
-    return apiRequest('/api/auth/logout', {
+  async register(data: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
+    return apiRequest<AuthResponse>('/api/auth/register', {
       method: 'POST',
+      body: JSON.stringify(data),
     })
   },
 
-  async me(): Promise<ApiResponse<any>> {
-    return apiRequest('/api/auth/me')
+  async getCurrentUser(token: string): Promise<ApiResponse<AuthResponse['user']>> {
+    return apiRequest<AuthResponse['user']>('/api/auth/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+  },
+
+  async logout(): Promise<ApiResponse<{ message: string }>> {
+    return apiRequest<{ message: string }>('/api/auth/logout', {
+      method: 'POST',
+    })
   },
 }
+

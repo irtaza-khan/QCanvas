@@ -30,6 +30,7 @@ import {
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useFileStore } from "@/lib/store";
+import { useAuthStore } from "@/lib/authStore";
 import { fileApi, quantumApi, HybridExecuteResult } from "@/lib/api";
 import { InputLanguage, ResultFormat } from "@/types";
 import { detectFramework } from "@/lib/utils";
@@ -68,6 +69,9 @@ export default function TopBar({
     setConversionStats,
   } = useFileStore();
 
+  // Use auth store instead of localStorage
+  const { isAuthenticated, user, clearAuth } = useAuthStore();
+
   const [isRunning, setIsRunning] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -79,16 +83,9 @@ export default function TopBar({
   );
   const [autoSave, setAutoSave] = useState(true);
   const [formatOnSave, setFormatOnSave] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Execution mode state
   const { executionMode, setExecutionMode, setHybridResult } = useFileStore();
-
-  // Check authentication status
-  useEffect(() => {
-    const authStatus = localStorage.getItem('qcanvas-auth')
-    setIsAuthenticated(!!authStatus)
-  }, [])
 
   const activeFile = getActiveFile();
 
@@ -776,8 +773,18 @@ export default function TopBar({
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("qcanvas-auth");
-    toast.success("Logged out successfully");
+    const isDemoUser = user?.role === 'demo';
+
+    // Clear auth (includes demo data cleanup if demo user)
+    clearAuth();
+
+    // Show appropriate toast message
+    if (isDemoUser) {
+      toast.success("Demo session ended. All data cleared.");
+    } else {
+      toast.success("Logged out successfully");
+    }
+
     router.push("/login");
   };
 
