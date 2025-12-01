@@ -15,7 +15,6 @@ COPY . .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt
 
 # Install the quantum_simulator package (editable)
 RUN pip install -e ./quantum_simulator

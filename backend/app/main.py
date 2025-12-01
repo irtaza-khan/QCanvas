@@ -10,7 +10,7 @@ current_file = os.path.abspath(__file__)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
 sys.path.insert(0, project_root)
 
-from app.api.routes import converter, health, simulator, hybrid
+from app.api.routes import converter, health, simulator, hybrid, auth
 from app.services.simulation_service import SimulationService
 from app.services.conversion_service import ConversionService
 
@@ -54,6 +54,7 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(health.router)
+app.include_router(auth.router)
 app.include_router(converter.router)
 app.include_router(simulator.router)
 app.include_router(hybrid.router)
