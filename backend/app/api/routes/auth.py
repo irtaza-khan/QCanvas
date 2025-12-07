@@ -3,6 +3,7 @@ Authentication endpoints for QCanvas.
 Handles user registration, login, and authentication.
 """
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -18,7 +19,7 @@ from app.models.schemas import (
 from app.utils.jwt_auth import create_access_token, get_user_id_from_token
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
@@ -38,6 +39,12 @@ def get_current_user(
     Raises:
         HTTPException: If token is invalid or user not found
    """
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     token = credentials.credentials
     user_id = get_user_id_from_token(token)
     
@@ -63,6 +70,34 @@ def get_current_user(
         )
     
     return user
+
+
+def get_optional_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    Dependency to get the current authenticated user if token is present.
+    Returns None if no token or invalid token.
+    """
+    if not credentials:
+        return None
+        
+    try:
+        token = credentials.credentials
+        user_id = get_user_id_from_token(token)
+        
+        if not user_id:
+            return None
+        
+        user = db.query(User).filter(User.id == user_id, User.deleted_at == None).first()
+        if not user or not user.is_active:
+            return None
+            
+        return user
+    except Exception:
+        return None
+
 
 
 @router.post(
