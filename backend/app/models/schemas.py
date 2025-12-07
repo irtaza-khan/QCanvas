@@ -1,5 +1,7 @@
 from pydantic import BaseModel
-from typing import Optional, Literal
+from typing import Optional, Literal, List
+from uuid import UUID
+from datetime import datetime
 
 class ConversionRequest(BaseModel):
     code: str
@@ -102,3 +104,42 @@ class ErrorResponse(BaseModel):
     """Standard error response schema."""
     detail: str
 
+
+# ============================================================================
+# Project & File Schemas
+# ============================================================================
+
+class FileCreate(BaseModel):
+    filename: str
+    content: str
+    is_main: bool = False
+
+class FileResponse(BaseModel):
+    id: int
+    project_id: int
+    filename: str
+    content: str
+    is_main: bool
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class ProjectCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    is_public: bool = False
+
+class ProjectResponse(BaseModel):
+    id: int
+    user_id: UUID
+    name: str
+    description: Optional[str]
+    is_public: bool
+    created_at: datetime
+    updated_at: datetime
+    files: List[FileResponse] = []
+    
+    class Config:
+        from_attributes = True
