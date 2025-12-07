@@ -1,16 +1,20 @@
 import sys
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.core.middleware import limiter, SecurityHeadersMiddleware, AuditLogMiddleware
+
 
 # Add the project root directory to Python path
 current_file = os.path.abspath(__file__)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
 sys.path.insert(0, project_root)
 
-from app.api.routes import converter, health, simulator, hybrid, auth
+from app.api.routes import converter, health, simulator, hybrid, auth, projects
 from app.services.simulation_service import SimulationService
 from app.services.conversion_service import ConversionService
 
@@ -43,6 +47,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Initialize Limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Add Middleware (Order matters: Security -> Audit -> CORS)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(AuditLogMiddleware)
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -58,6 +70,7 @@ app.include_router(auth.router)
 app.include_router(converter.router)
 app.include_router(simulator.router)
 app.include_router(hybrid.router)
+app.include_router(projects.router)
 
 # Root endpoint
 @app.get("/")
