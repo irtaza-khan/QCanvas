@@ -20,7 +20,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    pass
+    # Add 'DEMO' to the userrole enum
+    # Note: 'IF NOT EXISTS' is supported in PostgreSQL 12+
+    op.execute("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'DEMO'")
 
 
 def downgrade() -> None:
