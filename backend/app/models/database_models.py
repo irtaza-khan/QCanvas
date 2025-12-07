@@ -3,7 +3,8 @@ Database models for QCanvas.
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, Enum, TIMESTAMP
+from sqlalchemy import Column, String, Boolean, Enum, TIMESTAMP, ForeignKey, Text, Integer, Float, JSON
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.config.database import Base
 from app.utils.security import SecurityUtils
@@ -15,6 +16,31 @@ class UserRole(str, enum.Enum):
     USER = "user"
     ADMIN = "admin"
     DEMO = "demo"  # Demo account - data cleared on logout
+
+
+class QuantumFramework(str, enum.Enum):
+    CIRQ = "cirq"
+    QISKIT = "qiskit"
+    PENNYLANE = "pennylane"
+
+
+class SimulationBackend(str, enum.Enum):
+    STATEVECTOR = "statevector"
+    DENSITY_MATRIX = "density_matrix"
+    STABILIZER = "stabilizer"
+
+
+class ExecutionStatus(str, enum.Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
+    PENDING = "pending"
+    RUNNING = "running"
+
+
+class SessionType(str, enum.Enum):
+    WEBSOCKET = "websocket"
+    API = "api"
+    WEB = "web"
 
 
 class User(Base):
@@ -29,6 +55,14 @@ class User(Base):
     
     # Primary key
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # Relationships
+    projects = relationship("Project", back_populates="owner", cascade="all, delete-orphan")
+    jobs = relationship("Job", back_populates="user", cascade="all, delete-orphan")
+    conversions = relationship("Conversion", back_populates="user", cascade="all, delete-orphan")
+    simulations = relationship("Simulation", back_populates="user", cascade="all, delete-orphan")
+    sessions = relationship("Session", back_populates="user")
+    api_activities = relationship("ApiActivity", back_populates="user")
     
     # Authentication
     email = Column(String(255), unique=True, nullable=False, index=True)
@@ -120,3 +154,156 @@ class User(Base):
     
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email}, role={self.role.value})>"
+
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    is_public = Column(Boolean, default=False, nullable=False)
+    
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    owner = relationship("User", back_populates="projects")
+    files = relationship("File", back_populates="project", cascade="all, delete-orphan")
+    jobs = relationship("Job", back_populates="project")
+
+
+class File(Base):
+    __tablename__ = "files"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    filename = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    is_main = Column(Boolean, default=False, nullable=False)
+    
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    project = relationship("Project", back_populates="files")
+
+
+class JobStatus(str, enum.Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
+    
+    status = Column(Enum(JobStatus), default=JobStatus.PENDING, nullable=False)
+    backend = Column(String(50), nullable=False)
+    shots = Column(Integer, default=1024, nullable=False)
+    
+    execution_time_ms = Column(Float, nullable=True)
+    result_data = Column(JSON, nullable=True)
+    error_message = Column(Text, nullable=True)
+    
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    # Relationships
+    user = relationship("User", back_populates="jobs")
+    project = relationship("Project", back_populates="jobs")
+
+
+class Conversion(Base):
+    __tablename__ = "conversions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    source_framework = Column(Enum(QuantumFramework), nullable=False)
+    target_framework = Column(Enum(QuantumFramework), nullable=False)
+    source_code = Column(Text, nullable=False)
+    target_code = Column(Text, nullable=True)
+    qasm_code = Column(Text, nullable=True)
+    status = Column(Enum(ExecutionStatus), nullable=False)
+    error_message = Column(Text, nullable=True)
+    execution_time_ms = Column(Integer, nullable=True)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="conversions")
+    stats = relationship("ConversionStats", back_populates="conversion", uselist=False, cascade="all, delete-orphan")
+
+
+class ConversionStats(Base):
+    __tablename__ = "conversion_stats"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversion_id = Column(UUID(as_uuid=True), ForeignKey("conversions.id", ondelete="CASCADE"), unique=True, nullable=False)
+    num_qubits = Column(Integer, nullable=False)
+    num_gates = Column(Integer, nullable=False)
+    circuit_depth = Column(Integer, nullable=False)
+    optimization_level = Column(Integer, default=0)
+
+    # Relationships
+    conversion = relationship("Conversion", back_populates="stats")
+
+
+class Simulation(Base):
+    __tablename__ = "simulations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    qasm_code = Column(Text, nullable=False)
+    backend = Column(Enum(SimulationBackend), nullable=False)
+    shots = Column(Integer, nullable=False)
+    results_json = Column(JSON, nullable=True)
+    status = Column(Enum(ExecutionStatus), nullable=False)
+    error_message = Column(Text, nullable=True)
+    execution_time_ms = Column(Integer, nullable=True)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="simulations")
+
+
+class Session(Base):
+    __tablename__ = "sessions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    session_token = Column(String(255), unique=True, nullable=False)
+    session_type = Column(Enum(SessionType), nullable=False)
+    ip_address = Column(String(45), nullable=False)
+    user_agent = Column(Text, nullable=False)
+    expires_at = Column(TIMESTAMP, nullable=False)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="sessions")
+
+
+class ApiActivity(Base):
+    __tablename__ = "api_activity"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    endpoint = Column(String(255), nullable=False)
+    method = Column(String(10), nullable=False)
+    status_code = Column(Integer, nullable=False)
+    ip_address = Column(String(45), nullable=False)
+    user_agent = Column(Text, nullable=False)
+    request_body_hash = Column(String(64), nullable=True)
+    response_time_ms = Column(Integer, nullable=False)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="api_activities")
+
+
+
