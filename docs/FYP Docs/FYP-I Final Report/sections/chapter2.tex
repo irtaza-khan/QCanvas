@@ -177,7 +177,7 @@ The following use cases describe the core interactions between users and the QCa
     \end{enumerate}
     \item \textbf{Alternate Flows:}
     \begin{enumerate}
-        \item [2a] \textit{Server Unreachable:} System displays a "Maintenance Mode" splash screen with retry option.
+        \item [2a] \textit{Server Unreachable:} System displays a 404 error message with retry option.
     \end{enumerate}
     \item \textbf{Postcondition:} IDE is initialized and waiting for input.
 \end{itemize}
@@ -195,7 +195,7 @@ The following use cases describe the core interactions between users and the QCa
     \end{enumerate}
     \item \textbf{Alternate Flows:}
     \begin{enumerate}
-        \item [1a] \textit{Framework Switch:} If user switches framework mid-edit, System warns about unsaved syntax changes.
+        \item [2a] \textit{Syntax Error:} System highlights invalid code.
     \end{enumerate}
     \item \textbf{Postcondition:} Valid or invalid source code exists in the editor buffer.
 \end{itemize}
@@ -207,7 +207,7 @@ The following use cases describe the core interactions between users and the QCa
     \item \textbf{Precondition:} Source code is present in the editor.
     \item \textbf{Main Flow:}
     \begin{enumerate}
-        \item User clicks the "Convert" button.
+        \item User clicks the "Compile" button.
         \item System sends source code to the Conversion API.
         \item API parses the code and generates OpenQASM 3.0 intermediate representation.
         \item System returns the QASM code and displays it in the output panel.
@@ -215,7 +215,7 @@ The following use cases describe the core interactions between users and the QCa
     \item \textbf{Alternate Flows:}
     \begin{enumerate}
         \item [3a] \textit{Syntax Error:} Source code is invalid. API returns line number. System highlights the error line in red.
-        \item [3b] \textit{Unsupported Gate:} Source uses a gate not in the supported subset. System suggests a replacement gate.
+        \item [3b] \textit{Unsupported Gate:} Source uses a gate not in the supported subset. System returns gate not supported error.
     \end{enumerate}
     \item \textbf{Postcondition:} OpenQASM 3.0 code is available for simulation.
 \end{itemize}
@@ -227,7 +227,7 @@ The following use cases describe the core interactions between users and the QCa
     \item \textbf{Precondition:} Valid OpenQASM 3.0 code exists (from UC-03 or manual entry).
     \item \textbf{Main Flow:}
     \begin{enumerate}
-        \item User clicks "Run Simulation".
+        \item User clicks "Run" button.
         \item User configures parameters (Shots=1024, Backend=Statevector).
         \item System submits job to Queue.
         \item Simulation Backend executes the circuit.
@@ -235,7 +235,7 @@ The following use cases describe the core interactions between users and the QCa
     \end{enumerate}
     \item \textbf{Alternate Flows:}
     \begin{enumerate}
-        \item [4a] \textit{Timeout:} Simulation takes > 30s. System terminates job and alerts user to reduce circuit depth.
+        \item [4a] \textit{Timeout:} Simulation takes > 30s. System displays timeout message.
     \end{enumerate}
     \item \textbf{Postcondition:} Measurement counts and state data are available in client state.
 \end{itemize}
@@ -271,7 +271,7 @@ The following use cases describe the core interactions between users and the QCa
     \end{enumerate}
     \item \textbf{Alternate Flows:}
     \begin{enumerate}
-        \item [1a] \textit{Auto-Fix:} If a known quick fix exists, System displays a lightbulb icon. User clicks it to apply the fix.
+        \item [3a] \textit{Manual Correction:} User edits the code to resolve the issue. System re-validates and clears the error indicator.
     \end{enumerate}
     \item \textbf{Postcondition:} User is aware of the exact location and nature of the error.
 \end{itemize}
@@ -289,7 +289,7 @@ The following use cases describe the core interactions between users and the QCa
     \end{enumerate}
     \item \textbf{Alternate Flows:}
     \begin{enumerate}
-        \item [2a] \textit{File Size Limit:} If code > 1MB, System zips the content before download.
+        \item [3a] \textit{File Size Limit:} If code > 1MB, System zips the content before download.
     \end{enumerate}
     \item \textbf{Postcondition:} The OpenQASM source file is saved to the User's local file system.
 \end{itemize}
@@ -313,46 +313,11 @@ The following use cases describe the core interactions between users and the QCa
     \item \textbf{Postcondition:} Example code is loaded and ready to run.
 \end{itemize}
 
+
+
+
 % Use Case 09
-\subsection{UC-09: Batch Circuit Conversion}
-\begin{itemize}
-    \item \textbf{Primary Actor:} Researcher
-    \item \textbf{Precondition:} Researcher has an API Key and a set of local python files.
-    \item \textbf{Main Flow:}
-    \begin{enumerate}
-        \item Researcher sends a POST request to \texttt{/api/v1/convert/batch}.
-        \item System accepts payload and provides a Job ID.
-        \item System processes circuits in parallel workers.
-        \item System returns a JSON object with results for all inputs.
-    \end{enumerate}
-    \item \textbf{Alternate Flows:}
-    \begin{enumerate}
-        \item [2a] \textit{Rate Limit Exceeded:} System returns HTTP 429. User must wait 60s.
-    \end{enumerate}
-    \item \textbf{Postcondition:} Researcher possesses converted QASM for multiple source files.
-\end{itemize}
-
-% Use Case 10
-\subsection{UC-10: Compare Framework Outputs}
-\begin{itemize}
-    \item \textbf{Primary Actor:} Researcher
-    \item \textbf{Precondition:} User has selected "Comparison Mode".
-    \item \textbf{Main Flow:}
-    \begin{enumerate}
-        \item User inputs Circuit A (Qiskit) and Circuit B (Cirq).
-        \item System compiles both to OpenQASM 3.0.
-        \item System executes both on the \textit{same} backend configuration.
-        \item System overlays the two measurement histograms.
-    \end{enumerate}
-    \item \textbf{Alternate Flows:}
-    \begin{enumerate}
-        \item [2a] \textit{Semantics Mismatch:} If compilation fails for one, System alerts "Cannot compare invalid circuits".
-    \end{enumerate}
-    \item \textbf{Postcondition:} Visual comparison of results is displayed.
-\end{itemize}
-
-% Use Case 11
-\subsection{UC-11: Query Backend Capabilities}
+\subsection{UC-09: Query Backend Capabilities}
 \begin{itemize}
     \item \textbf{Primary Actor:} Developer
     \item \textbf{Precondition:} Authenticated API access.
@@ -369,8 +334,8 @@ The following use cases describe the core interactions between users and the QCa
     \item \textbf{Postcondition:} Developer client is self-configured to respect backend limits.
 \end{itemize}
 
-% Use Case 12
-\subsection{UC-12: Hybrid CPU–QPU Execution}
+% Use Case 10
+\subsection{UC-10: Hybrid CPU–QPU Execution}
 \begin{itemize}
     \item \textbf{Primary Actor:} User/System
     \item \textbf{Precondition:} Circuit submitted for execution.
