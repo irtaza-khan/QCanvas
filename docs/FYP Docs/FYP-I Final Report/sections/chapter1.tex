@@ -1,8 +1,12 @@
-\chapter{Introduction}
+\chapter{Abstract}
 
-The field of quantum computing is rapidly evolving, shifting from theoretical research to practical application. As hardware capabilities grow, so does the need for accessible, standardized software tools that can bridge the gap between abstract quantum concepts and executable code \cite{nielsen2010quantum}. "QCanvas" is proposed as a unified quantum simulation platform designed to address this need by providing a standards-aligned environment centered on OpenQASM 3.0.
+The field of quantum computing has transitioned significantly from theoretical abstraction to the era of Noisy Intermediate-Scale Quantum (NISQ) devices. As hardware vendors like IBM, Google, and Rigetti race to increase qubit counts and fidelity, the accompanying software ecosystem has expanded rapidly. However, this growth has come at the cost of fragmentation. Researchers and developers today are confronted with a "Tower of Babel" scenario, where competing frameworks—such as Qiskit, Cirq, and PennyLane—operate in silos, each with unique syntax, compilation targets, and visualization tools.
 
-This document details the software requirements for QCanvas, intended for developers, researchers, and supervisors. It outlines the architectural design, system capabilities, and constraints that define the project.
+This fragmentation poses a barrier to entry for students and creates friction for experienced researchers who wish to compare algorithms across different hardware baselines. The lack of a unified development environment that can transparently bridge these frameworks means that users often spend more time wrestling with proprietary APIs than designing quantum logic. Furthermore, the absence of standardized intermediate representations in educational tools obscures the critical translation step where high-level Python code becomes executable quantum instructions.
+
+"QCanvas" is proposed as a definitive solution to this interoperability challenge. It is designed as a unified, standard-compliant simulation platform that serves as a universal translator and execution engine for quantum circuits. By centering its architecture on OpenQASM 3.0 \cite{cross2021openqasm, nielsen2010quantum}, QCanvas provides a transparent window into quantum execution, allowing code from any major framework to be parsed, visualized, and simulated in a consistent environment.
+
+This document details the complete software requirements specification for QCanvas. It outlines the architectural decisions and functional capabilities intended to support developers, researchers, and educators in overcoming the current limitations of the quantum software landscape.
 
 \section{Problem Statement}
 
