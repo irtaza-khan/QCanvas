@@ -2,7 +2,11 @@ import sys
 import os
 import re
 from typing import Dict, Any, Optional, Tuple
-from config.config import VERBOSE, vprint, new_log_session
+# from config.config import VERBOSE, vprint, new_log_session
+# Patch: Config module missing, defining dependencies locally
+VERBOSE = False
+def vprint(*args): pass
+def new_log_session(name): pass
 
 # Add the project root directory to Python path
 current_file = os.path.abspath(__file__)
