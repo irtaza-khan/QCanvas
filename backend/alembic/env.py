@@ -20,7 +20,7 @@ import sys
 import os
 
 # Add backend directory to path
-backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, backend_dir)
 
 from app.config.database import Base
