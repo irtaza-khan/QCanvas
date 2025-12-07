@@ -63,32 +63,34 @@ This chapter describes the comprehensive functional and non-functional requireme
 
 \subsection{Reliability}
 \begin{itemize}
-    \item NFR-R1: The system shall recover from non-critical service failures (e.g., simulation timeout) and restore user state within 2 seconds.
-    \item NFR-R2: The system shall maintain an uptime of 99.9\% during business hours (09:00-17:00).
-    \item NFR-R3: The system shall persist distinct audit logs for 100\% of failed API transactions.
+    \item \textbf{NFR-R1: Service Availability} \\
+    The system containers (Backend, Database, Redis) shall report a 'healthy' status code (200 OK) on their health check endpoints 99.9\% of the time during active operation.
+    \item \textbf{NFR-R2: Audit Trail} \\
+    The system shall record an audit log entry in the \texttt{ApiActivity} table for 100\% of API requests resulting in 4xx or 5xx status codes.
 \end{itemize}
 
 \subsection{Usability}
 \begin{itemize}
-    \item NFR-U1: The system shall provide error messages with specific remediation steps for 100\% of validation errors.
-    \item NFR-U2: The system shall support keyboard access for all core compilation tasks (Ctrl+Enter to run).
-    \item NFR-U3: The interface shall implement WCAG 2.1 AA contrast ratios for text elements.
-    \item NFR-U4: A new user shall be able to execute the "Bell State" example within 3 clicks of landing.
+    \item \textbf{NFR-U1: Keyboard Efficiency} \\
+    The system shall execute the current quantum circuit when the user triggers the \texttt{Ctrl+Shift+R} (or \texttt{Cmd+Shift+R}) key combination.
+    \item \textbf{NFR-U2: Visual Accessibility} \\
+    The user interface shall utilize the Monaco Editor's high-contrast \texttt{vs-dark} or \texttt{vs} theme standards to ensure text legibility.
 \end{itemize}
 
 \subsection{Performance}
 \begin{itemize}
-    \item NFR-P1: The API shall return conversion results for standard circuits (<100 gates) in under 1500ms.
-    \item NFR-P2: Statevector simulation for 10 qubits shall complete in less than 5 seconds on the standard host.
-    \item NFR-P3: The IDE editor shall render character input with less than 50ms latency.
-    \item NFR-P4: WebSocket status updates shall propagate to the client within 200ms of backend state change.
+    \item \textbf{NFR-P1: Conversion Latency} \\
+    The API shall process circuit conversion requests (AST parsing to QASM generation) in under 1500ms for circuits with <100 gates.
+    \item \textbf{NFR-P2: Simulation Throughput} \\
+    The simulator shall complete execution of standard algorithms (e.g., Grover's Search n=2) in under 5 seconds.
 \end{itemize}
 
 \subsection{Security}
 \begin{itemize}
-    \item NFR-S1: The API shall enforce a rate limit of 60 requests per minute per IP address.
-    \item NFR-S2: All data in transit shall be encrypted using TLS 1.2 or higher.
-    \item NFR-S3: The system shall reject 100\% of input containing known injection patterns (SQLi, XSS).
+    \item \textbf{NFR-S1: API Rate Limiting} \\
+    The API shall strictly enforce a rate limit of \textbf{20 requests per minute} per client IP address for conversion endpoints.
+    \item \textbf{NFR-S2: Data Integrity Protection} \\
+    The system shall sanitize 100\% of user inputs via ORM parameterization to prevent SQL injection vulnerabilities.
 \end{itemize}
 
 \clearpage
