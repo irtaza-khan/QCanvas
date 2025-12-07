@@ -1,0 +1,327 @@
+\chapter{Project Requirements}
+
+This chapter describes the comprehensive functional and non-functional requirements for QCanvas, followed by use-cases, external interface specifications, and system features that define the complete system behavior.
+
+\section{Functional Requirements}
+
+\subsection{Conversion Module}
+\begin{itemize}
+    \item FR-C1: The system shall parse Cirq, Qiskit, and PennyLane circuits using AST-based parsing with runtime fallback.
+    \item FR-C2: The system shall generate OpenQASM 3.0 code conforming to the supported subset per project scope.
+    \item FR-C3: The system shall handle measurement and reset instructions correctly.
+    \item FR-C4: The system shall expose conversion statistics including qubits, depth, and gate counts.
+    \item FR-C5: The system shall validate generated OpenQASM 3.0 against the supported subset and provide detailed diagnostics.
+    \item FR-C6: The system shall support gate mapping with parameter and broadcast handling.
+\end{itemize}
+
+\subsection{Simulation Module}
+\begin{itemize}
+    \item FR-S1: The system shall support statevector, density matrix, and stabilizer simulation backends.
+    \item FR-S2: The system shall allow configurable shots (1–10,000) and return counts and metadata.
+    \item FR-S3: The system shall cache identical executions to improve performance.
+    \item FR-S4: The system shall allow seed configuration for deterministic runs.
+    \item FR-S5: The system shall provide backend capability discovery (max qubits, supported gates).
+    \item FR-S6: The system shall return results with counts, execution time, and optional state snapshots.
+\end{itemize}
+
+\subsection{Hybrid CPU–QPU Module}
+\begin{itemize}
+    \item FR-H1: The system shall separate classical orchestration (CPU) from quantum circuit execution (QPU/Simulator).
+    \item FR-H2: The system shall implement data flow: Source $\rightarrow$ QASM $\rightarrow$ Execution $\rightarrow$ Results.
+    \item FR-H3: The system shall provide WebSocket progress updates for long-running operations.
+    \item FR-H4: The system shall enforce simulation-first execution with optional pluggable endpoints.
+    \item FR-H5: The system shall provide resource-aware execution with limits and timeouts.
+\end{itemize}
+
+\subsection{Web IDE Module}
+\begin{itemize}
+    \item FR-W1: The system shall provide code editing with syntax highlighting and diagnostics.
+    \item FR-W2: The system shall display circuit visualization and results panels.
+    \item FR-W3: The system shall support multiple example projects and templates.
+    \item FR-W4: The system shall provide keyboard shortcuts for frequent actions.
+    \item FR-W5: The system shall support multi-file projects with workspace management.
+\end{itemize}
+
+\subsection{API and Realtime}
+\begin{itemize}
+    \item FR-A1: The system shall expose REST endpoints for conversion and validation.
+    \item FR-A2: The system shall expose WebSocket endpoints for progress streaming.
+    \item FR-A3: The system shall provide structured error payloads with codes and hints.
+    \item FR-A4: The system shall provide discovery endpoints for frameworks and backends.
+    \item FR-A5: The system shall support batch conversion and simulation operations.
+\end{itemize}
+
+\subsection{Validation}
+\begin{itemize}
+    \item FR-V1: The system shall validate OpenQASM 3.0 output against the allowed subset.
+    \item FR-V2: The system shall suggest nearest supported constructs for incompatibilities.
+    \item FR-V3: The system shall emit precise diagnostics with line/column, code, and remediation.
+    \item FR-V4: The system shall check for excluded features (timing, pulse-level) with clear guidance.
+\end{itemize}
+
+\section{Non-Functional Requirements}
+
+\subsection{Reliability}
+\begin{itemize}
+    \item NFR-R1: The system shall provide graceful degradation without crashing the IDE.
+    \item NFR-R2: Core services shall recover from transient faults without full termination.
+    \item NFR-R3: The system shall maintain persistent logs for failures and audit trails.
+    \item NFR-R4: The system shall target 99.9\% uptime for core services.
+\end{itemize}
+
+\subsection{Usability}
+\begin{itemize}
+    \item NFR-U1: The system shall provide responsive UI with clear error messages.
+    \item NFR-U2: The system shall support keyboard-first workflow with minimal steps to run.
+    \item NFR-U3: The system shall provide accessible design with high-contrast theme and screen-reader support.
+    \item NFR-U4: The system shall allow compilation or execution within 3 user interactions from editor.
+\end{itemize}
+
+\subsection{Performance}
+\begin{itemize}
+    \item NFR-P1: API response time shall be less than 2 seconds for typical conversions.
+    \item NFR-P2: Simulation time shall be less than 30 seconds for circuits up to 20 qubits (statevector).
+    \item NFR-P3: IDE interactions shall stay under 100ms perceived latency for common actions.
+    \item NFR-P4: WebSocket updates shall have less than 100ms latency.
+\end{itemize}
+
+\subsection{Security}
+\begin{itemize}
+    \item NFR-S1: The system shall validate all inputs and enforce rate limiting on endpoints.
+    \item NFR-S2: The system shall use secure WebSocket connections in production.
+    \item NFR-S3: The system shall implement CORS configuration and CSRF protections.
+    \item NFR-S4: The system shall sanitize user-supplied code and logs to prevent injection.
+\end{itemize}
+
+\clearpage
+\section{External Interface Requirements}
+
+\subsection{User Interfaces}
+
+\subsubsection{Web IDE Interface}
+\begin{itemize}
+    \item Monaco-based code editor with syntax highlighting for Qiskit, Cirq, PennyLane, and OpenQASM 3.0
+    \item Multi-panel layout: Editor, Results, Console, Logs, Statistics
+    \item File tree navigation with create, rename, delete operations
+    \item Theme switcher (dark/light modes)
+    \item Responsive design for desktop and tablet devices
+\end{itemize}
+
+\subsubsection{Results Visualization}
+\begin{itemize}
+    \item Tabbed results display: Console, Output, Histogram, OpenQASM, Errors, Stats
+    \item Interactive measurement histograms using Chart.js
+    \item Real-time execution status updates
+    \item Export functionality for results (JSON, CSV)
+\end{itemize}
+
+\subsection{Hardware Interfaces}
+
+The system does not interface with physical quantum hardware. All execution is simulation-based through software backends.
+
+\subsection{Software Interfaces}
+
+\subsubsection{Quantum Framework APIs}
+\begin{itemize}
+    \item Qiskit API (version 0.44+): Circuit construction and manipulation
+    \item Cirq API (version 1.0+): Circuit operations and gate definitions
+    \item PennyLane API (version 0.33+): Quantum node processing
+\end{itemize}
+
+\subsubsection{Database Interface}
+\begin{itemize}
+    \item PostgreSQL (future): User data, projects, circuit storage
+    \item Redis (future): Session caching and result caching
+\end{itemize}
+
+\subsubsection{External Services}
+\begin{itemize}
+    \item No external quantum hardware services in current scope
+    \item Future: Pluggable QPU endpoints with same API contract
+\end{itemize}
+
+\subsection{Communication Interfaces}
+
+\subsubsection{REST API}
+\begin{itemize}
+    \item Protocol: HTTPS in production, HTTP in development
+    \item Format: JSON request/response bodies
+    \item Authentication: JWT tokens (future implementation)
+    \item Base URL: /api/v1/
+\end{itemize}
+
+\subsubsection{WebSocket Interface}
+\begin{itemize}
+    \item Protocol: WSS in production, WS in development
+    \item Format: JSON message payloads
+    \item Endpoint: /ws
+    \item Use cases: Progress updates, real-time notifications
+\end{itemize}
+
+\clearpage
+\section{Use-Cases}
+
+The following use cases describe the core interactions between users and the QCanvas system.
+
+\subsection{UC-01: Launch Web IDE}
+\textbf{Primary Actor:} User \\
+\textbf{Precondition:} Browser access to QCanvas platform \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item User navigates to QCanvas web application
+    \item System loads Monaco editor and initializes workspace
+    \item System displays example library and framework selector
+\end{enumerate}
+\textbf{Postcondition:} IDE ready for circuit input
+
+\subsection{UC-02: Write Circuit Code}
+\textbf{Primary Actor:} User \\
+\textbf{Precondition:} Web IDE loaded successfully \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item User selects framework (Cirq, Qiskit, or PennyLane)
+    \item User writes quantum circuit code in editor
+    \item System provides syntax highlighting and basic validation
+\end{enumerate}
+\textbf{Postcondition:} Circuit code ready for conversion
+
+\subsection{UC-03: Convert to OpenQASM}
+\textbf{Primary Actor:} User \\
+\textbf{Precondition:} Valid circuit code exists in editor \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item User clicks "Convert to QASM" button
+    \item QCanvas (CPU) parses source framework code via AST or runtime
+    \item QCanvas generates OpenQASM 3.0 intermediate representation
+    \item System validates generated QASM against supported subset
+    \item System displays converted QASM code and statistics
+\end{enumerate}
+\textbf{Postcondition:} Valid OpenQASM 3.0 code available
+
+\subsection{UC-04: Execute Circuit on Simulator}
+\textbf{Primary Actor:} User \\
+\textbf{Precondition:} Valid OpenQASM 3.0 code exists \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item User selects simulation backend (statevector, density matrix, or stabilizer)
+    \item User configures execution parameters (shots, seed)
+    \item QCanvas (CPU) submits job to QSim (QPU/Simulator)
+    \item QSim executes circuit gates and performs measurements
+    \item System streams progress updates via WebSocket
+    \item QSim returns measurement results to QCanvas
+\end{enumerate}
+\textbf{Postcondition:} Simulation results generated and available
+
+\subsection{UC-05: Visualize Results}
+\textbf{Primary Actor:} User \\
+\textbf{Precondition:} Simulation execution completed successfully \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item System renders measurement histogram using Chart.js
+    \item System displays execution statistics (time, backend info)
+    \item System shows optional state snapshots (statevector/density matrix)
+\end{enumerate}
+\textbf{Postcondition:} Results visualized in IDE
+
+\subsection{UC-06: Handle Validation Errors}
+\textbf{Primary Actor:} User \\
+\textbf{Precondition:} Validation or execution error occurred \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item System displays error message with line/column information
+    \item System highlights problematic code in editor
+    \item System suggests fixes or identifies unsupported features
+    \item User corrects code based on feedback
+\end{enumerate}
+\textbf{Postcondition:} User informed of issues and guided to resolution
+
+\subsection{UC-07: Export OpenQASM}
+\textbf{Primary Actor:} User \\
+\textbf{Precondition:} OpenQASM 3.0 code successfully generated \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item User clicks export button
+    \item System packages QASM code with metadata
+    \item System downloads .qasm file to user's machine
+\end{enumerate}
+\textbf{Postcondition:} QASM file saved locally
+
+\subsection{UC-08: Load Example Circuit}
+\textbf{Primary Actor:} User \\
+\textbf{Precondition:} IDE loaded and example library available \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item User browses curated example library
+    \item User selects example (e.g., Bell State, GHZ, Grover's Algorithm)
+    \item System loads example code into editor with annotations
+\end{enumerate}
+\textbf{Postcondition:} Example ready to convert and execute
+
+\subsection{UC-09: Batch Circuit Conversion}
+\textbf{Primary Actor:} Researcher \\
+\textbf{Precondition:} Multiple circuit files prepared \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item Researcher submits batch conversion request via API
+    \item QCanvas processes each circuit sequentially or in parallel
+    \item System aggregates conversion results and statistics
+    \item System returns batch results with individual diagnostics
+\end{enumerate}
+\textbf{Postcondition:} All circuits converted with detailed reports
+
+\subsection{UC-10: Compare Framework Outputs}
+\textbf{Primary Actor:} Researcher \\
+\textbf{Precondition:} Same circuit written in multiple frameworks \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item Researcher converts all framework versions to OpenQASM
+    \item System executes all circuits on same backend with same parameters
+    \item System compares measurement distributions and statistics
+    \item System generates comparison report
+\end{enumerate}
+\textbf{Postcondition:} Cross-framework comparison data available
+
+\subsection{UC-11: Query Backend Capabilities}
+\textbf{Primary Actor:} Developer \\
+\textbf{Precondition:} System running and API accessible \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item Developer queries backend info endpoint
+    \item System returns maximum qubits supported
+    \item System lists supported gates and operations
+    \item System provides backend-specific constraints
+\end{enumerate}
+\textbf{Postcondition:} Backend capabilities known for optimization
+
+\subsection{UC-12: Hybrid CPU–QPU Execution}
+\textbf{Primary Actor:} User/System \\
+\textbf{Precondition:} Valid circuit ready for execution \\
+\textbf{Main Flow:}
+\begin{enumerate}
+    \item QCanvas (CPU) handles circuit compilation and validation
+    \item QCanvas prepares execution parameters and context
+    \item QCanvas submits compiled circuit to QSim (QPU/Simulator)
+    \item QSim (QPU) performs pure quantum gate execution
+    \item QSim returns raw measurement results
+    \item QCanvas (CPU) aggregates and post-processes results
+    \item System delivers final results to user via API
+\end{enumerate}
+\textbf{Postcondition:} Hybrid execution complete with clear CPU–QPU separation
+
+\clearpage
+\section{Use Cases Diagram}
+This diagram outlines the primary actors and their interactions with QCanvas across core flows like conversion, simulation, and results visualization.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{Use Case Diagram.png}
+    \caption{Use Case Diagram}
+\end{figure}
+
+\clearpage
+\section{Domain Model Diagram}
+This diagram shows the core entities (e.g., Circuit, ConversionRequest, SimulationJob, SimulationResult, User, Project) and key relationships that support conversion and simulation.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{Domain Model.png}
+    \caption{Domain Model}
+\end{figure}
