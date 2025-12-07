@@ -63,34 +63,32 @@ This chapter describes the comprehensive functional and non-functional requireme
 
 \subsection{Reliability}
 \begin{itemize}
-    \item NFR-R1: The system shall provide graceful degradation without crashing the IDE.
-    \item NFR-R2: Core services shall recover from transient faults without full termination.
-    \item NFR-R3: The system shall maintain persistent logs for failures and audit trails.
-    \item NFR-R4: The system shall target 99.9\% uptime for core services.
+    \item NFR-R1: The system shall recover from non-critical service failures (e.g., simulation timeout) and restore user state within 2 seconds.
+    \item NFR-R2: The system shall maintain an uptime of 99.9\% during business hours (09:00-17:00).
+    \item NFR-R3: The system shall persist distinct audit logs for 100\% of failed API transactions.
 \end{itemize}
 
 \subsection{Usability}
 \begin{itemize}
-    \item NFR-U1: The system shall provide responsive UI with clear error messages.
-    \item NFR-U2: The system shall support keyboard-first workflow with minimal steps to run.
-    \item NFR-U3: The system shall provide accessible design with high-contrast theme and screen-reader support.
-    \item NFR-U4: The system shall allow compilation or execution within 3 user interactions from editor.
+    \item NFR-U1: The system shall provide error messages with specific remediation steps for 100\% of validation errors.
+    \item NFR-U2: The system shall support keyboard access for all core compilation tasks (Ctrl+Enter to run).
+    \item NFR-U3: The interface shall implement WCAG 2.1 AA contrast ratios for text elements.
+    \item NFR-U4: A new user shall be able to execute the "Bell State" example within 3 clicks of landing.
 \end{itemize}
 
 \subsection{Performance}
 \begin{itemize}
-    \item NFR-P1: API response time shall be less than 2 seconds for typical conversions.
-    \item NFR-P2: Simulation time shall be less than 30 seconds for circuits up to 20 qubits (statevector).
-    \item NFR-P3: IDE interactions shall stay under 100ms perceived latency for common actions.
-    \item NFR-P4: WebSocket updates shall have less than 100ms latency.
+    \item NFR-P1: The API shall return conversion results for standard circuits (<100 gates) in under 1500ms.
+    \item NFR-P2: Statevector simulation for 10 qubits shall complete in less than 5 seconds on the standard host.
+    \item NFR-P3: The IDE editor shall render character input with less than 50ms latency.
+    \item NFR-P4: WebSocket status updates shall propagate to the client within 200ms of backend state change.
 \end{itemize}
 
 \subsection{Security}
 \begin{itemize}
-    \item NFR-S1: The system shall validate all inputs and enforce rate limiting on endpoints.
-    \item NFR-S2: The system shall use secure WebSocket connections in production.
-    \item NFR-S3: The system shall implement CORS configuration and CSRF protections.
-    \item NFR-S4: The system shall sanitize user-supplied code and logs to prevent injection.
+    \item NFR-S1: The API shall enforce a rate limit of 60 requests per minute per IP address.
+    \item NFR-S2: All data in transit shall be encrypted using TLS 1.2 or higher.
+    \item NFR-S3: The system shall reject 100\% of input containing known injection patterns (SQLi, XSS).
 \end{itemize}
 
 \clearpage
@@ -163,150 +161,231 @@ The system does not interface with physical quantum hardware. All execution is s
 
 The following use cases describe the core interactions between users and the QCanvas system.
 
+% Use Case 01
 \subsection{UC-01: Launch Web IDE}
-\textbf{Primary Actor:} User \\
-\textbf{Precondition:} Browser access to QCanvas platform \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item User navigates to QCanvas web application
-    \item System loads Monaco editor and initializes workspace
-    \item System displays example library and framework selector
-\end{enumerate}
-\textbf{Postcondition:} IDE ready for circuit input
+\begin{itemize}
+    \item \textbf{Primary Actor:} User
+    \item \textbf{Precondition:} Browser has network access to the QCanvas URL.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item User navigates to the application URL.
+        \item System loads the Monaco editor, sidebar, and results panel.
+        \item System fetches the default "Hello World" circuit.
+        \item System displays the "Ready" status indicator.
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [2a] \textit{Server Unreachable:} System displays a "Maintenance Mode" splash screen with retry option.
+    \end{enumerate}
+    \item \textbf{Postcondition:} IDE is initialized and waiting for input.
+\end{itemize}
 
+% Use Case 02
 \subsection{UC-02: Write Circuit Code}
-\textbf{Primary Actor:} User \\
-\textbf{Precondition:} Web IDE loaded successfully \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item User selects framework (Cirq, Qiskit, or PennyLane)
-    \item User writes quantum circuit code in editor
-    \item System provides syntax highlighting and basic validation
-\end{enumerate}
-\textbf{Postcondition:} Circuit code ready for conversion
+\begin{itemize}
+    \item \textbf{Primary Actor:} User
+    \item \textbf{Precondition:} UC-01 complete; Editor is active.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item User selects a target framework (e.g., Qiskit) from the dropdown.
+        \item User types quantum circuit code into the editor.
+        \item System performs real-time syntax checking (linting).
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [1a] \textit{Framework Switch:} If user switches framework mid-edit, System warns about unsaved syntax changes.
+    \end{enumerate}
+    \item \textbf{Postcondition:} Valid or invalid source code exists in the editor buffer.
+\end{itemize}
 
+% Use Case 03
 \subsection{UC-03: Convert to OpenQASM}
-\textbf{Primary Actor:} User \\
-\textbf{Precondition:} Valid circuit code exists in editor \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item User clicks "Convert to QASM" button
-    \item QCanvas (CPU) parses source framework code via AST or runtime
-    \item QCanvas generates OpenQASM 3.0 intermediate representation
-    \item System validates generated QASM against supported subset
-    \item System displays converted QASM code and statistics
-\end{enumerate}
-\textbf{Postcondition:} Valid OpenQASM 3.0 code available
+\begin{itemize}
+    \item \textbf{Primary Actor:} User
+    \item \textbf{Precondition:} Source code is present in the editor.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item User clicks the "Convert" button.
+        \item System sends source code to the Conversion API.
+        \item API parses the code and generates OpenQASM 3.0 intermediate representation.
+        \item System returns the QASM code and displays it in the output panel.
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [3a] \textit{Syntax Error:} Source code is invalid. API returns line number. System highlights the error line in red.
+        \item [3b] \textit{Unsupported Gate:} Source uses a gate not in the supported subset. System suggests a replacement gate.
+    \end{enumerate}
+    \item \textbf{Postcondition:} OpenQASM 3.0 code is available for simulation.
+\end{itemize}
 
-\subsection{UC-04: Execute Circuit on Simulator}
-\textbf{Primary Actor:} User \\
-\textbf{Precondition:} Valid OpenQASM 3.0 code exists \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item User selects simulation backend (statevector, density matrix, or stabilizer)
-    \item User configures execution parameters (shots, seed)
-    \item QCanvas (CPU) submits job to QSim (QPU/Simulator)
-    \item QSim executes circuit gates and performs measurements
-    \item System streams progress updates via WebSocket
-    \item QSim returns measurement results to QCanvas
-\end{enumerate}
-\textbf{Postcondition:} Simulation results generated and available
+% Use Case 04
+\subsection{UC-04: Execute Circuit}
+\begin{itemize}
+    \item \textbf{Primary Actor:} User
+    \item \textbf{Precondition:} Valid OpenQASM 3.0 code exists (from UC-03 or manual entry).
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item User clicks "Run Simulation".
+        \item User configures parameters (Shots=1024, Backend=Statevector).
+        \item System submits job to Queue.
+        \item Simulation Backend executes the circuit.
+        \item System pushes results to the frontend via WebSocket.
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [4a] \textit{Timeout:} Simulation takes > 30s. System terminates job and alerts user to reduce circuit depth.
+    \end{enumerate}
+    \item \textbf{Postcondition:} Measurement counts and state data are available in client state.
+\end{itemize}
 
+% Use Case 05
 \subsection{UC-05: Visualize Results}
-\textbf{Primary Actor:} User \\
-\textbf{Precondition:} Simulation execution completed successfully \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item System renders measurement histogram using Chart.js
-    \item System displays execution statistics (time, backend info)
-    \item System shows optional state snapshots (statevector/density matrix)
-\end{enumerate}
-\textbf{Postcondition:} Results visualized in IDE
+\begin{itemize}
+    \item \textbf{Primary Actor:} User
+    \item \textbf{Precondition:} UC-04 completed successfully.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item System receives JSON result payload.
+        \item System renders a bar chart using Chart.js for measurement counts.
+        \item System displays execution metadata (time, backend version).
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [2a] \textit{Empty Result:} If 0 shots were requested, System displays statevector only without histogram.
+    \end{enumerate}
+    \item \textbf{Postcondition:} Results are visible to the user.
+\end{itemize}
 
+% Use Case 06
 \subsection{UC-06: Handle Validation Errors}
-\textbf{Primary Actor:} User \\
-\textbf{Precondition:} Validation or execution error occurred \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item System displays error message with line/column information
-    \item System highlights problematic code in editor
-    \item System suggests fixes or identifies unsupported features
-    \item User corrects code based on feedback
-\end{enumerate}
-\textbf{Postcondition:} User informed of issues and guided to resolution
+\begin{itemize}
+    \item \textbf{Primary Actor:} User
+    \item \textbf{Precondition:} User has triggered Conversion or Execution with invalid input.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item System detects semantic error (e.g., unsupported gate).
+        \item System squiggles the error line in red in the editor.
+        \item System displays a "Problems" pane with error codes (e.g., ERR-020).
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [1a] \textit{Auto-Fix:} If a known quick fix exists, System displays a lightbulb icon. User clicks it to apply the fix.
+    \end{enumerate}
+    \item \textbf{Postcondition:} User is aware of the exact location and nature of the error.
+\end{itemize}
 
+% Use Case 07
 \subsection{UC-07: Export OpenQASM}
-\textbf{Primary Actor:} User \\
-\textbf{Precondition:} OpenQASM 3.0 code successfully generated \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item User clicks export button
-    \item System packages QASM code with metadata
-    \item System downloads .qasm file to user's machine
-\end{enumerate}
-\textbf{Postcondition:} QASM file saved locally
+\begin{itemize}
+    \item \textbf{Primary Actor:} User
+    \item \textbf{Precondition:} UC-03 completed successfully.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item User clicks the "Download QASM" icon.
+        \item System generates a .qasm file including metadata header.
+        \item System triggers the browser file download dialog.
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [2a] \textit{File Size Limit:} If code > 1MB, System zips the content before download.
+    \end{enumerate}
+    \item \textbf{Postcondition:} The OpenQASM source file is saved to the User's local file system.
+\end{itemize}
 
+% Use Case 08
 \subsection{UC-08: Load Example Circuit}
-\textbf{Primary Actor:} User \\
-\textbf{Precondition:} IDE loaded and example library available \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item User browses curated example library
-    \item User selects example (e.g., Bell State, GHZ, Grover's Algorithm)
-    \item System loads example code into editor with annotations
-\end{enumerate}
-\textbf{Postcondition:} Example ready to convert and execute
+\begin{itemize}
+    \item \textbf{Primary Actor:} User
+    \item \textbf{Precondition:} IDE is active.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item User opens the "Examples" drawer.
+        \item User clicks on "Grover's Algorithm".
+        \item System replaces current editor content with Grover's source code.
+        \item System displays a modal with a brief explanation of the algorithm.
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [3a] \textit{Dirty Buffer:} If current code is unsaved, System prompts "Discard changes?".
+    \end{enumerate}
+    \item \textbf{Postcondition:} Example code is loaded and ready to run.
+\end{itemize}
 
+% Use Case 09
 \subsection{UC-09: Batch Circuit Conversion}
-\textbf{Primary Actor:} Researcher \\
-\textbf{Precondition:} Multiple circuit files prepared \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item Researcher submits batch conversion request via API
-    \item QCanvas processes each circuit sequentially or in parallel
-    \item System aggregates conversion results and statistics
-    \item System returns batch results with individual diagnostics
-\end{enumerate}
-\textbf{Postcondition:} All circuits converted with detailed reports
+\begin{itemize}
+    \item \textbf{Primary Actor:} Researcher
+    \item \textbf{Precondition:} Researcher has an API Key and a set of local python files.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item Researcher sends a POST request to \texttt{/api/v1/convert/batch}.
+        \item System accepts payload and provides a Job ID.
+        \item System processes circuits in parallel workers.
+        \item System returns a JSON object with results for all inputs.
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [2a] \textit{Rate Limit Exceeded:} System returns HTTP 429. User must wait 60s.
+    \end{enumerate}
+    \item \textbf{Postcondition:} Researcher possesses converted QASM for multiple source files.
+\end{itemize}
 
+% Use Case 10
 \subsection{UC-10: Compare Framework Outputs}
-\textbf{Primary Actor:} Researcher \\
-\textbf{Precondition:} Same circuit written in multiple frameworks \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item Researcher converts all framework versions to OpenQASM
-    \item System executes all circuits on same backend with same parameters
-    \item System compares measurement distributions and statistics
-    \item System generates comparison report
-\end{enumerate}
-\textbf{Postcondition:} Cross-framework comparison data available
+\begin{itemize}
+    \item \textbf{Primary Actor:} Researcher
+    \item \textbf{Precondition:} User has selected "Comparison Mode".
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item User inputs Circuit A (Qiskit) and Circuit B (Cirq).
+        \item System compiles both to OpenQASM 3.0.
+        \item System executes both on the \textit{same} backend configuration.
+        \item System overlays the two measurement histograms.
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [2a] \textit{Semantics Mismatch:} If compilation fails for one, System alerts "Cannot compare invalid circuits".
+    \end{enumerate}
+    \item \textbf{Postcondition:} Visual comparison of results is displayed.
+\end{itemize}
 
+% Use Case 11
 \subsection{UC-11: Query Backend Capabilities}
-\textbf{Primary Actor:} Developer \\
-\textbf{Precondition:} System running and API accessible \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item Developer queries backend info endpoint
-    \item System returns maximum qubits supported
-    \item System lists supported gates and operations
-    \item System provides backend-specific constraints
-\end{enumerate}
-\textbf{Postcondition:} Backend capabilities known for optimization
+\begin{itemize}
+    \item \textbf{Primary Actor:} Developer
+    \item \textbf{Precondition:} Authenticated API access.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item Developer requests \texttt{GET /api/v1/backends}.
+        \item System returns list of available backends (e.g., "statevector").
+        \item System details max\_qubits (e.g., 20) and supported\_gates.
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [2a] \textit{Database Down:} System returns cached fallback capabilities list.
+    \end{enumerate}
+    \item \textbf{Postcondition:} Developer client is self-configured to respect backend limits.
+\end{itemize}
 
+% Use Case 12
 \subsection{UC-12: Hybrid CPU–QPU Execution}
-\textbf{Primary Actor:} User/System \\
-\textbf{Precondition:} Valid circuit ready for execution \\
-\textbf{Main Flow:}
-\begin{enumerate}
-    \item QCanvas (CPU) handles circuit compilation and validation
-    \item QCanvas prepares execution parameters and context
-    \item QCanvas submits compiled circuit to QSim (QPU/Simulator)
-    \item QSim (QPU) performs pure quantum gate execution
-    \item QSim returns raw measurement results
-    \item QCanvas (CPU) aggregates and post-processes results
-    \item System delivers final results to user via API
-\end{enumerate}
-\textbf{Postcondition:} Hybrid execution complete with clear CPU–QPU separation
+\begin{itemize}
+    \item \textbf{Primary Actor:} User/System
+    \item \textbf{Precondition:} Circuit submitted for execution.
+    \item \textbf{Main Flow:}
+    \begin{enumerate}
+        \item \textbf{Orchestration (CPU):} Validates QASM and allocates a Job ID.
+        \item \textbf{Orchestration (CPU):} Dispatches payload to QSim Service.
+        \item \textbf{Execution (QSim):} Initializes Quantum Statevector.
+        \item \textbf{Execution (QSim):} Applies Gate Operations sequentially.
+        \item \textbf{Orchestration (CPU):} Receives final counts and saves to DB.
+    \end{enumerate}
+    \item \textbf{Alternate Flows:}
+    \begin{enumerate}
+        \item [3a] \textit{Memory OOM:} QSim detects >20 qubits. Returns "Resource Limit Exceeded". CPU relays error to user.
+    \end{enumerate}
+    \item \textbf{Postcondition:} Job marked as "Completed" or "Failed" in database.
+\end{itemize}
 
 \clearpage
 \section{Use Cases Diagram}
