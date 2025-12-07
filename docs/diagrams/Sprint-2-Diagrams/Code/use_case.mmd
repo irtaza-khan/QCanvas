@@ -1,0 +1,39 @@
+graph LR
+    subgraph Actors
+        Res((Quantum\nResearcher))
+        Dev((Developer))
+        Stu((Student))
+        Adm((Admin))
+    end
+    subgraph System ["QCanvas Platform"]
+        UC1(Convert Circuit)
+        UC2(Simulate Circuit)
+        UC3(Hybrid Execution)
+        UC4(Manage Projects)
+        UC5(Share Circuits)
+        UC6(User Auth)
+        UC7(Admin Config)
+    end
+    Res --> UC1
+    Res --> UC2
+    Res --> UC3
+    Res --> UC4
+    
+    Dev --> UC1
+    Dev --> UC4
+    Dev --> UC5
+    
+    Stu --> UC2
+    Stu --> UC5
+    
+    Adm --> UC7
+    Adm --> UC6
+    
+    UC1 -.->|"include"| UC6
+    UC2 -.->|"include"| UC6
+    UC4 -.->|"include"| UC6
+    style Actors fill:#ffffff,stroke:#ffffff
+    style Res fill:#e1f5fe
+    style Dev fill:#e1f5fe
+    style Stu fill:#e1f5fe
+    style Adm fill:#e1f5fe

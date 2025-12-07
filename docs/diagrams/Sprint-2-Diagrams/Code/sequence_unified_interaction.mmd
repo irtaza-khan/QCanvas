@@ -1,0 +1,71 @@
+
+sequenceDiagram
+    autonumber
+    
+    actor User
+    participant TopBar as TopBar (Component)
+    participant ApiLib as lib/api.ts
+    participant API as Backend API
+    participant CS as ConversionService
+    participant SS as SimulationService
+    participant HS as HybridService
+    
+    Note over User, TopBar: User views Code Editor with active file
+    
+    alt OPTION 1: Convert Circuit (React Flow)
+        User->>TopBar: Select Framework & Click "Convert"
+        TopBar->>TopBar: handleRun() -> handleConvertToQASM()
+        TopBar->>ApiLib: quantumApi.convertToQasm(code, fw, style)
+        ApiLib->>API: POST /api/converter/convert
+        activate API
+        API->>CS: convert_to_qasm()
+        CS->>CS: Transpile & Extract Stats
+        CS-->>API: QASM + Stats
+        API-->>ApiLib: JSON {qasm_code, stats}
+        deactivate API
+        ApiLib-->>TopBar: Response Data
+        TopBar->>TopBar: setCompiledQasm(qasm)
+        TopBar-->>User: Update Results Pane (QASM View)
+        
+    else OPTION 2: Run Simulation (React Flow)
+        User->>TopBar: Select Backend & Click "Run" or (Ctrl+Shift+R)
+        TopBar->>TopBar: handleRun()
+        
+        opt If Source is not QASM
+            TopBar->>ApiLib: convertToQasm() ...
+            Note right of TopBar: (Same conversion flow as above)
+        end
+        
+        TopBar->>ApiLib: quantumApi.executeQasmWithQSim(qasm, backend)
+        ApiLib->>API: POST /api/simulator/execute-qsim
+        activate API
+        API->>SS: execute_qasm_with_qsim()
+        activate SS
+        SS->>SS: Initialize QSim Backend
+        SS->>SS: Run Quantum Circuit
+        SS-->>API: Results {counts, metadata}
+        deactivate SS
+        API-->>ApiLib: JSON {results}
+        deactivate API
+        ApiLib-->>TopBar: Response Data
+        TopBar->>TopBar: setSimulationResults(results)
+        TopBar-->>User: Render Histogram & Metrics
+        
+    else OPTION 3: Hybrid Execution (React Flow)
+        User->>TopBar: Select "Hybrid" Mode & Click "Run"
+        TopBar->>TopBar: handleRunHybrid()
+        TopBar->>ApiLib: quantumApi.executeHybrid(code)
+        ApiLib->>API: POST /api/hybrid/execute
+        activate API
+        API->>HS: execute_sandboxed(code)
+        activate HS
+        HS->>HS: Execute Python Script
+        HS->>SS: (Internal calls to QSim)
+        HS-->>API: ExecutionResult {stdout, plots}
+        deactivate HS
+        API-->>ApiLib: JSON {stdout, results}
+        deactivate API
+        ApiLib-->>TopBar: Response Data
+        TopBar->>TopBar: setHybridResult(result)
+        TopBar-->>User: Show Console Output & Data
+    end

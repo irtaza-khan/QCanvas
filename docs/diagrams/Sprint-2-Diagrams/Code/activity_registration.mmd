@@ -1,0 +1,15 @@
+
+stateDiagram-v2
+    [*] --> InputDetails
+    
+    state "Validation" as Val {
+        InputDetails --> CheckFormat : Submit Form
+        CheckFormat --> CheckEmail : Format OK
+        CheckFormat --> InputDetails : Format Error
+    }
+    
+    CheckEmail --> CreateUser : Email Unique
+    CheckEmail --> InputDetails : Email Exists
+    
+    CreateUser --> SendEmail : DB Insert
+    SendEmail --> [*] : Success

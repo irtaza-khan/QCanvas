@@ -1,0 +1,15 @@
+
+stateDiagram-v2
+    [*] --> Created
+    
+    Created --> Queued : Submit to Queue
+    Queued --> Running : Worker Picked
+    
+    Running --> Completed : Success
+    Running --> Failed : Runtime Error
+    
+    Created --> Cancelled : User Abort
+    Queued --> Cancelled : User Abort
+    
+    Completed --> [*]
+    Failed --> [*]

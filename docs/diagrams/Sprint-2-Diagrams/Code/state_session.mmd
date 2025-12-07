@@ -1,0 +1,16 @@
+
+stateDiagram-v2
+    [*] --> Anonymous
+    
+    Anonymous --> Authenticated : Login Success
+    note right of Authenticated : Token Issued
+    
+    Authenticated --> Active : User Action
+    Active --> Idle : No Activity
+    Idle --> Active : Activity Resume
+    
+    Idle --> Expired : Timeout
+    Authenticated --> Expired : Token Invalid
+    
+    Expired --> Anonymous : Logout/Redirect
+    Authenticated --> Anonymous : Logout

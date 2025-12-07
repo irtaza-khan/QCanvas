@@ -1,0 +1,22 @@
+
+sequenceDiagram
+    actor User
+    participant Sys as QCanvas System
+    participant DB as User DB
+
+    User->>Sys: login(email, password)
+    activate Sys
+    Sys->>DB: findUser(email)
+    activate DB
+    DB-->>Sys: user_record
+    deactivate DB
+    
+    Sys->>Sys: verifyHash(password)
+    
+    alt Valid
+        Sys->>Sys: createSession()
+        Sys-->>User: token(access_token)
+    else Invalid
+        Sys-->>User: error("Invalid Credentials")
+    end
+    deactivate Sys

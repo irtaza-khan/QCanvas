@@ -1,0 +1,96 @@
+
+flowchart TD
+    %% Nodes
+    Start((Start))
+    End((End))
+    
+    %% Frontend / UI States
+    subgraph Frontend ["Frontend (Next.js/React)"]
+        Login[Log Im / Register]
+        Dash[Dashboard / Project View]
+        Editor[Monaco Editor: Input Code]
+        SelectAction{Select Action}
+        
+        %% Action Paths
+        OptConvert[Click 'Convert']
+        OptSim[Click 'Run Simulation']
+        OptHybrid[Click 'Hybrid Exec']
+        
+        ShowRes["Display Results<br>(Charts/Console)"]
+    end
+    
+    %% API / Networking
+    subgraph Network ["API Layer (Axios)"]
+        ApiAuth[POST /api/auth/login]
+        ApiConv[POST /api/converter/convert]
+        ApiSim[POST /api/simulator/execute]
+        ApiHyb[POST /api/hybrid/execute]
+    end
+    
+    %% Backend Logic
+    subgraph Backend ["Backend (FastAPI)"]
+        Validate{Validation}
+        
+        %% Conversion Process
+        SvcConv[Conversion Service]
+        Parse[Framework Parser]
+        GenQASM[Generate OpenQASM 3]
+        
+        %% Simulation Process
+        SvcSim[Simulation Service]
+        RunQSim[Execute QSim]
+        
+        %% Hybrid Process
+        SvcHyb[Hybrid Router]
+        Sandbox[Python Sandbox]
+    end
+    
+    %% Database
+    subgraph Data ["Data Persistence"]
+        DB[(PostgreSQL)]
+        Logs[Audit Logs]
+    end
+    
+    %% Connections
+    Start --> Login
+    Login --> ApiAuth
+    ApiAuth --> DB
+    DB --> ApiAuth
+    ApiAuth --> Dash
+    
+    Dash --> Editor
+    Editor --> SelectAction
+    
+    %% Path 1: Conversion
+    SelectAction -->|Convert| OptConvert
+    OptConvert --> ApiConv
+    ApiConv --> SvcConv
+    SvcConv --> Parse
+    Parse --> Validate
+    Validate -- Valid --> GenQASM
+    Validate -- Invalid --> ShowRes
+    GenQASM --> ShowRes
+    
+    %% Path 2: Simulation
+    SelectAction -->|Simulate| OptSim
+    OptSim --> ApiSim
+    ApiSim --> SvcSim
+    SvcSim --> RunQSim
+    RunQSim --> Logs
+    Logs --> ShowRes
+    
+    %% Path 3: Hybrid
+    SelectAction -->|Hybrid| OptHybrid
+    OptHybrid --> ApiHyb
+    ApiHyb --> SvcHyb
+    SvcHyb --> Sandbox
+    Sandbox --> RunQSim
+    Sandbox --> ShowRes
+    
+    ShowRes --> End
+    
+    %% Styling
+    style Frontend fill:#e1f5fe,stroke:#01579b
+    style Network fill:#fff9c4,stroke:#fbc02d
+    style Backend fill:#e8f5e9,stroke:#2e7d32
+    style Data fill:#fff3e0,stroke:#e65100

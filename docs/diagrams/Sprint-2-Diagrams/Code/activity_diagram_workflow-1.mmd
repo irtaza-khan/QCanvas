@@ -1,0 +1,56 @@
+graph TB
+    %% Layout Optimization: Frontend -> API -> Backend -> Data
+    
+    subgraph Client ["Frontend (Next.js)"]
+        direction TB
+        Login["Log In"]
+        Dash["Dashboard"]
+        Editor["Monaco Editor"]
+        Action{{"Select Action"}}
+        
+        Login --> Dash --> Editor --> Action
+    end
+    
+    subgraph Services ["Backend Services (FastAPI)"]
+        direction TB
+        
+        %% API Endpoints
+        ApiConv["POST /convert"]
+        ApiSim["POST /execute"]
+        ApiHyb["POST /hybrid"]
+        
+        %% Logic Units
+        ConvSvc["Conversion Logic"]
+        SimSvc["QSim Engine"]
+        HybSvc["Python Sandbox"]
+        
+        %% Flow Inside Backend
+        ApiConv --> ConvSvc
+        ApiSim --> SimSvc
+        ApiHyb --> HybSvc
+        HybSvc --> SimSvc
+    end
+    
+    subgraph Storage ["Persistence"]
+        DB[("PostgreSQL")]
+        Logs["Audit Logs"]
+    end
+    %% Main Cross-Layer Flows
+    Action -->|"Convert"| ApiConv
+    Action -->|"Simulate"| ApiSim
+    Action -->|"Hybrid"| ApiHyb
+    
+    %% Data interactions
+    Login -.-> DB
+    SimSvc -.-> Logs
+    
+    %% Return Flow
+    ConvSvc --> Res["Display Results"]
+    SimSvc --> Res
+    HybSvc --> Res
+    
+    %% Styling for compactness
+    style Client fill:#e1f5fe,stroke:#01579b
+    style Services fill:#e8f5e9,stroke:#2e7d32
+    style Storage fill:#fff3e0,stroke:#e65100
+    style Res fill:#fff9c4,stroke:#fbc02d,stroke-width:2px

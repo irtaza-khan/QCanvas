@@ -1,0 +1,16 @@
+
+stateDiagram-v2
+    [*] --> Pending
+    
+    Pending --> Validating : Request Recvd
+    
+    Validating --> Failed : Syntax Error
+    Validating --> Converting : Syntax OK
+    
+    Converting --> Completed : Transpile OK
+    Converting --> Failed : Framework Error
+    
+    Completed --> [*]
+    Failed --> [*]
+    
+    note right of Converting : Heavy Calculation

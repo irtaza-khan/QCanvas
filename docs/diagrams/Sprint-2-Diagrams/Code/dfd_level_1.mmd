@@ -1,0 +1,68 @@
+
+graph TB
+    %% Layout: Top interactions -> Middle Processes -> Bottom Data Stores
+    %% Optimized for Portrait Report Page
+    
+    %% External Entities
+    User["👤 User"]
+    Admin["🛡️ Admin"]
+
+    %% Processes
+    subgraph Core_Processes ["QCanvas Processing Logic"]
+        direction TB
+        P1(("1.0 Identity<br>Management"))
+        P2(("2.0 Project<br>Management"))
+        P3(("3.0 Circuit<br>Conversion"))
+        P4(("4.0 Quantum<br>Simulation"))
+        P5(("5.0 Hybrid<br>Execution"))
+    end
+
+    %% Data Stores
+    subgraph Persistence ["Data Layer"]
+        D1[("D1 Users<br>(PostgreSQL)")]
+        D2[("D2 Projects<br>(Files/Meta)")]
+        D3[("D3 Results<br>(Jobs/Stats)")]
+        D4[("D4 Sessions<br>(Redis Cache)")]
+    end
+
+    %% Auth Flows
+    User -->|"Credentials"| P1
+    P1 -->|"Valid User"| D1
+    P1 -->|"Session Object"| D4
+    P1 -.->|"JWT Token"| User
+
+    %% Project Flows
+    User -->|"File Operations"| P2
+    P2 <-->|"R/W content"| D2
+
+    %% Quantum Flows (Conversion)
+    User -->|"Source Code"| P3
+    P3 -->|"Usage Stats"| D3
+    P3 -.->|"QASM 3.0"| User
+
+    %% Quantum Flows (Simulation)
+    User -->|"QASM/Config"| P4
+    P4 -->|"Job Status"| D3
+    P4 -.->|"Histogram Data"| User
+
+    %% Hybrid Flows
+    User -->|"Python Script"| P5
+    P5 -->|"Execute QASM"| P4
+    P5 -.->|"Console Output"| User
+
+    %% Admin Flows
+    Admin -->|"Request Report"| P1
+    P1 <-->|"Audit Logs"| D1
+
+    %% Styling for readability
+    style Use fill:#e1f5fe
+    style Admin fill:#e1f5fe
+    style P1 fill:#fff9c4
+    style P2 fill:#fff9c4
+    style P3 fill:#ffccbc
+    style P4 fill:#ffccbc
+    style P5 fill:#ffccbc
+    style D1 fill:#f0f4c3
+    style D2 fill:#f0f4c3
+    style D3 fill:#f0f4c3
+    style D4 fill:#f0f4c3

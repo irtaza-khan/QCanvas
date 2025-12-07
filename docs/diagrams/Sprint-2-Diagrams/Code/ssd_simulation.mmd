@@ -1,0 +1,18 @@
+
+sequenceDiagram
+    actor User
+    participant Sys as QCanvas System
+    participant Sim as Sim Backend
+
+    User->>Sys: runSimulation(qasm, backend, shots)
+    activate Sys
+    Sys->>Sys: validateRequest()
+    
+    Sys->>Sim: executeJob(qasm)
+    activate Sim
+    Sim-->>Sys: result(counts, time)
+    deactivate Sim
+    
+    Sys->>Sys: logActivity()
+    Sys-->>User: return(histogram_data)
+    deactivate Sys
