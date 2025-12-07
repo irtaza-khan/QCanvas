@@ -7,16 +7,16 @@ This chapter describes the comprehensive functional and non-functional requireme
 \subsection{Conversion Module}
 \begin{itemize}
     \item FR-C1: The system shall parse Cirq, Qiskit, and PennyLane circuits using AST-based parsing with runtime fallback.
-    \item FR-C2: The system shall generate OpenQASM 3.0 code conforming to the supported subset per project scope.
+    \item FR-C2: The system shall generate OpenQASM 3.0 code conforming to the supported subset per project scope \cite{cross2021openqasm}.
     \item FR-C3: The system shall handle measurement and reset instructions correctly.
     \item FR-C4: The system shall expose conversion statistics including qubits, depth, and gate counts.
-    \item FR-C5: The system shall validate generated OpenQASM 3.0 against the supported subset and provide detailed diagnostics.
+    \item FR-C5: The system shall validate generated OpenQASM 3.0 against the supported subset and provide detailed diagnostics \cite{cross2017openqasm}.
     \item FR-C6: The system shall support gate mapping with parameter and broadcast handling.
 \end{itemize}
 
 \subsection{Simulation Module}
 \begin{itemize}
-    \item FR-S1: The system shall support statevector, density matrix, and stabilizer simulation backends.
+    \item FR-S1: The system shall support statevector, density matrix, and stabilizer simulation backends \cite{nielsen2010quantum}.
     \item FR-S2: The system shall allow configurable shots (1–10,000) and return counts and metadata.
     \item FR-S3: The system shall cache identical executions to improve performance.
     \item FR-S4: The system shall allow seed configuration for deterministic runs.
@@ -26,7 +26,7 @@ This chapter describes the comprehensive functional and non-functional requireme
 
 \subsection{Hybrid CPU–QPU Module}
 \begin{itemize}
-    \item FR-H1: The system shall separate classical orchestration (CPU) from quantum circuit execution (QPU/Simulator).
+    \item FR-H1: The system shall separate classical orchestration (CPU) from quantum circuit execution (QPU/Simulator) \cite{peruzzo2014variational}.
     \item FR-H2: The system shall implement data flow: Source $\rightarrow$ QASM $\rightarrow$ Execution $\rightarrow$ Results.
     \item FR-H3: The system shall provide WebSocket progress updates for long-running operations.
     \item FR-H4: The system shall enforce simulation-first execution with optional pluggable endpoints.
@@ -123,9 +123,9 @@ The system does not interface with physical quantum hardware. All execution is s
 
 \subsubsection{Quantum Framework APIs}
 \begin{itemize}
-    \item Qiskit API (version 0.44+): Circuit construction and manipulation
-    \item Cirq API (version 1.0+): Circuit operations and gate definitions
-    \item PennyLane API (version 0.33+): Quantum node processing
+    \item Qiskit API (version 0.44+): Circuit construction and manipulation \cite{qiskit}
+    \item Cirq API (version 1.0+): Circuit operations and gate definitions \cite{cirq_developers_2023}
+    \item PennyLane API (version 0.33+): Quantum node processing \cite{bergholm2018pennylane}
 \end{itemize}
 
 \subsubsection{Database Interface}
@@ -162,6 +162,52 @@ The system does not interface with physical quantum hardware. All execution is s
 \section{Use-Cases}
 
 The following use cases describe the core interactions between users and the QCanvas system.
+
+\subsection{Functional Requirements Traceability}
+
+Table~\ref{tab:fr-uc-traceability} summarizes how the main functional requirement groups (Conversion, Simulation, Hybrid, Web IDE, API/Realtime, Validation) are exercised by the detailed use cases (UC-01--UC-10). This ensures that each requirement is covered by at least one concrete scenario and that use-case identifiers remain consistent with the diagrams.
+
+\begin{longtable}{p{0.5\textwidth} p{0.5\textwidth}}
+\toprule
+\textbf{FR Group} & \textbf{Primary Related Use-Cases} \\
+\midrule
+\endhead
+Conversion (FR-C1--FR-C6) & 
+UC-02: Write Circuit Code \\
+& UC-03: Convert to OpenQASM \\
+& UC-06: Handle Validation Errors \\
+& UC-07: Export OpenQASM \\
+\addlinespace[0.5em]
+Simulation (FR-S1--FR-S6) & 
+UC-04: Execute Circuit \\
+& UC-05: Visualize Results \\
+& UC-09: Query Backend Capabilities \\
+& UC-10: Hybrid CPU--QPU Execution \\
+\addlinespace[0.5em]
+Hybrid CPU--QPU (FR-H1--FR-H5) & 
+UC-04: Execute Circuit \\
+& UC-10: Hybrid CPU--QPU Execution \\
+\addlinespace[0.5em]
+Web IDE (FR-W1--FR-W5) & 
+UC-01: Launch Web IDE \\
+& UC-02: Write Circuit Code \\
+& UC-05: Visualize Results \\
+& UC-08: Load Example Circuit \\
+\addlinespace[0.5em]
+API and Realtime (FR-A1--FR-A5) & 
+UC-03: Convert to OpenQASM \\
+& UC-04: Execute Circuit \\
+& UC-05: Visualize Results \\
+& UC-09: Query Backend Capabilities \\
+\addlinespace[0.5em]
+Validation (FR-V1--FR-V4) & 
+UC-03: Convert to OpenQASM (error paths) \\
+& UC-04: Execute Circuit (error paths) \\
+& UC-06: Handle Validation Errors \\
+\bottomrule
+\caption{Traceability between FRs and UCs}
+\label{tab:fr-uc-traceability}
+\end{longtable}
 
 % Use Case 01
 \subsection{UC-01: Launch Web IDE}

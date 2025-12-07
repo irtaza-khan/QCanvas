@@ -1,6 +1,6 @@
 \chapter{System Overview}
 
-The system architecture of QCanvas follows a modular layered design separating conversion, validation, simulation, and UI concerns. This design ensures scalability, maintainability, and flexibility while supporting the hybrid CPU–QPU execution model.
+The system architecture of QCanvas follows a modular layered design separating conversion, validation, simulation, and UI concerns. This design ensures scalability, maintainability, and flexibility while supporting the hybrid CPU–QPU execution model \cite{peruzzo2014variational}.
 
 \section{Architectural Design}
 
@@ -44,8 +44,8 @@ QCanvas employs a hybrid architecture where the Next.js frontend handles UI and 
     \item Cirq 1.0+ for Google quantum framework support \cite{cirq_developers_2023}
     \item Qiskit 0.44+ for IBM quantum framework support \cite{qiskit}
     \item PennyLane 0.33+ for Xanadu quantum framework support \cite{bergholm2018pennylane}
-    \item Custom OpenQASM 3.0 generator (QASM3Builder)
-    \item Custom simulation backends (statevector, density matrix, stabilizer)
+    \item Custom OpenQASM 3.0 generator (QASM3Builder) \cite{cross2021openqasm}
+    \item Custom simulation backends (statevector, density matrix, stabilizer) \cite{nielsen2010quantum}
 \end{itemize}
 
 \subsection{Hybrid CPU–QPU Execution Model}
@@ -79,24 +79,24 @@ QCanvas employs a hybrid architecture where the Next.js frontend handles UI and 
 
 \section{Design Models}
 
-This section presents the required design models with placeholders for detailed diagrams.
+This section presents the required design models for QCanvas. Each diagram is derived from the implemented architecture and runtime behavior of the Next.js frontend, FastAPI backend, quantum converters, and QSim simulation engine.
 
 \subsection{Activity Diagrams}
 
 \subsubsection{Activity Diagram: Circuit Conversion and Execution}
-This diagram presents the end-to-end flow from code input, through validation and conversion, to simulation and results.
+This diagram presents the end-to-end flow from code input in the Next.js editor, through FastAPI conversion and validation services, into QSim execution and results visualization. It follows the actual implementation path: user code $\rightarrow$ converter API $\rightarrow$ OpenQASM 3.0 generation $\rightarrow$ SimulationService/QSim run $\rightarrow$ histogram and stats update in the Results pane.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{FYP-Activity-2.png}
+    \includegraphics[width=0.65\linewidth]{FYP-Activity-2.png}
     \caption{Activity Diagram — Circuit Conversion and Execution}
     \label{fig:activity_convert_run}
 \end{figure}
 
 \subsubsection{Activity Diagram: User Registration}
-This diagram captures the user registration and onboarding flow.
+This diagram captures the user registration and onboarding flow implemented in the authentication module: a new user submits credentials via the web UI, FastAPI validates and hashes the password, a PostgreSQL record is created, and a session/token is issued for subsequent IDE access.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\linewidth]{FYP-ActivityRegistration.png}
+    \includegraphics[width=0.55\linewidth]{FYP-ActivityRegistration.png}
     \caption{Activity Diagram — User Registration}
 \end{figure}
 
@@ -106,7 +106,7 @@ This diagram captures the user registration and onboarding flow.
 \subsection{Sequence Diagrams}
 
 \subsubsection{Sequence Diagram: Unified Execution Flow}
-This diagram shows the unified interaction flow across the system components.
+This diagram shows the unified interaction flow across concrete system components: the user and browser, the Next.js app (TopBar/EditorPane), FastAPI routes (converter and simulator), the ConversionService/SimulationService layer, and the QSim backends that execute OpenQASM circuits.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{FYP-SequenceUnified.png}
@@ -118,64 +118,65 @@ This diagram shows the unified interaction flow across the system components.
 This diagram details the authentication process involving the frontend, API, and Database.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{FYP-SequenceAuth.png}
+    \includegraphics[width=1.10\linewidth]{FYP-SequenceAuth.png}
     \caption{Sequence Diagram — Authentication}
 \end{figure}
 
 \subsubsection{System Sequence Diagrams (SSD)}
 The following diagrams illustrate the system event flows for key scenarios.
-
+\linebreak
+\linebreak
 \textbf{SSD: Authentication}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{FYP-Ssd-Auth.png}
+    \includegraphics[width=1.10\linewidth, height=18cm]{FYP-Ssd-Auth.png}
     \caption{SSD — Authentication}
 \end{figure}
 
 \textbf{SSD: Conversion}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{FYP-Ssd-Conversion.png}
+    \includegraphics[width=1.10\linewidth, height=21cm]{FYP-Ssd-Conversion.png}
     \caption{SSD — Conversion}
 \end{figure}
 
 \textbf{SSD: Simulation}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{FYP-Ssd-Simulation.png}
+    \includegraphics[width=1.15\linewidth]{FYP-Ssd-Simulation.png}
     \caption{SSD — Simulation}
 \end{figure}
 
 \clearpage
 \subsection{Architecture Diagram}
-This diagram provides a high-level view of frontend, backend, conversion/simulation services, and communication channels.
+This diagram provides a high-level view of the deployed QCanvas stack: the Next.js IDE, FastAPI API layer, \texttt{quantum\_converters} and \texttt{quantum\_simulator} packages, PostgreSQL/Redis persistence, and WebSocket/REST communication channels used for compilation and simulation.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{FYP-SystemArchitecture.png}
+    \includegraphics[width=1.10\linewidth, height=15cm]{FYP-SystemArcitecture-2.png}
     \caption{Architecture Diagram}
 \end{figure}
 
 \clearpage
 \subsection{Component Diagram}
-This diagram depicts module boundaries: editor, API, conversion, validation, simulation backends, and shared utilities.
+This diagram depicts concrete module boundaries: editor and results components in the frontend, API routes and services in the backend, conversion/validation modules, simulation backends, and shared utilities that are implemented in the current codebase.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{FYP-Component.png}
+    \includegraphics[width=1.10\linewidth, height=15.cm]{FYP-Component.png}
     \caption{Component Diagram}
 \end{figure}
 
 \clearpage
 \subsection{Package Diagram}
-This diagram outlines package organization across frontend, backend, converters, and simulator libraries.
+This diagram outlines the actual package organization across the frontend (Next.js \texttt{app}, \texttt{components}, and \texttt{lib}), backend (\texttt{app/api}, \texttt{core}, \texttt{services}, \texttt{models}), \texttt{quantum\_converters} (parsers, converters, optimizers), and \texttt{quantum\_simulator} libraries.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{Package Diagram.jpeg}
+    \includegraphics[width=1.10\linewidth]{ThesisFigs/FYP-PackageDiagram.png}
     \caption{Package Diagram}
 \end{figure}
 
 \clearpage
 \subsection{Deployment Diagram}
-This diagram shows the deployment view for development and production, including web server, API service, and optional workers.
+This diagram shows the deployment view for development and production, including an HTTP reverse proxy (e.g., Nginx), the FastAPI backend service, the Next.js frontend, PostgreSQL/Redis containers, and scaling via Docker Compose or Kubernetes as described in the deployment documentation.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{FYP-Deployment.png}
@@ -184,7 +185,7 @@ This diagram shows the deployment view for development and production, including
 
 \clearpage
 \subsection{State Diagrams}
-These diagrams model the state transitions of critical system entities.
+These diagrams model the state transitions of critical system entities such as conversion requests, simulation jobs, and user sessions, following the states and transitions implemented in the backend services and job orchestration logic.
 
 \subsubsection{State Diagram: Conversion Process}
 \begin{figure}[H]
@@ -202,9 +203,10 @@ These diagrams model the state transitions of critical system entities.
 
 \clearpage
 \subsection{Data Flow Diagrams (DFD)}
-These diagrams illustrate the flow of data through the system's processes.
+These diagrams illustrate the flow of data through the system's processes, from user interactions in the IDE to backend processing, database updates, and simulation results being returned to the frontend.
 
 \subsubsection{DFD Level 0 (Context Diagram)}
+At the context level, the DFD shows QCanvas as a single system interacting with external entities such as the User, Authentication Provider, and QSim backend. It highlights key flows including code submission, authentication requests, simulation requests, and results being returned to the browser.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{FYP-DFD-lvl0.png}
@@ -237,7 +239,7 @@ The conceptual entities from the domain model are transformed into runtime data 
 \end{itemize}
 
 \subsubsection{Entity Relationship Diagram (ERD)}
-The ERD below illustrates the schema and relationships for the Core Entities.
+The ERD below illustrates the schema and relationships for the Core Entities implemented in the database and runtime models, including how users own projects and files, how conversion results and simulation jobs are linked to circuits, and how results are persisted for later retrieval.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{FYP-ErdDiagram.png}

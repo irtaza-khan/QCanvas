@@ -19,9 +19,9 @@ The project structure was established using a modern tech stack:
 \subsubsection{Quantum Features}
 All planned features for Iteration 1 were successfully implemented:
 \begin{itemize}
-    \item \textbf{Framework Support:} Initial support for parsing and converting Cirq, Qiskit, and PennyLane circuits.
-    \item \textbf{Standard Gates:} Implementation of all standard quantum gates and modifiers (controls, inverses).
-    \item \textbf{Type System:} Complete type system support within the intermediate representation.
+    \item \textbf{Framework Support:} Initial support for parsing and converting Cirq, Qiskit, and PennyLane circuits \cite{qiskit, cirq_developers_2023, bergholm2018pennylane}.
+    \item \textbf{Standard Gates:} Implementation of all standard quantum gates and modifiers (controls, inverses) \cite{nielsen2010quantum}.
+    \item \textbf{Type System:} Complete type system support within the intermediate representation \cite{cross2021openqasm}.
     \item \textbf{Control Flow:} Implementation of classical control flow constructs (if-else).
 \end{itemize}
 
@@ -65,7 +65,7 @@ A complete database layer has been implemented using PostgreSQL and SQLAlchemy:
 \end{itemize}
 
 \subsubsection{API for QSim Compilation (Hybrid CPU/QPU)}
-To support the hybrid execution model, a dedicated orchestration API was implemented:
+To support the hybrid execution model, a dedicated orchestration API was implemented \cite{peruzzo2014variational}:
 \begin{itemize}
     \item \textbf{/compile Endpoint:} Offloads complex circuit compilation from the client to the high-performance Python backend.
     \item \textbf{/simulate Endpoint:} Acts as the bridge between classical orchestration and the quantum execution engine (QSim), managing job queues and results.
@@ -108,9 +108,9 @@ To verify the system's non-functional requirements, preliminary benchmarking was
 
 \subsection{Performance Evaluation}
 \begin{itemize}
-    \item \textbf{Conversion Latency:} The average time to convert a 50-gate circuit from Qiskit to OpenQASM 3.0 \cite{cross2021openqasm} was measured at \textbf{145ms}, well within the 1500ms target.
-    \item \textbf{Simulation Throughput:} The stabilizer backend demonstrated the capability to simulate 1000 shots of a 20-qubit Clifford circuit in under \textbf{1.2 seconds}.
-    \item \textbf{API Scalability:} Load testing on the `/compile` endpoint showed stable performance up to 50 concurrent requests per second before latency degradation occurred.
+\item \textbf{Conversion Latency:} The average time to convert a 50-gate circuit from Qiskit to OpenQASM 3.0 was measured at \textbf{145ms}, well within the 1500ms target.
+\item \textbf{Simulation Throughput:} The stabilizer backend demonstrated the capability to simulate 1000 shots of a 20-qubit Clifford circuit in under \textbf{1.2 seconds}.
+\item \textbf{API Scalability:} Load testing on the `/compile` endpoint showed stable performance up to 50 concurrent requests per second before latency degradation occurred.
 \end{itemize}
 
 \subsection{Correctness Benchmarking}

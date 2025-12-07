@@ -1,24 +1,27 @@
-\chapter{Abstract}
+\chapter{Introduction}
 
-The field of quantum computing has transitioned significantly from theoretical abstraction to the era of Noisy Intermediate-Scale Quantum (NISQ) devices. As hardware vendors like IBM, Google, and Rigetti race to increase qubit counts and fidelity, the accompanying software ecosystem has expanded rapidly. However, this growth has come at the cost of fragmentation. Researchers and developers today are confronted with a "Tower of Babel" scenario, where competing frameworks—such as Qiskit, Cirq, and PennyLane—operate in silos, each with unique syntax, compilation targets, and visualization tools.
+The field of quantum computing has transitioned significantly from theoretical abstraction to the era of Noisy Intermediate-Scale Quantum (NISQ) devices \cite{preskill2018quantum, nielsen2010quantum}. As hardware vendors like IBM, Google, and Rigetti race to increase qubit counts and fidelity, the accompanying software ecosystem has expanded rapidly. However, this growth has come at the cost of fragmentation. Researchers and developers today are confronted with a "Tower of Babel" scenario, where competing frameworks—such as Qiskit, Cirq, and PennyLane—operate in silos, each with unique syntax, compilation targets, and visualization tools \cite{qiskit, cirq_developers_2023, bergholm2018pennylane}.
 
 This fragmentation poses a barrier to entry for students and creates friction for experienced researchers who wish to compare algorithms across different hardware baselines. The lack of a unified development environment that can transparently bridge these frameworks means that users often spend more time wrestling with proprietary APIs than designing quantum logic. Furthermore, the absence of standardized intermediate representations in educational tools obscures the critical translation step where high-level Python code becomes executable quantum instructions.
 
-"QCanvas" is proposed as a definitive solution to this interoperability challenge. It is designed as a unified, standard-compliant simulation platform that serves as a universal translator and execution engine for quantum circuits. By centering its architecture on OpenQASM 3.0 \cite{cross2021openqasm, nielsen2010quantum}, QCanvas provides a transparent window into quantum execution, allowing code from any major framework to be parsed, visualized, and simulated in a consistent environment.
+"QCanvas" is proposed as a definitive solution to this interoperability challenge. It is designed as a unified, standard-compliant simulation platform that serves as a universal translator and execution engine for quantum circuits. By centering its architecture on OpenQASM 3.0 \cite{cross2021openqasm, cross2017openqasm}, QCanvas provides a transparent window into quantum execution, allowing code from any major framework to be parsed, visualized, and simulated in a consistent environment.
 
 This document details the complete software requirements specification for QCanvas. It outlines the architectural decisions and functional capabilities intended to support developers, researchers, and educators in overcoming the current limitations of the quantum software landscape.
 
 \section{Problem Statement}
 
-The current quantum development ecosystem is fragmented. Learners and researchers are forced to navigate a disconnect between multiple software frameworks (such as Qiskit, Cirq, and PennyLane) and the underlying hardware behavior. Key challenges include:
+Despite rapid progress in NISQ-era hardware and software, there is no unified simulation platform that allows quantum circuits from major frameworks (Qiskit, Cirq, PennyLane) to be expressed, compared, and executed through a single, standards-based workflow. Learners and researchers are forced to navigate duplicated concepts, incompatible APIs, and fragmented tooling across frameworks and simulators.
+
+Specifically, the current ecosystem lacks:
 
 \begin{itemize}
-    \item \textbf{Fragmentation:} Developers must learn duplicate concepts across different APIs, making it difficult to port or compare experiments.
-    \item \textbf{Lack of Standardization:} The absence of a transparent intermediate representation in many workflows obscures how high-level code maps to actual quantum operations.
-    \item \textbf{Steep Learning Curve:} Educational tools often lack immediate visual feedback, while professional tools are too complex for beginners, widening the gap between theory and practice.
+    \item \textbf{A unified intermediate representation in tooling:} Most frameworks hide or only partially expose the compiled quantum instructions, making it difficult to reason about what actually runs on the backend.
+    \item \textbf{A single, framework-agnostic IDE:} There is no web-based environment where users can work with Cirq, Qiskit, and PennyLane side by side while seeing the same OpenQASM 3.0 view of their circuits.
+    \item \textbf{A consistent simulation interface:} Users must switch between different simulators, configuration styles, and result formats when moving across frameworks.
+    \item \textbf{Beginner-friendly feedback:} Existing professional tools often prioritize flexibility over clarity, leaving students without guided error reporting or visual explanations.
 \end{itemize}
 
-QCanvas aims to solve these problems by introducing a unified interface where users can write in their preferred framework, but understand and execute their logic through a common, standardized lens (OpenQASM 3.0) \cite{cross2021openqasm}.
+QCanvas addresses this problem by providing a unified interface where users can write in their preferred framework but understand and execute their logic through a common, standardized lens (OpenQASM 3.0) \cite{cross2021openqasm}. The remainder of this document formalizes the scope, objectives, requirements, and architecture of that solution.
 
 \section{Project Objectives}
 
@@ -83,6 +86,12 @@ QCanvas serves a diverse audience with varying needs:
 \addlinespace
 \textbf{Educators} & Demonstrate concepts effectively to students. & Shareable examples, clean visualization, standard syntax compliance. \\
 \bottomrule
+
+% --- ADD THESE LINES ---
+\caption{User Classes and Characteristics}
+\label{tab:user-classes}
+% -----------------------
+
 \end{longtable}
 
 \section{Assumptions, Dependencies, and Constraints}
