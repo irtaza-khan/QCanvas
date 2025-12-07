@@ -92,10 +92,11 @@ A comprehensive testing strategy has been employed to ensure system reliability.
 \subsection{Test Coverage}
 As of the end of Iteration 2, the system has achieved 100\% pass rate on all implemented tests:
 \begin{itemize}
-    \item \textbf{Total Tests:} 105 passing tests.
-    \item \textbf{Iteration 1 Tests:} 44 tests covering basic features.
-    \item \textbf{Integration Tests:} 54 tests covering framework converters and end-to-end flows.
-    \item \textbf{Scope Coverage:} Tests cover Cirq (7/7), Qiskit (8/8), PennyLane (15/15), and Language Features (15/15).
+    \item \textbf{Total Tests:} 304 passing tests.
+    \item \textbf{Iteration 1 Tests:} 73 passed tests (110 collected, 33 skipped, 4 excluded) covering basic features.
+    \item \textbf{Iteration 2 Tests:} 151 tests covering advanced features, database models, and authentication.
+    \item \textbf{Integration Tests:} 80 tests covering end-to-end framework conversion and hybrid execution flows.
+    \item \textbf{Scope Coverage:} Comprehensive coverage across Cirq, Qiskit, PennyLane, and OpenQASM 3.0 semantics.
 \end{itemize}
 
 \subsection{Validation Results}
@@ -107,7 +108,7 @@ To verify the system's non-functional requirements, preliminary benchmarking was
 
 \subsection{Performance Evaluation}
 \begin{itemize}
-    \item \textbf{Conversion Latency:} The average time to convert a 50-gate circuit from Qiskit to OpenQASM 3.0 was measured at \textbf{145ms}, well within the 1500ms target.
+    \item \textbf{Conversion Latency:} The average time to convert a 50-gate circuit from Qiskit to OpenQASM 3.0 \cite{cross2021openqasm} was measured at \textbf{145ms}, well within the 1500ms target.
     \item \textbf{Simulation Throughput:} The stabilizer backend demonstrated the capability to simulate 1000 shots of a 20-qubit Clifford circuit in under \textbf{1.2 seconds}.
     \item \textbf{API Scalability:} Load testing on the `/compile` endpoint showed stable performance up to 50 concurrent requests per second before latency degradation occurred.
 \end{itemize}

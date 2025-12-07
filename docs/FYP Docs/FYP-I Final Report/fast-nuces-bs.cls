@@ -18,7 +18,7 @@
 \RequirePackage{amssymb, amsmath, amsthm, amstext}
 \RequirePackage{tikz}
 \RequirePackage{tocloft}
-\RequirePackage[sort, numbers, authoryear]{natbib}
+\RequirePackage[sort, numbers]{natbib}
 \RequirePackage{emptypage}
 \RequirePackage{graphics}
 \RequirePackage{graphicx}

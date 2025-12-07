@@ -41,9 +41,9 @@ QCanvas employs a hybrid architecture where the Next.js frontend handles UI and 
 
 \subsubsection{Quantum Computing Stack}
 \begin{itemize}
-    \item Cirq 1.0+ for Google quantum framework support
-    \item Qiskit 0.44+ for IBM quantum framework support
-    \item PennyLane 0.33+ for Xanadu quantum framework support
+    \item Cirq 1.0+ for Google quantum framework support \cite{cirq_developers_2023}
+    \item Qiskit 0.44+ for IBM quantum framework support \cite{qiskit}
+    \item PennyLane 0.33+ for Xanadu quantum framework support \cite{bergholm2018pennylane}
     \item Custom OpenQASM 3.0 generator (QASM3Builder)
     \item Custom simulation backends (statevector, density matrix, stabilizer)
 \end{itemize}
@@ -87,29 +87,63 @@ This section presents the required design models with placeholders for detailed 
 This diagram presents the end-to-end flow from code input, through validation and conversion, to simulation and results.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.67\linewidth]{AD-Compile and Execute.png}
+    \includegraphics[width=\linewidth]{FYP-Activity-2.png}
     \caption{Activity Diagram — Circuit Conversion and Execution}
     \label{fig:activity_convert_run}
 \end{figure}
 
-\subsubsection{Activity Diagram: Add New Framework}
-This diagram captures the steps for adding a new framework into the conversion pipeline from parsing to validation and testing.
+\subsubsection{Activity Diagram: User Registration}
+This diagram captures the user registration and onboarding flow.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.95\linewidth]{AD-New Framework.png}
-    \caption{Activity Diagram — Add New Framework}
+    \includegraphics[width=0.75\linewidth]{FYP-ActivityRegistration.png}
+    \caption{Activity Diagram — User Registration}
 \end{figure}
+
+
 
 
 \subsection{Sequence Diagrams}
 
-\subsubsection{Sequence Diagram: Conversion Flow}
-This diagram shows how the editor, API, and QCanvas interact to produce OpenQASM 3.0.
+\subsubsection{Sequence Diagram: Unified Execution Flow}
+This diagram shows the unified interaction flow across the system components.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{SD-Compile to QASM.png}
-    \caption{Sequence Diagram — Conversion}
-    \label{fig:seq_convert}
+    \includegraphics[width=\linewidth]{FYP-SequenceUnified.png}
+    \caption{Sequence Diagram — Unified Flow}
+    \label{fig:seq_unified}
+\end{figure}
+
+\subsubsection{Sequence Diagram: Authentication}
+This diagram details the authentication process involving the frontend, API, and Database.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{FYP-SequenceAuth.png}
+    \caption{Sequence Diagram — Authentication}
+\end{figure}
+
+\subsubsection{System Sequence Diagrams (SSD)}
+The following diagrams illustrate the system event flows for key scenarios.
+
+\textbf{SSD: Authentication}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{FYP-Ssd-Auth.png}
+    \caption{SSD — Authentication}
+\end{figure}
+
+\textbf{SSD: Conversion}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{FYP-Ssd-Conversion.png}
+    \caption{SSD — Conversion}
+\end{figure}
+
+\textbf{SSD: Simulation}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{FYP-Ssd-Simulation.png}
+    \caption{SSD — Simulation}
 \end{figure}
 
 \clearpage
@@ -117,7 +151,7 @@ This diagram shows how the editor, API, and QCanvas interact to produce OpenQASM
 This diagram provides a high-level view of frontend, backend, conversion/simulation services, and communication channels.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{Architecture Diagram.png}
+    \includegraphics[width=\linewidth]{FYP-SystemArchitecture.png}
     \caption{Architecture Diagram}
 \end{figure}
 
@@ -126,7 +160,7 @@ This diagram provides a high-level view of frontend, backend, conversion/simulat
 This diagram depicts module boundaries: editor, API, conversion, validation, simulation backends, and shared utilities.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{Component Diagram.png}
+    \includegraphics[width=\linewidth]{FYP-Component.png}
     \caption{Component Diagram}
 \end{figure}
 
@@ -144,8 +178,44 @@ This diagram outlines package organization across frontend, backend, converters,
 This diagram shows the deployment view for development and production, including web server, API service, and optional workers.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{Deployment Diagram.PNG}
+    \includegraphics[width=\linewidth]{FYP-Deployment.png}
     \caption{Deployment Diagram}
+\end{figure}
+
+\clearpage
+\subsection{State Diagrams}
+These diagrams model the state transitions of critical system entities.
+
+\subsubsection{State Diagram: Conversion Process}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{FYP-StateConversion.png}
+    \caption{State Diagram — Conversion}
+\end{figure}
+
+\subsubsection{State Diagram: Simulation Job}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{FYP-StateJob.png}
+    \caption{State Diagram — Job}
+\end{figure}
+
+\clearpage
+\subsection{Data Flow Diagrams (DFD)}
+These diagrams illustrate the flow of data through the system's processes.
+
+\subsubsection{DFD Level 0 (Context Diagram)}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{FYP-DFD-lvl0.png}
+    \caption{DFD Level 0}
+\end{figure}
+
+\subsubsection{DFD Level 1}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{FYP-DFD-lvl1.png}
+    \caption{DFD Level 1}
 \end{figure}
 
 
@@ -165,6 +235,14 @@ The conceptual entities from the domain model are transformed into runtime data 
     \item \textbf{SimulationResult}: Measurement counts, statevector/density matrix (optional), execution time, metadata.
     \item \textbf{Project}: Files collection, active file reference, project settings, theme preferences.
 \end{itemize}
+
+\subsubsection{Entity Relationship Diagram (ERD)}
+The ERD below illustrates the schema and relationships for the Core Entities.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{FYP-ErdDiagram.png}
+    \caption{Entity Relationship Diagram}
+\end{figure}
 
 \subsection{Data Organization and Processing}
 

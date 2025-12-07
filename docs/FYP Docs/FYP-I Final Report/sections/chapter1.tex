@@ -1,6 +1,6 @@
 \chapter{Introduction}
 
-The field of quantum computing is rapidly evolving, shifting from theoretical research to practical application. As hardware capabilities grow, so does the need for accessible, standardized software tools that can bridge the gap between abstract quantum concepts and executable code. "QCanvas" is proposed as a unified quantum simulation platform designed to address this need by providing a standards-aligned environment centered on OpenQASM 3.0.
+The field of quantum computing is rapidly evolving, shifting from theoretical research to practical application. As hardware capabilities grow, so does the need for accessible, standardized software tools that can bridge the gap between abstract quantum concepts and executable code \cite{nielsen2010quantum}. "QCanvas" is proposed as a unified quantum simulation platform designed to address this need by providing a standards-aligned environment centered on OpenQASM 3.0.
 
 This document details the software requirements for QCanvas, intended for developers, researchers, and supervisors. It outlines the architectural design, system capabilities, and constraints that define the project.
 
@@ -14,7 +14,7 @@ The current quantum development ecosystem is fragmented. Learners and researcher
     \item \textbf{Steep Learning Curve:} Educational tools often lack immediate visual feedback, while professional tools are too complex for beginners, widening the gap between theory and practice.
 \end{itemize}
 
-QCanvas aims to solve these problems by introducing a unified interface where users can write in their preferred framework, but understand and execute their logic through a common, standardized lens (OpenQASM 3.0).
+QCanvas aims to solve these problems by introducing a unified interface where users can write in their preferred framework, but understand and execute their logic through a common, standardized lens (OpenQASM 3.0) \cite{cross2021openqasm}.
 
 \section{Project Objectives}
 
@@ -68,16 +68,16 @@ The system is architected into modular components to ensure scalability and main
 
 QCanvas serves a diverse audience with varying needs:
 
-\begin{longtable}{p{0.25\textwidth} p{0.70\textwidth}}
+\begin{longtable}{p{0.20\textwidth} p{0.35\textwidth} p{0.35\textwidth}}
 \toprule
-\textbf{User Class} & \textbf{Goals \& Characteristics} \\
+\textbf{User Class} & \textbf{Primary Goals} & \textbf{Key Needs} \\
 \midrule
 \endhead
-\textbf{Beginners} & \textbf{Goal:} Visual intuition. \newline \textbf{Needs:} Templates, guided errors, simple visual feedback. \\
-\midrule
-\textbf{Researchers} & \textbf{Goal:} Reproducibility & comparison. \newline \textbf{Needs:} Batch processing, exact statevector access, cross-framework tools. \\
-\midrule
-\textbf{Educators} & \textbf{Goal:} Teaching tool. \newline \textbf{Needs:} Shareable examples, clean visualization, standard syntax. \\
+\textbf{Beginners} & Build visual intuition and learn quantum basics. & Templates, guided error messages, simple visual feedback. \\
+\addlinespace
+\textbf{Researchers} & Reproduce experiments and compare frameworks. & Batch processing, exact statevector access, cross-framework analysis. \\
+\addlinespace
+\textbf{Educators} & Demonstrate concepts effectively to students. & Shareable examples, clean visualization, standard syntax compliance. \\
 \bottomrule
 \end{longtable}
 

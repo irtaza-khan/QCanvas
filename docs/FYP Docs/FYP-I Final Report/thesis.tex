@@ -70,6 +70,11 @@
 \pretocmd{\subsubsection}{\Needspace{4\baselineskip}}{}{}
 \makeatother
 
+% Fix TOC numbering to avoid "1111" issues
+\renewcommand{\thesection}{\thechapter.\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+
 \include{sections/chapter1}
 \include{sections/chapter2}
 \include{sections/chapter3}
@@ -78,7 +83,7 @@
 %\appendix
 %\include{appendix1/appendix1}
 
-\bibliographystyle{plainnat}
+\bibliographystyle{ieeetr}
 \bibliography{references}
 
 \end{document}
