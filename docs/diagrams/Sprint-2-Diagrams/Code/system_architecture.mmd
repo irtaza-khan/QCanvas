@@ -1,88 +1,59 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '20px', 'fontFamily': 'arial', 'clusterBkg': '#fafafa', 'clusterBorder': '#666'}}}%%
+flowchart TB
+    %% Styling Definitions
+    classDef container fill:#fff,stroke:#333,stroke-width:2px;
+    classDef component fill:#e3f2fd,stroke:#1565c0,stroke-width:1px;
+    classDef infra fill:#f1f8e9,stroke:#558b2f,stroke-width:1px;
+    classDef data fill:#fff3e0,stroke:#e65100,stroke-width:1px;
 
-graph TB
     subgraph Frontend_Tier ["Frontend Tier (Client)"]
         direction TB
-        NextJS["Next.js Application\n(React 18 + TypeScript)"]
-        
-        subgraph Client_State ["Client State Management"]
-            Zustand["Zustand Store\n(Auth & File State)"]
-        end
-        
-        subgraph UI_Components ["UI Components"]
-            Monaco["Monaco Editor\n(Code/QASM)"]
-            Shadcn["UI Components\n(Tailwind CSS)"]
-        end
+        NextJS["Next.js App\n(React 18 + TS)"]:::component
+        Zustand["Zustand Store\n(State Mgmt)"]:::component
+        Monaco["Monaco Editor\n(Code/QASM)"]:::component
         
         NextJS --> Zustand
-        NextJS --> UI_Components
+        NextJS --> Monaco & Shadcn["UI Components"]:::component
         Zustand --> Monaco
     end
 
     subgraph Infrastructure_Tier ["Dockerized Infrastructure"]
+        direction TB
+        NGINX["Nginx Gateway\n(Port 80/443)"]:::infra
         
-        subgraph Ingress ["Reverse Proxy"]
-            NGINX["Nginx Gateway\n(Port 80/443)"]
-        end
-        
-        subgraph App_Container ["Backend Container"]
-            FastAPI["FastAPI Server\n(Python 3.10)"]
+        subgraph Backend ["Backend Container (FastAPI)"]
+            direction TB
+            FastAPI["FastAPI Server"]:::infra
             
-            subgraph Middleware_Stack ["Middleware Stack"]
-                AuthMW["Auth (JWT/OAuth2)"]
-                CorsMW["CORS & Security Headers"]
-                RateLimit["SlowAPI Rate Limiter"]
+            %% Flattened Internal Logic for Compactness
+            Middleware["Middleware Stack\n(Auth, CORS, RateLimit)"]:::infra
+            Services["App Services\n(Conversion, Simulation, Projects)"]:::infra
+            
+            subgraph Engine ["Quantum Engine"]
+                Converters["Converters\n(AST Parsing)"]:::infra
+                QSim["QSim Simulator\n(Statevector)"]:::infra
+                Sandbox["Hybrid Sandbox"]:::infra
             end
             
-            subgraph Service_Layer ["Application Services"]
-                ConvSvc["Conversion Service"]
-                SimSvc["Simulation Service"]
-                ProjSvc["Project Manager"]
-            end
-            
-            subgraph Runtime_Env ["Execution Environment"]
-                Sandbox["Hybrid Sandbox\n(Restricted Python)"]
-                QRuntime["QCanvas Runtime"]
-            end
-            
-            subgraph Core_Libs ["Quantum Core"]
-                Converters["Quantum Converters\n(AST Parsing)"]
-                QSim["QSim Simulator\n(Statevector/Matrix)"]
-                SDKs["SDK Wrappers\n(Cirq, Qiskit, PennyLane)"]
-            end
-            
-            FastAPI --> Middleware_Stack
-            Middleware_Stack --> Service_Layer
-            
-            ConvSvc --> Converters
-            SimSvc --> QSim
-            
-            Service_Layer --> Sandbox
-            Sandbox --> QRuntime
-            QRuntime --> QSim
+            FastAPI --> Middleware --> Services
+            Services --> Converters
+            Services --> QSim
+            Services --> Sandbox --> QSim
         end
         
-        subgraph Data_Tier ["Persistence & Caching"]
-            Postgres[("PostgreSQL 15\n(Primary DB)")]
-            Redis[("Redis\n(Cache & Pub/Sub)")]
+        subgraph Data_Tier ["Data Persistence"]
+            Postgres[("PostgreSQL 15")]:::data
+            Redis[("Redis Cache")]:::data
         end
         
-        subgraph DevOps ["Observability & Quality"]
-            SonarQube["SonarQube\n(Code Quality)"]
-        end
+        SonarQube["SonarQube"]:::infra
     end
 
-    %% Network Flows
-    NextJS -- "REST API / JSON" --> NGINX
-    NGINX -- "Proxy Pass :8000" --> FastAPI
+    %% Optimized Connections
+    NextJS ===> NGINX
+    NGINX --> FastAPI
     
-    Service_Layer -- "SQLAlchemy ORM" --> Postgres
-    Service_Layer -- "Cache/Session" --> Redis
-    
-    %% Styles
-    style Frontend_Tier fill:#e3f2fd,stroke:#1565c0
-    style App_Container fill:#f1f8e9,stroke:#558b2f
-    style Data_Tier fill:#fff3e0,stroke:#e65100
-    style Ingress fill:#fffde7,stroke:#fbc02d
-    
-    classDef container fill:#ffffff,stroke:#333333;
-    class NextJS,FastAPI,Postgres,Redis,SonarQube container;
+    Services -.-> Postgres
+    Services -.-> Redis
+
+    %% Global Component Styles applied via classes above

@@ -1,0 +1,74 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '20px', 'fontFamily': 'arial', 'clusterBkg': '#ffffff', 'clusterBorder': '#333', 'edgeLabelBackground':'#fff'}}}%%
+flowchart TB
+    %% Styling
+    classDef pkg fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef core fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+    classDef lib fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef util fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+
+    subgraph Frontend_Pkg ["Frontend Tier (Next.js)"]
+        direction TB
+        subgraph UI ["frontend/components"]
+            Components["UI Components<br>(Editor, TopBar)"]:::pkg
+        end
+        subgraph App ["frontend/app"]
+            Pages["Pages & Routing"]:::pkg
+        end
+        subgraph Libs ["frontend/lib"]
+            Store["Zustand Store"]:::pkg
+            ClientAPI["Axios Client"]:::pkg
+            Hooks["React Hooks"]:::pkg
+        end
+        subgraph F_Utils ["frontend/utils"]
+            FHelpers["Formatters<br>Validators"]:::util
+        end
+
+        Pages --> Components
+        Components --> Store & Hooks
+        Store --> ClientAPI
+        Components -.-> FHelpers
+    end
+
+    subgraph Backend_Pkg ["Backend Tier (FastAPI)"]
+        direction TB
+        subgraph API ["backend/api"]
+            Routes["Routers<br>(Convert, Sim)"]:::lib
+        end
+        subgraph Core ["backend/core"]
+            Middleware["Middleware<br>(Auth, CORS)"]:::lib
+            Config["App Config"]:::lib
+        end
+        subgraph Svc ["backend/services"]
+            BizLogic["Services<br>(ConversionSvc)"]:::lib
+        end
+        subgraph Model ["backend/models"]
+            ORM["SQLAlchemy Models"]:::lib
+            Pydantic["Pydantic Schemas"]:::lib
+        end
+
+        Routes --> Middleware & BizLogic
+        BizLogic --> ORM & Pydantic
+        Middleware --> Config
+    end
+
+    subgraph Shared_Pkg ["Quantum Core Library"]
+        direction TB
+        subgraph QConv ["quantum_converters"]
+            BaseConv["Base Classes"]:::core
+            SpecificConv["Converters<br>(Qiskit, Cirq)"]:::core
+            QASMGen["QASM Parsing"]:::core
+        end
+        subgraph QSim ["quantum_simulator"]
+            SimEngine["Simulator Engine"]:::core
+            StateVec["Statevector Ops"]:::core
+        end
+        
+        BaseConv --> SpecificConv
+        SpecificConv --> QASMGen
+        SimEngine --> StateVec
+    end
+
+    %% Cross-Boundary Dependencies
+    ClientAPI -. "JSON/HTTP" .-> Routes
+    BizLogic --> SpecificConv
+    BizLogic --> SimEngine
