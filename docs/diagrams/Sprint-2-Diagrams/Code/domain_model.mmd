@@ -1,0 +1,121 @@
+
+classDiagram
+    direction TB
+    
+    class User {
+        +UUID id
+        +String email
+        +String username
+        +String password_hash
+        +String full_name
+        +Boolean is_active
+        +Boolean is_verified
+        +UserRole role
+        +String api_key_encrypted
+        +DateTime created_at
+        +DateTime last_login_at
+    }
+    
+    class Project {
+        +Integer id
+        +UUID user_id
+        +String name
+        +Text description
+        +Boolean is_public
+        +DateTime created_at
+    }
+    
+    class File {
+        +Integer id
+        +Integer project_id
+        +String filename
+        +Text content
+        +Boolean is_main
+        +DateTime created_at
+    }
+    
+    class Job {
+        +Integer id
+        +UUID user_id
+        +Integer project_id
+        +JobStatus status
+        +String backend
+        +Integer shots
+        +Float execution_time_ms
+        +JSON result_data
+        +Text error_message
+    }
+    
+    class Conversion {
+        +UUID id
+        +UUID user_id
+        +QuantumFramework source_framework
+        +QuantumFramework target_framework
+        +Text source_code
+        +Text target_code
+        +Text qasm_code
+        +ExecutionStatus status
+        +Text error_message
+        +Integer execution_time_ms
+    }
+
+    class ConversionStats {
+        +UUID id
+        +UUID conversion_id
+        +Integer num_qubits
+        +Integer num_gates
+        +Integer circuit_depth
+        +Integer optimization_level
+    }
+
+    class Simulation {
+        +UUID id
+        +UUID user_id
+        +Text qasm_code
+        +SimulationBackend backend
+        +Integer shots
+        +JSON results_json
+        +ExecutionStatus status
+        +Text error_message
+    }
+
+    class Session {
+        +UUID id
+        +UUID user_id
+        +String session_token
+        +SessionType session_type
+        +String ip_address
+        +Text user_agent
+        +DateTime expires_at
+    }
+
+    class ApiActivity {
+        +UUID id
+        +UUID user_id
+        +String endpoint
+        +String method
+        +Integer status_code
+        +String ip_address
+        +Integer response_time_ms
+    }
+
+    User "1" --> "*" Project : owns
+    User "1" --> "*" Job : runs
+    User "1" --> "*" Conversion : requests
+    User "1" --> "*" Simulation : executes
+    User "1" --> "*" Session : has
+    User "1" --> "*" ApiActivity : generates
+
+    Project "1" --> "*" File : contains
+    Project "1" --> "*" Job : associated_with
+
+    Conversion "1" --> "0..1" ConversionStats : has_metrics
+    
+    %% Enum definitions as notes or independent classes to keep it clean
+    class Enums {
+        <<enumeration>>
+        UserRole: USER, ADMIN, DEMO
+        QuantumFramework: CIRQ, QISKIT, PENNYLANE
+        SimulationBackend: STATEVECTOR, DENSITY_MATRIX
+        JobStatus: PENDING, RUNNING, COMPLETED, FAILED
+    }

@@ -1,0 +1,56 @@
+
+graph TB
+    subgraph Frontend_Pkg ["Frontend (Next.js 14)"]
+        UI["React Pages (App Router)"]
+        Editor["Monaco Editor (React Wrapper)"]
+        Store["Zustand Store (Auth/Files)"]
+        Axios["API Client (Axios/Fetch)"]
+        Vis["Chart.js/D3 Visualizer"]
+    end
+    
+    subgraph Backend_Pkg ["Backend (FastAPI)"]
+        API["FastAPI App"]
+        Auth["Auth Service (JWT)"]
+        Proj["Project Service"]
+        Conv["Conversion Service"]
+        Sim["Simulation Service"]
+        Hyb["Hybrid Route"]
+    end
+    
+    subgraph Core_Pkg ["Quantum Runtime"]
+        Parsers["Framework Parsers<br>(Cirq/Qiskit/PennyLane)"]
+        QSim["QSim Simulator"]
+        PyBox["Python Sandbox (hybid.py)"]
+    end
+    
+    subgraph Data_Pkg ["Data Layer"]
+        PG[("PostgreSQL 15")]
+        Redis[("Redis Cache")]
+    end
+    
+    UI --> Store
+    Store --> Axios
+    Axios -->|"JSON/REST"| API
+    UI -.-> Editor
+    UI -.-> Vis
+    
+    API --> Auth
+    API --> Proj
+    API --> Conv
+    API --> Sim
+    API --> Hyb
+    
+    Conv --> Parsers
+    Sim --> QSim
+    Hyb --> PyBox
+    PyBox --> QSim
+    
+    Auth --> PG
+    Proj --> PG
+    Sim --> Redis
+    Sim --> PG
+    
+    style Frontend_Pkg fill:#e1f5fe,stroke:#01579b
+    style Backend_Pkg fill:#e8f5e9,stroke:#2e7d32
+    style Core_Pkg fill:#fff9c4,stroke:#fbc02d
+    style Data_Pkg fill:#fff3e0,stroke:#e65100

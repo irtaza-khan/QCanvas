@@ -1,0 +1,117 @@
+
+erDiagram
+    %% User Management
+    User {
+        UUID id PK
+        string email UK
+        string username UK
+        string password_hash
+        string full_name
+        boolean is_active
+        boolean is_verified
+        enum role "USER, ADMIN, DEMO"
+        string api_key_encrypted
+        timestamp created_at
+        timestamp last_login_at
+    }
+
+    Session {
+        UUID id PK
+        UUID user_id FK "Nullable"
+        string session_token UK
+        enum session_type "WEBSOCKET, API, WEB"
+        string ip_address
+        string user_agent
+        timestamp expires_at
+    }
+
+    ApiActivity {
+        UUID id PK
+        UUID user_id FK "Nullable"
+        string endpoint
+        string method
+        int status_code
+        string ip_address
+        int response_time_ms
+        string request_body_hash
+    }
+
+    %% Project Structure
+    Project {
+        int id PK
+        UUID user_id FK
+        string name
+        text description
+        boolean is_public
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    File {
+        int id PK
+        int project_id FK
+        string filename
+        text content
+        boolean is_main
+        timestamp updated_at
+    }
+
+    %% Job & Execution History
+    Job {
+        int id PK
+        UUID user_id FK
+        int project_id FK "Nullable"
+        enum status "PENDING, RUNNING, COMPLETED, FAILED"
+        string backend
+        int shots
+        float execution_time_ms
+        json result_data
+        text error_message
+    }
+
+    %% Specific Logic Tables
+    Conversion {
+        UUID id PK
+        UUID user_id FK
+        enum source_framework "CIRQ, QISKIT, PENNYLANE"
+        enum target_framework "CIRQ, QISKIT, PENNYLANE"
+        text source_code
+        text target_code
+        text qasm_code
+        enum status
+        int execution_time_ms
+    }
+
+    ConversionStats {
+        UUID id PK
+        UUID conversion_id FK "Unique"
+        int num_qubits
+        int num_gates
+        int circuit_depth
+        int optimization_level
+    }
+
+    Simulation {
+        UUID id PK
+        UUID user_id FK
+        text qasm_code
+        enum backend "STATEVECTOR, DENSITY_MATRIX, STABILIZER"
+        int shots
+        json results_json
+        enum status
+        int execution_time_ms
+        timestamp created_at
+    }
+
+    %% Relationships
+    User ||--o{ Session : "has multiple"
+    User ||--o{ ApiActivity : "logs"
+    User ||--o{ Project : "owns"
+    User ||--o{ Job : "launches"
+    User ||--o{ Conversion : "requests"
+    User ||--o{ Simulation : "runs"
+
+    Project ||--o{ File : "contains"
+    Project ||--o{ Job : "context for"
+    
+    Conversion ||--|| ConversionStats : "has metrics"

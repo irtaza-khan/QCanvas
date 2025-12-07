@@ -1,0 +1,32 @@
+
+sequenceDiagram
+    autonumber
+    actor Dev as Developer
+    participant Sys as :QCanvas System
+
+    Note over Dev, Sys: Use Case: Convert Quantum Circuit
+
+    Dev->>Sys: openConverterUI()
+    activate Sys
+    Sys-->>Dev: displayEditor(frameworks=["cirq", "qiskit", "pennylane"])
+    deactivate Sys
+
+    loop Refine Circuit
+        Dev->>Sys: uploadCode(file="circuit.py")
+        activate Sys
+        Sys-->>Dev: codeLoaded()
+        deactivate Sys
+
+        Dev->>Sys: requestConversion(source="cirq", target="qasm3")
+        activate Sys
+        
+        Sys->>Sys: validateSyntax(python_ast)
+        
+        alt Syntax Valid
+            Sys->>Sys: transpileToIntermediate(QASM)
+            Sys-->>Dev: returnConversion(qasm_code, metrics={qubits, depth})
+        else Syntax Error
+            Sys-->>Dev: displayError(traceback)
+        end
+        deactivate Sys
+    end

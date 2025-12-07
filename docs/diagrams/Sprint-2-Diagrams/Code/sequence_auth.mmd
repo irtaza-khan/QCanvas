@@ -1,0 +1,34 @@
+
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Frontend
+    participant Auth as Auth Service
+    participant DB as Database
+    
+    User->>UI: Submit (email, pass)
+    UI->>Auth: POST /login
+    activate Auth
+    
+    Auth->>DB: Query User(email)
+    activate DB
+    DB-->>Auth: User Record / Null
+    deactivate DB
+    
+    alt User Found
+        Auth->>Auth: bcrypt.verify(pass, hash)
+        
+        opt Password Match
+            Auth->>Auth: generateJWT()
+            Auth->>DB: Update last_login
+            Auth-->>UI: 200 OK {token, user}
+        end
+        opt Mismatch
+            Auth-->>UI: 401 Unauthorized
+        end
+    else Not Found
+        Auth-->>UI: 404 User Not Found
+    end
+    deactivate Auth
+    
+    UI->>User: Redirect to Dashboard

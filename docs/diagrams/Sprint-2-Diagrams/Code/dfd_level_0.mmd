@@ -1,0 +1,27 @@
+
+graph LR
+    %% Layout optimized for wide report view
+    
+    subgraph External_Entities
+        User[("👤 User<br>(Student/Dev/ Researcher)")]
+        Admin[("🛡️ Admin<br>(System Manager)")]
+    end
+
+    System((("QCanvas System<br>(Web Platform)")))
+
+    %% User Flows
+    User -->|"1. Auth Request<br>(Login/Register)"| System
+    User -->|"2. Project Data<br>(Files/Code)"| System
+    User -->|"3. Circuit Input<br>(Py/QASM/Framework)"| System
+    
+    System -->|"4. Auth Token<br>(JWT)"| User
+    System -->|"5. Sim Results<br>(Counts/Plots)"| User
+    System -->|"6. Conversion Output<br>(QASM/Target Code)"| User
+
+    %% Admin Flows
+    Admin -->|"7. Config & Queries"| System
+    System -->|"8. Usage Reports & Logs"| Admin
+
+    style System fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    style User fill:#e1f5fe,stroke:#0277bd
+    style Admin fill:#e1f5fe,stroke:#0277bd
