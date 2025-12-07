@@ -187,17 +187,12 @@ Persistence Layer & Project files, conversion history, results cache, user sessi
 
 \subsubsection{Current Implementation}
 \begin{itemize}
-    \item In-memory storage for active sessions and temporary results
-    \item File-based storage for example circuits and templates
-    \item Frontend local storage for user preferences and theme
-\end{itemize}
-
-\subsubsection{Future Implementation}
-\begin{itemize}
-    \item PostgreSQL for user accounts, projects, and circuit library
-    \item Redis for session management and result caching
-    \item SQLAlchemy ORM for database abstraction
-    \item Migration system for schema evolution
+    \item \textbf{In-memory storage}: Active sessions and temporary computation results.
+    \item \textbf{File-based storage}: Example circuits and templates.
+    \item \textbf{PostgreSQL}: Persistent storage for user accounts, projects, and conversion history.
+    \item \textbf{Redis}: Caching layer for session management and optimization.
+    \item \textbf{SQLAlchemy ORM}: Database abstraction layer.
+    \item \textbf{Frontend local storage}: User preferences and theme settings.
 \end{itemize}
 
 \subsection{API Data Models}

@@ -27,7 +27,7 @@ All planned features for Iteration 1 were successfully implemented:
 
 \subsection{Iteration 2: Advanced Features and Hybrid Execution}
 
-Iteration 2 expanded the system's capabilities with advanced language features, expanded framework support, and the introduction of the hybrid execution model.
+Iteration 2 expanded the system's capabilities with advanced language features, expanded framework support, a secure database layer, and the introduction of the hybrid execution model.
 
 
 
@@ -48,9 +48,25 @@ Support for PennyLane was significantly expanded to include advanced gates:
     \item Advanced modifiers: `negctrl`, `ctrl(n)`, `pow(k)`.
 \end{itemize}
 
+\subsubsection{User Management and Security}
+The system now includes a robust authentication and authorization module:
+\begin{itemize}
+    \item \textbf{Authentication:} JWT-based stateless authentication with securely hashed passwords (Bcrypt).
+    \item \textbf{Role-Based Access Control:} Support for User, Admin, and Demo roles.
+    \item \textbf{API Security:} Encrypted storage of API keys using AES-256.
+\end{itemize}
+
+\subsubsection{Persistence and Database Layer}
+A complete database layer has been implemented using PostgreSQL and SQLAlchemy:
+\begin{itemize}
+    \item \textbf{ORM Models:} Comprehensive models for Users, Projects, Files, Jobs, and Simulations.
+    \item \textbf{Migrations:} Alembic integration for tracking schema changes.
+    \item \textbf{Data Integrity:} Foreign key constraints and cascade delete policies.
+\end{itemize}
+
 \section{User Interface Implementation}
 
-The QCanvas Web IDE has been developed into a fully functional environment:
+The QCanvas Web IDE has been developed into a fully functional environment during Iteration 2:
 
 \begin{itemize}
     \item \textbf{Monaco Editor:} Integrated code editor with syntax highlighting for multiple frameworks.
