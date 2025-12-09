@@ -7,9 +7,11 @@ import { useFileStore } from '@/lib/store'
 import { debounce } from '@/lib/utils'
 import FindReplace from './FindReplace'
 import CircuitVisualization from './CircuitVisualization'
+import { useFeatures } from '@/lib/useFeatures'
 
 export default function EditorPane() {
   const { getActiveFile, updateFileContent } = useFileStore()
+  const { features } = useFeatures()
   const editorRef = useRef<any>(null)
   const activeFile = getActiveFile()
   const [showFindReplace, setShowFindReplace] = useState(false)
@@ -309,7 +311,7 @@ export default function EditorPane() {
         </div>
         
         <div className="flex items-center space-x-2">
-          {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
+          {features.circuit_visualization && (activeFile.language === 'python' || activeFile.language === 'qasm') && (
             <button
               onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
               className={`px-3 py-1 text-xs rounded-md transition-colors ${
@@ -333,7 +335,7 @@ export default function EditorPane() {
       />
 
       {/* Circuit Visualization */}
-      {showCircuitVisualization && (
+      {features.circuit_visualization && showCircuitVisualization && (
         <div className="h-48 bg-editor-bg border-b border-editor-border p-4 overflow-hidden">
           <h4 className="text-sm font-medium text-white mb-3">Circuit Visualization</h4>
           <CircuitVisualization

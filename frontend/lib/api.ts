@@ -1,4 +1,5 @@
 import { File, ApiResponse, CreateFileRequest, UpdateFileRequest } from '@/types'
+import { useAuthStore } from './authStore'
 
 // =============================================================================
 // API BASE CONFIGURATION
@@ -56,11 +57,22 @@ async function apiRequest<T>(
   try {
     const API_BASE = await getApiBase()
     const url = `${API_BASE}${endpoint}`
+
+    // Get token from auth store
+    const token = useAuthStore.getState().token
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options.headers as Record<string, string>,
+    }
+
+    // Inject token if available
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       ...options,
     })
 
@@ -134,8 +146,8 @@ export const fileApi = {
 }
 
 // Health check
-export async function healthCheck(): Promise<ApiResponse<{ ok: boolean }>> {
-  return apiRequest<{ ok: boolean }>('/api/health')
+export async function healthCheck(): Promise<ApiResponse<{ status: string; features?: Record<string, boolean> }>> {
+  return apiRequest<{ status: string; features?: Record<string, boolean> }>('/api/health')
 }
 
 // Quantum conversion API - connects to FastAPI backend
@@ -348,4 +360,3 @@ export const authApi = {
     })
   },
 }
-

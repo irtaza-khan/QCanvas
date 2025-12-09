@@ -34,6 +34,7 @@ import { useAuthStore } from "@/lib/authStore";
 import { fileApi, quantumApi, HybridExecuteResult } from "@/lib/api";
 import { InputLanguage, ResultFormat } from "@/types";
 import { detectFramework } from "@/lib/utils";
+import { useFeatures } from "@/lib/useFeatures";
 
 type ExecutionMode = 'compile' | 'execute' | 'hybrid';
 
@@ -68,6 +69,8 @@ export default function TopBar({
     setCompiledQasm,
     setConversionStats,
   } = useFileStore();
+
+  const { features } = useFeatures();
 
   // Use auth store instead of localStorage
   const { isAuthenticated, user, clearAuth } = useAuthStore();
@@ -370,6 +373,12 @@ export default function TopBar({
   };
 
   const handleRun = async () => {
+    // Require authentication for all execution modes
+    if (!isAuthenticated) {
+      toast.error("Please login to run or compile code");
+      return;
+    }
+
     // If in hybrid mode, use hybrid execution
     if (executionMode === 'hybrid') {
       return handleRunHybrid();
@@ -584,6 +593,11 @@ export default function TopBar({
   };
 
   const handleConvertToQASM = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to compile code");
+      return;
+    }
+
     if (!activeFile) {
       toast.error("No file selected");
       return;
@@ -948,16 +962,21 @@ export default function TopBar({
               >
                 Execute
               </button>
-              <button
-                onClick={() => setExecutionMode('hybrid')}
-                className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'hybrid'
-                  ? 'bg-green-500 text-white'
-                  : 'text-editor-text hover:bg-editor-border'
-                  }`}
-                title="Hybrid Mode - Run Python code with qcanvas/qsim APIs"
-              >
-                Hybrid
-              </button>
+
+              {features.hybrid_execution && (
+                <button
+                  onClick={() => isAuthenticated ? setExecutionMode('hybrid') : toast.error('Login required for Hybrid Mode')}
+                  className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'hybrid'
+                    ? 'bg-green-500 text-white'
+                    : !isAuthenticated
+                      ? 'text-gray-500 cursor-not-allowed opacity-50'
+                      : 'text-editor-text hover:bg-editor-border'
+                    }`}
+                  title={!isAuthenticated ? "Login required for Hybrid Mode" : "Hybrid Mode - Run Python code with qcanvas/qsim APIs"}
+                >
+                  Hybrid
+                </button>
+              )}
             </div>
 
             <button
@@ -990,19 +1009,21 @@ export default function TopBar({
               )}
             </button>
 
-            <button
-              onClick={handleSave}
-              disabled={isSaving || !activeFile}
-              className="btn-ghost flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-2 md:px-3 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
-              title="Save File (Ctrl/Cmd+S)"
-            >
-              {isSaving ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full spinner" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              <span className="hidden md:inline">Save</span>
-            </button>
+            {features.project_management && (
+              <button
+                onClick={handleSave}
+                disabled={isSaving || !activeFile}
+                className="btn-ghost flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-2 md:px-3 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors"
+                title="Save File (Ctrl/Cmd+S)"
+              >
+                {isSaving ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full spinner" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span className="hidden md:inline">Save</span>
+              </button>
+            )}
 
             <button
               onClick={handleExport}

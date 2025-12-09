@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
+import { useFeatures } from '@/lib/useFeatures'
 
 interface Gate {
   type: string
@@ -19,7 +20,11 @@ interface CircuitVisualizationProps {
 }
 
 export default function CircuitVisualization({ gates, qubits, className = '' }: CircuitVisualizationProps) {
+  const { features, loading } = useFeatures()
   const svgRef = useRef<SVGSVGElement>(null)
+
+  if (loading) return null
+  if (!features.circuit_visualization) return null
 
   useEffect(() => {
     if (!svgRef.current || gates.length === 0) return

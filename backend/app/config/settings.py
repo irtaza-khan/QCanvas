@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "development_secret_key"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
+    # Feature Flags (Sprint 3/4 Features)
+    ENABLE_HYBRID_EXECUTION: bool = True
+    ENABLE_PROJECT_MANAGEMENT: bool = False
+    ENABLE_ADVANCED_MONITORING: bool = False
+    ENABLE_CIRCUIT_VISUALIZATION: bool = False
+    
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
 

@@ -12,8 +12,16 @@ async def health_check():
     Returns:
         HealthResponse with status, timestamp, and version
     """
+    from app.config.settings import settings
+
     return HealthResponse(
         status="healthy",
         timestamp=datetime.utcnow().isoformat(),
-        version="1.0.0"
+        version="1.0.0",
+        features={
+            "hybrid_execution": settings.ENABLE_HYBRID_EXECUTION,
+            "project_management": settings.ENABLE_PROJECT_MANAGEMENT,
+            "advanced_monitoring": settings.ENABLE_ADVANCED_MONITORING,
+            "circuit_visualization": settings.ENABLE_CIRCUIT_VISUALIZATION
+        }
     )
