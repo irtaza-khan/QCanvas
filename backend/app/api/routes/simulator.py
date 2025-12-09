@@ -14,7 +14,7 @@ from app.services.simulation_service import SimulationService
 from app.config.database import get_db
 from sqlalchemy.orm import Session
 from app.models.database_models import User, Simulation, SimulationBackend, ExecutionStatus
-from app.api.routes.auth import get_optional_user, get_current_user
+from app.api.routes.auth import get_optional_user
 from app.core.middleware import limiter
 from fastapi import Depends, Request
 
@@ -29,7 +29,7 @@ async def execute_qasm(
     request: Request,
     request_data: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_optional_user)
 ):
     """
     Execute OpenQASM code using the quantum simulator (legacy)
@@ -67,7 +67,7 @@ async def execute_qasm_with_qsim(
     request: Request,
     request_data: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_optional_user)
 ):
     """
     Execute OpenQASM code using QSim backend

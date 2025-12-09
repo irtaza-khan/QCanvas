@@ -146,15 +146,8 @@ class HybridStatusResponse(BaseModel):
     allowed_modules: List[str]
 
 
-from app.models.database_models import User
-from app.api.routes.auth import get_current_user
-from fastapi import Depends
-
 @router.post("/execute", response_model=HybridExecuteResponse)
-async def execute_hybrid(
-    request: HybridExecuteRequest,
-    current_user: User = Depends(get_current_user)
-):
+async def execute_hybrid(request: HybridExecuteRequest):
     """
     Execute Python code with quantum circuits in a sandboxed environment.
     

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Literal, List, Dict
+from typing import Optional, Literal, List
 from uuid import UUID
 from datetime import datetime
 
@@ -21,7 +21,6 @@ class HealthResponse(BaseModel):
     status: str
     timestamp: str
     version: str
-    features: Optional[Dict[str, bool]] = None
 
 # ============================================================================
 # Authentication Schemas
