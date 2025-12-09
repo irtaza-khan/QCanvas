@@ -288,11 +288,16 @@ def _extract_error_line(tb_string: str, code: str) -> Optional[int]:
     """Extract the line number from a traceback string."""
     import re
     
-    # Look for "line X" in the traceback
-    matches = re.findall(r'line (\d+)', tb_string)
+    # Look for "File "<user_code>", line X" in the traceback
+    # This filters out internal library errors and focuses on the user's code
+    matches = re.findall(r'File ["\']<user_code>["\'], line (\d+)', tb_string)
     if matches:
-        return int(matches[-1])  # Return the last (most specific) line number
+        return int(matches[-1])  # Return the last (deepest) match in user code
     
+    # Fallback: If no user code line line found (unlikely for runtime error in script),
+    # maybe syntax error or similar where format is different, or global error.
+    # We can try generic line match but that gives internal lines.
+    # Better to return None so the frontend doesn't show confusing internal line numbers.
     return None
 
 

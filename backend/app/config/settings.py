@@ -33,6 +33,9 @@ class Settings(BaseSettings):
         if self.REDIS_URL is None:
             self.REDIS_URL = f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
+    # Feature Flags
+    ENABLE_QSIM_EXECUTION: bool = False
+
     class Config:
         case_sensitive = True
         env_file = ".env"

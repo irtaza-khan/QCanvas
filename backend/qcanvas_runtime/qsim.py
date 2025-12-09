@@ -22,6 +22,20 @@ if project_root not in sys.path:
 
 from .result import SimulationResult
 
+# Import settings to check for execution flag
+try:
+    # Try importing from app.config.settings (standard backend context)
+    from app.config.settings import settings
+except ImportError:
+    try:
+        # Try importing with backend prefix (from project root context)
+        from backend.app.config.settings import settings
+    except ImportError:
+        # Fallback if settings cannot be loaded (e.g. standalone test)
+        # We assume enabled by default if config is missing, or we could handle differently
+        print("Warning: Could not import settings in qsim wrapper. defaulting to enabled.")
+        settings = None
+
 # Import actual QSim
 try:
     from qsim import run_qasm as _qsim_run, RunArgs as _RunArgs, SimResult as _SimResult
@@ -84,6 +98,12 @@ def run(
         {'00': 498, '11': 502}
     """
     global _simulation_results
+
+    # Check config flag if available
+    if settings is not None and hasattr(settings, 'ENABLE_QSIM_EXECUTION'):
+        if not settings.ENABLE_QSIM_EXECUTION:
+            # We raise RuntimeError with specific message as requested
+            raise RuntimeError("QSim backend not found")
     
     if not QSIM_AVAILABLE:
         raise RuntimeError(

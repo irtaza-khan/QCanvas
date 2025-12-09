@@ -4,6 +4,7 @@ import time
 import psutil
 from typing import Dict, Any, Optional, List
 import numpy as np
+from app.config.settings import settings
 
 # Add the project root directory to Python path
 current_file = os.path.abspath(__file__)
@@ -114,6 +115,14 @@ class SimulationService:
             Dictionary containing simulation results from QSim
         """
         try:
+            # Check if QSim execution is enabled via config
+            if not settings.ENABLE_QSIM_EXECUTION:
+                print(f"QSim execution is DISABLED. Returning error for backend '{backend}'.")
+                return {
+                    "success": False,
+                    "error": "QSim backend not found"
+                }
+
             if not QSIM_AVAILABLE:
                 return {
                     "success": False,
