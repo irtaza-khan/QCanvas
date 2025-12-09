@@ -14,7 +14,7 @@ from app.services.conversion_service import ConversionService
 from app.config.database import get_db
 from sqlalchemy.orm import Session
 from app.models.database_models import User, Conversion, ConversionStats, QuantumFramework, ExecutionStatus
-from app.api.routes.auth import get_optional_user
+from app.api.routes.auth import get_optional_user, get_current_user
 from typing import Optional
 import uuid
 
@@ -32,7 +32,7 @@ async def convert_to_qasm(
     request: Request,
     request_data: ConversionRequest,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Convert quantum circuit code from specified framework to OpenQASM 3.0
@@ -160,7 +160,10 @@ async def get_supported_frameworks():
         raise HTTPException(status_code=500, detail=f"Failed to get frameworks: {str(e)}")
 
 @router.post("/validate")
-async def validate_code(request: ConversionRequest):
+async def validate_code(
+    request: ConversionRequest,
+    current_user: Optional[User] = Depends(get_current_user)
+):
     """
     Validate quantum circuit code syntax for the specified framework
     

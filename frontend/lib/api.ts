@@ -1,4 +1,5 @@
 import { File, ApiResponse, CreateFileRequest, UpdateFileRequest } from '@/types'
+import { useAuthStore } from '@/lib/authStore'
 
 // =============================================================================
 // API BASE CONFIGURATION
@@ -56,12 +57,33 @@ async function apiRequest<T>(
   try {
     const API_BASE = await getApiBase()
     const url = `${API_BASE}${endpoint}`
+
+    // Extract headers from options to prevent overwriting
+    const { headers: optionHeaders, ...otherOptions } = options
+
+    // Prepare headers object
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(optionHeaders as Record<string, string> || {}),
+    } as Record<string, string>
+
+    // Check for Authorization header (case-insensitive check)
+    const hasAuth = Object.keys(headers).some(k => k.toLowerCase() === 'authorization')
+
+    if (typeof window !== 'undefined' && !hasAuth) {
+      try {
+        const token = useAuthStore.getState().token
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+      } catch (e) {
+        console.warn('[API] Failed to inject auth token:', e)
+      }
+    }
+
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
+      headers,
+      ...otherOptions,
     })
 
     // Try to parse response body even if status is not ok

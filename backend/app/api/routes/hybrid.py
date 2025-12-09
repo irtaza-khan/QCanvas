@@ -5,12 +5,14 @@ Provides endpoints for executing Python code with quantum circuits
 in a sandboxed environment with qcanvas and qsim access.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 import sys
 import os
+from app.api.routes.auth import get_current_user
+from app.models.database_models import User
 
 # Add the project root directory to Python path
 current_file = os.path.abspath(__file__)
@@ -147,7 +149,10 @@ class HybridStatusResponse(BaseModel):
 
 
 @router.post("/execute", response_model=HybridExecuteResponse)
-async def execute_hybrid(request: HybridExecuteRequest):
+async def execute_hybrid(
+    request: HybridExecuteRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
     Execute Python code with quantum circuits in a sandboxed environment.
     
@@ -221,7 +226,10 @@ async def execute_hybrid(request: HybridExecuteRequest):
 
 
 @router.post("/validate", response_model=HybridValidateResponse)
-async def validate_hybrid(request: HybridValidateRequest):
+async def validate_hybrid(
+    request: HybridValidateRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
     Validate Python code without executing it.
     

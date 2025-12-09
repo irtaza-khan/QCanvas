@@ -40,23 +40,33 @@ def get_current_user(
         HTTPException: If token is invalid or user not found
    """
     if not credentials:
+        print("DEBUG: No credentials provided in request")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = credentials.credentials
-    user_id = get_user_id_from_token(token)
+    # print(f"DEBUG: Received token: {token[:10]}...") # Security: don't log full token in prod
     
+    try:
+        user_id = get_user_id_from_token(token)
+    except Exception as e:
+        print(f"DEBUG: Token validation error: {e}")
+        user_id = None
+        
     if not user_id:
+        print("DEBUG: Failed to extract user_id from token")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    print(f"DEBUG: Token valid for user_id: {user_id}")
     user = db.query(User).filter(User.id == user_id, User.deleted_at == None).first()
     if not user:
+        print(f"DEBUG: User {user_id} not found in DB or deleted")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or has been deleted",
@@ -64,6 +74,7 @@ def get_current_user(
         )
     
     if not user.is_active:
+        print(f"DEBUG: User {user_id} is inactive")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive"
