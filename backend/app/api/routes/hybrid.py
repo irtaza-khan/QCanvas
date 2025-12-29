@@ -29,7 +29,7 @@ try:
     from qcanvas_runtime.sandbox import execute_sandboxed, validate_code
     from qcanvas_runtime.result import HybridExecutionResult
     SANDBOX_AVAILABLE = True
-    print("✓ Sandbox module imported successfully")
+    print("[INFO] Sandbox module imported successfully")
 except ImportError as e:
     print(f"Warning: Sandbox not available: {e}")
     import traceback
@@ -42,7 +42,7 @@ except ImportError as e:
 try:
     from qsim import run_qasm
     QSIM_AVAILABLE = True
-    print("✓ QSim module available for hybrid execution")
+    print("[INFO] QSim module available for hybrid execution")
 except ImportError as e:
     print(f"Warning: QSim not available for hybrid execution: {e}")
     QSIM_AVAILABLE = False

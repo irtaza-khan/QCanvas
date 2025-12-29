@@ -13,7 +13,7 @@ sys.path.insert(0, project_root)
 # Import QSim for quantum simulation
 try:
     from qsim import run_qasm, RunArgs, SimResult
-    print("✓ QSim imported successfully")
+    print("[INFO] QSim imported successfully")
     QSIM_AVAILABLE = True
 except ImportError as e:
     print(f"Import error in simulation service: {e}")

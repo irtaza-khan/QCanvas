@@ -1,0 +1,7 @@
+=== backend.err.log ===
+INFO:     Will watch for changes in these directories: ['D:\\Study Material\\FYP\\OQW-Workshop\\QCanvas\\backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [25688] using WatchFiles
+
+
+=== backend.log ===
