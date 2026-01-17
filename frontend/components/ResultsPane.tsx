@@ -887,7 +887,7 @@ print(result.counts)`}
                         tooltip: {
                           callbacks: {
                             label: (context) => {
-                              const count = context.parsed.y
+                              const count = context.parsed.y ?? 0
                               const shots = quantumResults.shots || 1
                               const percentage = ((count / shots) * 100).toFixed(1)
                               return `${count} (${percentage}%)`
