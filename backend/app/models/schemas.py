@@ -17,6 +17,28 @@ class ConversionResponse(BaseModel):
     qasm_version: str
     conversion_stats: Optional[dict] = None
 
+
+class ParsedGate(BaseModel):
+    """Schema for a parsed gate in circuit visualization."""
+    type: str
+    qubit: int
+    control: Optional[int] = None
+    target: Optional[int] = None
+    angle: Optional[float] = None
+    timestamp: Optional[int] = None
+    name: Optional[str] = None
+    qubits: Optional[List[int]] = None
+
+
+class ParseResponse(BaseModel):
+    """Response schema for circuit parsing endpoint."""
+    success: bool
+    gates: Optional[List[ParsedGate]] = None
+    qubits: Optional[int] = None
+    error: Optional[str] = None
+    framework: Optional[str] = None
+
+
 class HealthResponse(BaseModel):
     status: str
     timestamp: str

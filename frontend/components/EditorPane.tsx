@@ -1,57 +1,110 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Editor } from '@monaco-editor/react'
+import dynamic from 'next/dynamic'
 import { FileIcon, Code2 } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import { debounce } from '@/lib/utils'
+import { parseCircuit, calculateQubitCount, parseCircuitWithCountAsync, ParsedGate } from '@/lib/circuitParser'
 import FindReplace from './FindReplace'
 import CircuitVisualization from './CircuitVisualization'
+
+// Dynamically import Monaco Editor with SSR disabled to prevent server-side rendering issues
+const Editor = dynamic(() => import('@monaco-editor/react').then(mod => mod.Editor), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full bg-editor-bg">
+      <div className="flex items-center space-x-2">
+        <div className="w-6 h-6 border-2 border-quantum-blue-light border-t-transparent rounded-full spinner"></div>
+        <span className="text-editor-text">Loading editor...</span>
+      </div>
+    </div>
+  ),
+})
 
 export default function EditorPane() {
   const { getActiveFile, updateFileContent } = useFileStore()
   const editorRef = useRef<any>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const activeFile = getActiveFile()
   const [showFindReplace, setShowFindReplace] = useState(false)
   const [findReplaceMode, setFindReplaceMode] = useState<'find' | 'replace'>('find')
   const [showCircuitVisualization, setShowCircuitVisualization] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+  const [circuitHeight, setCircuitHeight] = useState(200)
+  const [isDraggingCircuit, setIsDraggingCircuit] = useState(false)
+  
+  // Parsed circuit state for async AST parsing
+  const [parsedGates, setParsedGates] = useState<ParsedGate[]>([])
+  const [parsedQubits, setParsedQubits] = useState(2)
+  const [isParsing, setIsParsing] = useState(false)
 
-  // Simple circuit parsing for demonstration
-  const parseCircuitFromCode = (code: string) => {
-    if (!code) return []
-    
-    const gates = []
-    const lines = code.split('\n')
-    let qubitIndex = 0
-    
-    for (const line of lines) {
-      // Simple Qiskit gate detection
-      if (line.includes('.h(')) {
-        const match = line.match(/\.h\((\d+)\)/)
-        if (match) gates.push({ type: 'h', qubit: parseInt(match[1]) })
-      }
-      if (line.includes('.x(')) {
-        const match = line.match(/\.x\((\d+)\)/)
-        if (match) gates.push({ type: 'x', qubit: parseInt(match[1]) })
-      }
-      if (line.includes('.cx(')) {
-        const match = line.match(/\.cx\((\d+),\s*(\d+)\)/)
-        if (match) gates.push({ type: 'cx', control: parseInt(match[1]), target: parseInt(match[2]), qubit: parseInt(match[1]) })
-      }
-      
-      // Simple Cirq gate detection
-      if (line.includes('cirq.H(')) {
-        gates.push({ type: 'h', qubit: qubitIndex++ })
-      }
-      if (line.includes('cirq.X(')) {
-        gates.push({ type: 'x', qubit: qubitIndex++ })
-      }
-      if (line.includes('cirq.CNOT(')) {
-        gates.push({ type: 'cx', control: 0, target: 1, qubit: 0 })
-      }
+  // Ensure component is mounted on client before rendering Monaco
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+  
+  // Async circuit parsing with debouncing
+  // Uses backend AST parsing when available, falls back to regex
+  useEffect(() => {
+    if (!showCircuitVisualization || !activeFile?.content) {
+      return
     }
     
-    return gates
+    // Debounce the parsing to avoid too many API calls
+    const timer = setTimeout(async () => {
+      setIsParsing(true)
+      try {
+        const result = await parseCircuitWithCountAsync(activeFile.content)
+        setParsedGates(result.gates)
+        setParsedQubits(result.qubits)
+      } catch (err) {
+        // Fallback to sync parsing on error
+        console.warn('Async parsing failed, using sync fallback:', err)
+        const gates = parseCircuit(activeFile.content)
+        setParsedGates(gates)
+        setParsedQubits(calculateQubitCount(gates))
+      } finally {
+        setIsParsing(false)
+      }
+    }, 500) // 500ms debounce
+    
+    return () => clearTimeout(timer)
+  }, [activeFile?.content, showCircuitVisualization])
+
+  // Handle drag resize for circuit visualization panel
+  useEffect(() => {
+    if (!isDraggingCircuit) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return
+
+      const containerRect = containerRef.current.getBoundingClientRect()
+      // Calculate height from the top of the container (after the header)
+      const headerHeight = 48 // h-12 = 48px
+      const newHeight = e.clientY - containerRect.top - headerHeight
+      const minHeight = 100
+      const maxHeight = containerRect.height - 200 // Leave space for editor
+
+      setCircuitHeight(Math.max(minHeight, Math.min(maxHeight, newHeight)))
+    }
+
+    const handleMouseUp = () => {
+      setIsDraggingCircuit(false)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDraggingCircuit])
+
+  const handleCircuitDragStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsDraggingCircuit(true)
   }
 
   // Debounced content update to avoid too frequent updates
@@ -62,6 +115,11 @@ export default function EditorPane() {
   ).current
 
   const handleEditorDidMount = (editor: any, monacoInstance: any) => {
+    // Guard against SSR - ensure we're in browser environment
+    if (typeof window === 'undefined' || !editor || !monacoInstance) {
+      return
+    }
+
     editorRef.current = editor
 
     // Ensure Ctrl+A selects all text as a single continuous selection
@@ -136,9 +194,11 @@ export default function EditorPane() {
       },
     })
 
-    // Set theme based on current theme
-    const currentTheme = document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark'
-    monacoInstance.editor.setTheme(currentTheme)
+    // Set theme based on current theme (only in browser)
+    if (typeof document !== 'undefined') {
+      const currentTheme = document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark'
+      monacoInstance.editor.setTheme(currentTheme)
+    }
 
     // Add keyboard shortcuts
     editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS, () => {
@@ -225,8 +285,10 @@ export default function EditorPane() {
     }
   }
 
-  // Handle keyboard shortcuts globally
+  // Handle keyboard shortcuts globally (only on client)
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
@@ -248,8 +310,10 @@ export default function EditorPane() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // Handle find events from TopBar
+  // Handle find events from TopBar (only on client)
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     const handleOpenFind = (e: CustomEvent) => {
       const mode = e.detail?.mode || 'find'
       setFindReplaceMode(mode)
@@ -297,7 +361,7 @@ export default function EditorPane() {
   }
 
   return (
-    <div className="editor-pane">
+    <div ref={containerRef} className="editor-pane">
       {/* Editor Header */}
       <div className="h-12 bg-editor-sidebar border-b border-editor-border flex items-center justify-between px-4">
         <div className="flex items-center space-x-2">
@@ -332,30 +396,58 @@ export default function EditorPane() {
         editorRef={editorRef}
       />
 
-      {/* Circuit Visualization */}
-      {showCircuitVisualization && (
-        <div className="h-48 bg-editor-bg border-b border-editor-border p-4 overflow-hidden">
-          <h4 className="text-sm font-medium text-white mb-3">Circuit Visualization</h4>
-          <CircuitVisualization
-            gates={parseCircuitFromCode(activeFile.content)}
-            qubits={Math.max(2, parseCircuitFromCode(activeFile.content).reduce((max, gate) => Math.max(max, gate.qubit + 1), 0))}
-            className="h-32"
+      {/* Circuit Visualization - Resizable */}
+      {showCircuitVisualization && activeFile && (
+        <>
+          <div 
+            className="bg-editor-bg border-b border-editor-border p-4 overflow-auto"
+            style={{ height: `${circuitHeight}px` }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium text-white">Circuit Visualization</h4>
+              {isParsing && (
+                <span className="text-xs text-gray-400 flex items-center">
+                  <div className="w-3 h-3 border border-quantum-blue-light border-t-transparent rounded-full animate-spin mr-1"></div>
+                  Parsing...
+                </span>
+              )}
+            </div>
+            <CircuitVisualization
+              gates={parsedGates}
+              qubits={parsedQubits}
+              className="h-full"
+            />
+          </div>
+          {/* Drag Handle for Circuit Visualization */}
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Resize circuit visualization"
+            tabIndex={0}
+            className={`h-1 bg-editor-border hover:bg-quantum-blue-light cursor-row-resize transition-colors ${isDraggingCircuit ? 'bg-quantum-blue-light' : ''}`}
+            onMouseDown={handleCircuitDragStart}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') setCircuitHeight(h => Math.max(100, h - 20))
+              if (e.key === 'ArrowDown') setCircuitHeight(h => Math.min(500, h + 20))
+            }}
+            title="Drag to resize circuit view"
           />
-        </div>
+        </>
       )}
 
-      {/* Monaco Editor */}
+      {/* Monaco Editor - only render when mounted on client */}
       <div className="flex-1 overflow-hidden">
-        <Editor
-          key={activeFile.id}
-          height="100%"
-          path={activeFile.id}
-          language={getMonacoLanguage(activeFile.language)}
-          value={activeFile.content}
-          onChange={handleEditorChange}
-          onMount={handleEditorDidMount}
-          options={{
-            theme: document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark',
+        {isMounted ? (
+          <Editor
+            key={activeFile.id}
+            height="100%"
+            path={activeFile.id}
+            language={getMonacoLanguage(activeFile.language)}
+            value={activeFile.content}
+            onChange={handleEditorChange}
+            onMount={handleEditorDidMount}
+            options={{
+              theme: typeof document !== 'undefined' && document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark',
             fontSize: 14,
             fontFamily: 'JetBrains Mono, Fira Code, Monaco, Consolas, monospace',
             lineNumbers: 'on',
@@ -394,15 +486,15 @@ export default function EditorPane() {
               bottom: 16,
             },
           }}
-          loading={
-            <div className="flex items-center justify-center h-full bg-editor-bg">
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 border-2 border-quantum-blue-light border-t-transparent rounded-full spinner"></div>
-                <span className="text-editor-text">Loading editor...</span>
-              </div>
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full bg-editor-bg">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 border-2 border-quantum-blue-light border-t-transparent rounded-full spinner"></div>
+              <span className="text-editor-text">Loading editor...</span>
             </div>
-          }
-        />
+          </div>
+        )}
       </div>
     </div>
   )

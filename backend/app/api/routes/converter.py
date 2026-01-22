@@ -9,7 +9,7 @@ current_file = os.path.abspath(__file__)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_file))))
 sys.path.insert(0, project_root)
 
-from app.models.schemas import ConversionRequest, ConversionResponse
+from app.models.schemas import ConversionRequest, ConversionResponse, ParseResponse
 from app.services.conversion_service import ConversionService
 from app.config.database import get_db
 from sqlalchemy.orm import Session
@@ -185,6 +185,67 @@ async def validate_code(request: ConversionRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
+
+
+@router.post("/parse", response_model=ParseResponse)
+@limiter.limit("30/minute")
+async def parse_circuit_gates(
+    request: Request,
+    request_data: ConversionRequest
+):
+    """
+    Parse quantum circuit code and extract gates for visualization.
+    Uses AST-based parsing for accurate gate extraction without code execution.
+    
+    Args:
+        request: FastAPI Request object (for rate limiting)
+        request_data: ConversionRequest containing code and framework
+        
+    Returns:
+        ParseResponse with gates list, qubit count, or error details
+    """
+    try:
+        if not request_data.code.strip():
+            return ParseResponse(
+                success=False,
+                error="Code cannot be empty",
+                framework=request_data.framework
+            )
+        
+        if request_data.framework not in ["qiskit", "cirq", "pennylane"]:
+            return ParseResponse(
+                success=False,
+                error="Unsupported framework",
+                framework=request_data.framework
+            )
+        
+        # Parse the circuit using AST parsers
+        result = conversion_service.parse_circuit_gates(
+            code=request_data.code,
+            framework=request_data.framework
+        )
+        
+        if result["success"]:
+            return ParseResponse(
+                success=True,
+                gates=result["gates"],
+                qubits=result["qubits"],
+                framework=request_data.framework
+            )
+        else:
+            return ParseResponse(
+                success=False,
+                error=result["error"],
+                framework=request_data.framework
+            )
+            
+    except Exception as e:
+        return ParseResponse(
+            success=False,
+            error=f"Parse error: {str(e)}",
+            framework=getattr(request_data, 'framework', 'unknown')
+        )
+
 
 @router.get("/health")
 async def converter_health():

@@ -46,6 +46,41 @@ try:
 except ImportError as e:
     print(f"PennyLane converter import error: {e}")
 
+# Import AST parsers for circuit gate extraction
+QiskitASTParser = None
+CirqASTParser = None
+PennyLaneASTParser = None
+GateNode = None
+MeasurementNode = None
+ForLoopNode = None
+BarrierNode = None
+ResetNode = None
+
+try:
+    from quantum_converters.parsers.qiskit_parser import QiskitASTParser
+    print("OK QiskitASTParser available")
+except ImportError as e:
+    print(f"QiskitASTParser import error: {e}")
+
+try:
+    from quantum_converters.parsers.cirq_parser import CirqASTParser
+    print("OK CirqASTParser available")
+except ImportError as e:
+    print(f"CirqASTParser import error: {e}")
+
+try:
+    from quantum_converters.parsers.pennylane_parser import PennyLaneASTParser
+    print("OK PennyLaneASTParser available")
+except ImportError as e:
+    print(f"PennyLaneASTParser import error: {e}")
+
+try:
+    from quantum_converters.base.circuit_ast import GateNode, MeasurementNode, ForLoopNode, BarrierNode, ResetNode
+    print("OK CircuitAST nodes available")
+except ImportError as e:
+    print(f"CircuitAST import error: {e}")
+
+
 class ConversionService:
     """Service for converting quantum circuit code between different frameworks and OpenQASM"""
     
@@ -568,3 +603,228 @@ def get_circuit():
         }
         
         return guides.get(framework, "Format guide not available for this framework.")
+    
+    def parse_circuit_gates(self, code: str, framework: str) -> Dict[str, Any]:
+        """
+        Parse quantum circuit code and extract gates for visualization.
+        Uses AST-based parsing for accurate gate extraction.
+        
+        Args:
+            code: The source code to parse
+            framework: The framework ("qiskit", "cirq", or "pennylane")
+            
+        Returns:
+            Dictionary containing:
+                - success: bool
+                - gates: List of gate dictionaries
+                - qubits: Number of qubits
+                - error: Error message if failed
+        """
+        if framework not in ["qiskit", "cirq", "pennylane"]:
+            return {
+                "success": False,
+                "error": f"Unsupported framework: {framework}",
+                "gates": None,
+                "qubits": None
+            }
+        
+        try:
+            # Select the appropriate parser
+            parser = None
+            if framework == "qiskit" and QiskitASTParser:
+                parser = QiskitASTParser()
+            elif framework == "cirq" and CirqASTParser:
+                parser = CirqASTParser()
+            elif framework == "pennylane" and PennyLaneASTParser:
+                parser = PennyLaneASTParser()
+            
+            if parser is None:
+                return {
+                    "success": False,
+                    "error": f"Parser not available for framework: {framework}",
+                    "gates": None,
+                    "qubits": None
+                }
+            
+            # Parse the code to CircuitAST
+            circuit_ast = parser.parse(code)
+            
+            # Convert CircuitAST operations to gate list for visualization
+            gates = self._convert_ast_to_gates(circuit_ast)
+            
+            # Assign timestamps based on circuit layers
+            gates = self._assign_timestamps(gates)
+            
+            return {
+                "success": True,
+                "gates": gates,
+                "qubits": circuit_ast.qubits,
+                "error": None
+            }
+            
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "gates": None,
+                "qubits": None
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Parse error: {str(e)}",
+                "gates": None,
+                "qubits": None
+            }
+    
+    def _convert_ast_to_gates(self, circuit_ast) -> list:
+        """
+        Convert CircuitAST operations to a list of gate dictionaries
+        suitable for frontend visualization.
+        """
+        gates = []
+        self._process_operations(circuit_ast.operations, gates, {})
+        return gates
+    
+    def _process_operations(self, operations: list, gates: list, var_context: dict) -> None:
+        """
+        Recursively process operations, expanding loops and handling variable substitution.
+        
+        Args:
+            operations: List of AST operation nodes
+            gates: Output list to append gate dictionaries to
+            var_context: Dictionary mapping variable names to their current values
+        """
+        for op in operations:
+            if ForLoopNode and isinstance(op, ForLoopNode):
+                # Expand for loop by iterating through range
+                loop_var = op.variable
+                for i in range(op.range_start, op.range_end):
+                    # Create new context with loop variable value
+                    new_context = var_context.copy()
+                    new_context[loop_var] = i
+                    # Recursively process body with updated context
+                    self._process_operations(op.body, gates, new_context)
+            
+            elif GateNode and isinstance(op, GateNode):
+                gate_dict = self._gate_node_to_dict(op, var_context)
+                if gate_dict:
+                    gates.append(gate_dict)
+            
+            elif MeasurementNode and isinstance(op, MeasurementNode):
+                qubit = self._resolve_qubit(op.qubit, var_context)
+                gate_dict = {
+                    "type": "measure",
+                    "qubit": qubit,
+                }
+                gates.append(gate_dict)
+            
+            elif ResetNode and isinstance(op, ResetNode):
+                qubit = self._resolve_qubit(op.qubit, var_context)
+                gate_dict = {
+                    "type": "reset",
+                    "qubit": qubit,
+                }
+                gates.append(gate_dict)
+            
+            # Skip BarrierNode - not needed for visualization
+    
+    def _resolve_qubit(self, qubit, var_context: dict) -> int:
+        """
+        Resolve a qubit index, substituting variable values from context.
+        """
+        if isinstance(qubit, int):
+            return qubit
+        elif isinstance(qubit, str):
+            # Check if it's a variable in our context
+            if qubit in var_context:
+                return var_context[qubit]
+            # Try to parse as integer
+            try:
+                return int(qubit)
+            except ValueError:
+                return 0
+        return 0
+    
+    def _gate_node_to_dict(self, op, var_context: dict) -> dict:
+        """
+        Convert a GateNode to a gate dictionary, resolving variable qubit indices.
+        """
+        # Resolve all qubit indices
+        resolved_qubits = []
+        for q in op.qubits:
+            resolved_qubits.append(self._resolve_qubit(q, var_context))
+        
+        gate_dict = {
+            "type": op.name.lower(),
+            "qubit": resolved_qubits[0] if resolved_qubits else 0,
+        }
+        
+        # Handle two-qubit gates (control-target)
+        if len(resolved_qubits) >= 2:
+            if op.name.lower() in ['cx', 'cnot', 'cz', 'cy', 'ch', 'swap', 'cswap']:
+                gate_dict["control"] = resolved_qubits[0]
+                gate_dict["target"] = resolved_qubits[1]
+            else:
+                gate_dict["qubits"] = resolved_qubits
+        
+        # Handle three-qubit gates
+        if len(resolved_qubits) >= 3:
+            gate_dict["qubits"] = resolved_qubits
+        
+        # Handle parameterized gates
+        if op.parameters:
+            param = op.parameters[0]
+            if isinstance(param, (int, float)):
+                gate_dict["angle"] = float(param)
+            elif param == 'pi':
+                gate_dict["angle"] = 3.14159265359
+            elif isinstance(param, str) and '/' in param:
+                try:
+                    if param.startswith('pi/'):
+                        divisor = int(param.split('/')[1])
+                        gate_dict["angle"] = 3.14159265359 / divisor
+                except (ValueError, IndexError):
+                    pass
+        
+        return gate_dict
+    
+    def _assign_timestamps(self, gates: list) -> list:
+        """
+        Assign timestamps to gates based on circuit layers.
+        Gates on different qubits that don't overlap get the same timestamp.
+        """
+        if not gates:
+            return gates
+        
+        # Track next available timestamp for each qubit
+        qubit_next_time: Dict[int, int] = {}
+        
+        result = []
+        for gate in gates:
+            # Get all qubits this gate operates on
+            gate_qubits = set()
+            if 'qubit' in gate:
+                gate_qubits.add(gate['qubit'])
+            if 'control' in gate:
+                gate_qubits.add(gate['control'])
+            if 'target' in gate:
+                gate_qubits.add(gate['target'])
+            if 'qubits' in gate and gate['qubits']:
+                gate_qubits.update(gate['qubits'])
+            
+            # Find earliest timestamp where all qubits are free
+            timestamp = 0
+            for q in gate_qubits:
+                next_time = qubit_next_time.get(q, 0)
+                timestamp = max(timestamp, next_time)
+            
+            # Update next available time for all qubits
+            for q in gate_qubits:
+                qubit_next_time[q] = timestamp + 1
+            
+            gate_with_timestamp = gate.copy()
+            gate_with_timestamp["timestamp"] = timestamp
+            result.append(gate_with_timestamp)
+        
+        return result
