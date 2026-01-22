@@ -57,11 +57,11 @@ async function apiRequest<T>(
     const API_BASE = await getApiBase()
     const url = `${API_BASE}${endpoint}`
     const response = await fetch(url, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
-      ...options,
     })
 
     // Try to parse response body even if status is not ok
@@ -99,38 +99,71 @@ async function apiRequest<T>(
 
 // File API functions
 export const fileApi = {
-  // Get all files
+  // Get all files (legacy/placeholder)
   async getFiles(): Promise<ApiResponse<File[]>> {
     return apiRequest<File[]>('/api/files')
   },
+}
 
-  // Get specific file
-  async getFile(id: string): Promise<ApiResponse<File>> {
-    return apiRequest<File>(`/api/files/${id}`)
+// Projects API
+export interface Project {
+  id: number
+  user_id: string
+  name: string
+  description?: string
+  is_public: boolean
+  files?: File[]
+  created_at: string
+}
+
+export interface CreateProjectRequest {
+  name: string
+  description?: string
+  is_public?: boolean
+}
+
+export const projectsApi = {
+  // Get all projects
+  async getProjects(token?: string): Promise<ApiResponse<Project[]>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    return apiRequest<Project[]>('/api/projects/', { headers })
   },
 
-  // Create new file
-  async createFile(data: CreateFileRequest): Promise<ApiResponse<File>> {
-    return apiRequest<File>('/api/files', {
+  // Get specific project
+  async getProject(id: number, token?: string): Promise<ApiResponse<Project>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    return apiRequest<Project>(`/api/projects/${id}`, { headers })
+  },
+
+  // Create project
+  async createProject(data: CreateProjectRequest, token?: string): Promise<ApiResponse<Project>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    return apiRequest<Project>('/api/projects/', {
       method: 'POST',
       body: JSON.stringify(data),
+      headers,
     })
   },
 
-  // Update file
-  async updateFile(id: string, data: UpdateFileRequest): Promise<ApiResponse<File>> {
-    return apiRequest<File>(`/api/files/${id}`, {
+  // Add file to project
+  async addFile(projectId: number, data: CreateFileRequest, token?: string): Promise<ApiResponse<File>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    return apiRequest<File>(`/api/projects/${projectId}/files`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers,
+    })
+  },
+
+  // Update file content
+  async updateFile(projectId: number, fileId: string, data: Partial<CreateFileRequest>, token?: string): Promise<ApiResponse<File>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    return apiRequest<File>(`/api/projects/${projectId}/files/${fileId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
+      headers,
     })
-  },
-
-  // Delete file
-  async deleteFile(id: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiRequest<{ success: boolean }>(`/api/files/${id}`, {
-      method: 'DELETE',
-    })
-  },
+  }
 }
 
 // Health check

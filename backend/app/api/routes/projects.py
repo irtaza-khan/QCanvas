@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.config.database import get_db
 from app.models.database_models import User, Project, File
-from app.models.schemas import ProjectCreate, ProjectResponse, FileCreate, FileResponse
+from app.models.schemas import ProjectCreate, ProjectResponse, FileCreate, FileResponse, FileUpdate
 from app.api.routes.auth import get_current_user
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
@@ -76,3 +76,41 @@ def add_file_to_project(
     db.commit()
     db.refresh(new_file)
     return new_file
+
+@router.put("/{project_id}/files/{file_id}", response_model=FileResponse)
+def update_file(
+    project_id: int,
+    file_id: int,
+    file_update: FileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update a file's content or metadata."""
+    # First verify project belongs to user
+    project = db.query(Project).filter(
+        Project.id == project_id,
+        Project.user_id == current_user.id
+    ).first()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Then find the file
+    file = db.query(File).filter(
+        File.id == file_id,
+        File.project_id == project_id
+    ).first()
+    
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+        
+    if file_update.content is not None:
+        file.content = file_update.content
+    if file_update.filename is not None:
+        file.filename = file_update.filename
+    if file_update.is_main is not None:
+        file.is_main = file_update.is_main
+        
+    db.commit()
+    db.refresh(file)
+    return file

@@ -118,10 +118,35 @@ def show_data(table_name=None, limit=15):
     finally:
         db.close()
 
+
+def show_file_content(file_id):
+    db = SessionLocal()
+    try:
+        file = db.query(File).filter(File.id == file_id).first()
+        if file:
+            print(f"\n=== Content of File ID {file_id} ({file.filename}) ===")
+            print("-" * 50)
+            print(file.content)
+            print("-" * 50)
+        else:
+            print(f"File with ID {file_id} not found.")
+    except Exception as e:
+        print(f"Error fetching file: {e}")
+    finally:
+        db.close()
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inspect database tables")
-    parser.add_argument("table", nargs="?", help="Name of the table to inspect")
+    parser.add_argument("table", nargs="?", help="Name of the table to inspect or 'view_content'")
+    parser.add_argument("extra_arg", nargs="?", help="File ID if using view_content")
     parser.add_argument("--limit", type=int, default=15, help="Number of records to show")
     
     args = parser.parse_args()
-    show_data(args.table, args.limit)
+    
+    if args.table == "view_content":
+        if not args.extra_arg:
+            print("Usage: python show_db_data.py view_content <file_id>")
+        else:
+            show_file_content(args.extra_arg)
+    else:
+        show_data(args.table, args.limit)

@@ -61,6 +61,7 @@ export default function TopBar({
     toggleSidebar,
     getActiveFile,
     updateFileContent,
+    saveActiveFile,
   } = useFileStore();
   const {
     setCompileOptions,
@@ -567,17 +568,9 @@ export default function TopBar({
 
     setIsSaving(true);
     try {
-      const result = await fileApi.updateFile(activeFile.id, {
-        content: activeFile.content,
-      });
-
-      if (result.success) {
-        toast.success(`Saved ${activeFile.name}`);
-      } else {
-        throw new Error(result.error);
-      }
+      await saveActiveFile();
     } catch (error) {
-      toast.error("Save failed");
+      // Toast handled in store
     } finally {
       setIsSaving(false);
     }

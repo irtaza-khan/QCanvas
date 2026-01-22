@@ -136,6 +136,11 @@ class FileCreate(BaseModel):
     content: str
     is_main: bool = False
 
+class FileUpdate(BaseModel):
+    filename: Optional[str] = None
+    content: Optional[str] = None
+    is_main: Optional[bool] = None
+
 class FileResponse(BaseModel):
     id: int
     project_id: int

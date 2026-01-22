@@ -30,6 +30,8 @@ import { useFileStore } from '@/lib/store'
 import { File } from '@/types'
 import { isValidFilename, sanitizeFilename, formatFileSize, formatTimestamp } from '@/lib/utils'
 import AddNewLanguage from './AddNewLanguage'
+import { useAuthStore } from '@/lib/authStore'
+import { useEffect } from 'react'
 
 interface FileTemplate {
   name: string
@@ -163,8 +165,18 @@ export default function Sidebar() {
     setActiveFile, 
     addFile, 
     deleteFile, 
-    renameFile 
+    renameFile,
+    activeProjectId,
+    fetchProjects
   } = useFileStore()
+
+  const { token, isAuthenticated } = useAuthStore()
+
+  useEffect(() => {
+    if (isAuthenticated && token) {
+       fetchProjects(token)
+    }
+  }, [isAuthenticated, token, fetchProjects])
 
   const [isExpanded, setIsExpanded] = useState(true)
   const [showNewFileInput, setShowNewFileInput] = useState(false)

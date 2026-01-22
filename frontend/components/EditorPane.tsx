@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { FileIcon, Code2 } from 'lucide-react'
+import { FileIcon, Code2, Save } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import { debounce } from '@/lib/utils'
 import { parseCircuit, calculateQubitCount, parseCircuitWithCountAsync, ParsedGate } from '@/lib/circuitParser'
@@ -23,7 +23,7 @@ const Editor = dynamic(() => import('@monaco-editor/react').then(mod => mod.Edit
 })
 
 export default function EditorPane() {
-  const { getActiveFile, updateFileContent } = useFileStore()
+  const { getActiveFile, updateFileContent, saveActiveFile } = useFileStore()
   const editorRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const activeFile = getActiveFile()
@@ -114,6 +114,15 @@ export default function EditorPane() {
     }, 300)
   ).current
 
+  const handleManualSave = async () => {
+    if (editorRef.current && activeFile) {
+      const content = editorRef.current.getValue()
+      // Force update store immediately to ensure we save latest content
+      updateFileContent(activeFile.id, content)
+      await saveActiveFile()
+    }
+  }
+
   const handleEditorDidMount = (editor: any, monacoInstance: any) => {
     // Guard against SSR - ensure we're in browser environment
     if (typeof window === 'undefined' || !editor || !monacoInstance) {
@@ -202,8 +211,8 @@ export default function EditorPane() {
 
     // Add keyboard shortcuts
     editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS, () => {
-      // Save functionality will be handled by TopBar
-      // This prevents default browser save dialog
+      // Trigger save action
+      handleManualSave()
     })
 
     // Find and Replace shortcuts
@@ -293,8 +302,7 @@ export default function EditorPane() {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
         // Trigger save action
-        const event = new CustomEvent('save-file')
-        window.dispatchEvent(event)
+        handleManualSave()
       } else if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         setFindReplaceMode('find')
@@ -308,7 +316,7 @@ export default function EditorPane() {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [handleManualSave])
 
   // Handle find events from TopBar (only on client)
   useEffect(() => {
@@ -373,6 +381,15 @@ export default function EditorPane() {
         </div>
         
         <div className="flex items-center space-x-2">
+          <button
+            onClick={handleManualSave}
+            className="flex items-center space-x-1 px-3 py-1 text-xs text-editor-text hover:bg-editor-border rounded-md transition-colors"
+            title="Save (Ctrl+S)"
+          >
+            <Save className="w-4 h-4" />
+            <span>Save</span>
+          </button>
+
           {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
             <button
               onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}

@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { File, EditorState, SupportedLanguage, FILE_TEMPLATES, CompileOptions } from '@/types'
 import { generateId, getLanguageFromFilename } from './utils'
+import { projectsApi, Project, authApi } from './api'
+import { useAuthStore } from './authStore'
+import toast from 'react-hot-toast'
 
 // Conversion stats interface based on backend ConversionResult
 interface ConversionStats {
@@ -66,11 +69,16 @@ interface FileStore extends EditorState {
   // Additional state for conversion stats and simulation results
   conversionStats: ConversionStats | null
   simulationResults: SimulationResult | null
-  
+
+  // Project state
+  projects: Project[]
+  activeProjectId: number | null
+  loading: boolean
+
   // Hybrid execution state
   hybridResult: HybridResult | null
   executionMode: ExecutionMode
-  
+
   // Actions
   setActiveFile: (fileId: string | null) => void
   updateFileContent: (fileId: string, content: string) => void
@@ -91,6 +99,13 @@ interface FileStore extends EditorState {
   setHybridResult: (result: HybridResult | null) => void
   setExecutionMode: (mode: ExecutionMode) => void
   compileActiveToQasm: () => string | null
+
+  // Async Actions
+  fetchProjects: (token: string) => Promise<void>
+  createProject: (name: string, token: string) => Promise<void>
+
+  fetchProjectFiles: (projectId: number, token: string) => Promise<void>
+  saveActiveFile: () => Promise<void>
 }
 
 // Initial files - quantum algorithm examples from different frameworks
@@ -291,8 +306,11 @@ export const useFileStore = create<FileStore>()(
   devtools(
     (set, get) => ({
       // Initial state
-      activeFileId: 'file-1',
-      files: initialFiles,
+      activeFileId: null, // No file active initially until loaded
+      files: [], // Start empty, load from DB
+      projects: [],
+      activeProjectId: null,
+      loading: false,
       theme: 'dark', // Always default to dark
       sidebarCollapsed: false,
       resultsCollapsed: false,
@@ -319,11 +337,11 @@ export const useFileStore = create<FileStore>()(
             files: state.files.map((file) =>
               file.id === fileId
                 ? {
-                    ...file,
-                    content,
-                    updatedAt: new Date().toISOString(),
-                    size: content.length,
-                  }
+                  ...file,
+                  content,
+                  updatedAt: new Date().toISOString(),
+                  size: content.length,
+                }
                 : file
             ),
           }),
@@ -335,7 +353,7 @@ export const useFileStore = create<FileStore>()(
       addFile: (name, content) => {
         const language = getLanguageFromFilename(name)
         const defaultContent = content ?? FILE_TEMPLATES[language] ?? ''
-        
+
         const newFile: File = {
           id: generateId(),
           name,
@@ -411,11 +429,11 @@ export const useFileStore = create<FileStore>()(
             files: state.files.map((file) =>
               file.id === fileId
                 ? {
-                    ...file,
-                    name: newName,
-                    language: getLanguageFromFilename(newName),
-                    updatedAt: new Date().toISOString(),
-                  }
+                  ...file,
+                  name: newName,
+                  language: getLanguageFromFilename(newName),
+                  updatedAt: new Date().toISOString(),
+                }
                 : file
             ),
           }),
@@ -434,7 +452,7 @@ export const useFileStore = create<FileStore>()(
                 document.documentElement.classList.toggle('dark', theme === 'dark')
                 document.documentElement.classList.toggle('light', theme === 'light')
               }
-            } catch {}
+            } catch { }
             return { theme }
           },
           false,
@@ -453,7 +471,7 @@ export const useFileStore = create<FileStore>()(
                 document.documentElement.classList.toggle('dark', next === 'dark')
                 document.documentElement.classList.toggle('light', next === 'light')
               }
-            } catch {}
+            } catch { }
             return { theme: next }
           },
           false,
@@ -549,6 +567,112 @@ export const useFileStore = create<FileStore>()(
         const qasm = `${header}\n\n${body}`
         set({ compiledQasm: qasm }, false, 'compileActiveToQasm.mock')
         return qasm
+      },
+
+      // Async Actions
+      fetchProjects: async (token: string) => {
+        set({ loading: true })
+        try {
+          const res = await projectsApi.getProjects(token)
+          if (res.success && res.data) {
+            set({ projects: res.data }, false, 'fetchProjects')
+            // If projects exist, load the first one by default
+            if (res.data.length > 0) {
+              const firstProject = res.data[0]
+              set({ activeProjectId: firstProject.id }, false, 'setActiveProject')
+              get().fetchProjectFiles(firstProject.id, token)
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch projects", error)
+        } finally {
+          set({ loading: false })
+        }
+      },
+
+      createProject: async (name: string, token: string) => {
+        set({ loading: true })
+        try {
+          const res = await projectsApi.createProject({ name, is_public: false }, token)
+          if (res.success && res.data) {
+            const newProject = res.data
+            set(state => ({
+              projects: [...state.projects, newProject],
+              activeProjectId: newProject.id,
+              files: [], // New project has no files
+              activeFileId: null
+            }), false, 'createProject')
+          }
+        } catch (error) {
+          console.error("Failed to create project", error)
+        } finally {
+          set({ loading: false })
+        }
+      },
+
+      fetchProjectFiles: async (projectId: number, token: string) => {
+        set({ loading: true })
+        try {
+          const res = await projectsApi.getProject(projectId, token)
+          if (res.success && res.data && res.data.files) {
+            const projectFiles = res.data.files.map((f: any) => ({
+              id: f.id.toString(), // Ensure ID is string for frontend
+              name: f.filename,
+              content: f.content,
+              language: getLanguageFromFilename(f.filename), // Re-derive language
+              createdAt: f.created_at || new Date().toISOString(),
+              updatedAt: f.updated_at || new Date().toISOString(),
+              size: f.content?.length || 0,
+            }))
+
+            // Merge with initial/memory files
+            // Ensure no ID conflicts by prioritizing project files if duplicate IDs exist (unlikely with mixed types)
+            set({ files: [...initialFiles, ...projectFiles] }, false, 'fetchProjectFiles')
+
+            // Set active file if any
+            if (projectFiles.length > 0) {
+              set({ activeFileId: projectFiles[0].id }, false, 'setActiveFile')
+            } else {
+              set({ activeFileId: null }, false, 'setActiveFile')
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch files", error)
+        } finally {
+          set({ loading: false })
+        }
+      },
+
+      saveActiveFile: async () => {
+        const state = get()
+        const activeFile = state.getActiveFile()
+        const activeProjectId = state.activeProjectId
+        const token = useAuthStore.getState().token
+
+        if (!activeFile || !activeProjectId || !token) {
+          console.log("Save cancelled: Missing file, project or token", { activeFile, activeProjectId, hasToken: !!token })
+          if (!token) toast.error("Please log in to save")
+          return
+        }
+
+        const toastId = toast.loading('Saving...')
+        try {
+          // Use updateFile from projectsApi to save to backend
+          const res = await projectsApi.updateFile(activeProjectId, activeFile.id, {
+            content: activeFile.content
+          }, token)
+
+          if (res.success) {
+            toast.success('Saved', { id: toastId })
+          } else {
+            console.log("Full Save Response:", res)
+            const errorText = typeof res.error === 'object' ? JSON.stringify(res.error) : res.error
+            toast.error(`Failed to save: ${errorText || 'Unknown error'}`, { id: toastId })
+          }
+        } catch (error) {
+          console.error('Save failed', error)
+          toast.error('Save failed', { id: toastId })
+        }
       },
     }),
     {
