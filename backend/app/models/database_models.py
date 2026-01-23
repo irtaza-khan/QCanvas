@@ -63,6 +63,7 @@ class User(Base):
     simulations = relationship("Simulation", back_populates="user", cascade="all, delete-orphan")
     sessions = relationship("Session", back_populates="user")
     api_activities = relationship("ApiActivity", back_populates="user")
+    files = relationship("File", back_populates="user", cascade="all, delete-orphan")
     
     # Authentication
     email = Column(String(255), unique=True, nullable=False, index=True)
@@ -178,16 +179,19 @@ class File(Base):
     __tablename__ = "files"
 
     id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True) # Nullable for migration, should be filled
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
     filename = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
     is_main = Column(Boolean, default=False, nullable=False)
+    is_shared = Column(Boolean, default=False, nullable=False)
     
     created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
     updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     project = relationship("Project", back_populates="files")
+    user = relationship("User", back_populates="files")
 
 
 class JobStatus(str, enum.Enum):

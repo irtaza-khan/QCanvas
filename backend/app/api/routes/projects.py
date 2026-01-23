@@ -68,6 +68,7 @@ def add_file_to_project(
         
     new_file = File(
         project_id=project.id,
+        user_id=current_user.id,
         filename=file.filename,
         content=file.content,
         is_main=file.is_main

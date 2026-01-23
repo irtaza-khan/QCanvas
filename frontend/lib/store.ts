@@ -85,7 +85,7 @@ interface FileStore extends EditorState {
   addFile: (name: string, content?: string) => File
   addFileWithoutActivating: (name: string, content?: string) => File
   deleteFile: (fileId: string) => void
-  renameFile: (fileId: string, newName: string) => void
+
   setTheme: (theme: 'light' | 'dark') => void
   toggleTheme: () => void
   toggleSidebar: () => void
@@ -102,10 +102,11 @@ interface FileStore extends EditorState {
 
   // Async Actions
   fetchProjects: (token: string) => Promise<void>
-  createProject: (name: string, token: string) => Promise<void>
-
-  fetchProjectFiles: (projectId: number, token: string) => Promise<void>
+  fetchProjectFiles: (projectId: number | null, token: string) => Promise<void>
+  createProject: (name: string, isPublic: boolean, token: string) => Promise<void>
   saveActiveFile: () => Promise<void>
+  createFile: (name: string, content?: string, projectId?: number, isShared?: boolean) => Promise<void>
+  renameFile: (fileId: string, newName: string) => Promise<void>
 }
 
 // Initial files - quantum algorithm examples from different frameworks
@@ -423,7 +424,11 @@ export const useFileStore = create<FileStore>()(
         )
       },
 
-      renameFile: (fileId, newName) => {
+      renameFile: async (fileId: string, newName: string) => {
+        const state = get()
+        const token = useAuthStore.getState().token
+
+        // Optimistic update
         set(
           (state) => ({
             files: state.files.map((file) =>
@@ -440,6 +445,28 @@ export const useFileStore = create<FileStore>()(
           false,
           'renameFile'
         )
+
+        // API call if token exists and not a temp file
+        if (token && !fileId.startsWith('file-')) {
+          try {
+            // We need to know if it's a project file or root file?
+            // Actually fileApi.updateFile handles root files (via /api/files/{id})
+            // But if it's a project file, we might need projectsApi.updateFile??
+            // Our refactor made /api/files/{id} universial for updates generally?
+            // Let's check api.ts again. fileApi.updateFile uses /api/files/{id} PUT.
+            // projectsApi.updateFile uses /api/projects/{pid}/files/{fid} PUT.
+            // If the file has a projectId, we should safe check.
+            // But our backend /api/files/{id} update should work if user owns it.
+            // Let's use fileApi.updateFile as it's cleaner.
+
+            const api = await import('./api').then(m => m.fileApi)
+            await api.updateFile(parseInt(fileId), { filename: newName }, token)
+          } catch (error) {
+            console.error("Failed to rename file remotely", error)
+            toast.error("Failed to save rename")
+            // Revert? For now, keep optimistic
+          }
+        }
       },
 
       setTheme: (theme) => {
@@ -576,12 +603,7 @@ export const useFileStore = create<FileStore>()(
           const res = await projectsApi.getProjects(token)
           if (res.success && res.data) {
             set({ projects: res.data }, false, 'fetchProjects')
-            // If projects exist, load the first one by default
-            if (res.data.length > 0) {
-              const firstProject = res.data[0]
-              set({ activeProjectId: firstProject.id }, false, 'setActiveProject')
-              get().fetchProjectFiles(firstProject.id, token)
-            }
+            // Don't auto-select project, allow viewing root files
           }
         } catch (error) {
           console.error("Failed to fetch projects", error)
@@ -590,50 +612,86 @@ export const useFileStore = create<FileStore>()(
         }
       },
 
-      createProject: async (name: string, token: string) => {
+      createProject: async (name: string, isPublic: boolean, token: string) => {
         set({ loading: true })
         try {
-          const res = await projectsApi.createProject({ name, is_public: false }, token)
+          const res = await projectsApi.createProject({ name, is_public: isPublic }, token)
           if (res.success && res.data) {
             const newProject = res.data
             set(state => ({
               projects: [...state.projects, newProject],
               activeProjectId: newProject.id,
-              files: [], // New project has no files
               activeFileId: null
             }), false, 'createProject')
+            // After creating project, we might want to fetch its files (empty) + root files?
+            // Or just let the UI trigger fetch
+            get().fetchProjectFiles(newProject.id, token)
           }
         } catch (error) {
           console.error("Failed to create project", error)
+          toast.error("Failed to create project")
         } finally {
           set({ loading: false })
         }
       },
 
-      fetchProjectFiles: async (projectId: number, token: string) => {
+      fetchProjectFiles: async (projectId: number | null, token: string) => {
+        // If projectId is null, we fetch root files.
+        // If projectId is set, we fetch project files.
+        // BUT we likely want to see root files ALWAYS?
+        // For now, let's implement fetching specific scope.
+        // The Sidebar might call this twice or we merge results?
+        // Let's assume this action REPLACES files list with the scope's files
+        // OR we can rely on `files` containing everything and Sidebar filtering.
+        // Let's try to fetch BOTH if a project is active?
+        // Simplest: Fetch based on argument.
+
         set({ loading: true })
         try {
-          const res = await projectsApi.getProject(projectId, token)
-          if (res.success && res.data && res.data.files) {
-            const projectFiles = res.data.files.map((f: any) => ({
-              id: f.id.toString(), // Ensure ID is string for frontend
+          // Using fileApi now
+          const res = await import('./api').then(m => m.fileApi.getFiles(projectId || undefined, token))
+
+          if (res.success && res.data) {
+            const fetchedFiles = (res.data as any[]).map((f: any) => ({
+              id: f.id.toString(),
               name: f.filename,
               content: f.content,
-              language: getLanguageFromFilename(f.filename), // Re-derive language
+              language: getLanguageFromFilename(f.filename),
               createdAt: f.created_at || new Date().toISOString(),
               updatedAt: f.updated_at || new Date().toISOString(),
               size: f.content?.length || 0,
+              projectId: f.project_id ? f.project_id.toString() : undefined,
+              isShared: f.is_shared,
+              userId: f.user_id,
             }))
 
-            // Merge with initial/memory files
-            // Ensure no ID conflicts by prioritizing project files if duplicate IDs exist (unlikely with mixed types)
-            set({ files: [...initialFiles, ...projectFiles] }, false, 'fetchProjectFiles')
+            set(state => {
+              // If fetching a project, filter out old files of THAT project?
+              // Or just replace all files?
+              // If we want to show Root files + Project files, we need to manage them.
+              // Let's assume we replace `files` entirely for the view scope?
+              // User said "In memory files are always visible".
+              // Let's merge with initialFiles.
 
-            // Set active file if any
-            if (projectFiles.length > 0) {
-              set({ activeFileId: projectFiles[0].id }, false, 'setActiveFile')
-            } else {
-              set({ activeFileId: null }, false, 'setActiveFile')
+              // If we are switching projects, we probably want to clear other project files.
+              // But keep root files if we fetched them?
+
+              // Strategy: Just set files to (Initial + Fetched).
+              // If we want root + project, caller needs to handle it or we fetch both here.
+              // Let's fetch root files if projectId is provided too?
+
+              const filesToShow = projectId
+                ? fetchedFiles
+                : [...initialFiles, ...fetchedFiles]
+
+              return {
+                files: filesToShow,
+                activeProjectId: projectId
+              }
+            }, false, 'fetchProjectFiles')
+
+            if (fetchedFiles.length > 0) {
+              // Optional: set active, or handle in UI
             }
           }
         } catch (error) {
@@ -646,32 +704,125 @@ export const useFileStore = create<FileStore>()(
       saveActiveFile: async () => {
         const state = get()
         const activeFile = state.getActiveFile()
-        const activeProjectId = state.activeProjectId
         const token = useAuthStore.getState().token
 
-        if (!activeFile || !activeProjectId || !token) {
-          console.log("Save cancelled: Missing file, project or token", { activeFile, activeProjectId, hasToken: !!token })
+        if (!activeFile || !token) {
           if (!token) toast.error("Please log in to save")
           return
         }
 
+        // If it's an initial in-memory file without DB ID (starts with 'file-'), we create it?
+        // Or if it has a real ID (numeric usually from DB, but we verify)
+        // Actually our DB IDs are Ints, converted to string. 
+        // Initial files have 'file-X' which is not int-like.
+        // If we save a 'file-X', we should create it.
+
+        const isNew = activeFile.id.startsWith('file-')
+        const endpoint = import('./api').then(m => isNew ? m.fileApi.createFile : m.fileApi.updateFile)
+
         const toastId = toast.loading('Saving...')
         try {
-          // Use updateFile from projectsApi to save to backend
-          const res = await projectsApi.updateFile(activeProjectId, activeFile.id, {
-            content: activeFile.content
-          }, token)
-
-          if (res.success) {
-            toast.success('Saved', { id: toastId })
+          const api = await import('./api').then(m => m.fileApi)
+          let res;
+          if (isNew) {
+            // Create
+            res = await api.createFile({
+              filename: activeFile.name,
+              content: activeFile.content,
+              is_main: false, // Default?
+              project_id: state.activeProjectId || undefined,
+              is_shared: activeFile.isShared
+            }, token)
           } else {
-            console.log("Full Save Response:", res)
+            // Update
+            res = await api.updateFile(parseInt(activeFile.id), {
+              content: activeFile.content
+            }, token)
+          }
+
+          if (res.success && res.data) {
+            toast.success('Saved', { id: toastId })
+            // Update local file with new data (ID might change if new)
+            const backendFile = res.data as any
+            const updatedFile: File = {
+              ...activeFile,
+              id: backendFile.id.toString(),
+              name: backendFile.filename,
+              content: backendFile.content,
+              updatedAt: backendFile.updated_at || new Date().toISOString(),
+              projectId: backendFile.project_id?.toString(),
+              isShared: backendFile.is_shared
+            }
+
+            set(state => ({
+              files: state.files.map(f => f.id === activeFile.id ? updatedFile : f),
+              activeFileId: updatedFile.id
+            }))
+          } else {
             const errorText = typeof res.error === 'object' ? JSON.stringify(res.error) : res.error
-            toast.error(`Failed to save: ${errorText || 'Unknown error'}`, { id: toastId })
+            toast.error(`Failed to save: ${errorText}`, { id: toastId })
           }
         } catch (error) {
           console.error('Save failed', error)
           toast.error('Save failed', { id: toastId })
+        }
+      },
+
+      createFile: async (name: string, content?: string, projectId?: number, isShared: boolean = false) => {
+        const state = get()
+        const token = useAuthStore.getState().token
+
+        // Fallback to local if no token (but user asked for backend sync)
+        if (!token) {
+          // Toast or memory?
+          get().addFile(name, content)
+          return
+        }
+
+        const language = getLanguageFromFilename(name)
+        const defaultContent = content ?? FILE_TEMPLATES[language] ?? ''
+        const toastId = toast.loading('Creating file...')
+
+        try {
+          const api = await import('./api').then(m => m.fileApi)
+          const res = await api.createFile({
+            filename: name,
+            content: defaultContent,
+            is_main: false,
+            project_id: projectId,
+            is_shared: isShared
+          }, token)
+
+          if (res.success && res.data) {
+            const f = res.data as any
+            const newFile: File = {
+              id: f.id.toString(),
+              name: f.filename,
+              content: f.content,
+              language: language,
+              createdAt: f.created_at || new Date().toISOString(),
+              updatedAt: f.updated_at || new Date().toISOString(),
+              size: f.content.length,
+              projectId: f.project_id?.toString(),
+              isShared: f.is_shared,
+              userId: f.user_id?.toString()
+            }
+            set(
+              (state) => ({
+                files: [...state.files, newFile],
+                activeFileId: newFile.id,
+              }),
+              false,
+              'createFile'
+            )
+            toast.success(`Created ${name}`, { id: toastId })
+          } else {
+            const errorText = typeof res.error === 'object' ? JSON.stringify(res.error) : res.error
+            toast.error(`Failed to create file: ${errorText}`, { id: toastId })
+          }
+        } catch (error) {
+          console.error("Create file failed", error)
+          toast.error("Failed to create file", { id: toastId })
         }
       },
     }),

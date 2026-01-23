@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   File as FileIcon, 
   Folder, 
@@ -23,15 +23,17 @@ import {
   Upload,
   FolderPlus,
   FileCode,
-  Languages
+  Languages,
+  Users,
+  Lock,
+  Globe
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
-import { File } from '@/types'
+import { File, Project } from '@/types'
 import { isValidFilename, sanitizeFilename, formatFileSize, formatTimestamp } from '@/lib/utils'
 import AddNewLanguage from './AddNewLanguage'
 import { useAuthStore } from '@/lib/authStore'
-import { useEffect } from 'react'
 
 interface FileTemplate {
   name: string
@@ -160,14 +162,18 @@ def qml_xor_classifier():
 export default function Sidebar() {
   const { 
     files, 
+    projects,
     activeFileId, 
+    activeProjectId,
     sidebarCollapsed, 
     setActiveFile, 
     addFile, 
     deleteFile, 
     renameFile,
-    activeProjectId,
-    fetchProjects
+    fetchProjects,
+    createFile,
+    createProject,
+    fetchProjectFiles
   } = useFileStore()
 
   const { token, isAuthenticated } = useAuthStore()
@@ -175,17 +181,32 @@ export default function Sidebar() {
   useEffect(() => {
     if (isAuthenticated && token) {
        fetchProjects(token)
+       // Also fetch root files initially if no project is active, or user just logged in
+       if (!activeProjectId) {
+         fetchProjectFiles(null, token)
+       }
     }
-  }, [isAuthenticated, token, fetchProjects])
+  }, [isAuthenticated, token, fetchProjects, fetchProjectFiles, activeProjectId])
 
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isFilesExpanded, setIsFilesExpanded] = useState(true)
+  const [isProjectsExpanded, setIsProjectsExpanded] = useState(true)
+  
   const [showNewFileInput, setShowNewFileInput] = useState(false)
-  const [showTemplates, setShowTemplates] = useState(false)
   const [newFileName, setNewFileName] = useState('')
+  const [newFileIsShared, setNewFileIsShared] = useState(false)
+  
+  const [showNewProjectInput, setShowNewProjectInput] = useState(false)
+  const [newProjectName, setNewProjectName] = useState('')
+  const [newProjectIsPublic, setNewProjectIsPublic] = useState(false)
+
+  const [showTemplates, setShowTemplates] = useState(false)
+  
   const [editingFileId, setEditingFileId] = useState<string | null>(null)
   const [editingFileName, setEditingFileName] = useState('')
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'python' | 'qasm' | 'javascript' | 'json'>('all')
+  
   const [showAddLanguage, setShowAddLanguage] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; fileId: string; fileName: string }>({
     show: false,
@@ -193,13 +214,14 @@ export default function Sidebar() {
     fileName: ''
   })
 
+  // Filter files based on search and type
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesFilter = filterType === 'all' || file.language === filterType
     return matchesSearch && matchesFilter
   })
 
-  const handleCreateFile = () => {
+  const handleCreateFile = async () => {
     if (!newFileName.trim()) {
       toast.error('Please enter a file name')
       return
@@ -218,24 +240,49 @@ export default function Sidebar() {
     }
 
     try {
-      addFile(newFileName)
+      // Pass activeProjectId (null for root) and sharing status
+      await createFile(newFileName, undefined, activeProjectId === null ? undefined : activeProjectId, newFileIsShared) 
       setNewFileName('')
+      setNewFileIsShared(false)
       setShowNewFileInput(false)
-      toast.success(`Created ${newFileName}`)
     } catch (error) {
-      toast.error('Failed to create file')
+      // Error handled in store
+    }
+  }
+  
+  const handleCreateProject = async () => {
+    if (!newProjectName.trim()) {
+      toast.error('Please enter a project name')
+      return
+    }
+    
+    try {
+       // Assuming store is updated or matches signature: createProject(name, isPublic, token)
+       // But wait, createProject in store requires token?
+       // Sidebar uses destructuring from store.
+       // The store's createProject signature expects token as 3rd arg.
+       if (!token) return
+       await createProject(newProjectName, newProjectIsPublic, token)
+       setNewProjectName('')
+       setNewProjectIsPublic(false)
+       setShowNewProjectInput(false)
+    } catch (error) {
+      // Error handled in store
     }
   }
 
-  const handleCreateFromTemplate = (template: FileTemplate) => {
+  const handleProjectClick = (projectId: number | null) => {
+    if (!token) return
+    fetchProjectFiles(projectId, token)
+  }
+
+  const handleCreateFromTemplate = async (template: FileTemplate) => {
     const fileName = `${template.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.${template.language === 'python' ? 'py' : template.language}`
     try {
-      const newFile = addFile(fileName, template.content)
-      setActiveFile(newFile.id)
+      await createFile(fileName, template.content, activeProjectId, false)
       setShowTemplates(false)
-      toast.success(`Created ${fileName} from template`)
     } catch (error) {
-      toast.error('Failed to create file from template')
+       // Handled in store
     }
   }
 
@@ -315,25 +362,11 @@ export default function Sidebar() {
     return (
       <div className="w-12 bg-gradient-to-b from-editor-sidebar to-gray-900 border-r border-editor-border flex flex-col items-center py-4 space-y-2">
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={() => setIsFilesExpanded(!isFilesExpanded)}
           className="p-2 hover:bg-quantum-blue-light/20 rounded-lg transition-colors"
           title="Expand Sidebar"
         >
           <Folder className="w-5 h-5 text-editor-text" />
-        </button>
-        <button
-          onClick={() => setShowTemplates(true)}
-          className="p-2 hover:bg-quantum-blue-light/20 rounded-lg transition-colors"
-          title="Templates"
-        >
-          <FileCode className="w-5 h-5 text-editor-text" />
-        </button>
-        <button
-          onClick={() => setShowAddLanguage(true)}
-          className="p-2 hover:bg-quantum-blue-light/20 rounded-lg transition-colors"
-          title="Add Language"
-        >
-          <Languages className="w-5 h-5 text-editor-text" />
         </button>
       </div>
     )
@@ -341,20 +374,99 @@ export default function Sidebar() {
 
   return (
     <div className="sidebar bg-gradient-to-b from-editor-sidebar to-gray-900 border-r border-editor-border flex flex-col h-full overflow-hidden">
-      {/* Header */}
+      
+      {/* Projects Section */}
+      <div className="flex-shrink-0">
+          <div className="p-4 border-b border-editor-border">
+             <div className="flex items-center justify-between mb-2">
+                <button 
+                  onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
+                  className="flex items-center space-x-2 text-editor-text hover:text-white transition-colors"
+                >
+                   {isProjectsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                   <span className="font-medium">Projects</span>
+                </button>
+                <button
+                  onClick={() => setShowNewProjectInput(true)}
+                  className="btn-ghost p-1.5 hover:bg-quantum-blue-light/20 rounded-lg transition-colors"
+                  title="New Project"
+                >
+                   <FolderPlus className="w-4 h-4" />
+                </button>
+             </div>
+             
+             {isProjectsExpanded && (
+               <div className="space-y-1 max-h-48 overflow-y-auto">
+                 {/* Root (My Files) */}
+                 <div 
+                   className={`flex items-center space-x-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${activeProjectId === null ? 'bg-quantum-blue-light/20 text-white' : 'text-gray-400 hover:bg-editor-border/30'}`}
+                   onClick={() => handleProjectClick(null)}
+                 >
+                    <Folder className="w-4 h-4 text-quantum-blue-light" />
+                    <span className="text-sm">My Files (Root)</span>
+                 </div>
+
+                 {/* Project List */}
+                 {projects.map(project => (
+                   <div 
+                     key={project.id}
+                     className={`flex items-center space-x-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${activeProjectId === project.id ? 'bg-quantum-blue-light/20 text-white' : 'text-gray-400 hover:bg-editor-border/30'}`}
+                     onClick={() => handleProjectClick(project.id)}
+                   >
+                      <Folder className={`w-4 h-4 ${project.is_public ? 'text-green-400' : 'text-yellow-400'}`} />
+                      <span className="text-sm truncate flex-1">{project.name}</span>
+                      {project.is_public && <Globe className="w-3 h-3 text-gray-500" />}
+                   </div>
+                 ))}
+
+                 {/* New Project Input */}
+                 {showNewProjectInput && (
+                   <div className="p-2 bg-editor-bg/50 rounded-lg border border-editor-border">
+                      <input 
+                        type="text"
+                        placeholder="Project Name"
+                        value={newProjectName}
+                        onChange={e => setNewProjectName(e.target.value)}
+                        className="w-full bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-white focus-quantum mb-2"
+                        autoFocus
+                      />
+                      <div className="flex items-center justify-between">
+                         <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
+                            <input 
+                              type="checkbox"
+                              checked={newProjectIsPublic}
+                              onChange={e => setNewProjectIsPublic(e.target.checked)}
+                              className="rounded bg-editor-bg border-editor-border"
+                            />
+                            <span>Public</span>
+                         </label>
+                         <div className="flex space-x-1">
+                           <button onClick={handleCreateProject} className="p-1 hover:bg-green-500/20 rounded"><Check className="w-3 h-3 text-green-400"/></button>
+                           <button onClick={() => setShowNewProjectInput(false)} className="p-1 hover:bg-red-500/20 rounded"><X className="w-3 h-3 text-red-400"/></button>
+                         </div>
+                      </div>
+                   </div>
+                 )}
+               </div>
+             )}
+          </div>
+      </div>
+
+      {/* Files Header & Search */}
       <div className="p-4 border-b border-editor-border flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => setIsFilesExpanded(!isFilesExpanded)}
             className="flex items-center space-x-2 text-editor-text hover:text-white transition-colors"
           >
-            {isExpanded ? (
+            {isFilesExpanded ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
-            <Folder className="w-4 h-4" />
-            <span className="font-medium">Files</span>
+            <span className="font-medium">
+              {activeProjectId ? projects.find(p => p.id === activeProjectId)?.name : 'My Files'}
+            </span>
           </button>
           
           <div className="flex items-center space-x-1">
@@ -383,7 +495,7 @@ export default function Sidebar() {
         </div>
 
         {/* Search and Filter */}
-        {isExpanded && (
+        {isFilesExpanded && (
           <div className="space-y-2">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -411,43 +523,49 @@ export default function Sidebar() {
       </div>
 
       {/* File List */}
-      {isExpanded && (
+      {isFilesExpanded && (
         <div className="flex-1 overflow-y-auto">
           {/* New File Input */}
           {showNewFileInput && (
             <div className="p-3 border-b border-editor-border bg-editor-bg/50">
-              <div className="flex items-center space-x-2">
-                <FileIcon className="w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={newFileName}
-                  onChange={(e) => setNewFileName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreateFile()
-                    if (e.key === 'Escape') {
-                      setShowNewFileInput(false)
-                      setNewFileName('')
-                    }
-                  }}
-                  placeholder="filename.py"
-                  className="flex-1 bg-editor-bg border border-editor-border rounded-lg px-3 py-1.5 text-sm focus-quantum text-white"
-                  autoFocus
-                />
-                <button
-                  onClick={handleCreateFile}
-                  className="p-1.5 hover:bg-green-500/20 rounded-lg transition-colors"
-                >
-                  <Check className="w-3 h-3 text-green-400" />
-                </button>
-                <button
-                  onClick={() => {
-                    setShowNewFileInput(false)
-                    setNewFileName('')
-                  }}
-                  className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors"
-                >
-                  <X className="w-3 h-3 text-red-400" />
-                </button>
+              <div className="flex flex-col space-y-2">
+                 <div className="flex items-center space-x-2">
+                    <FileIcon className="w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={newFileName}
+                      onChange={(e) => setNewFileName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleCreateFile()
+                        if (e.key === 'Escape') {
+                          setShowNewFileInput(false)
+                          setNewFileName('')
+                        }
+                      }}
+                      placeholder="filename.py"
+                      className="flex-1 bg-editor-bg border border-editor-border rounded-lg px-3 py-1.5 text-sm focus-quantum text-white"
+                      autoFocus
+                    />
+                 </div>
+                 <div className="flex items-center justify-between">
+                     <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
+                        <input 
+                          type="checkbox"
+                          checked={newFileIsShared}
+                          onChange={e => setNewFileIsShared(e.target.checked)}
+                          className="rounded bg-editor-bg border-editor-border"
+                        />
+                        <span>Shared</span>
+                     </label>
+                     <div className="flex space-x-2">
+                        <button onClick={handleCreateFile} className="p-1.5 hover:bg-green-500/20 rounded-lg transition-colors">
+                           <Check className="w-3 h-3 text-green-400" />
+                        </button>
+                        <button onClick={() => { setShowNewFileInput(false); setNewFileName('') }} className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors">
+                           <X className="w-3 h-3 text-red-400" />
+                        </button>
+                     </div>
+                 </div>
               </div>
             </div>
           )}
@@ -498,9 +616,7 @@ export default function Sidebar() {
                       <div className="flex items-center space-x-2">
                         {getFileIcon(file)}
                         <span className="flex-1 truncate text-sm font-medium">{file.name}</span>
-                        <span className="text-xs text-gray-400">
-                          {formatFileSize(file.size)}
-                        </span>
+                        {file.isShared && <Users className="w-3 h-3 text-blue-300" />}
                       </div>
                     </div>
 
@@ -539,9 +655,13 @@ export default function Sidebar() {
                       <span className="font-medium">Language:</span>
                       <span className="px-2 py-0.5 bg-editor-border rounded text-white">{file.language}</span>
                     </div>
+                    <div className="flex items-center space-x-2 mb-1">
+                       <span className="font-medium">Size:</span>
+                       <span>{formatFileSize(file.size)}</span>
+                    </div>
                     <div className="flex items-center space-x-2">
-                      <Clock className="w-3 h-3" />
-                      <span>Modified: {formatTimestamp(file.updatedAt)}</span>
+                       <span className="font-medium">Shared:</span>
+                       <span className={file.isShared ? "text-green-400" : "text-gray-500"}>{file.isShared ? "Yes" : "No"}</span>
                     </div>
                   </div>
                 )}
