@@ -135,18 +135,24 @@ class FileCreate(BaseModel):
     filename: str
     content: str
     is_main: bool = False
+    is_shared: bool = False
+    project_id: Optional[int] = None
 
 class FileUpdate(BaseModel):
     filename: Optional[str] = None
     content: Optional[str] = None
     is_main: Optional[bool] = None
+    is_shared: Optional[bool] = None
+    project_id: Optional[int] = None
 
 class FileResponse(BaseModel):
     id: int
-    project_id: int
+    user_id: Optional[UUID] = None
+    project_id: Optional[int] = None
     filename: str
     content: str
     is_main: bool
+    is_shared: bool
     created_at: datetime
     updated_at: datetime
     

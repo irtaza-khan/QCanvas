@@ -1,4 +1,3 @@
-// File and Editor Types
 export interface File {
   id: string;
   name: string;
@@ -7,6 +6,9 @@ export interface File {
   createdAt: string;
   updatedAt: string;
   size: number;
+  projectId?: string;
+  isShared?: boolean;
+  userId?: string;
 }
 
 export interface Project {
@@ -66,14 +68,19 @@ export interface ApiResponse<T> {
 
 // File Operations
 export interface CreateFileRequest {
-  name: string;
-  content?: string;
-  language?: string;
+  filename: string;
+  content: string;
+  is_main?: boolean;
+  project_id?: number;
+  is_shared?: boolean;
 }
 
 export interface UpdateFileRequest {
+  filename?: string;
   content?: string;
-  name?: string;
+  is_main?: boolean;
+  project_id?: number;
+  is_shared?: boolean;
 }
 
 // Authentication Types (for future use)
@@ -96,7 +103,7 @@ export interface AuthState {
 }
 
 // Supported Languages
-export type SupportedLanguage = 
+export type SupportedLanguage =
   | 'python'
   | 'qasm'
   | 'javascript'
