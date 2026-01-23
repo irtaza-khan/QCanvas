@@ -34,6 +34,7 @@ import { useAuthStore } from "@/lib/authStore";
 import { fileApi, quantumApi, HybridExecuteResult } from "@/lib/api";
 import { InputLanguage, ResultFormat } from "@/types";
 import { detectFramework } from "@/lib/utils";
+import ProfileDropdown from "./ProfileDropdown";
 
 type ExecutionMode = 'compile' | 'execute' | 'hybrid';
 
@@ -1187,13 +1188,7 @@ export default function TopBar({
             </div>
 
             {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                className="btn-ghost text-red-400 hover:text-red-300 hover:bg-red-500/20 p-2 rounded-lg transition-all duration-200 hover:scale-110"
-                title="Logout"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
+              <ProfileDropdown onLogout={handleLogout} />
             ) : (
               <Link
                 href="/login"
