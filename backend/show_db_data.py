@@ -25,7 +25,7 @@ TABLE_MAP = {
     },
     "files": {
         "model": File,
-        "columns": ["id", "project_id", "filename", "is_main", "created_at"]
+        "columns": ["id", "project_id", "user_id", "filename", "is_main", "created_at"]
     },
     "jobs": {
         "model": Job,

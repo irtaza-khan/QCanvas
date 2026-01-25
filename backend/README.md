@@ -99,3 +99,51 @@ The API provides detailed error messages for:
 - **Hot Reload**: The backend automatically reloads on code changes when using `--reload`
 - **Logging**: Comprehensive logging for debugging
 - **Exception Handling**: Global exception handler for consistent error responses
+
+## Database Schema
+
+The application uses a relational database (PostgreSQL) with the following key entities:
+
+### Users (`users`)
+- **id**: UUID (Primary Key)
+- **email**: String (Unique, Indexed)
+- **username**: String (Unique, Indexed)
+- **role**: Enum (`user`, `admin`, `demo`)
+- **is_active**: Boolean
+- **is_verified**: Boolean
+- **api_key_encrypted**: String (AES-256 encrypted)
+- **created_at**, **updated_at**, **last_login_at**, **deleted_at** (Soft delete support)
+- **Relationships**: Has many Projects, Files, Jobs, Conversions, Simulations, Sessions, ApiActivities.
+
+### Projects (`projects`)
+- **id**: Integer (Primary Key)
+- **user_id**: UUID (Foreign Key to `users.id`)
+- **name**: String
+- **description**: Text
+- **is_public**: Boolean (Sharing flag)
+- **created_at**, **updated_at**
+- **Relationships**: Belongs to User (Owner). Has many Files, Jobs.
+
+### Files (`files`)
+- **id**: Integer (Primary Key)
+- **user_id**: UUID (Foreign Key to `users.id`)
+- **project_id**: Integer (Foreign Key to `projects.id`, Nullable)
+  - *Note: Files can exist independently (Root files) or belong to a Project.*
+- **filename**: String
+- **content**: Text
+- **is_main**: Boolean (Main entry point for project execution)
+- **is_shared**: Boolean (Global sharing flag)
+- **created_at**, **updated_at**
+- **Relationships**: Belongs to User. Belongs to Project (optional).
+
+### API Activity (`api_activity`)
+- **id**: UUID (Primary Key)
+- **user_id**: UUID (Foreign Key to `users.id`, Nullable)
+- **endpoint**: String
+- **method**: String
+- **status_code**: Integer
+- **ip_address**: String
+- **user_agent**: Text
+- **response_time_ms**: Integer
+- **created_at**
+- *Used for audit logging and usage tracking.*

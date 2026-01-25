@@ -159,9 +159,9 @@ def delete_file(
     file = db.query(File).filter(File.id == file_id).first()
     if not file:
         raise HTTPException(status_code=404, detail="File not found")
-        
-    # Only owner can delete
-    if file.user_id != current_user.id:
+            
+    # Only owner can delete (unless file has no owner)
+    if file.user_id is not None and file.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this file")
         
     db.delete(file)

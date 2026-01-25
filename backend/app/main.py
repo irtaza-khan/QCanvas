@@ -38,6 +38,9 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     print("Shutting down QCanvas Backend...")
+    from app.config.database import engine
+    engine.dispose()
+    print("Database connection closed.")
 
 # Create FastAPI app
 app = FastAPI(

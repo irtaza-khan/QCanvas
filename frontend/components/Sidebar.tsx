@@ -279,7 +279,7 @@ export default function Sidebar() {
   const handleCreateFromTemplate = async (template: FileTemplate) => {
     const fileName = `${template.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.${template.language === 'python' ? 'py' : template.language}`
     try {
-      await createFile(fileName, template.content, activeProjectId, false)
+      await createFile(fileName, template.content, activeProjectId ?? undefined, false)
       setShowTemplates(false)
     } catch (error) {
        // Handled in store
@@ -290,9 +290,9 @@ export default function Sidebar() {
     setDeleteConfirm({ show: true, fileId, fileName })
   }
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     try {
-      deleteFile(deleteConfirm.fileId)
+      await deleteFile(deleteConfirm.fileId)
       toast.success(`Deleted ${deleteConfirm.fileName}`)
     } catch (error) {
       toast.error('Failed to delete file')

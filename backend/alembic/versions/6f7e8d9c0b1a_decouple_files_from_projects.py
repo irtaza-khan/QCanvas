@@ -20,11 +20,24 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # Add user_id to files
-    op.add_column('files', sa.Column('user_id', sa.UUID(), nullable=True))
-    op.create_foreign_key(None, 'files', 'users', ['user_id'], ['id'])
+    op.add_column('files', sa.Column('user_id', postgresql.UUID(as_uuid=True), nullable=True))
+    
+    # Backfill files.user_id using the owning project
+    op.execute("UPDATE files SET user_id = projects.user_id FROM projects WHERE files.project_id = projects.id")
+    
+    # Enforce files.user_id NOT NULL after backfill
+    op.alter_column('files', 'user_id', nullable=False)
+    
+    # Create a named foreign key constraint
+    op.create_foreign_key(
+        'fk_files_user_id_users', 'files', 'users', ['user_id'], ['id'], ondelete='CASCADE'
+    )
 
     # Add is_shared to files
-    op.add_column('files', sa.Column('is_shared', sa.Boolean(), server_default='false', nullable=False))
+    op.add_column(
+        'files', 
+        sa.Column('is_shared', sa.Boolean(), server_default='false', nullable=False)
+    )
 
     # Make project_id nullable
     op.alter_column('files', 'project_id',
@@ -33,7 +46,10 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Revert project_id to not null (CAUTION: ensure no orphaned files exist before downgrading)
+    # Delete orphaned files where project_id IS NULL
+    op.execute("DELETE FROM files WHERE project_id IS NULL")
+
+    # Restore project_id NOT NULL
     op.alter_column('files', 'project_id',
                existing_type=sa.INTEGER(),
                nullable=False)
@@ -41,6 +57,8 @@ def downgrade() -> None:
     # Drop is_shared
     op.drop_column('files', 'is_shared')
 
+    # Drop the named foreign key
+    op.drop_constraint('fk_files_user_id_users', 'files', type_='foreignkey')
+
     # Drop user_id
-    op.drop_constraint(None, 'files', type_='foreignkey')
     op.drop_column('files', 'user_id')

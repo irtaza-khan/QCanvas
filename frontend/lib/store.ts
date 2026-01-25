@@ -84,7 +84,7 @@ interface FileStore extends EditorState {
   updateFileContent: (fileId: string, content: string) => void
   addFile: (name: string, content?: string) => File
   addFileWithoutActivating: (name: string, content?: string) => File
-  deleteFile: (fileId: string) => void
+  deleteFile: (fileId: string) => Promise<void>
 
   setTheme: (theme: 'light' | 'dark') => void
   toggleTheme: () => void
@@ -403,7 +403,22 @@ export const useFileStore = create<FileStore>()(
         return newFile
       },
 
-      deleteFile: (fileId) => {
+      deleteFile: async (fileId) => {
+        const token = useAuthStore.getState().token
+
+        // API call if token exists and not a temp file
+        if (token && !fileId.startsWith('file-')) {
+          try {
+            // Import dynamically to avoid circular dependency if any (though api.ts is already imported)
+            const api = await import('./api').then(m => m.fileApi)
+            await api.deleteFile(parseInt(fileId), token)
+          } catch (error) {
+            console.error("Failed to delete remote file", error)
+            // Propagate error to caller (Sidebar) so it can show error toast
+            throw error
+          }
+        }
+
         set(
           (state) => {
             const newFiles = state.files.filter((file) => file.id !== fileId)

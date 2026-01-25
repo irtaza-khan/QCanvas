@@ -43,8 +43,8 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             user_id = get_user_id_from_token(token)
 
         # Log to database
+        db = SessionLocal()
         try:
-            db = SessionLocal()
             activity = ApiActivity(
                 user_id=user_id,
                 endpoint=request.url.path,
@@ -56,8 +56,9 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             )
             db.add(activity)
             db.commit()
-            db.close()
         except Exception as e:
             print(f"Failed to write audit log: {e}")
+        finally:
+            db.close()
             
         return response
