@@ -39,12 +39,13 @@ import ProfileDropdown from "./ProfileDropdown";
 type ExecutionMode = 'compile' | 'execute' | 'hybrid';
 
 interface TopBarProps {
-  inputLanguage: InputLanguage | ""
-  setInputLanguage: (language: InputLanguage | "") => void
-  simBackend: 'cirq' | 'qiskit' | 'pennylane' | ''
-  setSimBackend: (backend: 'cirq' | 'qiskit' | 'pennylane' | '') => void
-  shots: number
-  setShots: (shots: number) => void
+  inputLanguage?: InputLanguage | ""
+  setInputLanguage?: (language: InputLanguage | "") => void
+  simBackend?: 'cirq' | 'qiskit' | 'pennylane' | ''
+  setSimBackend?: (backend: 'cirq' | 'qiskit' | 'pennylane' | '') => void
+  shots?: number
+  setShots?: (shots: number) => void
+  variant?: "default" | "simple"
 }
 
 export default function TopBar({
@@ -53,7 +54,8 @@ export default function TopBar({
   simBackend,
   setSimBackend,
   shots,
-  setShots
+  setShots,
+  variant = "default"
 }: TopBarProps) {
   const router = useRouter();
   const {
@@ -1002,7 +1004,6 @@ export default function TopBar({
               onClick={handleExport}
               disabled={!activeFile}
               className="btn-ghost flex items-center space-x-1 disabled:opacity-50 px-2 py-1.5 rounded-lg hover:bg-quantum-blue-light/20 transition-colors hidden lg:flex"
-              title="Export File"
             >
               <Download className="w-4 h-4" />
             </button>
