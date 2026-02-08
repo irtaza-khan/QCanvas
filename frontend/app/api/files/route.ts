@@ -108,7 +108,7 @@ export async function GET() {
   try {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     return NextResponse.json({
       files: mockFiles,
       count: mockFiles.length,
@@ -126,7 +126,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body: CreateFileRequest = await request.json()
-    
+
     // Validate request
     if (!body.name || body.name.trim() === '') {
       return NextResponse.json(
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    
+
     // Check if file with same name exists
     const existingFile = mockFiles.find(f => f.name === body.name)
     if (existingFile) {
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       )
     }
-    
+
     // Create new file
     const newFile: File = {
       id: generateId(),
@@ -154,13 +154,13 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString(),
       size: (body.content || '').length,
     }
-    
+
     // Add to mock database
     mockFiles.push(newFile)
-    
+
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 200))
-    
+
     return NextResponse.json(newFile, { status: 201 })
   } catch (error) {
     return NextResponse.json(

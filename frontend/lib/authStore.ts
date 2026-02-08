@@ -11,6 +11,7 @@ export interface User {
     is_verified: boolean
     created_at: string
     last_login_at: string | null
+    icon_name?: string
 }
 
 interface AuthState {
