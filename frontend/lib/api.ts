@@ -211,7 +211,8 @@ export async function healthCheck(): Promise<ApiResponse<{ ok: boolean }>> {
 // Quantum conversion API - connects to FastAPI backend
 export const quantumApi = {
   // Convert quantum code to OpenQASM
-  async convertToQasm(code: string, framework: string, style: 'classic' | 'compact' = 'classic'): Promise<ApiResponse<any>> {
+  async convertToQasm(code: string, framework: string, style: 'classic' | 'compact' = 'classic', token?: string): Promise<ApiResponse<any>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
     return apiRequest('/api/converter/convert', {
       method: 'POST',
       body: JSON.stringify({
@@ -220,6 +221,7 @@ export const quantumApi = {
         qasm_version: '3.0',
         style,
       }),
+      headers,
     })
   },
 
@@ -253,7 +255,8 @@ export const quantumApi = {
   },
 
   // Execute OpenQASM code via FastAPI backend (legacy)
-  async executeQasm(qasm_code: string, backend = 'statevector', shots = 1024): Promise<ApiResponse<any>> {
+  async executeQasm(qasm_code: string, backend = 'statevector', shots = 1024, token?: string): Promise<ApiResponse<any>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
     return apiRequest('/api/simulator/execute', {
       method: 'POST',
       body: JSON.stringify({
@@ -261,11 +264,13 @@ export const quantumApi = {
         backend,
         shots,
       }),
+      headers,
     })
   },
 
   // Execute OpenQASM code with QSim backend
-  async executeQasmWithQSim(qasm_code: string, backend: 'cirq' | 'qiskit' | 'pennylane' = 'cirq', shots = 1024): Promise<ApiResponse<any>> {
+  async executeQasmWithQSim(qasm_code: string, backend: 'cirq' | 'qiskit' | 'pennylane' = 'cirq', shots = 1024, token?: string): Promise<ApiResponse<any>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
     return apiRequest('/api/simulator/execute-qsim', {
       method: 'POST',
       body: JSON.stringify({
@@ -273,6 +278,7 @@ export const quantumApi = {
         backend,
         shots,
       }),
+      headers,
     })
   },
 
@@ -417,5 +423,26 @@ export const authApi = {
       method: 'POST',
     })
   },
+}
+
+// Gamification API
+export const gamificationApi = {
+  // Get user stats
+  async getStats(token: string): Promise<ApiResponse<any>> {
+    const headers = { 'Authorization': `Bearer ${token}` };
+    return apiRequest('/api/gamification/stats', { headers });
+  },
+
+  // Get recent activities
+  async getRecentActivities(token: string, limit = 10): Promise<ApiResponse<any>> {
+    const headers = { 'Authorization': `Bearer ${token}` };
+    return apiRequest(`/api/gamification/activities/recent?limit=${limit}`, { headers });
+  },
+
+  // Get activity summary
+  async getActivitySummary(token: string): Promise<ApiResponse<any>> {
+    const headers = { 'Authorization': `Bearer ${token}` };
+    return apiRequest('/api/gamification/activities/summary', { headers });
+  }
 }
 

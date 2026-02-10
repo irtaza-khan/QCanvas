@@ -60,6 +60,12 @@ export const useAuthStore = create<AuthState>()(
                     }
                 }
 
+                // Clear gamification data
+                if (typeof window !== 'undefined') {
+                    const { useGamificationStore } = require('@/lib/gamificationStore');
+                    useGamificationStore.getState().clearGamification();
+                }
+
                 set({
                     user: null,
                     token: null,
