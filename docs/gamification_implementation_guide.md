@@ -68,14 +68,14 @@ Tracks user achievement progress:
 
 #### Level Progression Formula
 ```python
-xp_for_level(level) = 100 * level^1.5
+xp_for_level(level) = 500 * (level - 1)
 ```
 
 Example progression:
-- Level 1 → 2: 100 XP
-- Level 2 → 3: 183 XP
-- Level 5 → 6: 461 XP
-- Level 10 → 11: 1,000 XP
+- Level 1 → 2: 500 XP (Total: 500)
+- Level 2 → 3: 500 XP (Total: 1000)
+- Level 5 → 6: 500 XP (Total: 2500)
+- Level 10 → 11: 500 XP (Total: 5000)
 
 #### XP Rewards
 | Activity | Base XP | First Time Bonus | Total (First) |

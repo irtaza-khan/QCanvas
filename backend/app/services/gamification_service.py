@@ -25,15 +25,14 @@ def xp_for_level(level: int) -> int:
     """
     Calculate total XP required to reach a specific level.
     
-    Formula: 100 * level^1.5
-    This creates exponential growth that feels rewarding but not overwhelming.
+    Formula: 500 * (level - 1)
+    This creates a linear progression where each level requires 500 XP.
     
     Examples:
     - Level 1: 0 XP
-    - Level 2: 283 XP
-    - Level 5: 1,118 XP
-    - Level 10: 3,162 XP
-    - Level 20: 8,944 XP
+    - Level 2: 500 XP
+    - Level 3: 1000 XP
+    - Level 10: 4500 XP
     
     Args:
         level: Target level (1-based)
@@ -43,14 +42,14 @@ def xp_for_level(level: int) -> int:
     """
     if level <= 1:
         return 0
-    return int(100 * math.pow(level, 1.5))
+    return 500 * (level - 1)
 
 
 def calculate_level(total_xp: int) -> int:
     """
     Calculate current level based on total XP.
     
-    Uses binary search for efficiency with large XP values.
+    Constant time calculation for linear progression.
     
     Args:
         total_xp: Total XP accumulated
@@ -61,11 +60,8 @@ def calculate_level(total_xp: int) -> int:
     if total_xp <= 0:
         return 1
     
-    level = 1
-    while xp_for_level(level + 1) <= total_xp:
-        level += 1
-    
-    return level
+    # Linear formula inversion: level = (total_xp // 500) + 1
+    return (total_xp // 500) + 1
 
 
 # ============================================================================
