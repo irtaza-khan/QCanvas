@@ -9,6 +9,16 @@ import { parseCircuit, calculateQubitCount, parseCircuitWithCountAsync, ParsedGa
 import FindReplace from './FindReplace'
 import CircuitVisualization from './CircuitVisualization'
 
+// Dynamically import 3D Visualization to avoid SSR issues
+const CircuitVisualization3D = dynamic(() => import('./CircuitVisualization3D'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full text-gray-500">
+      Loading 3D View...
+    </div>
+  ),
+})
+
 // Dynamically import Monaco Editor with SSR disabled to prevent server-side rendering issues
 const Editor = dynamic(() => import('@monaco-editor/react').then(mod => mod.Editor), {
   ssr: false,
@@ -30,6 +40,7 @@ export default function EditorPane() {
   const [showFindReplace, setShowFindReplace] = useState(false)
   const [findReplaceMode, setFindReplaceMode] = useState<'find' | 'replace'>('find')
   const [showCircuitVisualization, setShowCircuitVisualization] = useState(false)
+  const [is3DMode, setIs3DMode] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [circuitHeight, setCircuitHeight] = useState(200)
   const [isDraggingCircuit, setIsDraggingCircuit] = useState(false)
@@ -391,16 +402,31 @@ export default function EditorPane() {
           </button>
 
           {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
-            <button
-              onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
-              className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                showCircuitVisualization
-                  ? 'bg-quantum-blue-light text-white'
-                  : 'text-editor-text hover:bg-editor-border'
-              }`}
-            >
-              Circuit View
-            </button>
+            <div className="flex bg-editor-bg border border-editor-border rounded-md overflow-hidden p-0.5">
+              <button
+                onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
+                className={`px-3 py-1 text-xs rounded-sm transition-colors ${
+                  showCircuitVisualization
+                    ? 'bg-quantum-blue-light text-white'
+                    : 'text-editor-text hover:bg-editor-border'
+                }`}
+              >
+                Circuit View
+              </button>
+              {showCircuitVisualization && (
+                <button
+                  onClick={() => setIs3DMode(!is3DMode)}
+                  className={`px-2 py-1 text-xs rounded-sm transition-colors ml-1 ${
+                    is3DMode
+                      ? 'bg-quantum-purple text-white'
+                      : 'text-editor-text hover:bg-editor-border'
+                  }`}
+                  title={is3DMode ? "Switch to 2D" : "Switch to 3D"}
+                >
+                  {is3DMode ? "3D" : "2D"}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -429,11 +455,19 @@ export default function EditorPane() {
                 </span>
               )}
             </div>
-            <CircuitVisualization
-              gates={parsedGates}
-              qubits={parsedQubits}
-              className="h-full"
-            />
+            {is3DMode ? (
+              <CircuitVisualization3D
+                gates={parsedGates}
+                qubits={parsedQubits}
+                className="h-full"
+              />
+            ) : (
+              <CircuitVisualization
+                gates={parsedGates}
+                qubits={parsedQubits}
+                className="h-full"
+              />
+            )}
           </div>
           {/* Drag Handle for Circuit Visualization */}
           <div

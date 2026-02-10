@@ -110,20 +110,20 @@ export async function GET(
 ) {
   try {
     const fileId = params.id
-    
+
     // Find file in mock database
     const file = mockFiles.find(f => f.id === fileId)
-    
+
     if (!file) {
       return NextResponse.json(
         { error: 'File not found' },
         { status: 404 }
       )
     }
-    
+
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 50))
-    
+
     return NextResponse.json({ ...file, branding: 'QCanvas' })
   } catch (error) {
     return NextResponse.json(
@@ -141,31 +141,31 @@ export async function PUT(
   try {
     const fileId = params.id
     const body: UpdateFileRequest = await request.json()
-    
+
     // Find file in mock database
     const fileIndex = mockFiles.findIndex(f => f.id === fileId)
-    
+
     if (fileIndex === -1) {
       return NextResponse.json(
         { error: 'File not found' },
         { status: 404 }
       )
     }
-    
+
     // Update file
     const existingFile = mockFiles[fileIndex]
     const updatedFile: File = {
       ...existingFile,
-      ...(body.name && { name: body.name }),
+      ...(body.filename && { name: body.filename }),
       ...(body.content !== undefined && { content: body.content }),
-      ...(body.name && { language: getLanguageFromFilename(body.name) }),
+      ...(body.filename && { language: getLanguageFromFilename(body.filename) }),
       updatedAt: new Date().toISOString(),
       size: (body.content !== undefined ? body.content : existingFile.content).length,
     }
-    
+
     // If name is being changed, check for conflicts
-    if (body.name && body.name !== existingFile.name) {
-      const nameExists = mockFiles.some(f => f.id !== fileId && f.name === body.name)
+    if (body.filename && body.filename !== existingFile.name) {
+      const nameExists = mockFiles.some(f => f.id !== fileId && f.name === body.filename)
       if (nameExists) {
         return NextResponse.json(
           { error: 'File with this name already exists' },
@@ -173,13 +173,13 @@ export async function PUT(
         )
       }
     }
-    
+
     // Update in mock database
     mockFiles[fileIndex] = updatedFile
-    
+
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     return NextResponse.json(updatedFile)
   } catch (error) {
     return NextResponse.json(
@@ -196,23 +196,23 @@ export async function DELETE(
 ) {
   try {
     const fileId = params.id
-    
+
     // Find file in mock database
     const fileIndex = mockFiles.findIndex(f => f.id === fileId)
-    
+
     if (fileIndex === -1) {
       return NextResponse.json(
         { error: 'File not found' },
         { status: 404 }
       )
     }
-    
+
     // Remove from mock database
     mockFiles.splice(fileIndex, 1)
-    
+
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json(
