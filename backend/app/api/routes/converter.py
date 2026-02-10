@@ -61,6 +61,30 @@ async def convert_to_qasm(
         
 
         if result["success"]:
+            # Award XP for successful conversion if user is authenticated
+            if current_user:
+                try:
+                    from app.services.gamification_service import GamificationService
+                    
+                    # Extract conversion metadata for XP tracking
+                    metadata = {
+                        "source_framework": request_data.framework,
+                        "target_framework": "openqasm",
+                        "qubits": result.get("conversion_stats", {}).get("qubits", 0) if result.get("conversion_stats") else 0,
+                        "gates": sum(result.get("conversion_stats", {}).get("gates", {}).values()) if result.get("conversion_stats") and result.get("conversion_stats").get("gates") else 0
+                    }
+                    
+                    # Award XP for conversion
+                    GamificationService.award_xp(
+                        db=db,
+                        user_id=str(current_user.id),
+                        activity_type='conversion',
+                        metadata=metadata
+                    )
+                except Exception as e:
+                    # Don't fail the request if gamification fails
+                    print(f"Failed to award XP for conversion: {e}")
+            
             # Save to database if user is authenticated
             if current_user:
                 try:

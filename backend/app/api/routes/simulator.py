@@ -54,6 +54,30 @@ async def execute_qasm(
             shots=shots
         )
         
+        # Award XP for successful simulation if user is authenticated
+        if current_user and result.get("success"):
+            try:
+                from app.services.gamification_service import GamificationService
+                
+                # Extract circuit metadata for XP tracking
+                metadata = {
+                    "backend": backend,
+                    "shots": shots,
+                    "qubits": result.get("metadata", {}).get("num_qubits", 0) if result.get("metadata") else 0
+                }
+                
+                # Award XP for simulation
+                GamificationService.award_xp(
+                    db=db,
+                    user_id=str(current_user.id),
+                    activity_type='simulation_run',
+                    metadata=metadata
+                )
+                print(f"✅ Awarded XP to user {current_user.username} for simulation")
+            except Exception as e:
+                # Don't fail the request if gamification fails
+                print(f"❌ Failed to award XP for simulation: {e}")
+        
         return JSONResponse(content=result)
         
     except HTTPException:
@@ -118,7 +142,28 @@ async def execute_qasm_with_qsim(
                 status_code=400  # Use 400 for simulation failures (bad input/execution)
             )
         
-        return JSONResponse(content=result)
+        # Award XP for successful simulation if user is authenticated
+        if current_user and result.get("success"):
+            try:
+                from app.services.gamification_service import GamificationService
+                
+                # Extract circuit metadata for XP tracking
+                metadata = {
+                    "backend": backend,
+                    "shots": shots,
+                    "qubits": result.get("results", {}).get("metadata", {}).get("num_qubits", 0)
+                }
+                
+                # Award XP for simulation
+                GamificationService.award_xp(
+                    db=db,
+                    user_id=str(current_user.id),
+                    activity_type='simulation_run',
+                    metadata=metadata
+                )
+            except Exception as e:
+                # Don't fail the request if gamification fails
+                print(f"Failed to award XP for simulation: {e}")
         
         # Save to database if user is authenticated and simulation was successful
         if current_user and result.get("success"):
