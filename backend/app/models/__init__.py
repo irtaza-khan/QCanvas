@@ -1,1 +1,4 @@
-# TODO: Add module initialization code
+"""Database models package."""
+from app.models.database_models import *
+from app.models.gamification import *
+

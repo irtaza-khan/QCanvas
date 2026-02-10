@@ -25,6 +25,12 @@ sys.path.insert(0, backend_dir)
 
 from app.config.database import Base
 from app.models.database_models import User  # Import User model
+from app.models.gamification import (  # Import gamification models
+    UserGamification,
+    GamificationActivity,
+    Achievement,
+    UserAchievement
+)
 
 target_metadata = Base.metadata
 
