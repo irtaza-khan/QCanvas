@@ -11,23 +11,24 @@ import {
     CircuitBoard
 } from "lucide-react";
 import { useAuthStore } from "@/lib/authStore";
+import { useGamificationStore, getLevelBadge, formatXP } from "@/lib/gamificationStore";
 
 interface ProfileDropdownProps {
     onLogout: () => void;
 }
 
-// TODO: Replace with real data from useGamificationStore or API
-const MOCK_STATS = {
-    level: 5,
-    badge: "Quantum Novice",
-    xp: 450,
-    nextLevelXp: 1000,
-};
-
 export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
-    const { user } = useAuthStore();
+    const { user, token } = useAuthStore();
+    const { stats, fetchStats } = useGamificationStore();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Fetch gamification stats when component mounts
+    useEffect(() => {
+        if (user && token) {
+            fetchStats(token);
+        }
+    }, [user, token, fetchStats]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -48,8 +49,18 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
         ? user.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
         : user.icon_name || "U";
 
-    // Calculate progress for mock progress bar
-    const progressPercent = (MOCK_STATS.xp / MOCK_STATS.nextLevelXp) * 100;
+    // Use real stats or fallback to defaults
+    const level = stats?.level || 1;
+    const badge = getLevelBadge(level);
+    const xp = stats?.total_xp || 0;
+    const nextLevelXp = stats?.xp_next_level || 100;
+    const currentLevelXp = stats?.xp_current_level || 0;
+
+    // Calculate progress for progress bar
+    // Calculate progress for progress bar locally to ensure consistency with display text
+    const range = Math.max(0, nextLevelXp - currentLevelXp);
+    const earnedInLevel = Math.max(0, xp - currentLevelXp);
+    const progressPercent = range > 0 ? Math.min(100, (earnedInLevel / range) * 100) : 0;
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -63,7 +74,7 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
                         {initials}
                     </div>
                     <div className="absolute -bottom-1 -right-1 bg-editor-bg border border-quantum-blue-light rounded-full w-4 h-4 flex items-center justify-center">
-                        <span className="text-[9px] font-bold text-quantum-blue-light">{MOCK_STATS.level}</span>
+                        <span className="text-[9px] font-bold text-quantum-blue-light">{level}</span>
                     </div>
                 </div>
 
@@ -74,7 +85,7 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
                     </span>
                     <span className="text-[10px] text-quantum-blue-light flex items-center gap-1">
                         <Award className="w-3 h-3" />
-                        {MOCK_STATS.badge}
+                        {badge}
                     </span>
                 </div>
 
@@ -97,15 +108,16 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
                         </div>
 
                         {/* Gamification Progress */}
-                        {/* TODO: Connect to real backend data */}
                         <div className="space-y-1.5">
                             <div className="flex justify-between text-xs">
-                                <span className="text-gray-300 font-medium">Level {MOCK_STATS.level}</span>
-                                <span className="text-quantum-blue-light">{MOCK_STATS.xp} / {MOCK_STATS.nextLevelXp} XP</span>
+                                <span className="text-gray-300 font-medium">Level {level}</span>
+                                <span className="text-quantum-blue-light">
+                                    {formatXP(Math.max(0, xp - currentLevelXp))} / {formatXP(Math.max(0, nextLevelXp - currentLevelXp))} XP
+                                </span>
                             </div>
                             <div className="h-1.5 bg-editor-bg rounded-full overflow-hidden border border-white/5">
                                 <div
-                                    className="h-full bg-gradient-to-r from-quantum-blue to-purple-500 transition-all duration-500"
+                                    className="h-full bg-blue-500 transition-all duration-500"
                                     style={{ width: `${progressPercent}%` }}
                                 />
                             </div>
@@ -121,8 +133,6 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
                         >
                             <User className="w-4 h-4 text-gray-400 group-hover:text-quantum-blue-light" />
                             <span>View Profile</span>
-                            {/* Badge placeholder */}
-                            <span className="ml-auto text-[10px] bg-white/5 px-1.5 py-0.5 rounded text-gray-400">Soon</span>
                         </Link>
 
                         <Link

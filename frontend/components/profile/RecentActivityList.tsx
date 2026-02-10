@@ -1,143 +1,122 @@
 "use client";
 
-import { Activity, Code, Award, Zap, GitCommit } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useAuthStore } from "@/lib/authStore";
+import { useGamificationStore, getActivityDisplayName, getActivityIcon } from "@/lib/gamificationStore";
+import { Zap, Play, Repeat, Save, FolderPlus, BookCheck, Trophy, Share2, Users, Rocket, Sparkles } from "lucide-react";
 
-// Mock Component
-const RECENT_ACTIVITY = [
-    {
-        id: 1,
-        type: "simulation",
-        title: "Simulated 'Bell State' Circuit",
-        time: "2 hours ago",
-        xp: 50,
-        icon: Activity,
-        color: "text-blue-400",
-        bgColor: "bg-blue-500/10"
-    },
-    {
-        id: 2,
-        type: "badge",
-        title: "Unlocked 'Quantum Novice' Badge",
-        time: "1 day ago",
-        xp: 200,
-        icon: Award,
-        color: "text-yellow-400",
-        bgColor: "bg-yellow-500/10"
-    },
-    {
-        id: 3,
-        type: "conversion",
-        title: "Converted Qiskit to Cirq",
-        time: "2 days ago",
-        xp: 25,
-        icon: Code,
-        color: "text-purple-400",
-        bgColor: "bg-purple-500/10"
-    },
-    {
-        id: 4,
-        type: "streak",
-        title: "Reached 7-Day Streak",
-        time: "3 days ago",
-        xp: 150,
-        icon: Zap,
-        color: "text-orange-400",
-        bgColor: "bg-orange-500/10"
-    },
-    {
-        id: 5,
-        type: "contribution",
-        title: "Shared circuit with community",
-        time: "4 days ago",
-        xp: 30,
-        icon: GitCommit,
-        color: "text-green-400",
-        bgColor: "bg-green-500/10"
-    }
-];
+// Icon mapping
+const iconMap: Record<string, any> = {
+    'play': Play,
+    'rocket': Rocket,
+    'repeat': Repeat,
+    'sparkles': Sparkles,
+    'save': Save,
+    'folder-plus': FolderPlus,
+    'book-check': BookCheck,
+    'trophy': Trophy,
+    'share-2': Share2,
+    'users': Users,
+    'zap': Zap,
+};
 
 export default function RecentActivityList() {
-    const [isDark, setIsDark] = useState(true); // Default to dark
+    const { token } = useAuthStore();
+    const { recentActivities, fetchRecentActivities } = useGamificationStore();
 
     useEffect(() => {
-        // Check initial theme
-        const checkTheme = () => {
-            setIsDark(document.documentElement.classList.contains('dark'));
-        };
+        if (token) {
+            fetchRecentActivities(token, 10);
+        }
+    }, [token, fetchRecentActivities]);
 
-        checkTheme();
+    // Format timestamp
+    const formatTime = (timestamp: string) => {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
 
-        // Watch for theme changes
-        const observer = new MutationObserver(checkTheme);
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
-
-        return () => observer.disconnect();
-    }, []);
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return date.toLocaleDateString();
+    };
 
     return (
-        <div
-            className="rounded-xl p-6 shadow-sm dark:shadow-none"
-            style={{
-                backgroundColor: isDark ? 'rgba(0, 0, 0, 0.3)' : '#ffffff',
-                backdropFilter: isDark ? 'blur(16px)' : 'none',
-                border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e5e7eb'
-            }}
-        >
-            <h3
-                className="font-bold text-lg mb-4 flex items-center gap-2"
-                style={{ color: isDark ? '#ffffff' : '#111827' }}
-            >
-                <Activity
-                    className="w-5 h-5"
-                    style={{ color: isDark ? '#60a5fa' : '#1e3c72' }}
-                />
-                Recent Activity
-            </h3>
-
-            <div className="space-y-4">
-                {RECENT_ACTIVITY.map((activity) => (
-                    <div key={activity.id} className="flex items-center gap-4 group">
-                        {/* Icon */}
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${activity.bgColor} ${activity.color}`}>
-                            <activity.icon className="w-5 h-5" />
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                            <h4
-                                className="text-sm font-medium truncate group-hover:transition-colors"
-                                style={{
-                                    color: isDark ? '#e5e7eb' : '#374151'
-                                }}
-                            >
-                                {activity.title}
-                            </h4>
-                            <p
-                                className="text-xs"
-                                style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
-                            >
-                                {activity.time}
-                            </p>
-                        </div>
-
-                        {/* XP Badge */}
-                        <div
-                            className="px-2 py-1 rounded text-xs font-bold border"
-                            style={{
-                                backgroundColor: isDark ? 'rgba(0, 0, 0, 0.2)' : '#f3f4f6',
-                                color: isDark ? '#60a5fa' : '#1e3c72',
-                                borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#e5e7eb'
-                            }}
-                        >
-                            +{activity.xp} XP
-                        </div>
-                    </div>
-                ))}
+        <div className="bg-quantum-glass-dark border border-white/10 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-yellow-400" />
+                    Recent Activity
+                </h2>
+                <span className="text-xs text-gray-500">{recentActivities.length} activities</span>
             </div>
+
+            {recentActivities.length === 0 ? (
+                <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+                        <Zap className="w-8 h-8 text-gray-600" />
+                    </div>
+                    <p className="text-gray-500 text-sm">No recent activity yet</p>
+                    <p className="text-gray-600 text-xs mt-1">Start simulating circuits to earn XP!</p>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {recentActivities.map((activity) => {
+                        const iconName = getActivityIcon(activity.activity_type);
+                        const Icon = iconMap[iconName] || Zap;
+                        const displayName = getActivityDisplayName(activity.activity_type);
+                        const isFirstTime = activity.activity_type.startsWith('first_');
+
+                        return (
+                            <div
+                                key={activity.id}
+                                className={`flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/5 border ${isFirstTime
+                                        ? 'border-purple-500/30 bg-purple-500/5'
+                                        : 'border-white/5 bg-white/[0.02]'
+                                    }`}
+                            >
+                                {/* Icon */}
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isFirstTime
+                                        ? 'bg-gradient-to-br from-purple-500 to-blue-500'
+                                        : 'bg-gradient-to-br from-blue-500 to-cyan-500'
+                                    }`}>
+                                    <Icon className="w-5 h-5 text-white" />
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-medium text-white truncate">
+                                            {displayName}
+                                        </p>
+                                        {isFirstTime && (
+                                            <span className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded-full font-medium">
+                                                FIRST!
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        {formatTime(activity.created_at)}
+                                    </p>
+                                </div>
+
+                                {/* XP Badge */}
+                                <div className={`px-2.5 py-1 rounded-lg font-bold text-xs ${isFirstTime
+                                        ? 'bg-purple-500/20 text-purple-300'
+                                        : 'bg-blue-500/20 text-blue-300'
+                                    }`}>
+                                    +{activity.xp_awarded} XP
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

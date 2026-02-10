@@ -32,6 +32,7 @@ import toast from "react-hot-toast";
 import { useFileStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/authStore";
 import { fileApi, quantumApi, HybridExecuteResult } from "@/lib/api";
+import { useGamificationStore } from "@/lib/gamificationStore";
 import { InputLanguage, ResultFormat } from "@/types";
 import { detectFramework } from "@/lib/utils";
 import ProfileDropdown from "./ProfileDropdown";
@@ -74,7 +75,8 @@ export default function TopBar({
   } = useFileStore();
 
   // Use auth store instead of localStorage
-  const { isAuthenticated, user, clearAuth } = useAuthStore();
+  const { isAuthenticated, user, token, clearAuth } = useAuthStore();
+  const { fetchStats, fetchRecentActivities } = useGamificationStore(); // Gamification store
 
   const [isRunning, setIsRunning] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -438,7 +440,7 @@ export default function TopBar({
         setCompiledQasm(qasmCode);
       } else {
         // Use the selected input framework for conversion
-        const sourceFramework = inputLanguage;
+        const sourceFramework = inputLanguage || "";
 
         // Convert to QASM
         toast.loading(`Converting ${sourceFramework} to OpenQASM...`, { id: "execution" });
@@ -446,6 +448,7 @@ export default function TopBar({
           activeFile.content,
           sourceFramework,
           "classic",
+          token || undefined
         );
 
         if (!conversionResult.success || !conversionResult.data?.success) {
@@ -462,6 +465,12 @@ export default function TopBar({
             detail: { success: false, error: errorMsg }
           }));
           return;
+        }
+
+        // Refresh gamification stats if authenticated and not in demo mode
+        if (isAuthenticated && token && user?.role !== 'demo') {
+          fetchStats(token, true); // Force refresh
+          fetchRecentActivities(token);
         }
 
         qasmCode = conversionResult.data.qasm_code;
@@ -494,6 +503,7 @@ export default function TopBar({
         qasmCode,
         simBackend,
         shots,
+        token || undefined
       );
 
       // Check if the request itself failed (network error, etc.)
@@ -510,6 +520,12 @@ export default function TopBar({
 
       // API call succeeded, check if simulation succeeded
       if (executionResult.data?.success) {
+        // Refresh gamification stats if authenticated and not in demo mode
+        if (isAuthenticated && token && user?.role !== 'demo') {
+          fetchStats(token, true); // Force refresh
+          fetchRecentActivities(token);
+        }
+
         const simResult = executionResult.data.results;
 
         // Store results in the store for ResultsPane to display
