@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
     const body: CreateFileRequest = await request.json()
 
     // Validate request
-    if (!body.name || body.name.trim() === '') {
+    if (!body.filename || body.filename.trim() === '') {
       return NextResponse.json(
         { error: 'File name is required' },
         { status: 400 }
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if file with same name exists
-    const existingFile = mockFiles.find(f => f.name === body.name)
+    const existingFile = mockFiles.find(f => f.name === body.filename)
     if (existingFile) {
       return NextResponse.json(
         { error: 'File with this name already exists' },
@@ -147,9 +147,9 @@ export async function POST(request: NextRequest) {
     // Create new file
     const newFile: File = {
       id: generateId(),
-      name: body.name,
+      name: body.filename,
       content: body.content || '',
-      language: body.language || getLanguageFromFilename(body.name),
+      language: getLanguageFromFilename(body.filename),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       size: (body.content || '').length,

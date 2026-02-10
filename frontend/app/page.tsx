@@ -154,7 +154,7 @@ def grovers_search():
   return (
     <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-black/80 backdrop-blur-lg border-b border-white/10' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link href="/" className="flex items-center space-x-2 group">
@@ -185,17 +185,19 @@ def grovers_search():
             <div className="hidden md:flex items-center space-x-8">
               <button
                 onClick={() => scrollToSection('features')}
-                className="text-editor-text hover:text-white transition-colors duration-200"
+                className="relative group px-3 py-2"
               >
-                Features
+                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Features</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
               </button>
               {config.navigation.slice(1).map((item) => (
                 <Link
                   key={item.path}
                   href={item.path as any}
-                  className="text-editor-text hover:text-white transition-colors duration-200"
+                  className="relative group px-3 py-2"
                 >
-                  {item.name}
+                  <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">{item.name}</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
                 </Link>
               ))}
 
@@ -213,7 +215,7 @@ def grovers_search():
                 {isAuthenticated ? (
                   <Link
                     href="/app"
-                    className="btn-quantum text-sm px-4 py-2"
+                    className="btn-quantum text-sm px-6 py-2.5 font-medium shadow-lg hover:shadow-quantum-blue-light/50 transition-all duration-300 hover:scale-105"
                   >
                     Go to App
                   </Link>
@@ -221,13 +223,13 @@ def grovers_search():
                   <>
                     <Link
                       href="/login"
-                      className="text-editor-text hover:text-white transition-colors duration-200 font-medium"
+                      className="dark:text-white text-gray-800 hover:text-quantum-blue-light transition-colors duration-300 font-medium px-4"
                     >
                       Sign In
                     </Link>
                     <Link
                       href="/login"
-                      className="btn-quantum text-sm px-4 py-2"
+                      className="btn-quantum text-sm px-6 py-2.5 font-medium shadow-lg hover:shadow-quantum-blue-light/50 transition-all duration-300 hover:scale-105"
                     >
                       Get Started
                     </Link>

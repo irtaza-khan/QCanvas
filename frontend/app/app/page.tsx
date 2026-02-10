@@ -129,27 +129,8 @@ export default function AppPage() {
 
   // Handle global save event
   useEffect(() => {
-    const handleSave = async () => {
-      const activeFile = useFileStore.getState().getActiveFile()
-      if (!activeFile) {
-        toast.error('No file to save')
-        return
-      }
-
-      try {
-        const result = await fileApi.updateFile(activeFile.id, {
-          content: activeFile.content,
-        })
-
-        if (result.success) {
-          toast.success(`Saved ${activeFile.name}`)
-        } else {
-          throw new Error(result.error)
-        }
-      } catch (error) {
-        toast.error('Save failed')
-        console.error('Save error:', error)
-      }
+    const handleSave = () => {
+      useFileStore.getState().saveActiveFile()
     }
 
     window.addEventListener('save-file', handleSave)

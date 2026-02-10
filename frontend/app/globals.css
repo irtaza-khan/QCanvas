@@ -25,7 +25,7 @@
     --ring: 240 5.9% 10%;
     --radius: 0.5rem;
   }
- 
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -155,6 +155,7 @@ body {
     opacity: 0;
     transform: translateY(-4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -169,6 +170,7 @@ body {
   from {
     transform: translateX(-100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -182,6 +184,7 @@ body {
   from {
     transform: translateX(100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -340,6 +343,7 @@ body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -863,9 +867,12 @@ html {
 
 /* Enhanced animations */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -877,18 +884,24 @@ html {
 
 /* Floating animations */
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-20px);
   }
 }
 
 @keyframes float-reverse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(20px);
   }
@@ -899,6 +912,7 @@ html {
     opacity: 0;
     transform: translateY(30px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -931,18 +945,23 @@ section {
 .feature-card:nth-child(1) {
   animation-delay: 0.1s;
 }
+
 .feature-card:nth-child(2) {
   animation-delay: 0.2s;
 }
+
 .feature-card:nth-child(3) {
   animation-delay: 0.3s;
 }
+
 .feature-card:nth-child(4) {
   animation-delay: 0.4s;
 }
+
 .feature-card:nth-child(5) {
   animation-delay: 0.5s;
 }
+
 .feature-card:nth-child(6) {
   animation-delay: 0.6s;
 }
@@ -1055,10 +1074,13 @@ section {
 
 /* Simulation Controls Animations */
 @keyframes pulse-subtle {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.8;
     transform: scale(1);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.05);
@@ -1070,6 +1092,7 @@ section {
     opacity: 0;
     transform: translateX(-20px);
   }
+
   100% {
     opacity: 1;
     transform: translateX(0);
@@ -1081,6 +1104,7 @@ section {
     opacity: 0;
     transform: translateX(20px);
   }
+
   100% {
     opacity: 1;
     transform: translateX(0);
@@ -1092,6 +1116,7 @@ section {
     width: 0;
     opacity: 0;
   }
+
   100% {
     width: 50%;
     opacity: 1;
@@ -1121,7 +1146,7 @@ section {
     position: absolute;
     z-index: 50;
   }
-  
+
   .sidebar.collapsed {
     width: 3rem;
   }
@@ -1132,4 +1157,9 @@ section {
   .no-print {
     display: none !important;
   }
+}
+
+/* Custom Utilities */
+.box-shadow-glow {
+  box-shadow: 0 0 10px #60a5fa, 0 0 5px #60a5fa;
 }

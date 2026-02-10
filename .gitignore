@@ -30,6 +30,7 @@ lerna-debug.log*
 out/
 build/
 dist/
+frontend/tsconfig.tsbuildinfo
 
 # Environment variables
 .env

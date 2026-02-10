@@ -36,6 +36,7 @@ import { useGamificationStore } from "@/lib/gamificationStore";
 import { InputLanguage, ResultFormat } from "@/types";
 import { detectFramework } from "@/lib/utils";
 import ProfileDropdown from "./ProfileDropdown";
+import ShareModal from "./ShareModal";
 
 type ExecutionMode = 'compile' | 'execute' | 'hybrid';
 
@@ -759,15 +760,14 @@ export default function TopBar({
     toast.success("File exported successfully!");
   };
 
+  const [showShareModal, setShowShareModal] = useState(false);
+
   const handleShare = () => {
     if (!activeFile) {
       toast.error("No file to share");
       return;
     }
-
-    // In a real app, this would generate a shareable link
-    navigator.clipboard.writeText(activeFile.content);
-    toast.success("Code copied to clipboard for sharing!");
+    setShowShareModal(true);
   };
 
   const handleFind = () => {
@@ -1283,6 +1283,13 @@ export default function TopBar({
           onClick={() => setShowSettings(false)}
         />
       )}
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        fileContent={activeFile?.content || ""}
+        fileName={activeFile?.name || ""}
+      />
     </>
   );
 }
