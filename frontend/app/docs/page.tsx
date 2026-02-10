@@ -1225,7 +1225,7 @@ print(f"\\nOne-step result: {result2.counts}")`}
   return (
     <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
       {/* Enhanced Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-black/90 backdrop-blur-xl border-b border-white/10' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link href="/" className="flex items-center space-x-2 group">
@@ -1265,10 +1265,10 @@ print(f"\\nOne-step result: {result2.counts}")`}
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`transition-colors duration-200 ${
+                  className={`transition-colors duration-200 px-3 py-2 text-base font-medium ${
                     item.active
                       ? 'text-quantum-blue-light'
-                      : 'text-editor-text hover:text-white'
+                      : 'dark:text-white text-gray-800 hover:text-quantum-blue-light'
                   }`}
                 >
                   {item.label}
@@ -1277,9 +1277,10 @@ print(f"\\nOne-step result: {result2.counts}")`}
 
               <Link
                 href="/"
-                className="text-editor-text hover:text-white transition-colors duration-200"
+                className="relative group px-3 py-2"
               >
-                Home
+                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Home</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
               </Link>
             </div>
 

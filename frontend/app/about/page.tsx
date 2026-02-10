@@ -24,7 +24,7 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-black/80 backdrop-blur-lg border-b border-white/10' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link href="/" className="flex items-center space-x-2 group">
@@ -53,17 +53,21 @@ export default function AboutPage() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-editor-text hover:text-white transition-colors duration-200">
-                Home
+              <Link href="/" className="relative group px-3 py-2">
+                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Home</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
               </Link>
-              <Link href="/examples" className="text-editor-text hover:text-white transition-colors duration-200">
-                Examples
+              <Link href="/examples" className="relative group px-3 py-2">
+                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Examples</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
               </Link>
-              <Link href="/docs" className="text-editor-text hover:text-white transition-colors duration-200">
-                Documentation
+              <Link href="/docs" className="relative group px-3 py-2">
+                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Documentation</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
               </Link>
-              <Link href="/about" className="text-white font-medium underline decoration-quantum-blue-light decoration-2 underline-offset-4">
-                About Us
+              <Link href="/about" className="relative group px-3 py-2">
+                 <span className="relative z-10 text-quantum-blue-light font-medium transition-colors duration-300 text-base tracking-wide">About Us</span>
+                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-quantum-blue-light box-shadow-glow"></span>
               </Link>
 
               {/* Theme Toggle */}
@@ -79,7 +83,7 @@ export default function AboutPage() {
               <div className="flex items-center space-x-3">
                 <Link
                   href="/login"
-                  className="text-editor-text hover:text-white transition-colors duration-200 font-medium"
+                  className="dark:text-white text-gray-800 hover:text-quantum-blue-light transition-colors duration-300 font-medium px-4"
                 >
                   Sign In
                 </Link>
