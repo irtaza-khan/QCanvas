@@ -1,16 +1,17 @@
 """
-Gamification service for XP tracking and level calculation.
+Gamification service for XP tracking, level calculation, and achievements.
 
 This service handles:
 - XP awarding and tracking
 - Level calculation and progression
 - Activity logging
 - User stats retrieval
+- Achievement checking and unlocking
 """
 from sqlalchemy.orm import Session
-from app.models.gamification import UserGamification, GamificationActivity
+from app.models.gamification import UserGamification, GamificationActivity, Achievement, UserAchievement
 from datetime import datetime, date
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import math
 import logging
 
@@ -141,6 +142,7 @@ class GamificationService:
         3. Updates user stats
         4. Calculates level progression
         5. Updates streaks
+        6. Checks for newly unlocked achievements
         
         Args:
             db: Database session
@@ -157,6 +159,7 @@ class GamificationService:
             - old_level: Previous level
             - level_up: Whether user leveled up
             - xp_to_next_level: XP needed for next level
+            - new_achievements: List of newly unlocked achievements
         """
         try:
             # Get or create user stats
@@ -175,7 +178,8 @@ class GamificationService:
                     'level': stats.level,
                     'old_level': stats.level,
                     'level_up': False,
-                    'xp_to_next_level': xp_for_level(stats.level + 1) - stats.total_xp
+                    'xp_to_next_level': xp_for_level(stats.level + 1) - stats.total_xp,
+                    'new_achievements': []
                 }
             
             # Check for first-time bonus
@@ -226,7 +230,7 @@ class GamificationService:
             stats.last_activity_date = today
             stats.updated_at = datetime.utcnow()
             
-            # Commit all changes
+            # Commit all changes before checking achievements
             db.commit()
             db.refresh(stats)
             
@@ -234,6 +238,11 @@ class GamificationService:
             
             if level_up:
                 logger.info(f"User {user_id} leveled up: {old_level} -> {stats.level}")
+            
+            # Check for newly unlocked achievements
+            new_achievements = GamificationService.check_achievements(
+                db, user_id, activity_type
+            )
             
             result = {
                 'xp_gained': xp_amount,
@@ -243,7 +252,8 @@ class GamificationService:
                 'level_up': level_up,
                 'xp_to_next_level': xp_for_level(stats.level + 1) - stats.total_xp,
                 'is_first_time': is_first_time,
-                'current_streak': stats.current_streak
+                'current_streak': stats.current_streak,
+                'new_achievements': new_achievements
             }
             
             logger.info(f"Awarded {xp_amount} XP to user {user_id} for {activity_type}")
@@ -365,3 +375,378 @@ class GamificationService:
             }
         
         return summary
+
+    # ========================================================================
+    # ACHIEVEMENT METHODS
+    # ========================================================================
+
+    @staticmethod
+    def get_all_achievements(db: Session) -> List[Dict[str, Any]]:
+        """
+        Get all achievement definitions from the database.
+        
+        Returns:
+            List of achievement dictionaries
+        """
+        achievements = db.query(Achievement).order_by(
+            Achievement.category, Achievement.reward_xp
+        ).all()
+        
+        return [
+            {
+                'id': str(a.id),
+                'name': a.name,
+                'description': a.description,
+                'category': a.category,
+                'criteria': a.criteria,
+                'reward_xp': a.reward_xp,
+                'rarity': a.rarity,
+                'icon_name': a.icon_name,
+                'is_hidden': a.is_hidden,
+            }
+            for a in achievements
+        ]
+
+    @staticmethod
+    def get_user_achievements(
+        db: Session,
+        user_id: str,
+        include_locked: bool = True
+    ) -> List[Dict[str, Any]]:
+        """
+        Get achievements for a user, including progress and unlock status.
+        
+        Args:
+            db: Database session
+            user_id: User UUID as string
+            include_locked: If True, include all achievements (locked + unlocked).
+                            If False, only return unlocked achievements.
+            
+        Returns:
+            List of achievement dictionaries with user progress
+        """
+        from sqlalchemy import func
+        
+        # Get all achievements
+        all_achievements = db.query(Achievement).order_by(
+            Achievement.category, Achievement.reward_xp
+        ).all()
+        
+        # Get user's achievement records
+        user_records = db.query(UserAchievement).filter(
+            UserAchievement.user_id == user_id
+        ).all()
+        
+        # Map achievement_id -> user record
+        user_map = {str(ua.achievement_id): ua for ua in user_records}
+        
+        # Get activity counts for progress calculation
+        activity_summary = GamificationService.get_activity_summary(db, user_id)
+        
+        # Get user stats for level/xp/streak checks
+        stats = GamificationService.get_or_create_stats(db, user_id)
+        
+        result = []
+        for achievement in all_achievements:
+            aid = str(achievement.id)
+            user_record = user_map.get(aid)
+            
+            is_unlocked = user_record is not None and user_record.unlocked_at is not None
+            
+            # Skip locked hidden achievements if not unlocked
+            if achievement.is_hidden and not is_unlocked and not include_locked:
+                continue
+            
+            # Calculate progress based on criteria
+            progress, target = GamificationService._calculate_progress(
+                achievement.criteria, activity_summary, stats
+            )
+            
+            # If user has a stored record, use that progress if it's higher
+            if user_record and user_record.progress:
+                stored_progress = user_record.progress.get('current', 0)
+                progress = max(progress, stored_progress)
+            
+            entry = {
+                'id': aid,
+                'name': achievement.name if not (achievement.is_hidden and not is_unlocked) else "???",
+                'description': achievement.description if not (achievement.is_hidden and not is_unlocked) else "This achievement is a secret!",
+                'category': achievement.category,
+                'rarity': achievement.rarity,
+                'xp_reward': achievement.reward_xp,
+                'icon_name': achievement.icon_name or 'award',
+                'is_hidden': achievement.is_hidden,
+                'is_unlocked': is_unlocked,
+                'progress': progress if not (achievement.is_hidden and not is_unlocked) else 0,
+                'target': target if not (achievement.is_hidden and not is_unlocked) else 1,
+                'unlocked_at': user_record.unlocked_at.isoformat() + 'Z' if is_unlocked and user_record.unlocked_at else None,
+            }
+            
+            if not include_locked and not is_unlocked:
+                continue
+            
+            result.append(entry)
+        
+        return result
+
+    @staticmethod
+    def _calculate_progress(
+        criteria: Dict[str, Any],
+        activity_summary: Dict[str, Any],
+        stats: UserGamification
+    ) -> tuple:
+        """
+        Calculate current progress and target for an achievement.
+        
+        Args:
+            criteria: Achievement criteria JSON
+            activity_summary: User's activity counts
+            stats: User gamification stats
+            
+        Returns:
+            Tuple of (current_progress, target)
+        """
+        criteria_type = criteria.get('type', '')
+        
+        if criteria_type == 'activity_count':
+            activity_type = criteria.get('activity_type', '')
+            target = criteria.get('count', 1)
+            current = activity_summary.get(activity_type, {}).get('count', 0)
+            return (min(current, target), target)
+        
+        elif criteria_type == 'level_reached':
+            target_level = criteria.get('level', 1)
+            return (min(stats.level, target_level), target_level)
+        
+        elif criteria_type == 'streak_days':
+            target_days = criteria.get('days', 1)
+            current = max(stats.current_streak, stats.longest_streak)
+            return (min(current, target_days), target_days)
+        
+        elif criteria_type == 'total_xp':
+            target_xp = criteria.get('xp', 0)
+            return (min(stats.total_xp, target_xp), target_xp)
+        
+        elif criteria_type == 'distinct_activity_count':
+            # For distinct values, we can't easily count without metadata
+            # Return 0 progress; actual checking done in check_achievements
+            target = criteria.get('count', 1)
+            return (0, target)
+        
+        elif criteria_type == 'multi_activity_count':
+            activity_types = criteria.get('activity_types', [])
+            target = criteria.get('count', 1)
+            # Check that ALL activity types meet the minimum count
+            min_count = float('inf')
+            for act_type in activity_types:
+                count = activity_summary.get(act_type, {}).get('count', 0)
+                if count < min_count:
+                    min_count = count
+            current = min_count if min_count != float('inf') else 0
+            return (min(current, target), target)
+        
+        return (0, 1)
+
+    @staticmethod
+    def check_achievements(
+        db: Session,
+        user_id: str,
+        activity_type: str
+    ) -> List[Dict[str, Any]]:
+        """
+        Check and unlock any achievements the user has earned.
+        
+        Called after awarding XP to evaluate all relevant achievement criteria.
+        
+        Args:
+            db: Database session
+            user_id: User UUID as string
+            activity_type: The activity that was just performed
+            
+        Returns:
+            List of newly unlocked achievement dictionaries
+        """
+        try:
+            # Get all achievements
+            all_achievements = db.query(Achievement).all()
+            
+            # Get user's already-unlocked achievement IDs
+            unlocked_ids = set()
+            user_records = db.query(UserAchievement).filter(
+                UserAchievement.user_id == user_id,
+                UserAchievement.unlocked_at.isnot(None)
+            ).all()
+            for ur in user_records:
+                unlocked_ids.add(str(ur.achievement_id))
+            
+            # Get activity summary and stats
+            activity_summary = GamificationService.get_activity_summary(db, user_id)
+            stats = GamificationService.get_or_create_stats(db, user_id)
+            
+            newly_unlocked = []
+            
+            for achievement in all_achievements:
+                aid = str(achievement.id)
+                
+                # Skip already unlocked
+                if aid in unlocked_ids:
+                    continue
+                
+                # Evaluate criteria
+                is_met = GamificationService._evaluate_criteria(
+                    achievement.criteria, activity_summary, stats
+                )
+                
+                if is_met:
+                    # Unlock the achievement
+                    unlocked = GamificationService._unlock_achievement(
+                        db, user_id, achievement
+                    )
+                    if unlocked:
+                        newly_unlocked.append(unlocked)
+            
+            return newly_unlocked
+            
+        except Exception as e:
+            logger.error(f"Error checking achievements for user {user_id}: {e}")
+            return []
+
+    @staticmethod
+    def _evaluate_criteria(
+        criteria: Dict[str, Any],
+        activity_summary: Dict[str, Any],
+        stats: UserGamification
+    ) -> bool:
+        """
+        Evaluate whether achievement criteria are met.
+        
+        Args:
+            criteria: Achievement criteria JSON
+            activity_summary: User's activity counts
+            stats: User gamification stats
+            
+        Returns:
+            True if criteria are met
+        """
+        criteria_type = criteria.get('type', '')
+        
+        if criteria_type == 'activity_count':
+            activity_type = criteria.get('activity_type', '')
+            required_count = criteria.get('count', 1)
+            current_count = activity_summary.get(activity_type, {}).get('count', 0)
+            return current_count >= required_count
+        
+        elif criteria_type == 'level_reached':
+            required_level = criteria.get('level', 1)
+            return stats.level >= required_level
+        
+        elif criteria_type == 'streak_days':
+            required_days = criteria.get('days', 1)
+            best_streak = max(stats.current_streak, stats.longest_streak)
+            return best_streak >= required_days
+        
+        elif criteria_type == 'total_xp':
+            required_xp = criteria.get('xp', 0)
+            return stats.total_xp >= required_xp
+        
+        elif criteria_type == 'distinct_activity_count':
+            # For now, count based on activity count as approximation
+            activity_type = criteria.get('activity_type', '')
+            required_count = criteria.get('count', 1)
+            current_count = activity_summary.get(activity_type, {}).get('count', 0)
+            return current_count >= required_count
+        
+        elif criteria_type == 'multi_activity_count':
+            activity_types = criteria.get('activity_types', [])
+            required_count = criteria.get('count', 1)
+            for act_type in activity_types:
+                count = activity_summary.get(act_type, {}).get('count', 0)
+                if count < required_count:
+                    return False
+            return True
+        
+        return False
+
+    @staticmethod
+    def _unlock_achievement(
+        db: Session,
+        user_id: str,
+        achievement: Achievement
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Unlock an achievement for a user and award bonus XP.
+        
+        Args:
+            db: Database session
+            user_id: User UUID as string
+            achievement: Achievement model instance
+            
+        Returns:
+            Achievement dict if newly unlocked, None otherwise
+        """
+        try:
+            aid = str(achievement.id)
+            
+            # Check if already has a record
+            existing = db.query(UserAchievement).filter(
+                UserAchievement.user_id == user_id,
+                UserAchievement.achievement_id == achievement.id
+            ).first()
+            
+            now = datetime.utcnow()
+            
+            if existing:
+                if existing.unlocked_at:
+                    # Already unlocked
+                    return None
+                # Update existing record
+                existing.unlocked_at = now
+                existing.progress = {"current": 1, "target": 1}
+            else:
+                # Create new record
+                user_achievement = UserAchievement(
+                    user_id=user_id,
+                    achievement_id=achievement.id,
+                    progress={"current": 1, "target": 1},
+                    unlocked_at=now
+                )
+                db.add(user_achievement)
+            
+            # Award bonus XP for the achievement (without recursive achievement check)
+            if achievement.reward_xp > 0:
+                stats = GamificationService.get_or_create_stats(db, user_id)
+                stats.total_xp += achievement.reward_xp
+                stats.level = calculate_level(stats.total_xp)
+                stats.updated_at = now
+                
+                # Log achievement XP as activity
+                activity = GamificationActivity(
+                    user_id=user_id,
+                    activity_type='achievement_unlocked',
+                    xp_awarded=achievement.reward_xp,
+                    activity_metadata={
+                        'achievement_name': achievement.name,
+                        'achievement_id': aid
+                    }
+                )
+                db.add(activity)
+            
+            db.commit()
+            
+            logger.info(f"User {user_id} unlocked achievement: {achievement.name} (+{achievement.reward_xp} XP)")
+            
+            return {
+                'id': aid,
+                'name': achievement.name,
+                'description': achievement.description,
+                'category': achievement.category,
+                'rarity': achievement.rarity,
+                'xp_reward': achievement.reward_xp,
+                'icon_name': achievement.icon_name or 'award',
+                'unlocked_at': now.isoformat() + 'Z',
+            }
+            
+        except Exception as e:
+            logger.error(f"Error unlocking achievement {achievement.name} for user {user_id}: {e}")
+            db.rollback()
+            return None

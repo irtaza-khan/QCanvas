@@ -49,6 +49,7 @@ class XPAwardResponse(BaseModel):
     xp_to_next_level: int
     is_first_time: bool
     current_streak: int
+    new_achievements: List[Dict[str, Any]] = []
     message: Optional[str] = None
 
 
@@ -69,6 +70,14 @@ class ActivitySummaryResponse(BaseModel):
     """Response model for activity summary."""
     success: bool
     summary: Dict[str, Any]
+
+
+class AchievementsResponse(BaseModel):
+    """Response model for achievements."""
+    success: bool
+    achievements: List[Dict[str, Any]]
+    total: int
+    unlocked: int
 
 
 # ============================================================================
@@ -112,7 +121,7 @@ async def get_gamification_stats(
     "/activity",
     response_model=XPAwardResponse,
     summary="Log Activity and Award XP",
-    description="Log a user activity and award XP. Automatically applies first-time bonuses and updates level progression.",
+    description="Log a user activity and award XP. Automatically applies first-time bonuses, updates level progression, and checks for achievements.",
     status_code=status.HTTP_201_CREATED
 )
 async def log_activity(
@@ -131,6 +140,7 @@ async def log_activity(
     - Level-up detection
     - Streak tracking
     - Activity logging for analytics
+    - Achievement checking and unlocking
     """
     try:
         result = GamificationService.award_xp(
@@ -147,6 +157,12 @@ async def log_activity(
             message += f" and leveled up to Level {result['level']}! 🎉"
         elif result['is_first_time']:
             message += " (First time bonus!) 🆕"
+        
+        # Add achievement info to message
+        new_achievements = result.get('new_achievements', [])
+        if new_achievements:
+            names = [a['name'] for a in new_achievements]
+            message += f" | 🏆 Unlocked: {', '.join(names)}"
         
         return XPAwardResponse(
             success=True,
@@ -265,6 +281,138 @@ async def get_activity_summary(
         )
 
 
+# ============================================================================
+# ACHIEVEMENT ENDPOINTS
+# ============================================================================
+
+@router.get(
+    "/achievements",
+    response_model=AchievementsResponse,
+    summary="Get All Achievements with User Progress",
+    description="Retrieve all achievements with the current user's progress and unlock status."
+)
+async def get_achievements(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> AchievementsResponse:
+    """
+    Get all achievements with user's progress.
+    
+    Returns all achievements including:
+    - Achievement details (name, description, rarity, XP reward)
+    - Whether the user has unlocked it
+    - Current progress towards unlocking
+    - Unlock date if unlocked
+    
+    Hidden achievements show "???" for description until unlocked.
+    """
+    try:
+        achievements = GamificationService.get_user_achievements(
+            db=db,
+            user_id=str(current_user.id),
+            include_locked=True
+        )
+        
+        unlocked_count = sum(1 for a in achievements if a['is_unlocked'])
+        
+        return AchievementsResponse(
+            success=True,
+            achievements=achievements,
+            total=len(achievements),
+            unlocked=unlocked_count
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve achievements: {str(e)}"
+        )
+
+
+@router.get(
+    "/achievements/unlocked",
+    response_model=AchievementsResponse,
+    summary="Get User's Unlocked Achievements",
+    description="Retrieve only the achievements the current user has unlocked."
+)
+async def get_unlocked_achievements(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> AchievementsResponse:
+    """
+    Get only unlocked achievements.
+    
+    Returns achievements the user has earned, sorted by unlock date.
+    """
+    try:
+        achievements = GamificationService.get_user_achievements(
+            db=db,
+            user_id=str(current_user.id),
+            include_locked=False
+        )
+        
+        return AchievementsResponse(
+            success=True,
+            achievements=achievements,
+            total=len(achievements),
+            unlocked=len(achievements)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve unlocked achievements: {str(e)}"
+        )
+
+
+@router.post(
+    "/achievements/check",
+    response_model=AchievementsResponse,
+    summary="Manually Check Achievements",
+    description="Trigger a manual achievement check for the current user."
+)
+async def check_achievements(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> AchievementsResponse:
+    """
+    Manually trigger achievement check.
+    
+    Evaluates all achievement criteria against the user's current stats
+    and unlocks any newly earned achievements. Useful for retroactive
+    achievement grants.
+    """
+    try:
+        new_achievements = GamificationService.check_achievements(
+            db=db,
+            user_id=str(current_user.id),
+            activity_type='manual_check'
+        )
+        
+        # Return all achievements after the check
+        all_achievements = GamificationService.get_user_achievements(
+            db=db,
+            user_id=str(current_user.id),
+            include_locked=True
+        )
+        
+        unlocked_count = sum(1 for a in all_achievements if a['is_unlocked'])
+        
+        return AchievementsResponse(
+            success=True,
+            achievements=all_achievements,
+            total=len(all_achievements),
+            unlocked=unlocked_count
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to check achievements: {str(e)}"
+        )
+
+
+# ============================================================================
+# LEADERBOARD
+# ============================================================================
+
 @router.get(
     "/leaderboard",
     summary="Get Leaderboard",
@@ -332,5 +480,5 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "gamification",
-        "version": "1.0.0"
+        "version": "2.0.0"
     }
