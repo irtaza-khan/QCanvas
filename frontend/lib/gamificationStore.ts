@@ -43,25 +43,57 @@ export interface XPGainEvent {
     xp_to_next_level: number;
     is_first_time: boolean;
     current_streak: number;
+    new_achievements?: AchievementUnlock[];
     message?: string;
 }
 
+export interface AchievementData {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    rarity: string;
+    xp_reward: number;
+    icon_name: string;
+    is_hidden: boolean;
+    is_unlocked: boolean;
+    progress: number;
+    target: number;
+    unlocked_at: string | null;
+}
+
+export interface AchievementUnlock {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    rarity: string;
+    xp_reward: number;
+    icon_name: string;
+    unlocked_at: string;
+}
+
 interface GamificationState {
-    // State
+    // XP & Level
     stats: UserStats | null;
     recentActivities: Activity[];
     isLoading: boolean;
     error: string | null;
     lastFetched: number | null;
 
+    // Achievements
+    achievements: AchievementData[];
+    achievementsLoading: boolean;
+    achievementsLastFetched: number | null;
+
     // Actions
     fetchStats: (token: string, forceRefresh?: boolean) => Promise<void>;
     fetchRecentActivities: (token: string, limit?: number) => Promise<void>;
+    fetchAchievements: (token: string, forceRefresh?: boolean) => Promise<void>;
     updateStatsFromXPGain: (xpGainEvent: XPGainEvent) => void;
     clearGamification: () => void;
-
-    // Helpers
     shouldRefetch: () => boolean;
+    shouldRefetchAchievements: () => boolean;
 }
 
 // Cache duration: 30 seconds (reduced for better real-time updates)
@@ -81,12 +113,18 @@ export const useGamificationStore = create<GamificationState>()(
             error: null,
             lastFetched: null,
 
+            // Achievements
+            achievements: [],
+            achievementsLoading: false,
+            achievementsLastFetched: null,
+
             // Fetch user stats from backend
             fetchStats: async (token: string, forceRefresh: boolean = false) => {
-                // Check if we should refetch
-                if (!forceRefresh && !get().shouldRefetch() && get().stats) {
-                    return;
-                }
+                const state = get();
+
+                // Skip if loading or cache is fresh
+                if (state.isLoading) return;
+                if (!forceRefresh && !state.shouldRefetch()) return;
 
                 set({ isLoading: true, error: null });
 
@@ -95,25 +133,16 @@ export const useGamificationStore = create<GamificationState>()(
 
                     if (response.success && response.data?.stats) {
                         set({
-                            stats: response.data.stats,
+                            stats: response.data.stats as UserStats,
                             isLoading: false,
                             lastFetched: Date.now(),
                         });
                     } else {
-                        // If no stats yet, just clear loading
-                        if (response.success && response.data?.success && !response.data?.stats) {
-                            set({ isLoading: false, lastFetched: Date.now() });
-                            return;
-                        }
-
                         throw new Error(response.error || response.data?.error || 'Failed to fetch gamification stats');
                     }
                 } catch (error) {
                     console.error('Error fetching gamification stats:', error);
-                    set({
-                        error: error instanceof Error ? error.message : 'Unknown error',
-                        isLoading: false,
-                    });
+                    set({ isLoading: false, error: String(error) });
                 }
             },
 
@@ -121,39 +150,62 @@ export const useGamificationStore = create<GamificationState>()(
             fetchRecentActivities: async (token: string, limit = 10) => {
                 try {
                     const response = await gamificationApi.getRecentActivities(token, limit);
-
                     if (response.success && response.data?.activities) {
-                        set({ recentActivities: response.data.activities });
-                    } else {
-                        console.warn('Failed to fetch recent activities:', response.error);
+                        set({ recentActivities: response.data.activities as Activity[] });
                     }
                 } catch (error) {
                     console.error('Error fetching recent activities:', error);
                 }
             },
 
+            // Fetch achievements from backend
+            fetchAchievements: async (token: string, forceRefresh: boolean = false) => {
+                const state = get();
+
+                if (state.achievementsLoading) return;
+                if (!forceRefresh && !state.shouldRefetchAchievements()) return;
+
+                set({ achievementsLoading: true });
+
+                try {
+                    const response = await gamificationApi.getAchievements(token);
+
+                    if (response.success && response.data?.achievements) {
+                        set({
+                            achievements: response.data.achievements as AchievementData[],
+                            achievementsLoading: false,
+                            achievementsLastFetched: Date.now(),
+                        });
+                    } else {
+                        throw new Error(response.error || 'Failed to fetch achievements');
+                    }
+                } catch (error) {
+                    console.error('Error fetching achievements:', error);
+                    set({ achievementsLoading: false });
+                }
+            },
+
             // Update stats from XP gain event (optimistic update)
             updateStatsFromXPGain: (xpGainEvent: XPGainEvent) => {
-                const currentStats = get().stats;
+                const state = get();
+                if (state.stats) {
+                    set({
+                        stats: {
+                            ...state.stats,
+                            total_xp: xpGainEvent.total_xp,
+                            level: xpGainEvent.level,
+                            xp_to_next_level: xpGainEvent.xp_to_next_level,
+                            current_streak: xpGainEvent.current_streak,
+                        },
+                        // Force refetch on next access to get accurate data
+                        lastFetched: null,
+                    });
+                }
 
-                if (!currentStats) return;
-
-                // Update stats optimistically
-                set({
-                    stats: {
-                        ...currentStats,
-                        total_xp: xpGainEvent.total_xp,
-                        level: xpGainEvent.level,
-                        current_streak: xpGainEvent.current_streak,
-                        xp_to_next_level: xpGainEvent.xp_to_next_level,
-                        // Recalculate progress percentage
-                        progress_percentage: Math.round(
-                            ((xpGainEvent.total_xp - currentStats.xp_current_level) /
-                                (currentStats.xp_next_level - currentStats.xp_current_level)) *
-                            100
-                        ),
-                    },
-                });
+                // If achievements were unlocked, force refetch achievements
+                if (xpGainEvent.new_achievements && xpGainEvent.new_achievements.length > 0) {
+                    set({ achievementsLastFetched: null });
+                }
             },
 
             // Clear gamification data (on logout)
@@ -161,25 +213,36 @@ export const useGamificationStore = create<GamificationState>()(
                 set({
                     stats: null,
                     recentActivities: [],
+                    achievements: [],
                     isLoading: false,
                     error: null,
                     lastFetched: null,
+                    achievementsLoading: false,
+                    achievementsLastFetched: null,
                 });
             },
 
             // Check if we should refetch data
             shouldRefetch: () => {
-                const lastFetched = get().lastFetched;
-                if (!lastFetched) return true;
-                return Date.now() - lastFetched > CACHE_DURATION;
+                const state = get();
+                if (!state.lastFetched) return true;
+                return Date.now() - state.lastFetched > CACHE_DURATION;
+            },
+
+            // Check if we should refetch achievements
+            shouldRefetchAchievements: () => {
+                const state = get();
+                if (!state.achievementsLastFetched) return true;
+                return Date.now() - state.achievementsLastFetched > CACHE_DURATION;
             },
         }),
         {
             name: 'gamification-storage',
             partialize: (state) => ({
                 stats: state.stats,
-                recentActivities: state.recentActivities,
+                achievements: state.achievements,
                 lastFetched: state.lastFetched,
+                achievementsLastFetched: state.achievementsLastFetched,
             }),
         }
     )
@@ -189,60 +252,78 @@ export const useGamificationStore = create<GamificationState>()(
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Get level badge/title based on level
- */
+// Get level badge/title based on level
 export function getLevelBadge(level: number): string {
-    if (level >= 50) return 'Quantum Master';
-    if (level >= 40) return 'Quantum Expert';
-    if (level >= 30) return 'Quantum Specialist';
-    if (level >= 20) return 'Quantum Adept';
-    if (level >= 10) return 'Quantum Apprentice';
-    if (level >= 5) return 'Quantum Novice';
-    return 'Quantum Beginner';
+    if (level >= 51) return 'Quantum Guru';
+    if (level >= 41) return 'Quantum Master';
+    if (level >= 31) return 'Quantum Engineer';
+    if (level >= 21) return 'Algorithm Designer';
+    if (level >= 11) return 'Quantum Explorer';
+    if (level >= 6) return 'Circuit Builder';
+    return 'Quantum Novice';
 }
 
-/**
- * Format XP number with commas
- */
+// Format XP number with commas
 export function formatXP(xp: number): string {
     return xp.toLocaleString();
 }
 
-/**
- * Get activity type display name
- */
+// Get activity type display name
 export function getActivityDisplayName(activityType: string): string {
-    const names: Record<string, string> = {
+    const displayNames: Record<string, string> = {
         'simulation_run': 'Simulation Run',
-        'first_simulation': 'First Simulation',
         'conversion': 'Circuit Conversion',
-        'first_conversion': 'First Conversion',
         'circuit_saved': 'Circuit Saved',
         'project_created': 'Project Created',
         'tutorial_completed': 'Tutorial Completed',
         'challenge_completed': 'Challenge Completed',
         'circuit_shared': 'Circuit Shared',
         'helped_user': 'Helped User',
+        'achievement_unlocked': 'Achievement Unlocked',
     };
-    return names[activityType] || activityType;
+    return displayNames[activityType] || activityType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
-/**
- * Get activity icon name for Lucide icons
- */
+// Get activity icon name for Lucide icons
 export function getActivityIcon(activityType: string): string {
-    const icons: Record<string, string> = {
-        'simulation_run': 'play',
-        'first_simulation': 'rocket',
-        'conversion': 'repeat',
-        'first_conversion': 'sparkles',
-        'circuit_saved': 'save',
-        'project_created': 'folder-plus',
-        'tutorial_completed': 'book-check',
-        'challenge_completed': 'trophy',
-        'circuit_shared': 'share-2',
-        'helped_user': 'users',
+    const iconMap: Record<string, string> = {
+        'simulation_run': 'Play',
+        'conversion': 'ArrowLeftRight',
+        'circuit_saved': 'Save',
+        'project_created': 'FolderPlus',
+        'tutorial_completed': 'GraduationCap',
+        'challenge_completed': 'Target',
+        'circuit_shared': 'Share2',
+        'helped_user': 'HandHelping',
+        'achievement_unlocked': 'Trophy',
     };
-    return icons[activityType] || 'zap';
+    return iconMap[activityType] || 'Activity';
+}
+
+// Get category display name
+export function getCategoryDisplayName(category: string): string {
+    const displayNames: Record<string, string> = {
+        'getting_started': 'Getting Started',
+        'algorithms': 'Algorithms',
+        'mastery': 'Mastery',
+        'learning': 'Learning',
+        'streak': 'Streak',
+        'social': 'Social',
+        'specialization': 'Specialization',
+        'progression': 'Progression',
+        'hidden': 'Hidden',
+    };
+    return displayNames[category] || category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+// Get rarity color class
+export function getRarityColor(rarity: string): string {
+    const colors: Record<string, string> = {
+        'common': 'text-gray-500 dark:text-gray-400',
+        'uncommon': 'text-green-600 dark:text-green-400',
+        'rare': 'text-blue-600 dark:text-blue-400',
+        'epic': 'text-purple-600 dark:text-purple-400',
+        'legendary': 'text-yellow-500 dark:text-yellow-400',
+    };
+    return colors[rarity] || colors['common'];
 }

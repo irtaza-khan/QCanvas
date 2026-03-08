@@ -1,123 +1,69 @@
 "use client";
 
-import { useState } from "react";
-import AchievementCard, { Achievement } from "@/components/gamification/AchievementCard";
+import { useState, useEffect } from "react";
+import { RefreshCw, Trophy, Filter, Lock } from "lucide-react";
+import AchievementCard from "@/components/gamification/AchievementCard";
 import StatsOverview from "@/components/gamification/StatsOverview";
 import SimpleTopBar from "@/components/SimpleTopBar";
+import { useGamificationStore, getCategoryDisplayName, AchievementData } from "@/lib/gamificationStore";
+import { useAuthStore } from "@/lib/authStore";
 
-// Mock Data based on Gamification Plan
-const MOCK_ACHIEVEMENTS: Achievement[] = [
-    // Getting Started
-    {
-        id: "1",
-        name: "First Steps",
-        description: "Create your first quantum circuit using QCanvas.",
-        category: "Getting Started",
-        rarity: "Common",
-        xpReward: 50,
-        iconName: "rocket",
-        isUnlocked: true,
-        progress: 1,
-        target: 1,
-        unlockedAt: "2026-01-20"
-    },
-    {
-        id: "2",
-        name: "Hello Quantum",
-        description: "Simulate your first Bell state to create entanglement.",
-        category: "Getting Started",
-        rarity: "Common",
-        xpReward: 75,
-        iconName: "rocket",
-        isUnlocked: true,
-        progress: 1,
-        target: 1,
-        unlockedAt: "2026-01-21"
-    },
-    {
-        id: "3",
-        name: "Framework Explorer",
-        description: "Try creating circuits in Qiskit, Cirq, and PennyLane.",
-        category: "Getting Started",
-        rarity: "Rare",
-        xpReward: 150,
-        iconName: "compass",
-        isUnlocked: false,
-        progress: 1,
-        target: 3
-    },
-    // Mastery
-    {
-        id: "4",
-        name: "Qubit Wrangler",
-        description: "Simulate a total of 100 quantum circuits.",
-        category: "Mastery",
-        rarity: "Rare",
-        xpReward: 300,
-        iconName: "target",
-        isUnlocked: false,
-        progress: 12,
-        target: 100
-    },
-    {
-        id: "5",
-        name: "Getting the Hang of It",
-        description: "Run 10 simulations successfully.",
-        category: "Mastery",
-        rarity: "Uncommon",
-        xpReward: 100,
-        iconName: "target",
-        isUnlocked: true,
-        progress: 10,
-        target: 10
-    },
-    {
-        id: "6",
-        name: "Level 5 Achieved",
-        description: "Reach level 5 by earning XP.",
-        category: "Mastery",
-        rarity: "Uncommon",
-        xpReward: 100,
-        iconName: "star",
-        isUnlocked: true,
-        progress: 5,
-        target: 5
-    },
-    // Algorithm
-    {
-        id: "7",
-        name: "Grover's Guardian",
-        description: "Implement Grover's search algorithm successfully.",
-        category: "Algorithms",
-        rarity: "Epic",
-        xpReward: 400,
-        iconName: "award",
-        isUnlocked: false,
-        progress: 0,
-        target: 1
-    },
-    {
-        id: "8",
-        name: "Shor's Scholar",
-        description: "Implement Shor's factoring algorithm.",
-        category: "Algorithms",
-        rarity: "Legendary",
-        xpReward: 500,
-        iconName: "award",
-        isUnlocked: false,
-        progress: 0,
-        target: 1
-    }
-];
+// Map backend data to AchievementCard format
+function mapToCardFormat(a: AchievementData) {
+    const rarityMap: Record<string, "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"> = {
+        common: "Common",
+        uncommon: "Uncommon",
+        rare: "Rare",
+        epic: "Epic",
+        legendary: "Legendary",
+    };
 
-const CATEGORIES = ["All", "Getting Started", "Mastery", "Algorithms"];
+    return {
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        category: getCategoryDisplayName(a.category),
+        rarity: rarityMap[a.rarity] || "Common" as const,
+        xpReward: a.xp_reward,
+        iconName: a.icon_name,
+        isUnlocked: a.is_unlocked,
+        progress: a.progress,
+        target: a.target,
+        unlockedAt: a.unlocked_at || undefined,
+    };
+}
 
 export default function AchievementsPage() {
     const [activeCategory, setActiveCategory] = useState("All");
+    const { achievements, achievementsLoading, fetchAchievements } = useGamificationStore();
+    const { token } = useAuthStore();
 
-    const filteredAchievements = activeCategory === "All"
-        ? MOCK_ACHIEVEMENTS
-        : MOCK_ACHIEVEMENTS.filter(a => a.category === activeCategory);
+    // Fetch achievements on mount
+    useEffect(() => {
+        if (token) {
+            fetchAchievements(token, true);
+        }
+    }, [token, fetchAchievements]);
+
+    // Build category list from actual data
+    const categories = ["All", ...Array.from(new Set(
+        achievements.map(a => getCategoryDisplayName(a.category))
+    )).sort()];
+
+    // Map and filter
+    const mapped = achievements.map(mapToCardFormat);
+    const filtered = activeCategory === "All"
+        ? mapped
+        : mapped.filter(a => a.category === activeCategory);
+
+    // Separate into 3 groups: Completed, In Progress, Not Started
+    const completed = filtered.filter(a => a.isUnlocked);
+    const inProgress = filtered.filter(a => !a.isUnlocked && a.progress > 0);
+    const notStarted = filtered.filter(a => !a.isUnlocked && a.progress === 0);
+
+    const handleRefresh = () => {
+        if (token) fetchAchievements(token, true);
+    };
 
     return (
         <div className="min-h-screen bg-editor-bg text-white">
@@ -128,19 +74,32 @@ export default function AchievementsPage() {
 
             <div className="p-6 md:p-10">
                 <div className="max-w-6xl mx-auto">
-                    <header className="mb-10">
-                        <h1 className="text-4xl font-bold quantum-gradient bg-clip-text text-transparent mb-2">
-                            Achievements
-                        </h1>
-                        <p className="text-gray-400">Track your progress and mastery of quantum computing.</p>
+                    {/* Header */}
+                    <header className="mb-10 flex items-end justify-between">
+                        <div>
+                            <h1 className="text-4xl font-bold quantum-gradient bg-clip-text text-transparent mb-2">
+                                Achievements
+                            </h1>
+                            <p className="text-gray-400">
+                                Track your progress and mastery of quantum computing. All achievements are tracked automatically — just use QCanvas!
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleRefresh}
+                            disabled={achievementsLoading}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all disabled:opacity-50"
+                        >
+                            <RefreshCw className={`w-4 h-4 ${achievementsLoading ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </button>
                     </header>
 
                     {/* Stats Overview */}
-                    <StatsOverview achievements={MOCK_ACHIEVEMENTS} />
+                    <StatsOverview achievements={mapped} />
 
                     {/* Category Filter */}
                     <div className="flex gap-2 overflow-x-auto pb-4 mb-6 border-b border-white/10">
-                        {CATEGORIES.map(category => (
+                        {categories.map(category => (
                             <button
                                 key={category}
                                 onClick={() => setActiveCategory(category)}
@@ -154,16 +113,72 @@ export default function AchievementsPage() {
                         ))}
                     </div>
 
-                    {/* Achievements Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {filteredAchievements.map(achievement => (
-                            <AchievementCard key={achievement.id} achievement={achievement} />
-                        ))}
-                    </div>
+                    {/* Loading State */}
+                    {achievementsLoading && achievements.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-20 gap-4">
+                            <div className="w-10 h-10 border-2 border-quantum-blue-light border-t-transparent rounded-full animate-spin" />
+                            <p className="text-gray-500 text-sm">Loading achievements...</p>
+                        </div>
+                    )}
 
-                    {filteredAchievements.length === 0 && (
-                        <div className="text-center py-20 text-gray-500">
-                            No achievements found in this category yet.
+                    {/* ✅ Completed Section */}
+                    {completed.length > 0 && (
+                        <div className="mb-8">
+                            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                <Trophy className="w-5 h-5 text-yellow-400" />
+                                Completed
+                                <span className="text-sm font-normal text-gray-500">({completed.length})</span>
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {completed.map(achievement => (
+                                    <AchievementCard key={achievement.id} achievement={achievement} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 🔄 In Progress Section */}
+                    {inProgress.length > 0 && (
+                        <div className="mb-8">
+                            <h2 className="text-lg font-semibold text-blue-400 mb-4 flex items-center gap-2">
+                                <Filter className="w-5 h-5 text-blue-500" />
+                                In Progress
+                                <span className="text-sm font-normal text-gray-500">({inProgress.length})</span>
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {inProgress.map(achievement => (
+                                    <AchievementCard key={achievement.id} achievement={achievement} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 🔒 Not Started Section */}
+                    {notStarted.length > 0 && (
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-500 mb-4 flex items-center gap-2">
+                                <Lock className="w-5 h-5 text-gray-600" />
+                                Not Started
+                                <span className="text-sm font-normal text-gray-600">({notStarted.length})</span>
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {notStarted.map(achievement => (
+                                    <AchievementCard key={achievement.id} achievement={achievement} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Empty State */}
+                    {!achievementsLoading && filtered.length === 0 && (
+                        <div className="text-center py-20">
+                            <Trophy className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                            <p className="text-gray-500">
+                                {achievements.length === 0
+                                    ? "No achievements available yet. Please sign in to view your achievements."
+                                    : "No achievements found in this category."
+                                }
+                            </p>
                         </div>
                     )}
                 </div>

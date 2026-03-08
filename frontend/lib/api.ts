@@ -443,6 +443,24 @@ export const gamificationApi = {
   async getActivitySummary(token: string): Promise<ApiResponse<any>> {
     const headers = { 'Authorization': `Bearer ${token}` };
     return apiRequest('/api/gamification/activities/summary', { headers });
+  },
+
+  // Get all achievements with user progress
+  async getAchievements(token: string): Promise<ApiResponse<any>> {
+    const headers = { 'Authorization': `Bearer ${token}` };
+    return apiRequest('/api/gamification/achievements', { headers });
+  },
+
+  // Get only unlocked achievements
+  async getUnlockedAchievements(token: string): Promise<ApiResponse<any>> {
+    const headers = { 'Authorization': `Bearer ${token}` };
+    return apiRequest('/api/gamification/achievements/unlocked', { headers });
+  },
+
+  // Manually trigger achievement check
+  async checkAchievements(token: string): Promise<ApiResponse<any>> {
+    const headers = { 'Authorization': `Bearer ${token}` };
+    return apiRequest('/api/gamification/achievements/check', { method: 'POST', headers });
   }
 }
 

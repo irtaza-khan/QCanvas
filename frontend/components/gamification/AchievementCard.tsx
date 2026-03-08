@@ -101,7 +101,13 @@ export default function AchievementCard({ achievement }: AchievementCardProps) {
           {/* Progress Bar or Unlocked Date */}
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
-              <span>{isLocked ? "In Progress" : "Completed"}</span>
+              <span>{
+                !isLocked
+                  ? "Completed"
+                  : achievement.progress > 0
+                    ? "In Progress"
+                    : "Not Started"
+              }</span>
               <span className={!isLocked ? "text-quantum-blue dark:text-quantum-blue-light" : ""}>
                 {achievement.progress} / {achievement.target}
               </span>
