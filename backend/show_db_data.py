@@ -1,62 +1,32 @@
 import sys
 import os
 import argparse
-from sqlalchemy.orm import Session
-from sqlalchemy import text, inspect
+from sqlalchemy import text, inspect as sa_inspect, create_engine
 
 # Add backend directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.config.database import SessionLocal
-from app.models.database_models import (
-    User, Project, File, Job, Conversion, ConversionStats, 
-    Simulation, Session, ApiActivity
-)
+from app.config.database import SessionLocal, engine
 
-# Map table names to models and default columns to show
-TABLE_MAP = {
-    "users": {
-        "model": User,
-        "columns": ["id", "username", "email", "role", "is_active", "created_at"]
-    },
-    "projects": {
-        "model": Project,
-        "columns": ["id", "name", "user_id", "is_public", "created_at"]
-    },
-    "files": {
-        "model": File,
-        "columns": ["id", "project_id", "user_id", "filename", "is_main", "created_at"]
-    },
-    "jobs": {
-        "model": Job,
-        "columns": ["id", "user_id", "status", "backend", "shots", "created_at"]
-    },
-    "conversions": {
-        "model": Conversion,
-        "columns": ["id", "user_id", "source_framework", "target_framework", "status", "created_at"]
-    },
-    "simulations": {
-        "model": Simulation,
-        "columns": ["id", "user_id", "backend", "shots", "status", "created_at"]
-    },
-    "sessions": {
-        "model": Session,
-        "columns": ["id", "user_id", "session_type", "ip_address", "expires_at"]
-    },
-    "api_activity": {
-        "model": ApiActivity,
-        "columns": ["id", "user_id", "method", "endpoint", "status_code", "response_time_ms", "created_at"]
-    }
-}
 
 def print_table(title, headers, rows):
-    print(f"\n=== {title} ===")
+    print(f"\n{'='*60}")
+    print(f"  {title}")
+    print(f"{'='*60}")
     if not rows:
-        print("No records found.")
+        print("  No records found.")
         return
 
-    # Convert all values to string
-    str_rows = [[str(val) for val in row] for row in rows]
+    # Convert all values to string, truncate long values
+    str_rows = []
+    for row in rows:
+        str_row = []
+        for val in row:
+            s = str(val) if val is not None else "NULL"
+            if len(s) > 50:
+                s = s[:47] + "..."
+            str_row.append(s)
+        str_rows.append(str_row)
     
     # Calculate column widths
     widths = [len(h) for h in headers]
@@ -77,56 +47,76 @@ def print_table(title, headers, rows):
     for row in str_rows:
         print(fmt.format(*row))
     print(separator)
+    print(f"  Total: {len(rows)} records shown\n")
 
-def get_column_value(obj, col_name):
-    val = getattr(obj, col_name)
-    if hasattr(val, 'strftime'):
-        return val.strftime("%Y-%m-%d %H:%M:%S")
-    return val
 
-def show_data(table_name=None, limit=15):
+def get_all_tables():
+    """Dynamically discover all tables in the database."""
+    inspector = sa_inspect(engine)
+    return sorted(inspector.get_table_names())
+
+
+def get_table_columns(table_name):
+    """Get column names for a table."""
+    inspector = sa_inspect(engine)
+    columns = inspector.get_columns(table_name)
+    return [col["name"] for col in columns]
+
+
+def show_table_data(table_name, limit=15):
+    """Show data from a specific table using raw SQL."""
     db = SessionLocal()
     try:
-        if table_name:
-            if table_name not in TABLE_MAP:
-                print(f"Error: Table '{table_name}' not found. Available tables: {', '.join(TABLE_MAP.keys())}")
-                return
-            
-            config = TABLE_MAP[table_name]
-            model = config["model"]
-            columns = config["columns"]
-            
-            # Query
-            query = db.query(model).order_by(model.created_at.desc())
-            items = query.limit(limit).all()
-            
-            # Prepare rows
-            rows = [[get_column_value(item, col) for col in columns] for item in items]
-            print_table(f"Latest {limit} {table_name}", columns, rows)
-            
-        else:
-            # Show summary of all tables
-            print("Usage: python show_db_data.py [table_name] [--limit N]")
-            print("Available tables:", ", ".join(TABLE_MAP.keys()))
-            print("\n--- Summary ---")
-            for name, config in TABLE_MAP.items():
-                count = db.query(config["model"]).count()
-                print(f"{name}: {count} records")
-
+        columns = get_table_columns(table_name)
+        
+        # Count total
+        count_result = db.execute(text(f'SELECT COUNT(*) FROM "{table_name}"'))
+        total = count_result.scalar()
+        
+        # Fetch rows
+        result = db.execute(text(f'SELECT * FROM "{table_name}" ORDER BY 1 DESC LIMIT :lim'), {"lim": limit})
+        rows = [list(row) for row in result]
+        
+        title = f"{table_name.upper()} ({total} total, showing {min(total, limit)})"
+        print_table(title, columns, rows)
+        
     except Exception as e:
-        print(f"Error fetching data: {e}")
+        print(f"\n⚠ Error reading table '{table_name}': {e}")
     finally:
         db.close()
 
 
+def show_summary():
+    """Show a summary of all tables with record counts."""
+    db = SessionLocal()
+    tables = get_all_tables()
+    
+    print(f"\nUsage: python show_db_data.py [table_name|all] [--limit N]")
+    print(f"Available tables: {', '.join(tables)}")
+    print("Use 'all' to show data from every table.\n")
+    print("--- Summary ---")
+    
+    for table in tables:
+        try:
+            count_result = db.execute(text(f'SELECT COUNT(*) FROM "{table}"'))
+            count = count_result.scalar()
+            print(f"  {table:<25} {count:>6} records")
+        except Exception as e:
+            print(f"  {table:<25}    ⚠ error: {e}")
+    
+    db.close()
+
+
 def show_file_content(file_id):
+    """Show content of a specific file by ID."""
     db = SessionLocal()
     try:
-        file = db.query(File).filter(File.id == file_id).first()
-        if file:
-            print(f"\n=== Content of File ID {file_id} ({file.filename}) ===")
+        result = db.execute(text('SELECT id, filename, content FROM files WHERE id = :fid'), {"fid": file_id})
+        row = result.fetchone()
+        if row:
+            print(f"\n=== Content of File ID {row[0]} ({row[1]}) ===")
             print("-" * 50)
-            print(file.content)
+            print(row[2])
             print("-" * 50)
         else:
             print(f"File with ID {file_id} not found.")
@@ -135,11 +125,12 @@ def show_file_content(file_id):
     finally:
         db.close()
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Inspect database tables")
-    parser.add_argument("table", nargs="?", help="Name of the table to inspect or 'view_content'")
+    parser = argparse.ArgumentParser(description="Inspect ALL database tables dynamically")
+    parser.add_argument("table", nargs="?", help="Table name, 'all' for everything, or 'view_content'")
     parser.add_argument("extra_arg", nargs="?", help="File ID if using view_content")
-    parser.add_argument("--limit", type=int, default=15, help="Number of records to show")
+    parser.add_argument("--limit", type=int, default=15, help="Number of records to show per table")
     
     args = parser.parse_args()
     
@@ -148,5 +139,16 @@ if __name__ == "__main__":
             print("Usage: python show_db_data.py view_content <file_id>")
         else:
             show_file_content(args.extra_arg)
+    elif args.table == "all":
+        tables = get_all_tables()
+        for table in tables:
+            show_table_data(table, args.limit)
+    elif args.table:
+        all_tables = get_all_tables()
+        if args.table not in all_tables:
+            print(f"Error: Table '{args.table}' not found.")
+            print(f"Available tables: {', '.join(all_tables)}")
+        else:
+            show_table_data(args.table, args.limit)
     else:
-        show_data(args.table, args.limit)
+        show_summary()
