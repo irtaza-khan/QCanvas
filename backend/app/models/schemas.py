@@ -91,6 +91,7 @@ class UserResponse(BaseModel):
     is_verified: bool
     created_at: str
     last_login_at: Optional[str] = None
+    bio: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -125,6 +126,39 @@ class TokenResponse(BaseModel):
 class ErrorResponse(BaseModel):
     """Standard error response schema."""
     detail: str
+
+
+class UpdateProfileRequest(BaseModel):
+    """Request schema for updating user profile."""
+    full_name: Optional[str] = None
+    username: Optional[str] = None
+    bio: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "full_name": "John Doe",
+                "username": "johndoe",
+                "bio": "Quantum computing enthusiast."
+            }
+        }
+
+
+class UpdateProfileResponse(BaseModel):
+    """Response schema for profile update."""
+    id: str
+    email: str
+    username: str
+    full_name: str
+    role: str
+    is_active: bool
+    is_verified: bool
+    created_at: str
+    last_login_at: Optional[str] = None
+    bio: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
 # ============================================================================

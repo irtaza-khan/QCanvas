@@ -14,7 +14,9 @@ from app.models.schemas import (
     UserLoginRequest,
     UserResponse,
     TokenResponse,
-    ErrorResponse
+    ErrorResponse,
+    UpdateProfileRequest,
+    UpdateProfileResponse,
 )
 from app.utils.jwt_auth import create_access_token, get_user_id_from_token
 
@@ -240,7 +242,8 @@ def login(request: UserLoginRequest, db: Session = Depends(get_db)):
         is_active=user.is_active,
         is_verified=user.is_verified,
         created_at=user.created_at.isoformat(),
-        last_login_at=user.last_login_at.isoformat() if user.last_login_at else None
+        last_login_at=user.last_login_at.isoformat() if user.last_login_at else None,
+        bio=user.bio
     )
     
     return TokenResponse(
@@ -275,7 +278,8 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
         is_active=current_user.is_active,
         is_verified=current_user.is_verified,
         created_at=current_user.created_at.isoformat(),
-        last_login_at=current_user.last_login_at.isoformat() if current_user.last_login_at else None
+        last_login_at=current_user.last_login_at.isoformat() if current_user.last_login_at else None,
+        bio=current_user.bio
     )
 
 
@@ -290,3 +294,64 @@ def logout():
     For production, consider implementing token blacklisting with Redis.
     """
     return {"message": "Successfully logged out"}
+
+
+@router.put(
+    "/me",
+    response_model=UpdateProfileResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Username already taken"},
+        401: {"model": ErrorResponse, "description": "Not authenticated"},
+    }
+)
+def update_profile(
+    request: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update the current authenticated user's profile.
+
+    Updatable fields:
+    - **full_name**: User's display name
+    - **username**: Unique username (must not be taken by another user)
+    - **bio**: Short bio (stored client-side, echoed back in response)
+
+    Requires valid JWT token in Authorization header.
+    """
+    # Check username uniqueness if changing it
+    if request.username and request.username != current_user.username:
+        existing = db.query(User).filter(
+            User.username == request.username,
+            User.id != current_user.id,
+            User.deleted_at == None
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken"
+            )
+        current_user.username = request.username
+
+    if request.full_name:
+        current_user.full_name = request.full_name
+
+    if request.bio is not None:
+        current_user.bio = request.bio
+
+    db.commit()
+    db.refresh(current_user)
+
+    return UpdateProfileResponse(
+        id=str(current_user.id),
+        email=current_user.email,
+        username=current_user.username,
+        full_name=current_user.full_name,
+        role=current_user.role.value,
+        is_active=current_user.is_active,
+        is_verified=current_user.is_verified,
+        created_at=current_user.created_at.isoformat(),
+        last_login_at=current_user.last_login_at.isoformat() if current_user.last_login_at else None,
+        bio=current_user.bio,
+    )
+

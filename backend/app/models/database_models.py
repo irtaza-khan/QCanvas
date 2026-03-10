@@ -72,6 +72,7 @@ class User(Base):
     
     # Profile
     full_name = Column(String(255), nullable=False)
+    bio = Column(String(500), nullable=True)
     
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
