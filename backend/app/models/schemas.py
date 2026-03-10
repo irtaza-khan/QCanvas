@@ -176,3 +176,37 @@ class ProjectResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+# ============================================================================
+# Shared Snippets Schemas
+# ============================================================================
+
+class SharedSnippetCreate(BaseModel):
+    id: str
+    title: str
+    description: Optional[str] = None
+    framework: str
+    difficulty: str
+    category: str
+    tags: Optional[List[str]] = None
+    code: str
+    filename: str
+    author: Optional[str] = "Anonymous User"
+
+class SharedSnippetResponse(BaseModel):
+    id: str
+    author_id: Optional[UUID] = None
+    author_name: str
+    title: str
+    description: Optional[str] = None
+    framework: str
+    difficulty: str
+    category: str
+    tags: Optional[List[str]] = None
+    code: str
+    filename: str
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True

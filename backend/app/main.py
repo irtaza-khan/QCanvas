@@ -14,7 +14,7 @@ current_file = os.path.abspath(__file__)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
 sys.path.insert(0, project_root)
 
-from app.api.routes import converter, health, simulator, hybrid, auth, projects, files, gamification
+from app.api.routes import converter, health, simulator, hybrid, auth, projects, files, gamification, shared
 from app.services.conversion_service import ConversionService
 from app.services.simulation_service import SimulationService
 
@@ -80,6 +80,7 @@ app.include_router(hybrid.router)
 app.include_router(projects.router)
 app.include_router(files.router)
 app.include_router(gamification.router)
+app.include_router(shared.router)
 
 # Root endpoint
 @app.get("/")

@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Share2, Copy, Check, Tag } from "lucide-react";
 import toast from "react-hot-toast";
+import { useAuthStore } from "@/lib/authStore";
+import { sharedApi } from "@/lib/api";
 
 const COMMON_TAGS = [
   "quantum-circuits", "qubits", "superposition", "entanglement", "measurement",
@@ -29,6 +31,7 @@ export default function ShareModal({
   fileContent,
   fileName,
 }: ShareModalProps) {
+  const { user } = useAuthStore();
   const [id, setId] = useState("");
   const [title, setTitle] = useState(fileName);
   const [description, setDescription] = useState("");
@@ -110,31 +113,27 @@ export default function ShareModal({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/share", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id,
-          title,
-          description,
-          framework,
-          difficulty,
-          category,
-          tags,
-          code: fileContent,
-          filename: fileName,
-        }),
+      // Tags is a comma-separated string, but backend expects list of strings
+      const formattedTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+
+      const response = await sharedApi.createSharedSnippet({
+        id,
+        title,
+        description,
+        framework,
+        difficulty,
+        category,
+        tags: formattedTags,
+        code: fileContent,
+        filename: fileName,
+        author: user?.full_name || user?.username || 'Anonymous User',
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (response.success) {
         toast.success("File shared successfully!");
         onClose();
       } else {
-        toast.error(data.error || "Failed to share file");
+        toast.error(response.error || "Failed to share file");
       }
     } catch (error) {
       console.error("Share error:", error);

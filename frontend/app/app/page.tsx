@@ -85,9 +85,9 @@ export default function AppPage() {
       if (pendingExample) {
         try {
           const example = JSON.parse(pendingExample)
-          const newFile = useFileStore.getState().addFile(example.name, example.content)
-          useFileStore.getState().setActiveFile(newFile.id)
-          toast.success(`Loaded example: ${example.name}`)
+          // Use createFile to persist to database instead of just memory
+          await useFileStore.getState().createFile(example.name, example.content)
+          toast.success(`Loaded and saved example: ${example.name}`)
           sessionStorage.removeItem('pending-example')
         } catch (error) {
           console.error('Failed to load pending example:', error)
@@ -107,12 +107,12 @@ export default function AppPage() {
 
     const channel = new BroadcastChannel('qcanvas-examples')
 
-    channel.onmessage = (event) => {
+    channel.onmessage = async (event) => {
       if (event.data.type === 'add-example-file') {
         const { filename, code } = event.data
-        // Add the file and set it as active
-        const newFile = useFileStore.getState().addFile(filename, code)
-        toast.success(`Loaded example: ${filename}`)
+        // Use createFile to persist to database instead of just memory
+        await useFileStore.getState().createFile(filename, code)
+        toast.success(`Loaded and saved example: ${filename}`)
 
         // Send confirmation back to examples page
         channel.postMessage({

@@ -310,4 +310,32 @@ class ApiActivity(Base):
     user = relationship("User", back_populates="api_activities")
 
 
+class SharedSnippet(Base):
+    """
+    Model for community shared quantum code snippets.
+    These are the projects shared via the Share feature.
+    """
+    __tablename__ = "shared_snippets"
 
+    id = Column(String(255), primary_key=True)  # The unique share link ID
+    
+    # Author Info
+    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    author_name = Column(String(255), nullable=False)
+    
+    # Snippet Data
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    framework = Column(String(50), nullable=False)
+    difficulty = Column(String(50), nullable=False)
+    category = Column(String(100), nullable=False)
+    tags = Column(String(500), nullable=True)  # Comma-separated list of tags
+    code = Column(Text, nullable=False)
+    filename = Column(String(255), nullable=False)
+    
+    # Timestamps
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    author = relationship("User", backref="shared_snippets")
