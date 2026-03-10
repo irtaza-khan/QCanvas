@@ -3,48 +3,69 @@ import os
 import sys
 
 # Add backend directory to path so imports work
-# current file is in QCanvas/backend/reset_db.py
 backend_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(backend_dir)
 sys.path.insert(0, backend_dir)
 sys.path.insert(0, project_root)
 
 from app.config.database import engine, Base
-# Import all models to ensure they are registered with Base.metadata
+# Import ALL models to ensure they are registered with Base.metadata
 from app.models import database_models 
+from app.models import gamification
 from alembic.config import Config
 from alembic import command
 
 def reset_database():
     try:
-        # Drop all tables
-        print("Dropping all tables...")
-        Base.metadata.drop_all(bind=engine)
+        print("⚠️  WARNING: This will DROP ALL TABLES and recreate them from scratch!")
+        print("   All data (users, projects, files, shared snippets, gamification, etc.) will be lost.\n")
         
-        # Create all tables
-        print("Creating all tables...")
+        confirm = input("Are you sure? Type 'yes' to confirm: ").strip().lower()
+        if confirm != 'yes':
+            print("Aborted.")
+            return
+        
+        # Drop all tables
+        print("\n🗑️  Dropping all tables...")
+        Base.metadata.drop_all(bind=engine)
+        print("   ✅ All tables dropped.")
+        
+        # Create all tables from current models
+        print("🔨 Creating all tables from current models...")
         Base.metadata.create_all(bind=engine)
         
+        # List created tables
+        from sqlalchemy import inspect as sa_inspect
+        inspector = sa_inspect(engine)
+        tables = sorted(inspector.get_table_names())
+        print(f"   ✅ Created {len(tables)} tables:")
+        for t in tables:
+            cols = [c['name'] for c in inspector.get_columns(t)]
+            print(f"      - {t} ({len(cols)} columns)")
+        
         # Stamp alembic head
-        print("Stamping alembic head...")
-        alembic_ini_path = os.path.join(project_root, "alembic.ini")
+        print("\n📌 Stamping alembic to latest head...")
+        alembic_ini_path = os.path.join(backend_dir, "alembic.ini")
         alembic_cfg = Config(alembic_ini_path)
-        
-        # Ensure script_location is correct
-        # The config should handle it, but we can verify or set it if needed.
-        # We shouldn't need to change CWD if we pass the absolute path to ini.
-        
         command.stamp(alembic_cfg, "head")
-        print("Database reset successfully.")
+        print("   ✅ Alembic stamped to head.")
         
         # Recreate demo account
-        import create_demo_account
-        print("\nRecreating demo account...")
-        create_demo_account.main()
+        try:
+            import create_demo_account
+            print("\n👤 Recreating demo account...")
+            create_demo_account.main()
+            print("   ✅ Demo account created.")
+        except Exception as e:
+            print(f"   ⚠️  Could not create demo account: {e}")
+        
+        print("\n🎉 Database reset complete!")
         
     except Exception as e:
-        print(f"Error resetting database: {e}")
-        print("Please ensure the database server is running.")
+        print(f"\n❌ Error resetting database: {e}")
+        import traceback
+        traceback.print_exc()
+        print("\nPlease ensure the database server is running.")
 
 
 if __name__ == "__main__":
