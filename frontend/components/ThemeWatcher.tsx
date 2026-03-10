@@ -6,6 +6,7 @@ import { useFileStore } from '@/lib/store'
 export default function ThemeWatcher() {
   const theme = useFileStore((s) => s.theme)
   const setTheme = useFileStore((s) => s.setTheme)
+  const setExplainItMode = useFileStore((s) => s.setExplainItMode)
 
   useEffect(() => {
     // Initialize theme on mount - ALWAYS default to dark
@@ -21,13 +22,19 @@ export default function ThemeWatcher() {
       if (effective !== theme) {
         setTheme(effective)
       }
+
+      // Initialize Quantum Explain It mode from localStorage
+      const explainIt = localStorage.getItem('qcanvas-explain-it')
+      if (explainIt !== null) {
+        setExplainItMode(explainIt === '1')
+      }
     } catch {
       // Fallback to dark theme
       document.documentElement.classList.remove('light')
       document.documentElement.classList.add('dark')
       setTheme('dark')
     }
-  }, [setTheme]) // Only run once on mount
+  }, [setTheme, setExplainItMode]) // Only run once on mount
 
   useEffect(() => {
     // Apply theme changes from store to document

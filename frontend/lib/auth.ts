@@ -8,7 +8,7 @@ export function useRequireAuth(redirectUrl = '/login') {
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
-            router.push(redirectUrl);
+            router.push(redirectUrl as Parameters<typeof router.push>[0]);
         }
     }, [isAuthenticated, isLoading, router, redirectUrl]);
 

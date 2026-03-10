@@ -26,6 +26,7 @@ import {
   Share2,
   Search,
   Replace,
+  Lightbulb,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -67,6 +68,8 @@ export default function TopBar({
     getActiveFile,
     updateFileContent,
     saveActiveFile,
+    explainItMode,
+    setExplainItMode,
   } = useFileStore();
   const {
     setCompileOptions,
@@ -1195,6 +1198,25 @@ export default function TopBar({
                         <div className="relative inline-flex items-center">
                           <div className={`w-10 h-5 rounded-full shadow-inner transition-colors ${formatOnSave ? 'bg-quantum-blue-light' : 'bg-editor-border'}`}>
                             <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${formatOnSave ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Quantum Explain It - hover explanations */}
+                      <button
+                        onClick={() => {
+                          setExplainItMode(!explainItMode);
+                          toast.success(`Hover explanations ${explainItMode ? 'disabled' : 'enabled'}`);
+                        }}
+                        className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Lightbulb className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-white">Show hover explanations</span>
+                        </div>
+                        <div className="relative inline-flex items-center">
+                          <div className={`w-10 h-5 rounded-full shadow-inner transition-colors ${explainItMode ? 'bg-quantum-blue-light' : 'bg-editor-border'}`}>
+                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${explainItMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
                           </div>
                         </div>
                       </button>

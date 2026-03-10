@@ -112,6 +112,67 @@ body {
   background-color: #252526;
 }
 
+/* Quantum Explain It: hover tooltip styling (dark) */
+.monaco-editor .monaco-hover {
+  z-index: 10000 !important;
+  background-color: #1e1e1e !important;
+  border: 1px solid #60a5fa !important;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(96, 165, 250, 0.15);
+}
+
+/* The overflowingContentWidgets container needs high z-index too */
+.monaco-editor .overflowingContentWidgets {
+  z-index: 10000 !important;
+}
+
+.monaco-editor .monaco-hover .monaco-hover-content {
+  background-color: #1e1e1e !important;
+  color: #e2e8f0 !important;
+  padding: 10px 14px !important;
+  max-width: 520px;
+}
+
+/* Kind label: (function), (variable), (keyword), (class) */
+.monaco-editor .monaco-hover .markdown-hover > p:first-of-type {
+  color: #60a5fa !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px !important;
+}
+
+/* Signature code block */
+.monaco-editor .monaco-hover .markdown-hover pre {
+  background-color: #252830 !important;
+  color: #9cdcfe !important;
+  border-radius: 4px;
+  padding: 8px 10px !important;
+  border: 1px solid #3e3e42;
+  border-left: 3px solid #60a5fa !important;
+  margin: 6px 0 !important;
+  font-size: 0.85rem !important;
+  line-height: 1.5 !important;
+}
+
+.monaco-editor .monaco-hover .markdown-hover pre code {
+  color: #9cdcfe !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Description text */
+.monaco-editor .monaco-hover .markdown-hover p {
+  color: #cbd5e1 !important;
+  line-height: 1.5 !important;
+  font-size: 0.85rem !important;
+}
+
+/* Framework line (italic) */
+.monaco-editor .monaco-hover .markdown-hover em {
+  color: #94a3b8 !important;
+  font-size: 0.78rem !important;
+}
+
 /* Quantum theme utilities */
 .quantum-gradient {
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -600,6 +661,66 @@ html {
 
 .light .monaco-editor .token.number {
   color: #dc2626 !important;
+}
+
+/* Quantum Explain It: hover tooltip styling (light) */
+.light .monaco-editor .monaco-hover {
+  z-index: 10000 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #3b82f6 !important;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.12);
+}
+
+.light .monaco-editor .overflowingContentWidgets {
+  z-index: 10000 !important;
+}
+
+.light .monaco-editor .monaco-hover .monaco-hover-content {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  padding: 10px 14px !important;
+  max-width: 520px;
+}
+
+/* Kind label */
+.light .monaco-editor .monaco-hover .markdown-hover > p:first-of-type {
+  color: #2563eb !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px !important;
+}
+
+/* Signature code block */
+.light .monaco-editor .monaco-hover .markdown-hover pre {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+  border-radius: 4px;
+  padding: 8px 10px !important;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #3b82f6 !important;
+  margin: 6px 0 !important;
+  font-size: 0.85rem !important;
+  line-height: 1.5 !important;
+}
+
+.light .monaco-editor .monaco-hover .markdown-hover pre code {
+  color: #1e293b !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Description text */
+.light .monaco-editor .monaco-hover .markdown-hover p {
+  color: #334155 !important;
+  line-height: 1.5 !important;
+  font-size: 0.85rem !important;
+}
+
+/* Framework line (italic) */
+.light .monaco-editor .monaco-hover .markdown-hover em {
+  color: #64748b !important;
+  font-size: 0.78rem !important;
 }
 
 /* Light theme for quantum glass effect */

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { FileIcon, Code2, Save } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import { debounce } from '@/lib/utils'
+import { getHoverForSymbol, formatHoverMarkdown } from '@/lib/quantumHoverSymbols'
 import { parseCircuit, calculateQubitCount, parseCircuitWithCountAsync, ParsedGate } from '@/lib/circuitParser'
 import FindReplace from './FindReplace'
 import CircuitVisualization from './CircuitVisualization'
@@ -35,6 +36,9 @@ const Editor = dynamic(() => import('@monaco-editor/react').then(mod => mod.Edit
 export default function EditorPane() {
   const { getActiveFile, updateFileContent, saveActiveFile } = useFileStore()
   const editorRef = useRef<any>(null)
+  const monacoRef = useRef<any>(null)
+  const hoverProviderRef = useRef<any>(null)
+  const completionProviderRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const activeFile = getActiveFile()
   const [showFindReplace, setShowFindReplace] = useState(false)
@@ -141,6 +145,11 @@ export default function EditorPane() {
     }
 
     editorRef.current = editor
+    monacoRef.current = monacoInstance
+
+    // Register language-level providers only once; dispose previous on re-mount
+    if (hoverProviderRef.current) { hoverProviderRef.current.dispose(); hoverProviderRef.current = null }
+    if (completionProviderRef.current) { completionProviderRef.current.dispose(); completionProviderRef.current = null }
 
     // Ensure Ctrl+A selects all text as a single continuous selection
     // The issue: setSelection might not clear existing multi-cursor selections
@@ -238,7 +247,7 @@ export default function EditorPane() {
     })
 
     // Add quantum-specific snippets for Python/Qiskit
-    monacoInstance.languages.registerCompletionItemProvider('python', {
+    completionProviderRef.current = monacoInstance.languages.registerCompletionItemProvider('python', {
       provideCompletionItems: () => {
         return {
           suggestions: [
@@ -294,6 +303,37 @@ export default function EditorPane() {
               documentation: "Grover's algorithm template",
             },
           ],
+        }
+      },
+    })
+
+    // Quantum Explain It: hover tooltips for framework symbols (when explainItMode is on)
+    hoverProviderRef.current = monacoInstance.languages.registerHoverProvider('python', {
+      provideHover: (model: any, position: any) => {
+        if (!useFileStore.getState().explainItMode) return null
+        const wordAt = model.getWordAtPosition(position)
+        if (!wordAt) return null
+        const word = wordAt.word
+        const line = model.getLineContent(position.lineNumber)
+        let dottedPrefix: string | undefined
+        const dotPos = wordAt.startColumn - 2
+        if (dotPos >= 0 && line[dotPos] === '.') {
+          const before = line.slice(0, dotPos)
+          const match = before.match(/([a-zA-Z_]\w*)\s*$/)
+          if (match) dottedPrefix = match[1]
+        }
+        const entry = getHoverForSymbol(word, dottedPrefix)
+        if (!entry) return null
+        const markdown = formatHoverMarkdown(entry)
+        const range = new monacoInstance.Range(
+          position.lineNumber,
+          wordAt.startColumn,
+          position.lineNumber,
+          wordAt.endColumn
+        )
+        return {
+          contents: [{ value: markdown }],
+          range,
         }
       },
     })
@@ -499,6 +539,7 @@ export default function EditorPane() {
             onMount={handleEditorDidMount}
             options={{
               theme: typeof document !== 'undefined' && document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark',
+            fixedOverflowWidgets: true,
             fontSize: 14,
             fontFamily: 'JetBrains Mono, Fira Code, Monaco, Consolas, monospace',
             lineNumbers: 'on',

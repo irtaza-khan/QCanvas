@@ -157,6 +157,29 @@ async def compat_simulate(payload: dict):
         return JSONResponse(status_code=422, content={"detail": "Missing source"})
     return {"success": True, "results": {"counts": {"0": 500, "1": 500}}}
 
+
+# ---------------------------------------------------------------------------
+# Quantum Explain It – hover resolution (stub for future in-file variable resolution)
+# Intended contract:
+#   POST /api/hover
+#   Body: { "source": "code string", "language": "python", "position": { "line": 1, "character": 0 } }
+#   Response: { "symbol": str | null, "kind": "function"|"class"|"variable"|null,
+#               "signature": str | null, "description": str | null }
+#   When implemented: parse source, resolve symbol at position (e.g. in-file variable type),
+#   return hover payload or null if not resolvable.
+# ---------------------------------------------------------------------------
+@app.post("/api/hover")
+async def hover_resolve(payload: dict):
+    # Stub: not implemented. Frontend uses static knowledge base; call this when static lookup
+    # returns null for optional in-file variable/type resolution.
+    return {
+        "symbol": None,
+        "kind": None,
+        "signature": None,
+        "description": None,
+    }
+
+
 # Global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):

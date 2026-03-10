@@ -88,6 +88,8 @@ interface FileStore extends EditorState {
 
   setTheme: (theme: 'light' | 'dark') => void
   toggleTheme: () => void
+  setExplainItMode: (enabled: boolean) => void
+  toggleExplainItMode: () => void
   toggleSidebar: () => void
   toggleResults: () => void
   setFiles: (files: File[]) => void
@@ -313,6 +315,7 @@ export const useFileStore = create<FileStore>()(
       activeProjectId: null,
       loading: false,
       theme: 'dark', // Always default to dark
+      explainItMode: true,
       sidebarCollapsed: false,
       resultsCollapsed: false,
       compiledQasm: null,
@@ -518,6 +521,37 @@ export const useFileStore = create<FileStore>()(
           },
           false,
           'toggleTheme'
+        )
+      },
+
+      setExplainItMode: (enabled) => {
+        set(
+          () => {
+            try {
+              if (globalThis.window !== undefined) {
+                localStorage.setItem('qcanvas-explain-it', enabled ? '1' : '0')
+              }
+            } catch { }
+            return { explainItMode: enabled }
+          },
+          false,
+          'setExplainItMode'
+        )
+      },
+
+      toggleExplainItMode: () => {
+        set(
+          (state) => {
+            const next = !state.explainItMode
+            try {
+              if (globalThis.window !== undefined) {
+                localStorage.setItem('qcanvas-explain-it', next ? '1' : '0')
+              }
+            } catch { }
+            return { explainItMode: next }
+          },
+          false,
+          'toggleExplainItMode'
         )
       },
 

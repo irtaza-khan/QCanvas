@@ -77,12 +77,17 @@ const Gate3D = ({ gate, x, y, qubitSpacing }: { gate: Gate, x: number, y: number
           </mesh>
           
           {/* Target Symbol (X for CNOT, Dot for CZ) */}
-          <mesh position={[0, targetY, 0]} onPointerOver={() => setHovered(true)} onPointerOut={() => setHovered(false)}>
-             {type === 'cz' ? (
-                <sphereGeometry args={[0.3, 32, 32]} />
-             ) : (
-                <cylinderGeometry args={[0.3, 0.3, 0.1, 32]} rotation={[Math.PI/2, 0, 0]} />
-             )}
+          <mesh
+            position={[0, targetY, 0]}
+            rotation={type === 'cz' ? [0, 0, 0] : [Math.PI / 2, 0, 0]}
+            onPointerOver={() => setHovered(true)}
+            onPointerOut={() => setHovered(false)}
+          >
+            {type === 'cz' ? (
+              <sphereGeometry args={[0.3, 32, 32]} />
+            ) : (
+              <cylinderGeometry args={[0.3, 0.3, 0.1, 32]} />
+            )}
             <meshStandardMaterial color={hovered ? '#ffffff' : color} />
           </mesh>
 

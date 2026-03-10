@@ -58,6 +58,8 @@ export interface EditorState {
   resultsCollapsed: boolean;
   compiledQasm: string | null;
   compileOptions: CompileOptions;
+  /** When true, hover over quantum framework symbols shows explanations (Quantum Explain It mode). */
+  explainItMode: boolean;
 }
 
 export interface ApiResponse<T> {
