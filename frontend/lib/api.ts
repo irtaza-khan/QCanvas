@@ -79,7 +79,18 @@ async function apiRequest<T>(
     // If response is not ok, check if we have error details in the body
     if (!response.ok) {
       // Check if the response body has error information
-      const errorMsg = data?.error || data?.detail || data?.message || `HTTP error! status: ${response.status}`
+      let errorMsg = data?.error || data?.message || `HTTP error! status: ${response.status}`
+
+      if (data?.detail) {
+        if (typeof data.detail === 'string') {
+          errorMsg = data.detail;
+        } else if (Array.isArray(data.detail)) {
+          errorMsg = data.detail.map((err: any) => err.msg || JSON.stringify(err)).join(', ')
+        } else if (typeof data.detail === 'object') {
+          errorMsg = data.detail.msg || data.detail.message || JSON.stringify(data.detail)
+        }
+      }
+
       return {
         error: errorMsg,
         success: false,
@@ -475,3 +486,20 @@ export const gamificationApi = {
   }
 }
 
+// Shared Snippets API
+export const sharedApi = {
+  // Get all shared snippets
+  async getSharedSnippets(): Promise<ApiResponse<any>> {
+    return apiRequest('/api/shared/', {
+      method: 'GET',
+    })
+  },
+
+  // Create a new shared snippet
+  async createSharedSnippet(data: any): Promise<ApiResponse<any>> {
+    return apiRequest('/api/shared/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+}

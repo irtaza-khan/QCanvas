@@ -111,6 +111,11 @@ interface FileStore extends EditorState {
   renameFile: (fileId: string, newName: string) => Promise<void>
 }
 
+// =============================================================================
+// DEVELOPER TOGGLE: Set to true to show built-in template files in the sidebar
+// =============================================================================
+const SHOW_TEMPLATE_FILES = false
+
 // Initial files - quantum algorithm examples from different frameworks
 const initialFiles: File[] = [
   (() => {
@@ -729,9 +734,10 @@ export const useFileStore = create<FileStore>()(
               // If we want root + project, caller needs to handle it or we fetch both here.
               // Let's fetch root files if projectId is provided too?
 
+              const templates = SHOW_TEMPLATE_FILES ? initialFiles : []
               const filesToShow = projectId
                 ? fetchedFiles
-                : [...initialFiles, ...fetchedFiles]
+                : [...templates, ...fetchedFiles]
 
               return {
                 files: filesToShow,

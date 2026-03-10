@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Copy, Play, Code, Moon, Sun, Menu, X } from 'lucide-react'
+import { Copy, Play, Code, Moon, Sun, Menu, X, Share2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
+import { sharedApi } from '@/lib/api'
 
 interface Example {
   id: string
@@ -17,6 +18,10 @@ interface Example {
   category: string
   code: string
   tags: string[]
+}
+
+interface CommunityExample extends Example {
+  author: string
 }
 
 const examples: Example[] = [
@@ -851,6 +856,9 @@ const frameworks = ['qiskit', 'cirq', 'pennylane']
 const difficulties = ['beginner', 'intermediate', 'advanced']
 
 export default function ExamplesPage() {
+  const [activeTab, setActiveTab] = useState<'official' | 'community'>('official')
+  const [communityExamples, setCommunityExamples] = useState<CommunityExample[]>([])
+  const [isLoadingCommunity, setIsLoadingCommunity] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [selectedFramework, setSelectedFramework] = useState<string>('all')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
@@ -865,12 +873,44 @@ export default function ExamplesPage() {
       setScrollY(window.scrollY)
     }
 
+    const fetchCommunityExamples = async () => {
+      setIsLoadingCommunity(true)
+      try {
+        const response = await sharedApi.getSharedSnippets()
+        if (response.success && response.data) {
+          // Map to match Example interface plus author
+          const mapped = response.data.map((file: any) => ({
+            id: file.id,
+            title: file.title,
+            description: file.description,
+            framework: file.framework,
+            difficulty: file.difficulty,
+            category: file.category,
+            tags: file.tags || [],
+            code: file.code,
+            author: file.author_name || 'Anonymous'
+          }))
+          setCommunityExamples(mapped) // Backend already sorts them desc
+        }
+      } catch (error) {
+        console.error("Failed to fetch community examples", error)
+      } finally {
+        setIsLoadingCommunity(false)
+      }
+    }
+
     window.addEventListener('scroll', handleScroll)
+    fetchCommunityExamples()
+    
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const openInEditor = (example: Example) => {
-    const filename = `${example.title.replace(/\s+/g, '_')}.py`
+    let sanitizedTitle = example.title.replace(/\s+/g, '_')
+    if (sanitizedTitle.toLowerCase().endsWith('.py')) {
+      sanitizedTitle = sanitizedTitle.slice(0, -3)
+    }
+    const filename = `${sanitizedTitle}.py`
 
     // Try to send message to existing app tab
     const channel = new BroadcastChannel('qcanvas-examples')
@@ -883,6 +923,13 @@ export default function ExamplesPage() {
     // Fallback: navigate to app if no response after timeout
     const timeout = setTimeout(() => {
       channel.close()
+      
+      // Store in session storage so the app page can pick it up
+      sessionStorage.setItem('pending-example', JSON.stringify({
+        name: filename,
+        content: example.code
+      }))
+      
       // If app tab is not open, navigate to it
       router.push('/app')
     }, 500)
@@ -897,7 +944,10 @@ export default function ExamplesPage() {
     }
   }
 
-  const filteredExamples = examples.filter(example => {
+  // Use either static official examples or fetched community examples
+  const currentDataSet = activeTab === 'official' ? examples : communityExamples
+
+  const filteredExamples = currentDataSet.filter(example => {
     const matchesCategory = selectedCategory === 'all' || example.category === selectedCategory
     const matchesFramework = selectedFramework === 'all' || example.framework === selectedFramework
     const matchesDifficulty = selectedDifficulty === 'all' || example.difficulty === selectedDifficulty
@@ -1077,9 +1127,38 @@ export default function ExamplesPage() {
         </div>
       </section>
 
-      {/* Filters */}
+      {/* Filters & Tabs */}
       <main className="px-4 py-8 flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto space-y-6">
+          
+          {/* Tabs */}
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl space-x-1">
+              <button
+                onClick={() => setActiveTab('official')}
+                className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                  activeTab === 'official'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Code className="w-4 h-4" />
+                Official Examples
+              </button>
+              <button
+                onClick={() => setActiveTab('community')}
+                className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                  activeTab === 'community'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Share2 className="w-4 h-4" />
+                Community Shared
+              </button>
+            </div>
+          </div>
+
           <div className="quantum-glass-dark rounded-2xl p-6 backdrop-blur-xl border border-white/10">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
@@ -1155,7 +1234,13 @@ export default function ExamplesPage() {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white mb-2">{example.title}</h3>
+                      <h3 className="text-xl font-semibold text-white mb-1">{example.title}</h3>
+                      {'author' in example && (
+                        <p className="text-xs text-blue-300 mb-2 font-medium flex items-center gap-1.5 opacity-90">
+                           <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+                           By: {(example as CommunityExample).author}
+                        </p>
+                      )}
                       <p className="text-editor-text text-sm mb-3">{example.description}</p>
                     </div>
                   </div>
@@ -1204,13 +1289,25 @@ export default function ExamplesPage() {
             ))}
           </div>
 
-          {filteredExamples.length === 0 && (
-            <div className="text-center py-16">
-              <Code className="w-16 h-16 text-editor-text mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">No examples found</h3>
-              <p className="text-editor-text">Try adjusting your filters or search terms.</p>
+          {/* Empty State */}
+          {activeTab === 'community' && isLoadingCommunity ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+               <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+               <p className="text-editor-text">Loading community projects...</p>
             </div>
-          )}
+          ) : filteredExamples.length === 0 ? (
+            <div className="text-center py-16 quantum-glass-dark rounded-2xl border border-white/10">
+              <Code className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">
+                {activeTab === 'community' ? 'No community projects found' : 'No examples found'}
+              </h3>
+              <p className="text-editor-text max-w-md mx-auto">
+                {activeTab === 'community' 
+                  ? 'Be the first to share a quantum project! Open the editor and click the Share button.' 
+                  : 'Try adjusting your filters or search terms.'}
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
       </main>
