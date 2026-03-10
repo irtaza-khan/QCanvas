@@ -20,15 +20,22 @@ const iconMap: Record<string, any> = {
     'zap': Zap,
 };
 
-export default function RecentActivityList() {
+export default function RecentActivityList({
+    preview = false,
+    limit = 10,
+}: {
+    preview?: boolean;
+    limit?: number;
+}) {
     const { token } = useAuthStore();
     const { recentActivities, fetchRecentActivities } = useGamificationStore();
 
     useEffect(() => {
         if (token) {
-            fetchRecentActivities(token, 10);
+            fetchRecentActivities(token, limit);
         }
-    }, [token, fetchRecentActivities]);
+    }, [token, fetchRecentActivities, limit]);
+
 
     // Format timestamp
     const formatTime = (timestamp: string) => {
@@ -46,6 +53,44 @@ export default function RecentActivityList() {
         return date.toLocaleDateString();
     };
 
+    const displayActivities = recentActivities.slice(0, limit);
+
+    if (preview) {
+        // Stripped version — no outer card (parent provides it)
+        if (displayActivities.length === 0) {
+            return (
+                <p className="text-gray-500 text-sm text-center py-6">No recent activity yet</p>
+            );
+        }
+        return (
+            <div className="space-y-3">
+                {displayActivities.map((activity) => {
+                    const iconName = getActivityIcon(activity.activity_type);
+                    const Icon = iconMap[iconName] || Zap;
+                    const displayName = getActivityDisplayName(activity.activity_type);
+                    const isFirstTime = activity.activity_type.startsWith('first_');
+                    return (
+                        <div
+                            key={activity.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/5 border ${isFirstTime ? 'border-purple-500/30 bg-purple-500/5' : 'border-white/5 bg-white/[0.02]'}`}
+                        >
+                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${isFirstTime ? 'bg-gradient-to-br from-purple-500 to-blue-500' : 'bg-gradient-to-br from-blue-500 to-cyan-500'}`}>
+                                <Icon className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-white truncate">{displayName}</p>
+                                <p className="text-xs text-gray-500">{formatTime(activity.created_at)}</p>
+                            </div>
+                            <div className={`px-2 py-0.5 rounded text-xs font-bold ${isFirstTime ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'}`}>
+                                +{activity.xp_awarded} XP
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }
+
     return (
         <div className="bg-quantum-glass-dark border border-white/10 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
@@ -56,7 +101,7 @@ export default function RecentActivityList() {
                 <span className="text-xs text-gray-500">{recentActivities.length} activities</span>
             </div>
 
-            {recentActivities.length === 0 ? (
+            {displayActivities.length === 0 ? (
                 <div className="text-center py-12">
                     <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
                         <Zap className="w-8 h-8 text-gray-600" />
@@ -66,7 +111,7 @@ export default function RecentActivityList() {
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {recentActivities.map((activity) => {
+                    {displayActivities.map((activity) => {
                         const iconName = getActivityIcon(activity.activity_type);
                         const Icon = iconMap[iconName] || Zap;
                         const displayName = getActivityDisplayName(activity.activity_type);
@@ -76,14 +121,14 @@ export default function RecentActivityList() {
                             <div
                                 key={activity.id}
                                 className={`flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/5 border ${isFirstTime
-                                        ? 'border-purple-500/30 bg-purple-500/5'
-                                        : 'border-white/5 bg-white/[0.02]'
+                                    ? 'border-purple-500/30 bg-purple-500/5'
+                                    : 'border-white/5 bg-white/[0.02]'
                                     }`}
                             >
                                 {/* Icon */}
                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isFirstTime
-                                        ? 'bg-gradient-to-br from-purple-500 to-blue-500'
-                                        : 'bg-gradient-to-br from-blue-500 to-cyan-500'
+                                    ? 'bg-gradient-to-br from-purple-500 to-blue-500'
+                                    : 'bg-gradient-to-br from-blue-500 to-cyan-500'
                                     }`}>
                                     <Icon className="w-5 h-5 text-white" />
                                 </div>
@@ -107,8 +152,8 @@ export default function RecentActivityList() {
 
                                 {/* XP Badge */}
                                 <div className={`px-2.5 py-1 rounded-lg font-bold text-xs ${isFirstTime
-                                        ? 'bg-purple-500/20 text-purple-300'
-                                        : 'bg-blue-500/20 text-blue-300'
+                                    ? 'bg-purple-500/20 text-purple-300'
+                                    : 'bg-blue-500/20 text-blue-300'
                                     }`}>
                                     +{activity.xp_awarded} XP
                                 </div>

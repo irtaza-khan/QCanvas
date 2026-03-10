@@ -423,6 +423,17 @@ export const authApi = {
       method: 'POST',
     })
   },
+
+  async updateProfile(
+    data: { full_name?: string; username?: string; bio?: string },
+    token: string
+  ): Promise<ApiResponse<AuthResponse['user'] & { bio?: string }>> {
+    return apiRequest<AuthResponse['user'] & { bio?: string }>('/api/auth/me', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+  },
 }
 
 // Gamification API

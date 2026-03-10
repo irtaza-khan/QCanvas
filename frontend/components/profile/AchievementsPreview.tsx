@@ -32,7 +32,7 @@ function mapToCardFormat(a: AchievementData) {
     };
 }
 
-export default function AchievementsPreview() {
+export default function AchievementsPreview({ expanded = false }: { expanded?: boolean }) {
     const { achievements, fetchAchievements } = useGamificationStore();
     const { token } = useAuthStore();
 
@@ -42,17 +42,29 @@ export default function AchievementsPreview() {
         }
     }, [token, fetchAchievements]);
 
-    // Show up to 3 achievements: prioritize recently unlocked, then closest to unlocking
     const mapped = achievements.map(mapToCardFormat);
-    const unlocked = mapped.filter(a => a.isUnlocked).slice(0, 2);
-    const inProgress = mapped
-        .filter(a => !a.isUnlocked && a.progress > 0)
-        .sort((a, b) => (b.progress / b.target) - (a.progress / a.target))
-        .slice(0, 3 - unlocked.length);
-    const previewItems = [...unlocked, ...inProgress].slice(0, 3);
 
-    // Fallback if no data yet
-    if (previewItems.length === 0 && !token) {
+    // Expanded: all achievements sorted (unlocked → in-progress → locked)
+    const displayItems = expanded
+        ? [
+            ...mapped.filter((a) => a.isUnlocked).sort((a, b) =>
+                (b.unlockedAt || "").localeCompare(a.unlockedAt || "")
+            ),
+            ...mapped.filter((a) => !a.isUnlocked && a.progress > 0)
+                .sort((a, b) => b.progress / b.target - a.progress / a.target),
+            ...mapped.filter((a) => !a.isUnlocked && a.progress === 0),
+        ]
+        : (() => {
+            const unlocked = mapped.filter((a) => a.isUnlocked).slice(0, 2);
+            const inProgress = mapped
+                .filter((a) => !a.isUnlocked && a.progress > 0)
+                .sort((a, b) => b.progress / b.target - a.progress / a.target)
+                .slice(0, 3 - unlocked.length);
+            return [...unlocked, ...inProgress].slice(0, 3);
+        })();
+
+    // Fallback if not signed in
+    if (displayItems.length === 0 && !token) {
         return (
             <div className="bg-quantum-glass-dark border border-white/10 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -66,6 +78,22 @@ export default function AchievementsPreview() {
         );
     }
 
+    if (expanded) {
+        return (
+            <div className="space-y-3">
+                {displayItems.length === 0 ? (
+                    <p className="text-gray-500 text-sm text-center py-8">No achievements yet — start using QCanvas!</p>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {displayItems.map((achievement) => (
+                            <AchievementCard key={achievement.id} achievement={achievement} />
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="bg-quantum-glass-dark border border-white/10 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
@@ -74,7 +102,7 @@ export default function AchievementsPreview() {
                     Achievements
                     {achievements.length > 0 && (
                         <span className="text-xs text-gray-500 font-normal">
-                            {mapped.filter(a => a.isUnlocked).length}/{mapped.length}
+                            {mapped.filter((a) => a.isUnlocked).length}/{mapped.length}
                         </span>
                     )}
                 </h3>
@@ -87,12 +115,12 @@ export default function AchievementsPreview() {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-                {previewItems.map(achievement => (
+                {displayItems.map((achievement) => (
                     <AchievementCard key={achievement.id} achievement={achievement} />
                 ))}
             </div>
 
-            {previewItems.length === 0 && (
+            {displayItems.length === 0 && (
                 <p className="text-gray-500 text-sm text-center py-4">
                     Start using QCanvas to earn your first achievements!
                 </p>
