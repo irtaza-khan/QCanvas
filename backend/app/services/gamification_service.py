@@ -462,8 +462,11 @@ class GamificationService:
                 achievement.criteria, activity_summary, stats
             )
             
-            # If user has a stored record, use that progress if it's higher
-            if user_record and user_record.progress:
+            # If already unlocked, progress is always equal to target (100% complete)
+            if is_unlocked:
+                progress = target
+            elif user_record and user_record.progress:
+                # Not yet unlocked — use stored progress if it's higher than calculated
                 stored_progress = user_record.progress.get('current', 0)
                 progress = max(progress, stored_progress)
             
@@ -695,19 +698,37 @@ class GamificationService:
             
             now = datetime.utcnow()
             
+            # Determine the correct target from the achievement criteria
+            criteria = achievement.criteria or {}
+            criteria_type = criteria.get('type', '')
+            if criteria_type == 'activity_count':
+                unlock_target = criteria.get('count', 1)
+            elif criteria_type == 'level_reached':
+                unlock_target = criteria.get('level', 1)
+            elif criteria_type == 'streak_days':
+                unlock_target = criteria.get('days', 1)
+            elif criteria_type == 'total_xp':
+                unlock_target = criteria.get('xp', 1)
+            elif criteria_type == 'distinct_activity_count':
+                unlock_target = criteria.get('count', 1)
+            elif criteria_type == 'multi_activity_count':
+                unlock_target = criteria.get('count', 1)
+            else:
+                unlock_target = 1
+
             if existing:
                 if existing.unlocked_at:
                     # Already unlocked
                     return None
                 # Update existing record
                 existing.unlocked_at = now
-                existing.progress = {"current": 1, "target": 1}
+                existing.progress = {"current": unlock_target, "target": unlock_target}
             else:
                 # Create new record
                 user_achievement = UserAchievement(
                     user_id=user_id,
                     achievement_id=achievement.id,
-                    progress={"current": 1, "target": 1},
+                    progress={"current": unlock_target, "target": unlock_target},
                     unlocked_at=now
                 )
                 db.add(user_achievement)
