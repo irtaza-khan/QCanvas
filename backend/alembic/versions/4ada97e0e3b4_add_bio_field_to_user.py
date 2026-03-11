@@ -34,14 +34,17 @@ def upgrade() -> None:
                existing_type=postgresql.JSONB(astext_type=sa.Text()),
                type_=sa.JSON(),
                existing_nullable=True)
-    op.drop_index(op.f('idx_activity_created'), table_name='gamification_activities')
-    op.drop_index(op.f('idx_activity_type'), table_name='gamification_activities')
-    op.drop_index(op.f('idx_activity_user_created'), table_name='gamification_activities')
+    # Indexes on gamification_activities were already dropped in a previous migration.
+    # Use IF EXISTS to avoid errors when running on databases where they are missing.
+    op.execute('DROP INDEX IF EXISTS "idx_activity_created";')
+    op.execute('DROP INDEX IF EXISTS "idx_activity_type";')
+    op.execute('DROP INDEX IF EXISTS "idx_activity_user_created";')
     op.alter_column('user_achievements', 'progress',
                existing_type=postgresql.JSONB(astext_type=sa.Text()),
                type_=sa.JSON(),
                existing_nullable=True)
-    op.drop_index(op.f('idx_user_achievement_unique'), table_name='user_achievements')
+    # This index may already have been dropped by an earlier migration; make this safe.
+    op.execute('DROP INDEX IF EXISTS "idx_user_achievement_unique";')
     op.add_column('users', sa.Column('bio', sa.String(length=500), nullable=True))
     # ### end Alembic commands ###
 
