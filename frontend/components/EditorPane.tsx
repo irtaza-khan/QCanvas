@@ -442,29 +442,43 @@ export default function EditorPane() {
           </button>
 
           {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
-            <div className="flex bg-editor-bg border border-editor-border rounded-md overflow-hidden p-0.5">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
-                className={`px-3 py-1 text-xs rounded-sm transition-colors ${
+                className={`px-3 py-1.5 text-xs rounded-md transition-all border ${
                   showCircuitVisualization
-                    ? 'bg-quantum-blue-light text-white'
-                    : 'text-editor-text hover:bg-editor-border'
+                    ? 'bg-quantum-blue-light/20 border-quantum-blue-light/50 text-quantum-blue-light shadow-[0_0_10px_rgba(96,165,250,0.15)]'
+                    : 'bg-editor-bg border-editor-border text-editor-text hover:bg-white/5'
                 }`}
               >
                 Circuit View
               </button>
+              
               {showCircuitVisualization && (
-                <button
-                  onClick={() => setIs3DMode(!is3DMode)}
-                  className={`px-2 py-1 text-xs rounded-sm transition-colors ml-1 ${
-                    is3DMode
-                      ? 'bg-quantum-purple text-white'
-                      : 'text-editor-text hover:bg-editor-border'
-                  }`}
-                  title={is3DMode ? "Switch to 2D" : "Switch to 3D"}
-                >
-                  {is3DMode ? "3D" : "2D"}
-                </button>
+                <div className="flex items-center bg-black/40 border border-white/10 rounded-md p-0.5 relative overflow-hidden">
+                  <button
+                    onClick={() => setIs3DMode(false)}
+                    className={`relative z-10 px-3 py-1 text-xs font-medium rounded-sm transition-colors ${
+                      !is3DMode ? 'text-white' : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    2D
+                  </button>
+                  <button
+                    onClick={() => setIs3DMode(true)}
+                    className={`relative z-10 px-3 py-1 text-xs font-medium rounded-sm transition-colors ${
+                      is3DMode ? 'text-white' : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    3D
+                  </button>
+                  {/* Sliding highlight */}
+                  <div 
+                    className={`absolute inset-y-0.5 w-[calc(50%-2px)] rounded-sm bg-quantum-purple shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                      is3DMode ? 'translate-x-[calc(100%+4px)] left-0' : 'translate-x-[2px] left-0'
+                    }`}
+                  />
+                </div>
               )}
             </div>
           )}

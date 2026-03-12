@@ -73,14 +73,14 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-quantum-blue to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-lg ring-2 ring-white/10 group-hover:ring-quantum-blue-light/50 transition-all">
                         {initials}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 bg-editor-bg border border-quantum-blue-light rounded-full w-4 h-4 flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 bg-[#0a0a1a] border border-quantum-blue-light rounded-full w-4 h-4 flex items-center justify-center">
                         <span className="text-[9px] font-bold text-quantum-blue-light">{level}</span>
                     </div>
                 </div>
 
                 {/* Name & Badge (Hidden on mobile) */}
                 <div className="hidden lg:flex flex-col items-start">
-                    <span className="text-xs font-semibold text-editor-text group-hover:text-white transition-colors">
+                    <span className="text-xs font-semibold text-gray-300 group-hover:text-white transition-colors">
                         {user.username}
                     </span>
                     <span className="text-[10px] text-quantum-blue-light flex items-center gap-1">
@@ -115,7 +115,7 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
                                     {formatXP(Math.max(0, xp - currentLevelXp))} / {formatXP(Math.max(0, nextLevelXp - currentLevelXp))} XP
                                 </span>
                             </div>
-                            <div className="h-1.5 bg-editor-bg rounded-full overflow-hidden border border-white/5">
+                            <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
                                 <div
                                     className="h-full bg-blue-500 transition-all duration-500"
                                     style={{ width: `${progressPercent}%` }}

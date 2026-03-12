@@ -204,7 +204,7 @@ export default function ShareModal({
                   value={id}
                   onChange={(e) => setId(e.target.value)}
                   placeholder="e.g., my-quantum-teleportation-v1"
-                  className="relative w-full px-4 py-3 bg-editor-bg border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                  className="relative w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
                   required
                 />
               </div>
@@ -361,7 +361,7 @@ export default function ShareModal({
                 </span>
               </label>
               <div className="flex-1 relative rounded-lg overflow-hidden border border-white/10 group">
-                <div className="absolute inset-0 bg-editor-bg/80 backdrop-blur-sm"></div>
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
                 <pre className="absolute inset-0 p-4 text-xs text-blue-200/90 font-mono overflow-auto custom-scrollbar leading-relaxed">
                   <code>{fileContent}</code>
                 </pre>
