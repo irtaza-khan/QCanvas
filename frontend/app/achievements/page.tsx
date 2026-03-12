@@ -66,7 +66,7 @@ export default function AchievementsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-editor-bg text-white">
+        <div className="min-h-screen bg-[#0a0a1a] text-white">
             <SimpleTopBar />
 
             {/* Spacer to prevent topbar overlap */}

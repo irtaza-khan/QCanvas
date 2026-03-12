@@ -18,17 +18,13 @@ import {
   Star,
   Users,
   Globe,
-  Moon,
-  Sun,
-  Menu,
-  X
 } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import { config, getCopyrightText } from '@/lib/config'
+import Navbar from '@/components/Navbar'
 
 export default function HomePage() {
-  const { theme, toggleTheme } = useFileStore()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { theme } = useFileStore()
   const [isVisible, setIsVisible] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -152,373 +148,213 @@ def grovers_search():
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0a1a] relative overflow-x-hidden">
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative">
-                <Image
-                  src="/QCanvas-logo-Black.svg"
-                  alt="QCanvas Logo"
-                  width={48}
-                  height={48}
-                  className="object-contain block dark:hidden transition-all duration-300 hover:scale-110 animate-pulse"
-                  priority
-                />
-                <Image
-                  src="/QCanvas-logo-White.svg"
-                  alt="QCanvas Logo"
-                  width={48}
-                  height={48}
-                  className="object-contain hidden dark:block transition-all duration-300 hover:scale-110 animate-pulse"
-                  priority
-                />
-              </div>
-              <span className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent transition-all duration-200">
-                QCanvas
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <button
-                onClick={() => scrollToSection('features')}
-                className="relative group px-3 py-2"
-              >
-                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Features</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
-              </button>
-              {config.navigation.slice(1).map((item) => (
-                <Link
-                  key={item.path}
-                  href={item.path as any}
-                  className="relative group px-3 py-2"
-                >
-                  <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">{item.name}</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
-                </Link>
-              ))}
-
-              {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg bg-editor-bg/50 border border-editor-border hover:border-quantum-blue-light transition-colors duration-200"
-                title="Toggle theme"
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5 text-editor-text" /> : <Moon className="w-5 h-5 text-editor-text" />}
-              </button>
-
-              {/* Auth Buttons */}
-              <div className="flex items-center space-x-3">
-                {isAuthenticated ? (
-                  <Link
-                    href="/app"
-                    className="btn-quantum text-sm px-6 py-2.5 font-medium shadow-lg hover:shadow-quantum-blue-light/50 transition-all duration-300 hover:scale-105"
-                  >
-                    Go to App
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      className="dark:text-white text-gray-800 hover:text-quantum-blue-light transition-colors duration-300 font-medium px-4"
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/login"
-                      className="btn-quantum text-sm px-6 py-2.5 font-medium shadow-lg hover:shadow-quantum-blue-light/50 transition-all duration-300 hover:scale-105"
-                    >
-                      Get Started
-                    </Link>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-editor-bg/50 border border-editor-border"
-            >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden bg-black/95 backdrop-blur-lg border-t border-white/10">
-              <div className="px-4 py-4 space-y-4">
-                <button
-                  onClick={() => scrollToSection('features')}
-                  className="block w-full text-left text-editor-text hover:text-white transition-colors duration-200"
-                >
-                  Features
-                </button>
-                {config.navigation.slice(1).map((item) => (
-                  <Link
-                    key={item.path}
-                    href={item.path as any}
-                    className="block text-editor-text hover:text-white transition-colors duration-200"
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                  <button
-                    onClick={toggleTheme}
-                    className="flex items-center space-x-2 text-editor-text hover:text-white transition-colors duration-200"
-                  >
-                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    <span>Theme</span>
-                  </button>
-                  <div className="flex space-x-3">
-                    {isAuthenticated ? (
-                      <Link href="/app" className="btn-quantum text-sm px-3 py-1">
-                        Go to App
-                      </Link>
-                    ) : (
-                      <>
-                        <Link href="/login" className="text-editor-text hover:text-white transition-colors duration-200">
-                          Sign In
-                        </Link>
-                        <Link href="/login" className="btn-quantum text-sm px-3 py-1">
-                          Get Started
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+      <Navbar activePath="/" scrollToFeatures={scrollToSection} />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 pt-20 overflow-hidden">
-        {/* Enhanced Animated Background */}
+        {/* Grid dot background */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-60"></div>
+
+        {/* Hero spotlight radial glow */}
+        <div className="absolute inset-0 hero-spotlight"></div>
+
+        {/* Subtle background orbs — fewer, more vibrant */}
         <div className="absolute inset-0 overflow-hidden">
-          {/* Large background orbs */}
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-quantum-blue-light opacity-8 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 opacity-8 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500 opacity-3 rounded-full blur-3xl animate-pulse delay-500"></div>
-
-          {/* Additional floating orbs */}
-          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400 opacity-6 rounded-full blur-2xl animate-float delay-300"></div>
-          <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-pink-400 opacity-5 rounded-full blur-2xl animate-float delay-700"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-green-400 opacity-4 rounded-full blur-2xl animate-float delay-1100"></div>
+          <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-indigo-500 opacity-[0.07] rounded-full blur-[100px]"></div>
+          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-violet-500 opacity-[0.07] rounded-full blur-[100px]"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500 opacity-[0.05] rounded-full blur-[80px]"></div>
         </div>
 
-        {/* Enhanced Floating Elements */}
+        {/* Floating elements — fewer, more visible */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Quantum-themed floating icons */}
-          <div className="absolute top-20 left-10 animate-float delay-1000 hover:scale-110 transition-transform duration-300">
-            <Atom className="w-8 h-8 text-quantum-blue-light opacity-40 animate-pulse" />
+          <div className="absolute top-24 left-[8%] animate-float">
+            <Atom className="w-8 h-8 text-indigo-400 opacity-20" />
           </div>
-          <div className="absolute top-40 right-20 animate-float-reverse delay-2000 hover:scale-110 transition-transform duration-300">
-            <Sparkles className="w-6 h-6 text-purple-400 opacity-50 animate-pulse delay-500" />
+          <div className="absolute top-1/3 right-[8%] animate-float-reverse" style={{ animationDelay: '2s' }}>
+            <Sparkles className="w-6 h-6 text-violet-400 opacity-25" />
           </div>
-          <div className="absolute bottom-40 left-20 animate-float delay-3000 hover:scale-110 transition-transform duration-300">
-            <Cpu className="w-10 h-10 text-teal-400 opacity-35 animate-pulse delay-1000" />
+          <div className="absolute bottom-1/3 left-[12%] animate-float" style={{ animationDelay: '4s' }}>
+            <Cpu className="w-7 h-7 text-cyan-400 opacity-20" />
           </div>
-          <div className="absolute top-1/3 right-10 animate-float-reverse delay-4000 hover:scale-110 transition-transform duration-300">
-            <Zap className="w-7 h-7 text-yellow-400 opacity-45 animate-pulse delay-1500" />
-          </div>
-          <div className="absolute bottom-1/3 left-1/5 animate-float delay-5000 hover:scale-110 transition-transform duration-300">
-            <Lightbulb className="w-6 h-6 text-orange-400 opacity-40 animate-pulse delay-2000" />
-          </div>
-          <div className="absolute top-2/3 right-1/3 animate-float-reverse delay-6000 hover:scale-110 transition-transform duration-300">
-            <Star className="w-5 h-5 text-indigo-400 opacity-50 animate-pulse delay-2500" />
-          </div>
-
-          {/* Geometric shapes */}
-          <div className="absolute top-16 right-1/4 w-2 h-2 bg-quantum-blue-light rounded-full animate-ping opacity-60"></div>
-          <div className="absolute bottom-32 right-16 w-1 h-8 bg-purple-400 rounded-full animate-pulse opacity-40"></div>
-          <div className="absolute top-1/2 left-16 w-3 h-3 bg-teal-400 rounded-full animate-bounce opacity-50"></div>
+          <div className="absolute top-16 right-1/4 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping opacity-40"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping opacity-30" style={{ animationDelay: '1s' }}></div>
         </div>
 
-        <div className="text-center max-w-6xl mx-auto relative z-10">
+        <div className="text-center max-w-5xl mx-auto relative z-10">
           <div className={`transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="inline-flex items-center bg-quantum-blue-light/10 border border-quantum-blue-light/20 rounded-full px-6 py-2 mb-8 backdrop-blur-sm hover:bg-quantum-blue-light/20 transition-all duration-500 hover:scale-105">
-              <Zap className="w-4 h-4 text-quantum-blue-light mr-2 animate-pulse" />
-              <span className="text-sm font-medium text-quantum-blue-light">Next-Generation Quantum Development</span>
+            {/* Glowing badge */}
+            <div className="inline-flex items-center glow-badge bg-indigo-500/10 rounded-full px-6 py-2.5 mb-10 backdrop-blur-sm hover:bg-indigo-500/15 transition-all duration-500 hover:scale-105">
+              <Zap className="w-4 h-4 text-indigo-400 mr-2" />
+              <span className="text-sm font-medium text-indigo-300">Next-Generation Quantum Development</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              <span className="quantum-gradient bg-clip-text text-transparent animate-pulse">Quantum</span>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-[1.1] tracking-tight">
+              <span className="quantum-gradient bg-clip-text text-transparent">Quantum</span>
               <br />
-              <span className="text-white transition-all duration-1000 delay-500">Computing Made</span>
+              <span className="text-white">Computing Made</span>
               <br />
-              <span className="gradient-text animate-pulse delay-700">Simple</span>
+              <span className="gradient-text">Simple</span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed transition-all duration-1000 delay-800">
+            <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
               {config.project.description}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 transition-all duration-1000 delay-1000">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
               <button
                 onClick={() => handleTryExample(getExampleCode('bell-state'))}
-                className="btn-quantum text-lg px-8 py-4 flex items-center group hover-lift relative overflow-hidden"
+                className="btn-quantum text-lg px-8 py-4 flex items-center group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
                 <span className="relative z-10">Try QCanvas Now</span>
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300 relative z-10" />
               </button>
               <button
                 onClick={() => scrollToSection('features')}
-                className="btn-ghost text-lg px-8 py-4 flex items-center group hover-lift relative overflow-hidden"
+                className="btn-ghost text-lg px-8 py-4 flex items-center group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-quantum-blue-light/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                <Lightbulb className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
-                <span className="relative z-10">Explore Features</span>
+                <Lightbulb className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300" />
+                <span>Explore Features</span>
               </button>
             </div>
 
-            {/* Enhanced Stats */}
-            <div className='grid grid-rows-1 gap-4'>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto transition-all duration-1000 delay-1200">
-              <div className="text-center group hover:scale-105 transition-transform duration-300">
-                <div className="text-3xl font-bold quantum-gradient bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300">{config.stats.frameworks}</div>
-                <div className="text-sm text-editor-text group-hover:text-white transition-colors duration-300">Quantum Frameworks</div>
-                <div className="w-0 group-hover:w-full h-0.5 bg-quantum-blue-light rounded-full transition-all duration-500 mx-auto mt-2"></div>
+            {/* Stats with glass cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
+              <div className="stat-card text-center group">
+                <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">{config.stats.frameworks}</div>
+                <div className="text-sm text-gray-500 group-hover:text-gray-300 transition-colors">Quantum Frameworks</div>
               </div>
-              <div className="text-center group hover:scale-105 transition-transform duration-300">
-                <div className="text-3xl font-bold quantum-gradient bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300">{config.stats.standards}</div>
-                <div className="text-sm text-editor-text group-hover:text-white transition-colors duration-300">Compatible</div>
-                <div className="w-0 group-hover:w-full h-0.5 bg-purple-400 rounded-full transition-all duration-500 mx-auto mt-2"></div>
+              <div className="stat-card text-center group">
+                <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">{config.stats.standards}</div>
+                <div className="text-sm text-gray-500 group-hover:text-gray-300 transition-colors">Compatible</div>
               </div>
-              <div className="text-center group hover:scale-105 transition-transform duration-300">
-                <div className="text-3xl font-bold quantum-gradient bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300">{config.stats.simulations}</div>
-                <div className="text-sm text-editor-text group-hover:text-white transition-colors duration-300">Simulation</div>
-                <div className="w-0 group-hover:w-full h-0.5 bg-teal-400 rounded-full transition-all duration-500 mx-auto mt-2"></div>
+              <div className="stat-card text-center group">
+                <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">{config.stats.simulations}</div>
+                <div className="text-sm text-gray-500 group-hover:text-gray-300 transition-colors">Simulation</div>
               </div>
             </div>
+
             {/* Scroll Indicator */}
-            <div className="relative transform -translate-x-1/2 animate-bounce">
+            <div className="animate-bounce">
               <button
                 onClick={() => scrollToSection('features')}
-                className="text-editor-text hover:text-white transition-colors duration-200"
+                className="text-gray-500 hover:text-white transition-colors duration-200"
               >
                 <ChevronDown className="w-6 h-6" />
               </button>
             </div>
-            </div>
           </div>
-
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 bg-black/20">
-        <div className="max-w-7xl mx-auto">
+      <section id="features" className="py-24 px-4 relative">
+        <div className="absolute inset-0 bg-grid-pattern opacity-30"></div>
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               <span className="quantum-gradient bg-clip-text text-transparent">Powerful Features</span>
             </h2>
-            <p className="text-xl text-editor-text max-w-3xl mx-auto">
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
               Everything you need to build, convert, and simulate quantum circuits
               with professional-grade tools and real-time feedback.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Feature 1 */}
-            <div className="quantum-glass-dark rounded-2xl p-8 hover-lift hover:shadow-quantum-lg transition-all duration-500 group feature-card opacity-0 animate-fade-in">
-              <div className="w-12 h-12 bg-quantum-blue-light/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 group-hover:bg-quantum-blue-light/30">
-                <Code className="w-6 h-6 text-quantum-blue-light group-hover:scale-110 transition-transform duration-300" />
+            <div className="quantum-glass-dark card-accent-blue rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(99,102,241,0.1)]">
+              <div className="w-12 h-12 bg-indigo-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-indigo-500/25 transition-all duration-300">
+                <Code className="w-6 h-6 text-indigo-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-quantum-blue-light transition-colors duration-300">Framework Conversion</h3>
-              <p className="text-editor-text mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-indigo-400 transition-colors duration-300">Framework Conversion</h3>
+              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Seamlessly convert between Cirq, Qiskit, and PennyLane with
                 intelligent parsing and OpenQASM 3.0 as the universal intermediate format.
               </p>
-              <div className="flex items-center text-sm text-quantum-blue-light group-hover:text-white transition-colors duration-300">
+              <div className="flex items-center text-sm text-indigo-400 group-hover:text-indigo-300 transition-colors duration-300 font-medium">
                 <span>Learn more</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </div>
 
             {/* Feature 2 */}
-            <div className="quantum-glass-dark rounded-2xl p-8 hover-lift hover:shadow-quantum-lg transition-all duration-500 group feature-card opacity-0 animate-fade-in">
-              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 group-hover:bg-purple-500/30">
-                <Play className="w-6 h-6 text-purple-400 group-hover:scale-110 transition-transform duration-300" />
+            <div className="quantum-glass-dark card-accent-purple rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]">
+              <div className="w-12 h-12 bg-violet-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-violet-500/25 transition-all duration-300">
+                <Play className="w-6 h-6 text-violet-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-purple-400 transition-colors duration-300">Real-time Simulation</h3>
-              <p className="text-editor-text mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-violet-400 transition-colors duration-300">Real-time Simulation</h3>
+              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Experience instant quantum circuit simulation with multiple backends,
                 progress tracking, and interactive visualization powered by WebSocket.
               </p>
-              <div className="flex items-center text-sm text-purple-400 group-hover:text-white transition-colors duration-300">
+              <div className="flex items-center text-sm text-violet-400 group-hover:text-violet-300 transition-colors duration-300 font-medium">
                 <span>Try simulation</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </div>
 
             {/* Feature 3 */}
-            <div className="quantum-glass-dark rounded-2xl p-8 hover-lift hover:shadow-quantum-lg transition-all duration-500 group feature-card opacity-0 animate-fade-in">
-              <div className="w-12 h-12 bg-teal-500/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 group-hover:bg-teal-500/30">
-                <BookOpen className="w-6 h-6 text-teal-400 group-hover:scale-110 transition-transform duration-300" />
+            <div className="quantum-glass-dark card-accent-teal rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+              <div className="w-12 h-12 bg-cyan-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-cyan-500/25 transition-all duration-300">
+                <BookOpen className="w-6 h-6 text-cyan-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-teal-400 transition-colors duration-300">Educational Platform</h3>
-              <p className="text-editor-text mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-cyan-400 transition-colors duration-300">Educational Platform</h3>
+              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Learn quantum computing with guided examples, tutorials, and
                 an intuitive interface designed for both beginners and experts.
               </p>
-              <div className="flex items-center text-sm text-teal-400 group-hover:text-white transition-colors duration-300">
+              <div className="flex items-center text-sm text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300 font-medium">
                 <span>Start learning</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </div>
 
             {/* Feature 4 */}
-            <div className="quantum-glass-dark rounded-2xl p-8 hover-lift hover:shadow-quantum-lg transition-all duration-500 group feature-card opacity-0 animate-fade-in">
-              <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 group-hover:bg-green-500/30">
-                <Zap className="w-6 h-6 text-green-400 group-hover:scale-110 transition-transform duration-300" />
+            <div className="quantum-glass-dark card-accent-green rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+              <div className="w-12 h-12 bg-emerald-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/25 transition-all duration-300">
+                <Zap className="w-6 h-6 text-emerald-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-green-400 transition-colors duration-300">Web IDE</h3>
-              <p className="text-editor-text mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-emerald-400 transition-colors duration-300">Web IDE</h3>
+              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Professional code editor with syntax highlighting, IntelliSense,
                 and live preview for quantum circuit development and debugging.
               </p>
-              <div className="flex items-center text-sm text-green-400 group-hover:text-white transition-colors duration-300">
+              <div className="flex items-center text-sm text-emerald-400 group-hover:text-emerald-300 transition-colors duration-300 font-medium">
                 <span>Open editor</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </div>
 
             {/* Feature 5 */}
-            <div className="quantum-glass-dark rounded-2xl p-8 hover-lift hover:shadow-quantum-lg transition-all duration-500 group feature-card opacity-0 animate-fade-in">
-              <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 group-hover:bg-orange-500/30">
-                <Users className="w-6 h-6 text-orange-400 group-hover:scale-110 transition-transform duration-300" />
+            <div className="quantum-glass-dark card-accent-orange rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+              <div className="w-12 h-12 bg-amber-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-500/25 transition-all duration-300">
+                <Users className="w-6 h-6 text-amber-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-orange-400 transition-colors duration-300">Community Sharing</h3>
-              <p className="text-editor-text mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-amber-400 transition-colors duration-300">Community Sharing</h3>
+              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Share your quantum circuits with the community through GitHub-style
                 repositories, collaboration tools, and public circuit galleries.
               </p>
-              <div className="flex items-center text-sm text-orange-400 group-hover:text-white transition-colors duration-300">
+              <div className="flex items-center text-sm text-amber-400 group-hover:text-amber-300 transition-colors duration-300 font-medium">
                 <span>Join community</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </div>
 
             {/* Feature 6 */}
-            <div className="quantum-glass-dark rounded-2xl p-8 hover-lift hover:shadow-quantum-lg transition-all duration-500 group feature-card opacity-0 animate-fade-in">
-              <div className="w-12 h-12 bg-pink-500/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 group-hover:bg-pink-500/30">
-                <Globe className="w-6 h-6 text-pink-400 group-hover:scale-110 transition-transform duration-300" />
+            <div className="quantum-glass-dark card-accent-pink rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(236,72,153,0.1)]">
+              <div className="w-12 h-12 bg-pink-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-pink-500/25 transition-all duration-300">
+                <Globe className="w-6 h-6 text-pink-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-pink-400 transition-colors duration-300">OpenQASM 3.0</h3>
-              <p className="text-editor-text mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-pink-400 transition-colors duration-300">OpenQASM 3.0</h3>
+              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Full support for OpenQASM 3.0 standard with advanced features,
                 validation, and compatibility across all major quantum platforms.
               </p>
-              <div className="flex items-center text-sm text-pink-400 group-hover:text-white transition-colors duration-300">
+              <div className="flex items-center text-sm text-pink-400 group-hover:text-pink-300 transition-colors duration-300 font-medium">
                 <span>View standard</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
               </div>
@@ -528,41 +364,40 @@ def grovers_search():
       </section>
 
       {/* Examples Preview */}
-      <section className="py-20 px-4 bg-gradient-to-b from-transparent via-black/10 to-transparent">
+      <section className="py-24 px-4 relative">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16 transition-all duration-1000">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 transition-all duration-1000">
-              <span className="quantum-gradient bg-clip-text text-transparent animate-pulse">Interactive Examples</span>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              <span className="quantum-gradient bg-clip-text text-transparent">Interactive Examples</span>
             </h2>
-            <p className="text-xl text-editor-text max-w-3xl mx-auto mb-8 transition-all duration-1000 delay-200">
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
               Explore quantum computing through hands-on examples and live demonstrations
             </p>
             <Link
               href="/examples"
-              className="btn-quantum inline-flex items-center group hover-lift transition-all duration-1000 delay-400"
+              className="btn-quantum inline-flex items-center group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
               <span className="relative z-10">View All Examples</span>
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 transition-all duration-1000 delay-600">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Example 1 */}
             <div
               onClick={() => handleTryExample(getExampleCode('bell-state'))}
               className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
             >
-              <div className="w-full h-32 bg-gradient-to-br from-quantum-blue-light/20 to-purple-500/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <Code className="w-12 h-12 text-quantum-blue-light group-hover:scale-110 transition-transform duration-300" />
+              <div className="w-full h-32 bg-gradient-to-br from-indigo-500/20 via-indigo-400/10 to-violet-500/20 rounded-xl mb-4 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300 border border-indigo-500/10">
+                <Code className="w-12 h-12 text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-quantum-blue-light transition-colors duration-300">Bell State (Cirq)</h3>
-              <p className="text-editor-text text-sm mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-indigo-400 transition-colors duration-300">Bell State (Cirq)</h3>
+              <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
                 Create quantum entanglement with H + CNOT gates. Expect 50% |00⟩ and 50% |11⟩
               </p>
               <div className="flex items-center justify-between">
-                <span className="text-xs bg-quantum-blue-light/20 text-quantum-blue-light px-2 py-1 rounded group-hover:bg-quantum-blue-light/40 transition-colors duration-300">Beginner</span>
-                <ArrowRight className="w-4 h-4 text-quantum-blue-light group-hover:translate-x-2 transition-transform duration-300" />
+                <span className="text-xs bg-indigo-500/15 text-indigo-300 px-3 py-1 rounded-full border border-indigo-500/20">Beginner</span>
+                <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </div>
 
@@ -571,16 +406,16 @@ def grovers_search():
               onClick={() => handleTryExample(getExampleCode('quantum-teleportation'))}
               className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
             >
-              <div className="w-full h-32 bg-gradient-to-br from-purple-500/20 to-teal-500/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <Play className="w-12 h-12 text-purple-400 group-hover:scale-110 transition-transform duration-300" />
+              <div className="w-full h-32 bg-gradient-to-br from-violet-500/20 via-purple-400/10 to-pink-500/20 rounded-xl mb-4 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300 border border-violet-500/10">
+                <Play className="w-12 h-12 text-violet-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-purple-400 transition-colors duration-300">Teleportation (Qiskit)</h3>
-              <p className="text-editor-text text-sm mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-violet-400 transition-colors duration-300">Teleportation (Qiskit)</h3>
+              <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
                 Transfer quantum states using entanglement with Bell measurement and classical corrections
               </p>
               <div className="flex items-center justify-between">
-                <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded group-hover:bg-purple-500/40 transition-colors duration-300">Intermediate</span>
-                <ArrowRight className="w-4 h-4 text-purple-400 group-hover:translate-x-2 transition-transform duration-300" />
+                <span className="text-xs bg-violet-500/15 text-violet-300 px-3 py-1 rounded-full border border-violet-500/20">Intermediate</span>
+                <ArrowRight className="w-4 h-4 text-violet-400 group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </div>
 
@@ -589,16 +424,16 @@ def grovers_search():
               onClick={() => handleTryExample(getExampleCode('grovers-search'))}
               className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
             >
-              <div className="w-full h-32 bg-gradient-to-br from-teal-500/20 to-green-500/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <Atom className="w-12 h-12 text-teal-400 group-hover:scale-110 transition-transform duration-300" />
+              <div className="w-full h-32 bg-gradient-to-br from-cyan-500/20 via-teal-400/10 to-emerald-500/20 rounded-xl mb-4 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300 border border-cyan-500/10">
+                <Atom className="w-12 h-12 text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-teal-400 transition-colors duration-300">Grover&apos;s Search (PennyLane)</h3>
-              <p className="text-editor-text text-sm mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors duration-300">Grover&apos;s Search (PennyLane)</h3>
+              <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
                 Quantum search algorithm with oracle and diffusion operator for quadratic speedup
               </p>
               <div className="flex items-center justify-between">
-                <span className="text-xs bg-teal-500/20 text-teal-400 px-2 py-1 rounded group-hover:bg-teal-500/40 transition-colors duration-300">Advanced</span>
-                <ArrowRight className="w-4 h-4 text-teal-400 group-hover:translate-x-2 transition-transform duration-300" />
+                <span className="text-xs bg-cyan-500/15 text-cyan-300 px-3 py-1 rounded-full border border-cyan-500/20">Advanced</span>
+                <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </div>
           </div>
@@ -606,83 +441,86 @@ def grovers_search():
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-quantum-blue-light/10 to-purple-500/10 relative overflow-hidden">
-        {/* Additional floating elements for CTA */}
+      <section className="py-24 px-4 relative overflow-hidden">
+        {/* Radial glow behind heading */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-indigo-500 opacity-[0.06] rounded-full blur-[100px]"></div>
+        </div>
+
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-10 left-10 animate-float delay-1000">
-            <Star className="w-6 h-6 text-quantum-blue-light opacity-30" />
+          <div className="absolute top-10 left-[15%] animate-float">
+            <Star className="w-5 h-5 text-indigo-400 opacity-20" />
           </div>
-          <div className="absolute bottom-10 right-10 animate-float-reverse delay-1500">
-            <Sparkles className="w-5 h-5 text-purple-400 opacity-40" />
+          <div className="absolute bottom-10 right-[15%] animate-float-reverse" style={{ animationDelay: '1.5s' }}>
+            <Sparkles className="w-4 h-4 text-violet-400 opacity-25" />
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto text-center relative z-10 transition-all duration-1000">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 transition-all duration-1000">
-            <span className="quantum-gradient bg-clip-text text-transparent animate-pulse">Ready to Start Your</span>
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <span className="quantum-gradient bg-clip-text text-transparent">Ready to Start Your</span>
             <br />
-            <span className="text-white transition-all duration-1000 delay-200">Quantum Journey?</span>
+            <span className="text-white">Quantum Journey?</span>
           </h2>
-          <p className="text-xl text-editor-text mb-8 max-w-2xl mx-auto transition-all duration-1000 delay-400">
+          <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
             Join thousands of researchers, students, and developers building
             the future of quantum computing with {config.project.name}.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center transition-all duration-1000 delay-600">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/login"
-              className="btn-quantum text-lg px-8 py-4 flex items-center justify-center group hover-lift relative overflow-hidden"
+              className="btn-quantum text-lg px-8 py-4 flex items-center justify-center group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               <Zap className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
               <span className="relative z-10">Launch QCanvas</span>
             </Link>
             <Link
               href="/docs"
-              className="btn-ghost text-lg px-8 py-4 flex items-center justify-center group hover-lift relative overflow-hidden"
+              className="btn-ghost text-lg px-8 py-4 flex items-center justify-center group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-quantum-blue-light/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <BookOpen className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
-              <span className="relative z-10">Read Documentation</span>
+              <BookOpen className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300" />
+              <span>Read Documentation</span>
             </Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-white/10">
+      <footer className="py-12 px-4 relative">
+        <div className="gradient-divider mb-12"></div>
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
-              <Link href="/" className="flex items-center space-x-2 mb-4 group">
-                <div className="relative">
+              <Link href="/" className="flex items-center space-x-2.5 mb-4 group">
+                <div className="relative logo-glow">
                   <Image
                     src="/QCanvas-logo-Black.svg"
                     alt="QCanvas Logo"
-                    width={40}
-                    height={40}
-                    className="object-contain block dark:hidden transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 animate-pulse"
+                    width={36}
+                    height={36}
+                    className="object-contain block dark:hidden transition-all duration-300 group-hover:scale-110"
                   />
                   <Image
                     src="/QCanvas-logo-White.svg"
                     alt="QCanvas Logo"
-                    width={40}
-                    height={40}
-                    className="object-contain hidden dark:block transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 animate-pulse"
+                    width={36}
+                    height={36}
+                    className="object-contain hidden dark:block transition-all duration-300 group-hover:scale-110"
                   />
                 </div>
-                <span className="text-xl font-bold quantum-gradient bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
+                <span className="text-xl font-bold quantum-gradient bg-clip-text text-transparent">
                   QCanvas
                 </span>
               </Link>
-            <p className="text-editor-text mb-4 max-w-md">
-              {config.project.description}
-            </p>
+              <p className="text-gray-500 mb-4 max-w-md text-sm leading-relaxed">
+                {config.project.description}
+              </p>
               <div className="flex space-x-4">
                 <a
                   href={config.social.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-editor-text hover:text-white transition-colors duration-200"
+                  className="text-gray-500 hover:text-indigo-400 transition-colors duration-200"
                 >
                   <GitBranch className="w-5 h-5" />
                 </a>
@@ -690,7 +528,7 @@ def grovers_search():
                   href={config.social.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-editor-text hover:text-white transition-colors duration-200"
+                  className="text-gray-500 hover:text-indigo-400 transition-colors duration-200"
                 >
                   <Globe className="w-5 h-5" />
                 </a>
@@ -698,13 +536,13 @@ def grovers_search():
             </div>
 
             <div>
-              <h4 className="font-semibold text-white mb-4">Platform</h4>
-              <div className="space-y-2">
+              <h4 className="font-semibold text-white mb-4 text-sm">Platform</h4>
+              <div className="space-y-2.5">
                 {config.footer.platform.map((link) => (
                   <Link
                     key={link.path}
                     href={link.path as any}
-                    className="block text-editor-text hover:text-white transition-colors duration-200"
+                    className="block text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit"
                   >
                     {link.name}
                   </Link>
@@ -713,15 +551,15 @@ def grovers_search():
             </div>
 
             <div>
-              <h4 className="font-semibold text-white mb-4">Community</h4>
-              <div className="space-y-2">
+              <h4 className="font-semibold text-white mb-4 text-sm">Community</h4>
+              <div className="space-y-2.5">
                 {config.footer.community.map((link) => (
                   <a
                     key={link.url}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block text-editor-text hover:text-white transition-colors duration-200"
+                    className="block text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit"
                   >
                     {link.name}
                   </a>
@@ -730,14 +568,15 @@ def grovers_search():
             </div>
           </div>
 
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-editor-text text-sm">
+          <div className="gradient-divider mb-8"></div>
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-600 text-sm">
               {getCopyrightText()}
             </p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <button className="text-editor-text hover:text-white transition-colors duration-200 text-sm cursor-not-allowed opacity-60" title="Coming Soon">Privacy</button>
-              <button className="text-editor-text hover:text-white transition-colors duration-200 text-sm cursor-not-allowed opacity-60" title="Coming Soon">Terms</button>
-              <a href={`mailto:${config.contact.support}`} className="text-editor-text hover:text-white transition-colors duration-200 text-sm">Support</a>
+              <button className="text-gray-600 hover:text-gray-400 transition-colors duration-200 text-sm cursor-not-allowed" title="Coming Soon">Privacy</button>
+              <button className="text-gray-600 hover:text-gray-400 transition-colors duration-200 text-sm cursor-not-allowed" title="Coming Soon">Terms</button>
+              <a href={`mailto:${config.contact.support}`} className="text-gray-600 hover:text-indigo-400 transition-colors duration-200 text-sm">Support</a>
             </div>
           </div>
         </div>

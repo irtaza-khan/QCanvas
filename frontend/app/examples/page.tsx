@@ -982,7 +982,11 @@ export default function ExamplesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0a1a] relative overflow-x-hidden text-white">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-transparent to-[#0a0a1a] pointer-events-none" />
+      <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] hero-spotlight opacity-30 blur-3xl pointer-events-none" />
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1033,7 +1037,7 @@ export default function ExamplesPage() {
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-lg bg-editor-bg/50 border border-editor-border hover:border-quantum-blue-light transition-colors duration-200"
+                className="p-2 rounded-lg bg-white/5 border border-white/10 hover:border-quantum-blue-light transition-colors duration-200"
                 title="Toggle theme"
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5 text-editor-text" /> : <Moon className="w-5 h-5 text-editor-text" />}
@@ -1059,7 +1063,7 @@ export default function ExamplesPage() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-editor-bg/50 border border-editor-border"
+              className="md:hidden p-2 rounded-lg bg-white/5 border border-white/10"
             >
               {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -1107,11 +1111,11 @@ export default function ExamplesPage() {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 pt-20">
-        {/* Animated Background */}
+        {/* Subtle background orbs — fewer, more vibrant */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-quantum-blue-light opacity-10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 opacity-10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500 opacity-5 rounded-full blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-indigo-500 opacity-[0.07] rounded-full blur-[100px]"></div>
+          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-violet-500 opacity-[0.07] rounded-full blur-[100px]"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500 opacity-[0.05] rounded-full blur-[80px]"></div>
         </div>
 
         <div className="text-center max-w-6xl mx-auto relative z-10">
@@ -1170,7 +1174,7 @@ export default function ExamplesPage() {
                   placeholder="Search examples..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg focus-quantum text-white placeholder-gray-400"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/5 rounded-lg focus-quantum text-white placeholder-gray-400"
                 />
               </div>
 
@@ -1181,7 +1185,7 @@ export default function ExamplesPage() {
                   id="category-select"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg focus-quantum text-white"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/5 rounded-lg focus-quantum text-white"
                 >
                   <option value="all">All Categories</option>
                   {categories.map(category => (
@@ -1197,7 +1201,7 @@ export default function ExamplesPage() {
                   id="framework-select"
                   value={selectedFramework}
                   onChange={(e) => setSelectedFramework(e.target.value)}
-                  className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg focus-quantum text-white"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/5 rounded-lg focus-quantum text-white"
                 >
                   <option value="all">All Frameworks</option>
                   {frameworks.map(framework => (
@@ -1213,7 +1217,7 @@ export default function ExamplesPage() {
                   id="difficulty-select"
                   value={selectedDifficulty}
                   onChange={(e) => setSelectedDifficulty(e.target.value)}
-                  className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg focus-quantum text-white"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/5 rounded-lg focus-quantum text-white"
                 >
                   <option value="all">All Levels</option>
                   {difficulties.map(difficulty => (
@@ -1280,7 +1284,7 @@ export default function ExamplesPage() {
                 </div>
 
                 {/* Code Preview */}
-                <div className="bg-editor-bg p-4 border-t border-editor-border">
+                <div className="bg-black/20 p-4 border-t border-white/5">
                   <pre className="text-xs text-editor-text overflow-x-auto max-w-full">
                     <code className="whitespace-pre-wrap break-words">{example.code.split('\n').slice(0, 8).join('\n')}...</code>
                   </pre>
@@ -1313,7 +1317,7 @@ export default function ExamplesPage() {
       </main>
 
       {/* Footer */}
-      <footer className="px-4 py-8 border-t border-editor-border">
+      <footer className="px-4 py-8 border-t border-white/5">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-editor-text">
             Ready to explore quantum computing? Copy any example and try it in QCanvas!

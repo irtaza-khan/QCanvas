@@ -197,7 +197,7 @@ export default function DocsPage() {
                 <Lightbulb className="w-5 h-5 mr-2 text-yellow-400" />
                 First Example
               </h3>
-              <div className="bg-editor-bg rounded-lg p-4 border border-editor-border mb-4">
+              <div className="bg-black/20 rounded-lg p-4 border border-white/5 mb-4">
                 <h4 className="text-white font-medium mb-3">Bell State Circuit</h4>
                 <pre className="text-xs text-editor-text overflow-x-auto">
 {`# Qiskit Bell State
@@ -507,7 +507,7 @@ print(qc)`}
 
           <div className="quantum-glass-dark rounded-xl p-8">
             <h3 className="text-2xl font-bold text-white mb-6">High-Level Architecture</h3>
-            <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+            <div className="bg-black/20 rounded-lg p-6 border border-white/5">
               <pre className="text-xs text-editor-text overflow-x-auto">
 {`Frontend (Next.js)          Backend (FastAPI)          Quantum Processing
 ├── React Components     ├── REST API Layer       ├── Quantum Converters
@@ -575,7 +575,7 @@ print(qc)`}
             <div className="space-y-6">
               <div>
                 <h4 className="text-lg font-semibold text-white mb-3">Circuit Conversion Flow</h4>
-                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                <div className="bg-black/20 rounded-lg p-4 border border-white/5">
                   <div className="flex items-center space-x-4 text-sm">
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
@@ -602,7 +602,7 @@ print(qc)`}
 
               <div>
                 <h4 className="text-lg font-semibold text-white mb-3">Simulation Flow</h4>
-                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                <div className="bg-black/20 rounded-lg p-4 border border-white/5">
                   <div className="flex items-center space-x-4 text-sm">
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-teal-400 rounded-full"></div>
@@ -659,7 +659,7 @@ print(qc)`}
                 Conversion API
               </h3>
               <div className="space-y-4">
-                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                <div className="bg-black/20 rounded-lg p-4 border border-white/5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-white font-medium">POST /api/converter/convert</span>
                     <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
@@ -675,7 +675,7 @@ print(qc)`}
                   </pre>
                 </div>
 
-                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                <div className="bg-black/20 rounded-lg p-4 border border-white/5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-white font-medium">GET /api/health</span>
                     <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Health</span>
@@ -691,7 +691,7 @@ print(qc)`}
                 Simulation API (QSim)
               </h3>
               <div className="space-y-4">
-                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                <div className="bg-black/20 rounded-lg p-4 border border-white/5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-white font-medium">POST /api/simulator/execute</span>
                     <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Active</span>
@@ -707,7 +707,7 @@ print(qc)`}
                   </pre>
                 </div>
 
-                <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+                <div className="bg-black/20 rounded-lg p-4 border border-white/5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-white font-medium">Response Metadata</span>
                     <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Stats</span>
@@ -721,7 +721,7 @@ print(qc)`}
           <div className="quantum-glass-dark rounded-xl p-8">
             <h3 className="text-2xl font-bold text-white mb-6">QSim Simulation Backends</h3>
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border hover:border-blue-500/50 transition-colors">
+              <div className="bg-black/20 rounded-lg p-6 border border-white/5 hover:border-blue-500/50 transition-colors">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                     <Database className="w-5 h-5 text-blue-400" />
@@ -741,7 +741,7 @@ print(qc)`}
                 </div>
               </div>
 
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border hover:border-purple-500/50 transition-colors">
+              <div className="bg-black/20 rounded-lg p-6 border border-white/5 hover:border-purple-500/50 transition-colors">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                     <Layers className="w-5 h-5 text-purple-400" />
@@ -761,7 +761,7 @@ print(qc)`}
                 </div>
               </div>
 
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border hover:border-green-500/50 transition-colors">
+              <div className="bg-black/20 rounded-lg p-6 border border-white/5 hover:border-green-500/50 transition-colors">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                     <Zap className="w-5 h-5 text-green-400" />
@@ -786,13 +786,13 @@ print(qc)`}
           <div className="quantum-glass-dark rounded-xl p-8">
             <h3 className="text-2xl font-bold text-white mb-6">WebSocket API</h3>
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+              <div className="bg-black/20 rounded-lg p-4 border border-white/5">
                 <h4 className="text-white font-medium mb-2">Connection</h4>
                 <pre className="text-xs text-editor-text bg-gray-900 dark:bg-gray-900 bg-gray-100 p-2 rounded">
 ws://localhost:8000/ws
                 </pre>
               </div>
-              <div className="bg-editor-bg rounded-lg p-4 border border-editor-border">
+              <div className="bg-black/20 rounded-lg p-4 border border-white/5">
                 <h4 className="text-white font-medium mb-2">Real-time Updates</h4>
                 <p className="text-editor-text text-sm">Live progress updates for long-running operations</p>
               </div>
@@ -831,7 +831,7 @@ ws://localhost:8000/ws
             
             <div className="space-y-6">
               {/* compile function */}
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-black/20 rounded-lg p-6 border border-white/5">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xl font-semibold text-white flex items-center">
                     <span className="text-quantum-blue-light mr-2">compile</span>
@@ -872,7 +872,7 @@ print(qasm)`}
               </div>
 
               {/* qsim.run function */}
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-black/20 rounded-lg p-6 border border-white/5">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xl font-semibold text-white flex items-center">
                     <span className="text-quantum-blue-light mr-2">qsim.run</span>
@@ -918,7 +918,7 @@ print(result.probabilities)`}
               </div>
 
               {/* compile_and_execute function */}
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-black/20 rounded-lg p-6 border border-white/5">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xl font-semibold text-white flex items-center">
                     <span className="text-quantum-blue-light mr-2">compile_and_execute</span>
@@ -976,7 +976,7 @@ print(result.probabilities)`}
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-editor-border">
+                  <tr className="border-b border-white/5">
                     <th className="text-left py-3 px-4 text-white font-semibold">Attribute</th>
                     <th className="text-left py-3 px-4 text-white font-semibold">Type</th>
                     <th className="text-left py-3 px-4 text-white font-semibold">Description</th>
@@ -984,73 +984,73 @@ print(result.probabilities)`}
                   </tr>
                 </thead>
                 <tbody className="text-editor-text">
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">counts</code></td>
                     <td className="py-3 px-4 text-sm"><code>Dict[str, int]</code></td>
                     <td className="py-3 px-4">Measurement counts for each outcome</td>
                     <td className="py-3 px-4 text-sm"><code>{`{'00': 512, '11': 512}`}</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">probabilities</code></td>
                     <td className="py-3 px-4 text-sm"><code>Dict[str, float]</code></td>
                     <td className="py-3 px-4">Probability of each measurement outcome</td>
                     <td className="py-3 px-4 text-sm"><code>{`{'00': 0.5, '11': 0.5}`}</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">statevector</code></td>
                     <td className="py-3 px-4 text-sm"><code>List[complex]</code></td>
                     <td className="py-3 px-4">Full quantum statevector (only when shots=0)</td>
                     <td className="py-3 px-4 text-sm"><code>{`[0.707+0j, 0+0j, ...]`}</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">n_qubits</code></td>
                     <td className="py-3 px-4 text-sm"><code>int</code></td>
                     <td className="py-3 px-4">Number of qubits in the circuit</td>
                     <td className="py-3 px-4 text-sm"><code>2</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">shots</code></td>
                     <td className="py-3 px-4 text-sm"><code>int</code></td>
                     <td className="py-3 px-4">Number of measurement shots executed</td>
                     <td className="py-3 px-4 text-sm"><code>1000</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">backend</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Backend used for simulation</td>
                     <td className="py-3 px-4 text-sm"><code>"cirq"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">execution_time</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Total execution time (human-readable)</td>
                     <td className="py-3 px-4 text-sm"><code>"1.23ms"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">simulation_time</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Time spent in quantum simulation</td>
                     <td className="py-3 px-4 text-sm"><code>"0.98ms"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">memory_usage</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Memory consumed during simulation</td>
                     <td className="py-3 px-4 text-sm"><code>"45.2 MB"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">cpu_usage</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">CPU utilization during simulation</td>
                     <td className="py-3 px-4 text-sm"><code>"12.5%"</code></td>
                   </tr>
-                  <tr className="border-b border-editor-border/50 hover:bg-editor-bg/50 dark:hover:bg-editor-bg/50 hover:bg-gray-50 transition-colors">
+                  <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">fidelity</code></td>
                     <td className="py-3 px-4 text-sm"><code>float</code></td>
                     <td className="py-3 px-4">Simulation fidelity as percentage</td>
                     <td className="py-3 px-4 text-sm"><code>100.0</code></td>
                   </tr>
-                  <tr className="hover:bg-editor-bg/50 transition-colors">
+                  <tr className="hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">metadata</code></td>
                     <td className="py-3 px-4 text-sm"><code>Dict[str, Any]</code></td>
                     <td className="py-3 px-4">Additional backend-specific metadata</td>
@@ -1073,7 +1073,7 @@ print(result.probabilities)`}
 
             <div className="grid md:grid-cols-3 gap-6">
               {/* Cirq */}
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-black/20 rounded-lg p-6 border border-white/5">
                 <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
                   <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
                     <Code className="w-4 h-4 text-blue-400" />
@@ -1104,7 +1104,7 @@ print(circuit)`}
               </div>
 
               {/* Qiskit */}
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-black/20 rounded-lg p-6 border border-white/5">
                 <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
                   <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3">
                     <Code className="w-4 h-4 text-purple-400" />
@@ -1136,7 +1136,7 @@ c: 2/══════╪══╬══╩═`}
               </div>
 
               {/* PennyLane */}
-              <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+              <div className="bg-black/20 rounded-lg p-6 border border-white/5">
                 <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
                   <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center mr-3">
                     <Code className="w-4 h-4 text-green-400" />
@@ -1174,7 +1174,7 @@ print(qml.draw(circuit)())`}
               <Lightbulb className="w-6 h-6 mr-3 text-yellow-400" />
               Complete Workflow Example
             </h3>
-            <div className="bg-editor-bg rounded-lg p-6 border border-editor-border">
+            <div className="bg-black/20 rounded-lg p-6 border border-white/5">
               <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4">
                 <pre className="text-sm text-editor-text overflow-x-auto">
 {`import cirq
@@ -1223,7 +1223,11 @@ print(f"\\nOne-step result: {result2.counts}")`}
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0a1a] relative overflow-x-hidden text-white">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-transparent to-[#0a0a1a] pointer-events-none" />
+      <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] hero-spotlight opacity-30 blur-3xl pointer-events-none" />
       {/* Enhanced Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1287,7 +1291,7 @@ print(f"\\nOne-step result: {result2.counts}")`}
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-editor-bg/50 border border-editor-border hover:border-quantum-blue-light transition-all duration-200 hover:scale-105"
+              className="p-2 rounded-lg bg-white/5 border border-white/10 hover:border-quantum-blue-light transition-all duration-200 hover:scale-105"
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -1296,7 +1300,7 @@ print(f"\\nOne-step result: {result2.counts}")`}
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-editor-bg/50 border border-editor-border hover:border-quantum-blue-light transition-all duration-200 hover:scale-105"
+              className="md:hidden p-2 rounded-lg bg-white/5 border border-white/10 hover:border-quantum-blue-light transition-all duration-200 hover:scale-105"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -1352,45 +1356,26 @@ print(f"\\nOne-step result: {result2.counts}")`}
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 pt-20 overflow-hidden">
-        {/* Enhanced Animated Background */}
+        {/* Subtle background orbs — fewer, more vibrant */}
         <div className="absolute inset-0 overflow-hidden">
-          {/* Large background orbs */}
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-quantum-blue-light opacity-8 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 opacity-8 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500 opacity-3 rounded-full blur-3xl animate-pulse delay-500"></div>
-
-          {/* Additional floating orbs */}
-          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400 opacity-6 rounded-full blur-2xl animate-float delay-300"></div>
-          <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-pink-400 opacity-5 rounded-full blur-2xl animate-float delay-700"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-green-400 opacity-4 rounded-full blur-2xl animate-float delay-1100"></div>
+          <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-indigo-500 opacity-[0.07] rounded-full blur-[100px]"></div>
+          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-violet-500 opacity-[0.07] rounded-full blur-[100px]"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500 opacity-[0.05] rounded-full blur-[80px]"></div>
         </div>
 
-        {/* Enhanced Floating Elements */}
+        {/* Floating elements — fewer, more visible */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Quantum-themed floating icons */}
-          <div className="absolute top-20 left-10 animate-float delay-1000 hover:scale-110 transition-transform duration-300">
-            <Atom className="w-8 h-8 text-quantum-blue-light opacity-40 animate-pulse" />
+          <div className="absolute top-24 left-[8%] animate-float">
+            <Atom className="w-8 h-8 text-indigo-400 opacity-20" />
           </div>
-          <div className="absolute top-40 right-20 animate-float-reverse delay-2000 hover:scale-110 transition-transform duration-300">
-            <Sparkles className="w-6 h-6 text-purple-400 opacity-50 animate-pulse delay-500" />
+          <div className="absolute top-1/3 right-[8%] animate-float-reverse" style={{ animationDelay: '2s' }}>
+            <Sparkles className="w-6 h-6 text-violet-400 opacity-25" />
           </div>
-          <div className="absolute bottom-40 left-20 animate-float delay-3000 hover:scale-110 transition-transform duration-300">
-            <Cpu className="w-10 h-10 text-teal-400 opacity-35 animate-pulse delay-1000" />
+          <div className="absolute bottom-1/3 left-[12%] animate-float" style={{ animationDelay: '4s' }}>
+            <Cpu className="w-7 h-7 text-cyan-400 opacity-20" />
           </div>
-          <div className="absolute top-1/3 right-10 animate-float-reverse delay-4000 hover:scale-110 transition-transform duration-300">
-            <Zap className="w-7 h-7 text-yellow-400 opacity-45 animate-pulse delay-1500" />
-          </div>
-          <div className="absolute bottom-1/3 left-1/5 animate-float delay-5000 hover:scale-110 transition-transform duration-300">
-            <Lightbulb className="w-6 h-6 text-orange-400 opacity-40 animate-pulse delay-2000" />
-          </div>
-          <div className="absolute top-2/3 right-1/3 animate-float-reverse delay-6000 hover:scale-110 transition-transform duration-300">
-            <Star className="w-5 h-5 text-indigo-400 opacity-50 animate-pulse delay-2500" />
-          </div>
-
-          {/* Geometric shapes */}
-          <div className="absolute top-16 right-1/4 w-2 h-2 bg-quantum-blue-light rounded-full animate-ping opacity-60"></div>
-          <div className="absolute bottom-32 right-16 w-1 h-8 bg-purple-400 rounded-full animate-pulse opacity-40"></div>
-          <div className="absolute top-1/2 left-16 w-3 h-3 bg-teal-400 rounded-full animate-bounce opacity-50"></div>
+          <div className="absolute top-16 right-1/4 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping opacity-40"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping opacity-30" style={{ animationDelay: '1s' }}></div>
         </div>
 
         <div className={`text-center max-w-6xl mx-auto relative z-10 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
@@ -1475,7 +1460,7 @@ print(f"\\nOne-step result: {result2.counts}")`}
       ))}
 
       {/* Footer */}
-      <footer className="px-4 py-12 border-t border-editor-border">
+      <footer className="px-4 py-12 border-t border-white/5">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-editor-text">
             {getCopyrightText()}

@@ -22,7 +22,11 @@ export default function AboutPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-editor-bg via-gray-900 to-editor-bg relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0a1a] relative overflow-x-hidden text-white">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-transparent to-[#0a0a1a] pointer-events-none" />
+      <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] hero-spotlight opacity-30 blur-3xl pointer-events-none" />
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,7 +77,7 @@ export default function AboutPage() {
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-lg bg-editor-bg/50 border border-editor-border hover:border-quantum-blue-light transition-colors duration-200"
+                className="p-2 rounded-lg bg-white/5 border border-white/10 hover:border-quantum-blue-light transition-colors duration-200"
                 title="Toggle theme"
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5 text-editor-text" /> : <Moon className="w-5 h-5 text-editor-text" />}
@@ -99,7 +103,7 @@ export default function AboutPage() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-editor-bg/50 border border-editor-border"
+              className="md:hidden p-2 rounded-lg bg-white/5 border border-white/10"
             >
               {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -147,11 +151,11 @@ export default function AboutPage() {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 pt-20">
-        {/* Animated Background */}
+        {/* Subtle background orbs — fewer, more vibrant */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-quantum-blue-light opacity-10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 opacity-10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500 opacity-5 rounded-full blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-indigo-500 opacity-[0.07] rounded-full blur-[100px]"></div>
+          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-violet-500 opacity-[0.07] rounded-full blur-[100px]"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500 opacity-[0.05] rounded-full blur-[80px]"></div>
         </div>
 
         <div className="text-center max-w-6xl mx-auto relative z-10">
@@ -185,17 +189,17 @@ export default function AboutPage() {
                   <h4 className="text-xl font-semibold text-white mb-4">{member.name}</h4>
                   <div className="flex justify-center space-x-3">
                     {member.email && (
-                      <a href={`mailto:${member.email}`} className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-red-600 transition-colors" title="Email">
+                      <a href={`mailto:${member.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
                         <Mail className="w-5 h-5" />
                       </a>
                     )}
                     {member.github && (
-                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-gray-700 transition-colors" title="GitHub">
+                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="GitHub">
                         <Github className="w-5 h-5" />
                       </a>
                     )}
                     {member.linkedin && (
-                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-blue-600 transition-colors" title="LinkedIn">
+                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="LinkedIn">
                         <Linkedin className="w-5 h-5" />
                       </a>
                     )}
@@ -217,17 +221,17 @@ export default function AboutPage() {
                   <h4 className="text-xl font-semibold text-white mb-4">{member.name}</h4>
                   <div className="flex justify-center space-x-3">
                     {member.email && (
-                      <a href={`mailto:${member.email}`} className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-red-600 transition-colors" title="Email">
+                      <a href={`mailto:${member.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
                         <Mail className="w-5 h-5" />
                       </a>
                     )}
                     {member.github && (
-                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-gray-700 transition-colors" title="GitHub">
+                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="GitHub">
                         <Github className="w-5 h-5" />
                       </a>
                     )}
                     {member.linkedin && (
-                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-blue-600 transition-colors" title="LinkedIn">
+                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="LinkedIn">
                         <Linkedin className="w-5 h-5" />
                       </a>
                     )}
@@ -240,7 +244,7 @@ export default function AboutPage() {
       </div>
 
       {/* Initiative Section */}
-      <div className="px-4 py-16 bg-gradient-to-b from-transparent to-editor-bg/20">
+      <div className="px-4 py-16 bg-gradient-to-b from-transparent to-black/30">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-8">Built under</h2>
           <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10">
@@ -273,17 +277,17 @@ export default function AboutPage() {
                   <h4 className="text-xl font-semibold text-white mb-4">{supervisor.name}</h4>
                   <div className="flex justify-center space-x-3">
                     {supervisor.email && (
-                      <a href={`mailto:${supervisor.email}`} className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-red-600 transition-colors" title="Email">
+                      <a href={`mailto:${supervisor.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
                         <Mail className="w-5 h-5" />
                       </a>
                     )}
                     {supervisor.github && (
-                      <a href={supervisor.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-gray-700 transition-colors" title="GitHub">
+                      <a href={supervisor.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="GitHub">
                         <Github className="w-5 h-5" />
                       </a>
                     )}
                     {supervisor.linkedin && (
-                      <a href={supervisor.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-editor-bg rounded-lg text-editor-text hover:text-white hover:bg-blue-600 transition-colors" title="LinkedIn">
+                      <a href={supervisor.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="LinkedIn">
                         <Linkedin className="w-5 h-5" />
                       </a>
                     )}
@@ -296,7 +300,7 @@ export default function AboutPage() {
       </div>
 
       {/* Footer */}
-      <footer className="px-4 py-8 border-t border-editor-border">
+      <footer className="px-4 py-8 border-t border-white/5">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-editor-text">
             {getCopyrightText()}

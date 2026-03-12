@@ -86,7 +86,7 @@ export default function ProfilePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-editor-bg">
+            <div className="min-h-screen bg-[#0a0a1a]">
                 <SimpleTopBar />
                 <div className="h-20" />
                 <div className="p-4 md:p-8 max-w-6xl mx-auto">
@@ -114,7 +114,7 @@ export default function ProfilePage() {
     ];
 
     return (
-        <div className="min-h-screen bg-editor-bg text-white">
+        <div className="min-h-screen bg-[#0a0a1a] text-white">
             <SimpleTopBar />
 
             {/* Spacer below topbar */}
