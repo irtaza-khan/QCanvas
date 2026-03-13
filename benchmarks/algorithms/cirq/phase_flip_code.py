@@ -1,39 +1,48 @@
 """
-Cirq Implementation: Phase-Flip Error Correcting Code (3 qubits)
+Cirq Implementation: Phase-Flip Error Correction Code (3 qubits)
 Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
 Algorithm: 3-Qubit Phase-Flip Code
 Category: Error Correction
-Qubit Range: 3 (fixed)
+Qubit Range: 3
 Framework: Cirq (idiomatic style)
 
-Phase-flip code in Cirq. Structurally identical to the Cirq bit-flip code
-but with additional H layers wrapping the encoding/decoding stages.
+Encode (H basis) → phase-flip error → correct (Toffoli) → decode → measure.
 
-Expected gate count difference vs bit_flip_code.py:
-  +6 H gates (3 before syndrome, 3 after)
+Called by: benchmarks/scripts/compile_all.py
 """
 
-# TODO: import cirq
+import cirq
+
 
 def get_circuit():
-    """
-    Build and return the Cirq phase-flip error correction circuit.
+    """Build 3-qubit phase-flip code circuit in Cirq."""
+    q0, q1, q2 = cirq.LineQubit.range(3)
+    ops = []
 
-    Returns:
-        cirq.Circuit: Phase-flip code. Works in the X-basis using H gates
-        to rotate before and after the standard bit-flip encoding/decoding.
-    """
+    # Prepare |+⟩
+    ops.append(cirq.H(q0))
 
-    # TODO: data = cirq.LineQubit(0); anc0 = cirq.LineQubit(1); anc1 = cirq.LineQubit(2)
-    # TODO: Init: H(data)
-    # TODO: Encode: CNOT(data, anc0), CNOT(data, anc1), H on all 3
-    # TODO: (Optional) Error injection: comment marker for Z error
-    # TODO: Syndrome: H on all 3, CNOT(data,anc0)+measure('s0'), CNOT(data,anc1)+measure('s1')
-    # TODO: Correction: Z(data).with_classical_controls('s0'), etc.
-    # TODO: Final: H(data), measure(data, key='logical_output')
-    # TODO: return cirq.Circuit([...])
-    pass
+    # Encoding: fan-out then Hadamard all
+    ops.append(cirq.CNOT(q0, q1))
+    ops.append(cirq.CNOT(q0, q2))
+    ops.extend([cirq.H(q0), cirq.H(q1), cirq.H(q2)])
+
+    # Simulated error: Z on q0
+    ops.append(cirq.Z(q0))
+
+    # Decoding: H back, then Toffoli correction
+    ops.extend([cirq.H(q0), cirq.H(q1), cirq.H(q2)])
+    ops.append(cirq.CCX(q1, q2, q0))
+    ops.append(cirq.CNOT(q0, q1))
+    ops.append(cirq.CNOT(q0, q2))
+
+    # Measure
+    ops.append(cirq.measure(q0, q1, q2, key='result'))
+
+    return cirq.Circuit(ops)
 
 
-# TODO: if __name__ == "__main__": print circuit, compare H count vs bit_flip_code
+if __name__ == '__main__':
+    c = get_circuit()
+    print(c)

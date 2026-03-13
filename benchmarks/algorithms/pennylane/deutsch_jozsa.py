@@ -1,52 +1,57 @@
 """
-PennyLane Implementation: Deutsch–Jozsa (variable: 3–8 qubits)
+PennyLane Implementation: Deutsch–Jozsa Algorithm (variable: 3–8 qubits)
 Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
 Algorithm: Deutsch–Jozsa
 Category: Oracle-Based
-Qubit Range: 3–8
+Qubit Range: 3–8 (n input wires + 1 ancilla wire)
 Framework: PennyLane (idiomatic style)
 
-PennyLane does not have a DJ template; oracle is built manually.
-Uses same oracle strategy as Qiskit version (CNOT from each input to ancilla).
+Called by: benchmarks/scripts/compile_all.py  (n ∈ 3..8)
 """
 
-# TODO: import pennylane as qml
+import pennylane as qml
 
-def get_circuit(n: int = 3, oracle_type: str = "balanced"):
+
+def get_circuit(n: int = 3, oracle_type: str = 'balanced'):
     """
-    Build and return the PennyLane Deutsch–Jozsa QNode.
+    Create and return a PennyLane QNode for Deutsch–Jozsa.
 
     Args:
-        n (int): Number of input qubits. Total wires = n+1 (ancilla at wire n).
-        oracle_type (str): 'constant' or 'balanced'.
+        n: Number of input qubits (3–8).
+        oracle_type: 'balanced', 'constant_0', 'constant_1'.
 
     Returns:
-        function: QNode.
-
-    Notes:
-        - Ancilla wire = n, input wires = 0..n-1
-        - return qml.probs(wires=list(range(n)))
+        callable: PennyLane QNode.
     """
+    total = n + 1   # n input + 1 ancilla
+    dev = qml.device('default.qubit', wires=total)
 
-    # TODO: dev = qml.device('default.qubit', wires=n+1)
+    @qml.qnode(dev)
+    def dj_circuit():
+        # Ancilla to |−⟩
+        qml.PauliX(wires=n)
+        for w in range(total):
+            qml.Hadamard(wires=w)
 
-    # TODO: @qml.qnode(dev)
-    #   def dj_circuit():
-    #       # Ancilla prep: X then H
-    #       qml.PauliX(wires=n)
-    #       qml.Hadamard(wires=n)
-    #       # H on input qubits
-    #       for i in range(n): qml.Hadamard(wires=i)
-    #       # Oracle
-    #       if oracle_type == 'balanced':
-    #           for i in range(n): qml.CNOT(wires=[i, n])
-    #       # Second H layer
-    #       for i in range(n): qml.Hadamard(wires=i)
-    #       return qml.probs(wires=list(range(n)))
+        # Oracle
+        if oracle_type == 'balanced':
+            for w in range(n):
+                qml.CNOT(wires=[w, n])
+        elif oracle_type == 'constant_1':
+            qml.PauliX(wires=n)
 
-    # TODO: return dj_circuit
-    pass
+        # H on input wires
+        for w in range(n):
+            qml.Hadamard(wires=w)
+
+        return qml.probs(wires=list(range(n)))
+
+    return dj_circuit
 
 
-# TODO: if __name__ == "__main__": run both oracle types for n=3
+if __name__ == '__main__':
+    for n in [3, 4, 5]:
+        qnode = get_circuit(n)
+        print(f"\nDJ balanced (n={n}):")
+        print(qml.draw(qnode)())

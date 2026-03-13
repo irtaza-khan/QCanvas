@@ -7,126 +7,108 @@ Category: Search
 Qubit Range: 2–6
 Framework: Cirq (idiomatic style)
 
-Primary case study (Case Study 2). Uses the SAME marked states as the
-Qiskit version for reproducibility.
+Cirq-idiomatic decomposition:
+  - Uses cirq.X, cirq.H natively
+  - Multi-controlled Z: Cirq's cirq.ControlledGate for n-controlled gates
+  - Oracle applied as a custom Gate built from basic Cirq operations
 
-Idiomatic Cirq conventions:
-  - Custom gate classes can be defined as cirq.Gate subclasses for the oracle
-    and diffusion operator, or constructed inline from primitive gates
-  - cirq.X, cirq.H, cirq.CNOT, cirq.CZ, cirq.CCX (Toffoli gate: cirq.CCX)
-  - cirq.ControlledGate for multi-controlled gates of arbitrary size
+Uses the same MARKED_STATES as Qiskit and PennyLane versions.
 
-Key structural difference from Qiskit:
-  - Cirq may represent multi-controlled Z (MCZ) as a native gate (e.g., cirq.CCZ
-    for 3-qubit or cirq.ControlledGate(cirq.Z, num_controls=n-1))
-  - Qiskit decomposes MCZ via mcp(pi, controls, target)
-  - PennyLane provides qml.GroverOperator as template (may have fewest gates)
-  This three-way comparison is central to Case Study 2.
-
-Marked states (MUST match qiskit/grovers_algorithm.py):
-  n=2 → "11", n=3 → "101", n=4 → "1011", n=5 → "10110", n=6 → "101101"
-
-This file is called by:
-  - benchmarks/scripts/compile_all.py  (for n ∈ 2..6)
-  - benchmarks/notebooks/nb01_compile_and_static_analysis.ipynb
-  - benchmarks/notebooks/nb04_case_studies.ipynb  (Case Study 2)
+Called by:
+  - benchmarks/scripts/compile_all.py  (n ∈ 2..6)
+  - benchmarks/notebooks/nb04_case_studies.ipynb (Case Study 2)
 """
 
-# ──────────────────────────────────────────────────────────
-# Imports
-# ──────────────────────────────────────────────────────────
+import numpy as np
+import cirq
 
-# TODO: import cirq
-# TODO: import numpy as np
-
-
-# ──────────────────────────────────────────────────────────
-# Constants
-# ──────────────────────────────────────────────────────────
-
-# TODO: MARKED_STATES = {2: "11", 3: "101", 4: "1011", 5: "10110", 6: "101101"}
+MARKED_STATES = {
+    2: "11",
+    3: "101",
+    4: "1011",
+    5: "10110",
+    6: "101101",
+}
 
 
-# ──────────────────────────────────────────────────────────
-# Helper: Phase Oracle
-# ──────────────────────────────────────────────────────────
-
-def build_phase_oracle(qubits, marked_state: str):
-    """
-    Return a list of Cirq operations implementing the phase oracle.
-
-    Strategy:
-      - X on qubits where marked_state bit == '0'
-      - Multi-controlled-Z (using cirq.ControlledGate or cirq.CCZ for small n)
-      - X again on same qubits
-
-    Returns:
-        list[cirq.Operation]: Oracle operations to append to a circuit.
-    """
-
-    # TODO: ops = []
-    # TODO: For each i where marked_state[i] == '0': ops.append(cirq.X(qubits[i]))
-    # TODO: Build MCZ: for n<=3 use cirq.CCZ(*qubits) or cirq.CZ(q0, q1);
-    #        for n>3 use cirq.ControlledGate(cirq.Z, num_controls=n-1)(*qubits)
-    # TODO: For each i where marked_state[i] == '0': ops.append(cirq.X(qubits[i]))
-    # TODO: return ops
-    pass
+def _mcz(qubits):
+    """Multi-controlled Z on a list of qubits using decomposition."""
+    if len(qubits) == 1:
+        return [cirq.Z(qubits[0])]
+    # H on last qubit, then MCX (multi-controlled X), then H
+    ops = []
+    target = qubits[-1]
+    controls = qubits[:-1]
+    ops.append(cirq.H(target))
+    if len(controls) == 1:
+        ops.append(cirq.CNOT(controls[0], target))
+    elif len(controls) == 2:
+        ops.append(cirq.CCX(controls[0], controls[1], target))
+    else:
+        # For > 2 controls, use recursive decomposition
+        ops.append(cirq.ControlledGate(cirq.X, num_controls=len(controls))(*controls, target))
+    ops.append(cirq.H(target))
+    return ops
 
 
-# ──────────────────────────────────────────────────────────
-# Helper: Diffusion Operator
-# ──────────────────────────────────────────────────────────
-
-def build_diffusion_operator(qubits):
-    """
-    Return Cirq operations for the Grover diffusion operator (2|s⟩⟨s|-I).
-
-    H⊗n → X⊗n → MCZ → X⊗n → H⊗n
-
-    Returns:
-        list[cirq.Operation]
-    """
-
-    # TODO: ops = []
-    # TODO: H on all qubits
-    # TODO: X on all qubits
-    # TODO: MCZ (same construction as oracle)
-    # TODO: X on all qubits
-    # TODO: H on all qubits
-    # TODO: return ops
-    pass
+def build_phase_oracle(qubits, marked_state: str) -> list:
+    """Phase oracle operations for the given marked state."""
+    ops = []
+    # X on qubits where marked_state[i] == '0'
+    for i, bit in enumerate(marked_state):
+        if bit == '0':
+            ops.append(cirq.X(qubits[i]))
+    # Multi-controlled Z
+    ops.extend(_mcz(list(qubits)))
+    # Undo X flips
+    for i, bit in enumerate(marked_state):
+        if bit == '0':
+            ops.append(cirq.X(qubits[i]))
+    return ops
 
 
-# ──────────────────────────────────────────────────────────
-# Main Circuit
-# ──────────────────────────────────────────────────────────
+def build_diffusion(qubits) -> list:
+    """Grover diffusion operator operations."""
+    ops = []
+    ops.extend(cirq.H(q) for q in qubits)
+    ops.extend(cirq.X(q) for q in qubits)
+    ops.extend(_mcz(list(qubits)))
+    ops.extend(cirq.X(q) for q in qubits)
+    ops.extend(cirq.H(q) for q in qubits)
+    return ops
+
 
 def get_circuit(n: int = 2):
     """
-    Build and return the full Cirq Grover's algorithm circuit.
+    Build Grover's algorithm circuit for n qubits in Cirq.
 
     Args:
-        n (int): Number of search qubits (2–6). Default 2.
+        n: Number of search qubits (2–6).
 
     Returns:
-        cirq.Circuit
+        cirq.Circuit: Full Grover circuit.
     """
+    if n not in MARKED_STATES:
+        raise ValueError(f"n must be in {sorted(MARKED_STATES.keys())}, got {n}")
 
-    # TODO: qubits = cirq.LineQubit.range(n)
-    # TODO: marked_state = MARKED_STATES[n]
-    # TODO: num_iterations = int(np.floor(np.pi / 4 * np.sqrt(2**n)))
+    marked = MARKED_STATES[n]
+    num_iterations = max(1, int(np.floor(np.pi / 4 * np.sqrt(2 ** n))))
+    qubits = cirq.LineQubit.range(n)
 
-    # TODO: Build circuit:
-    #   - H on all qubits
-    #   - Repeat num_iterations: build_phase_oracle + build_diffusion_operator
-    #   - cirq.measure(*qubits, key='result')
+    ops = list(cirq.H(q) for q in qubits)
 
-    # TODO: return cirq.Circuit([...])
-    pass
+    for _ in range(num_iterations):
+        ops.extend(build_phase_oracle(qubits, marked))
+        ops.extend(build_diffusion(qubits))
+
+    ops.append(cirq.measure(*qubits, key='result'))
+
+    return cirq.Circuit(ops)
 
 
-# ──────────────────────────────────────────────────────────
-# Module entry-point
-# ──────────────────────────────────────────────────────────
-
-# TODO: if __name__ == "__main__": print circuits for n=2, n=3, n=4; print gate counts
+if __name__ == '__main__':
+    for n in [2, 3, 4]:
+        c = get_circuit(n)
+        iters = max(1, int(np.floor(np.pi / 4 * np.sqrt(2 ** n))))
+        print(f"\nGrover's (n={n}, marked='{MARKED_STATES[n]}', iters={iters}):")
+        print(c)

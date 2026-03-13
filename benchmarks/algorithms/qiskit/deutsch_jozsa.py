@@ -4,158 +4,98 @@ Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
 Algorithm: Deutsch–Jozsa
 Category: Oracle-Based
-Qubit Range: 3–8 (n input qubits + 1 ancilla = n+1 total)
+Qubit Range: 3–8 (n input qubits + 1 ancilla)
 Framework: Qiskit (idiomatic style)
 
-The Deutsch–Jozsa algorithm determines whether an n-bit boolean function
-f:{0,1}^n → {0,1} is constant or balanced, using a single query to the
-quantum oracle.
+Determines whether a boolean function f: {0,1}^n → {0,1} is
+constant (f always 0 or always 1) or balanced (f=0 for half inputs,
+f=1 for the other half) in a single query.
 
-This benchmark implements TWO oracle variants:
-  - get_circuit_constant()  →  constant oracle (f always returns 0)
-  - get_circuit_balanced()  →  balanced oracle (f returns 0 for half inputs, 1 for the other half)
+Oracle types implemented:
+  'balanced' → XOR oracle using CNOT gates (canonical balanced function)
+  'constant_0' → f(x)=0 for all x (identity ancilla)
+  'constant_1' → f(x)=1 for all x (X on ancilla before and after)
 
-Circuit structure (n input qubits + 1 ancilla):
-  1. Prepare ancilla in |−⟩ = H|1⟩
-  2. Apply H⊗n to all input qubits
-  3. Apply oracle U_f
-  4. Apply H⊗n again to input qubits
-  5. Measure input qubits
-     - All zeros → constant function
-     - At least one 1 → balanced function
+Idiomatic Qiskit:
+  - n input qubits + 1 ancilla qubit (total n+1)
+  - Ancilla initialised to |−⟩ (H applied after X)
+  - Balanced oracle: CNOTs from all input qubits to ancilla
 
-Key metric for paper:
-  Oracle encoding is the PRIMARY source of gate-count variation between
-  frameworks. The diffusion + oracle section may decompose CNOT sequences
-  very differently across Qiskit, Cirq, and PennyLane.
-
-This file is called by:
-  - benchmarks/scripts/compile_all.py  (for n ∈ 3..8, both oracle types)
-  - benchmarks/notebooks/nb01_compile_and_static_analysis.ipynb
-  - benchmarks/notebooks/nb03_statistical_analysis.ipynb (scaling)
+Called by:
+  - benchmarks/scripts/compile_all.py  (n ∈ 3..8, oracle='balanced')
+  - benchmarks/notebooks/nb03_statistical_analysis.ipynb
 """
 
-# ──────────────────────────────────────────────────────────
-# Imports
-# ──────────────────────────────────────────────────────────
-
-# TODO: import QuantumCircuit from qiskit
+from qiskit import QuantumCircuit
 
 
-# ──────────────────────────────────────────────────────────
-# Constants Oracle
-# ──────────────────────────────────────────────────────────
-
-def get_circuit_constant(n: int = 3):
+def build_oracle(n: int, oracle_type: str = 'balanced') -> QuantumCircuit:
     """
-    Build the Deutsch–Jozsa circuit with a CONSTANT oracle (f always 0).
+    Build the Deutsch-Jozsa oracle as a sub-circuit.
 
     Args:
-        n (int): Number of input qubits. Total qubits = n + 1 (ancilla).
+        n: Number of input qubits.
+        oracle_type: 'balanced', 'constant_0', or 'constant_1'.
 
     Returns:
-        QuantumCircuit: Full Deutsch–Jozsa circuit. Measuring input
-        qubits should always yield all-zeros (00...0).
-
-    Oracle implementation:
-        Constant-0 oracle: do nothing (identity). Zero gates added.
-        This is the trivial baseline — useful for measuring the framework's
-        overhead for the non-oracle portions of the circuit.
+        QuantumCircuit: Oracle sub-circuit acting on n+1 qubits.
     """
+    oracle = QuantumCircuit(n + 1)
 
-    # TODO: Create QuantumCircuit with n+1 qubits and n classical bits
-    #       (index n is the ancilla qubit)
+    if oracle_type == 'balanced':
+        # CNOT from each input qubit to the ancilla (qubit n)
+        for i in range(n):
+            oracle.cx(i, n)
+    elif oracle_type == 'constant_0':
+        pass  # Identity: f(x) = 0 for all x
+    elif oracle_type == 'constant_1':
+        oracle.x(n)  # f(x) = 1 for all x: flip ancilla unconditionally
+    else:
+        raise ValueError(f"Unknown oracle type: {oracle_type}")
 
-    # ── Initial state preparation ──────────────────────
-    # TODO: Apply X then H to ancilla qubit (index n) → puts ancilla in |−⟩
-    # TODO: Apply H to all n input qubits (range(n))
-
-    # ── Constant oracle (identity — no gates needed) ───
-    # TODO: Add a barrier to separate oracle from rest of circuit (improves clarity in QASM)
-
-    # ── Second Hadamard layer ──────────────────────────
-    # TODO: Apply H to all n input qubits again
-
-    # ── Measurement ───────────────────────────────────
-    # TODO: Measure input qubits 0..n-1 into classical bits 0..n-1
-
-    # TODO: return circuit
-    pass
+    return oracle
 
 
-# ──────────────────────────────────────────────────────────
-# Balanced Oracle
-# ──────────────────────────────────────────────────────────
-
-def get_circuit_balanced(n: int = 3):
+def get_circuit(n: int = 3, oracle_type: str = 'balanced'):
     """
-    Build the Deutsch–Jozsa circuit with a BALANCED oracle.
+    Build the full Deutsch–Jozsa circuit for n input qubits.
 
     Args:
-        n (int): Number of input qubits. Total qubits = n + 1 (ancilla).
+        n: Number of input qubits (3–8).
+        oracle_type: 'balanced' (default), 'constant_0', or 'constant_1'.
 
     Returns:
-        QuantumCircuit: Full Deutsch–Jozsa circuit. Measuring input
-        qubits should yield a non-zero result (confirming balanced function).
-
-    Oracle implementation:
-        The standard balanced oracle applies CNOT gates from each input qubit
-        to the ancilla: cx(i, n) for i in range(n).
-        This flips the ancilla for exactly half the input combinations,
-        making f balanced. The number of CNOT gates scales linearly with n —
-        this is the key metric for the scaling analysis.
+        QuantumCircuit: Full DJ circuit. Measuring all input qubits gives
+            all-zeros → constant function; any other outcome → balanced.
     """
+    if n < 1:
+        raise ValueError(f"DJ requires n >= 1 input qubits, got {n}")
 
-    # TODO: Create QuantumCircuit with n+1 qubits and n classical bits
+    total_qubits = n + 1   # n input + 1 ancilla
+    qc = QuantumCircuit(total_qubits, n)
 
-    # ── Initial state preparation ──────────────────────
-    # TODO: Apply X then H to ancilla
-    # TODO: Apply H to all n input qubits
+    # Initialise ancilla to |−⟩
+    qc.x(n)
 
-    # ── Balanced oracle ────────────────────────────────
-    # TODO: Apply barrier
-    # TODO: Apply CNOT from each input qubit i to ancilla (n): cx(i, n)
-    # TODO: Apply barrier
+    # Apply H to all qubits (input + ancilla)
+    qc.h(range(total_qubits))
 
-    # ── Second Hadamard layer ──────────────────────────
-    # TODO: Apply H to all n input qubits
+    # Apply oracle
+    oracle = build_oracle(n, oracle_type)
+    qc.compose(oracle, qubits=range(total_qubits), inplace=True)
 
-    # ── Measurement ───────────────────────────────────
-    # TODO: Measure qubits 0..n-1
+    # Apply H to input qubits only
+    qc.h(range(n))
 
-    # TODO: return circuit
-    pass
+    # Measure input qubits
+    qc.measure(range(n), range(n))
 
-
-# ──────────────────────────────────────────────────────────
-# Convenience wrapper
-# ──────────────────────────────────────────────────────────
-
-def get_circuit(n: int = 3, oracle_type: str = "balanced"):
-    """
-    Convenience dispatcher.
-
-    Args:
-        n (int): Number of input qubits.
-        oracle_type (str): 'constant' or 'balanced'. Default 'balanced'.
-
-    Returns:
-        QuantumCircuit
-
-    Used by compile_all.py to iterate over both oracle types and qubit sizes.
-    """
-
-    # TODO: if oracle_type == 'constant': return get_circuit_constant(n)
-    # TODO: elif oracle_type == 'balanced': return get_circuit_balanced(n)
-    # TODO: else raise ValueError(f"Unknown oracle_type: {oracle_type}")
-    pass
+    return qc
 
 
-# ──────────────────────────────────────────────────────────
-# Module entry-point
-# ──────────────────────────────────────────────────────────
-
-# TODO: Add if __name__ == "__main__" that:
-#   - Runs get_circuit(n=3, oracle_type='constant') and prints diagram
-#   - Runs get_circuit(n=3, oracle_type='balanced') and prints diagram
-#   - Prints gate counts for both
+if __name__ == '__main__':
+    for n in [3, 4, 5]:
+        qc = get_circuit(n, 'balanced')
+        print(f"\nDeutsch–Jozsa balanced ({n} input qubits):")
+        print(qc.draw('text'))
+        print(f"  Gate count: {qc.count_ops()}")

@@ -2,69 +2,65 @@
 PennyLane Implementation: Quantum Teleportation (3 qubits)
 Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
-Algorithm: Quantum Teleportation Protocol
+Algorithm: Quantum Teleportation
 Category: Quantum Communication
-Qubit Range: 3 (fixed)
+Qubit Range: 3
 Framework: PennyLane (idiomatic style)
 
-PennyLane's mid-circuit measurement API (introduced in v0.24+):
-  - qml.measure(wires=i) returns a MeasurementValue object
-  - qml.cond(m, qml.X)(wires=j) applies X to wire j if measurement m == 1
+PennyLane note: Mid-circuit measurements and conditional operations use
+qml.measure() and qml.cond() (available in PennyLane ≥ 0.38). This differs
+structurally from both Qiskit (c_if) and Cirq (ClassicallyControlledOperation),
+producing a different QASM AST structure.
 
-This is the PRIMARY comparison of classically-conditioned operations:
-  Qiskit → c_if()                       → 'if (c==1)' in QASM 3.0
-  Cirq   → with_classical_controls()    → may differ in QASM 3.0 syntax
-  PennyLane → qml.cond()               → depends on PennyLane QASM export
-
-Whether QCanvas's PennyLaneASTVisitor correctly handles qml.measure() and
-qml.cond() is an important capability test for this paper.
+Called by: benchmarks/scripts/compile_all.py
 """
 
-# TODO: import pennylane as qml
+import pennylane as qml
 
-def get_circuit():
+dev = qml.device('default.qubit', wires=3)
+
+
+@qml.qnode(dev)
+def teleportation_circuit():
     """
-    Build and return the PennyLane quantum teleportation QNode.
+    3-qubit quantum teleportation QNode.
+
+    Wire assignment:
+      wire 0 = qubit to teleport (initialised to |+⟩)
+      wire 1 = Alice's entangled qubit
+      wire 2 = Bob's entangled qubit
 
     Returns:
-        function: QNode implementing teleportation with qml.cond().
-
-    Notes:
-        - wires 0, 1, 2 correspond to Alice's qubit, Alice's ancilla, Bob's qubit.
-        - qml.measure() returns a MeasurementValue, NOT a classical register.
-        - qml.cond() is used for classically-controlled gates post-measurement.
-        - Final return: qml.probs(wires=[2]) for Bob's qubit output distribution.
+        np.ndarray: Probabilities of Bob's qubit.
     """
+    # Prepare state to teleport: |+⟩
+    qml.Hadamard(wires=0)
 
-    # TODO: dev = qml.device('default.qubit', wires=3)
+    # Create Bell pair between Alice (wire 1) and Bob (wire 2)
+    qml.Hadamard(wires=1)
+    qml.CNOT(wires=[1, 2])
 
-    # TODO: @qml.qnode(dev)
-    #   def teleportation_circuit():
-    #       # Prepare |+⟩ to teleport
-    #       qml.Hadamard(wires=0)
-    #       # Create Bell pair
-    #       qml.Hadamard(wires=1)
-    #       qml.CNOT(wires=[1, 2])
-    #       # Alice's operations
-    #       qml.CNOT(wires=[0, 1])
-    #       qml.Hadamard(wires=0)
-    #       # Measure Alice's qubits
-    #       m0 = qml.measure(wires=0)
-    #       m1 = qml.measure(wires=1)
-    #       # Bob's corrections
-    #       qml.cond(m0, qml.X)(wires=2)
-    #       qml.cond(m1, qml.Z)(wires=2)
-    #       # Return Bob's output
-    #       return qml.probs(wires=[2])
+    # Alice's Bell measurement operations
+    qml.CNOT(wires=[0, 1])
+    qml.Hadamard(wires=0)
 
-    # TODO: return teleportation_circuit
-    pass
+    # Mid-circuit measurements
+    m0 = qml.measure(0)
+    m1 = qml.measure(1)
+
+    # Bob's conditional corrections
+    qml.cond(m1, qml.PauliX)(wires=2)
+    qml.cond(m0, qml.PauliZ)(wires=2)
+
+    return qml.probs(wires=[2])
 
 
-def get_circuit_fn():
-    """Alias for get_circuit() — used by compile_all.py."""
-    # TODO: return get_circuit()
-    pass
+def get_circuit():
+    """Return the teleportation QNode for use by compile_all.py."""
+    return teleportation_circuit
 
 
-# TODO: if __name__ == "__main__": call the QNode and print Bob's qubit probabilities
+if __name__ == '__main__':
+    probs = teleportation_circuit()
+    print("Bob's qubit probabilities:", probs)
+    print(qml.draw(teleportation_circuit)())

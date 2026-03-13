@@ -1,50 +1,63 @@
 """
-PennyLane Implementation: Bernstein–Vazirani (variable: 3–8 qubits)
+PennyLane Implementation: Bernstein–Vazirani Algorithm (variable: 3–8 qubits)
 Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
 Algorithm: Bernstein–Vazirani
 Category: Oracle-Based
-Qubit Range: 3–8
+Qubit Range: 3–8 (n input wires + 1 ancilla wire)
 Framework: PennyLane (idiomatic style)
 
-Same algorithm as qiskit/bernstein_vazirani.py using PennyLane.
-MUST use the same SECRET_STRINGS as Qiskit and Cirq versions.
+Uses the same SECRET_STRINGS as Qiskit and Cirq versions.
+
+Called by: benchmarks/scripts/compile_all.py  (n ∈ 3..8)
 """
 
-# TODO: import pennylane as qml
+import pennylane as qml
 
-# TODO: SECRET_STRINGS = {3: "101", 4: "1011", 5: "10110", 6: "101101", 7: "1011010", 8: "10110100"}
+SECRET_STRINGS = {
+    3: "101",
+    4: "1011",
+    5: "10110",
+    6: "101101",
+    7: "1011010",
+    8: "10110101",
+}
+
 
 def get_circuit(n: int = 3):
     """
-    Build and return the PennyLane BV QNode.
+    Create PennyLane BV QNode for n input qubits.
 
     Args:
-        n (int): Number of input qubits (3–8).
+        n: Number of input qubits (3–8).
 
     Returns:
-        function: QNode.
+        callable: PennyLane QNode.
     """
+    if n not in SECRET_STRINGS:
+        raise ValueError(f"n must be in {sorted(SECRET_STRINGS.keys())}")
 
-    # TODO: Validate n in SECRET_STRINGS
-    # TODO: dev = qml.device('default.qubit', wires=n+1)
+    s     = SECRET_STRINGS[n]
+    total = n + 1
+    dev   = qml.device('default.qubit', wires=total)
 
-    # TODO: @qml.qnode(dev)
-    #   def bv_circuit():
-    #       secret = SECRET_STRINGS[n]
-    #       # Ancilla prep
-    #       qml.PauliX(wires=n); qml.Hadamard(wires=n)
-    #       # Input H layer
-    #       for i in range(n): qml.Hadamard(wires=i)
-    #       # Oracle: CNOT where secret[i]=='1'
-    #       for i in range(n):
-    #           if secret[i] == '1': qml.CNOT(wires=[i, n])
-    #       # Second H layer
-    #       for i in range(n): qml.Hadamard(wires=i)
-    #       return qml.probs(wires=list(range(n)))
+    @qml.qnode(dev)
+    def bv_circuit():
+        qml.PauliX(wires=n)
+        for w in range(total):
+            qml.Hadamard(wires=w)
+        for i, bit in enumerate(s):
+            if bit == '1':
+                qml.CNOT(wires=[i, n])
+        for w in range(n):
+            qml.Hadamard(wires=w)
+        return qml.probs(wires=list(range(n)))
 
-    # TODO: return bv_circuit
-    pass
+    return bv_circuit
 
 
-# TODO: if __name__ == "__main__": run for n=3..6, print probabilities
+if __name__ == '__main__':
+    for n in [3, 4, 5]:
+        qnode = get_circuit(n)
+        print(f"\nBV (n={n}, secret='{SECRET_STRINGS[n]}'):")
+        print(qml.draw(qnode)())

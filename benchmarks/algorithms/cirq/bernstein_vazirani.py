@@ -4,80 +4,68 @@ Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
 Algorithm: Bernstein–Vazirani
 Category: Oracle-Based
-Qubit Range: 3–8
+Qubit Range: 3–8 (n input qubits + 1 ancilla)
 Framework: Cirq (idiomatic style)
 
-Same algorithm as bernstein_vazirani.py in qiskit/, implemented in Cirq.
-Uses the SAME fixed secret strings (imported from the Qiskit version or
-re-declared as a shared constant) for reproducibility.
+Uses the same fixed SECRET_STRINGS as the Qiskit and PennyLane versions
+to ensure a fair cross-framework comparison.
 
-Idiomatic Cirq conventions:
-  - cirq.LineQubit.range(n+1)
-  - Explicit moment grouping for H layers and oracle CNOTs
-
-Fixed secrets (MUST match qiskit/bernstein_vazirani.py and pennylane/bernstein_vazirani.py):
-  n=3 → "101", n=4 → "1011", n=5 → "10110", n=6 → "101101", ...
-
-This file is called by:
-  - benchmarks/scripts/compile_all.py
-  - benchmarks/notebooks/nb01_compile_and_static_analysis.ipynb
+Called by:
+  - benchmarks/scripts/compile_all.py  (n ∈ 3..8)
+  - benchmarks/notebooks/nb03_statistical_analysis.ipynb
 """
 
-# ──────────────────────────────────────────────────────────
-# Imports
-# ──────────────────────────────────────────────────────────
+import cirq
 
-# TODO: import cirq
+SECRET_STRINGS = {
+    3: "101",
+    4: "1011",
+    5: "10110",
+    6: "101101",
+    7: "1011010",
+    8: "10110101",
+}
 
-
-# ──────────────────────────────────────────────────────────
-# Constants
-# ──────────────────────────────────────────────────────────
-
-# TODO: SECRET_STRINGS = {3: "101", 4: "1011", 5: "10110", 6: "101101", 7: "1011010", 8: "10110100"}
-# NOTE: Must be identical to the Qiskit and PennyLane versions
-
-
-# ──────────────────────────────────────────────────────────
-# Circuit Definition
-# ──────────────────────────────────────────────────────────
 
 def get_circuit(n: int = 3):
     """
-    Build and return the Cirq Bernstein–Vazirani circuit.
+    Build the Bernstein–Vazirani circuit for n input qubits in Cirq.
 
     Args:
-        n (int): Number of input qubits (3–8).
+        n: Number of input qubits (3–8).
 
     Returns:
-        cirq.Circuit
+        cirq.Circuit: BV circuit. Measurement = secret string s.
     """
+    if n not in SECRET_STRINGS:
+        raise ValueError(f"No secret string for n={n}. Use n ∈ {sorted(SECRET_STRINGS.keys())}.")
 
-    # TODO: Validate n in SECRET_STRINGS
-    # TODO: qubits = cirq.LineQubit.range(n+1); ancilla = qubits[n]
-    # TODO: secret = SECRET_STRINGS[n]
+    s       = SECRET_STRINGS[n]
+    inputs  = cirq.LineQubit.range(n)
+    ancilla = cirq.LineQubit(n)
+    ops     = []
 
-    # ── Ancilla prep ──────────────────────────────────
-    # TODO: cirq.X(ancilla), cirq.H(ancilla)
+    # Ancilla to |−⟩
+    ops.append(cirq.X(ancilla))
+    ops.extend(cirq.H(q) for q in inputs)
+    ops.append(cirq.H(ancilla))
 
-    # ── Input H layer ─────────────────────────────────
-    # TODO: [cirq.H(qubits[i]) for i in range(n)]
+    # Oracle: CNOT from input[i] to ancilla if s[i] == '1'
+    for i, bit in enumerate(s):
+        if bit == '1':
+            ops.append(cirq.CNOT(inputs[i], ancilla))
 
-    # ── Oracle ────────────────────────────────────────
-    # TODO: [cirq.CNOT(qubits[i], ancilla) for i where secret[i]=='1']
+    # H on input qubits
+    ops.extend(cirq.H(q) for q in inputs)
 
-    # ── Second H layer ────────────────────────────────
-    # TODO: [cirq.H(qubits[i]) for i in range(n)]
+    # Measure
+    ops.append(cirq.measure(*inputs, key='result'))
 
-    # ── Measurement ───────────────────────────────────
-    # TODO: cirq.measure(*qubits[:n], key='result')
-
-    # TODO: return cirq.Circuit([...])
-    pass
+    return cirq.Circuit(ops)
 
 
-# ──────────────────────────────────────────────────────────
-# Module entry-point
-# ──────────────────────────────────────────────────────────
-
-# TODO: if __name__ == "__main__": print circuits for n=3 and n=6, print oracle CNOT counts
+if __name__ == '__main__':
+    for n in [3, 4, 5]:
+        c = get_circuit(n)
+        print(f"\nBernstein–Vazirani (n={n}, secret='{SECRET_STRINGS[n]}'):")
+        print(c)

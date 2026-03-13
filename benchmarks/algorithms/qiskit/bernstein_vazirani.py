@@ -7,113 +7,79 @@ Category: Oracle-Based
 Qubit Range: 3–8 (n input qubits + 1 ancilla)
 Framework: Qiskit (idiomatic style)
 
-The Bernstein–Vazirani algorithm recovers a hidden secret string s ∈ {0,1}^n
-using a single quantum query to the oracle f(x) = s·x mod 2.
+Recovers a hidden string s ∈ {0,1}^n from an oracle f(x) = s·x (mod 2)
+in a single query, compared to n classical queries.
 
-The oracle encodes the secret string by applying CNOT gates from each qubit
-where s[i] == 1 to the ancilla qubit. The resulting measurement of the input
-register directly reveals s.
-
-Reproducibility:
-  The secret string is fixed as a module-level constant so all frameworks
-  use the IDENTICAL oracle. This ensures structural differences in the
-  generated QASM come solely from framework conventions, not from different
-  oracle encodings.
-
-Fixed secrets used in the benchmark:
+Fixed secret strings (for reproducibility across frameworks):
   n=3 → s = "101"
   n=4 → s = "1011"
   n=5 → s = "10110"
   n=6 → s = "101101"
   n=7 → s = "1011010"
-  n=8 → s = "10110100"
+  n=8 → s = "10110101"
 
-Key metric for paper:
-  Simpler oracle than Deutsch–Jozsa, so the gate count difference between
-  frameworks is more clearly attributable to framework overhead rather than
-  oracle complexity. Serves as a clean baseline for cross-framework comparison.
-
-This file is called by:
-  - benchmarks/scripts/compile_all.py
-  - benchmarks/notebooks/nb01_compile_and_static_analysis.ipynb
+Called by:
+  - benchmarks/scripts/compile_all.py  (n ∈ 3..8)
+  - benchmarks/notebooks/nb03_statistical_analysis.ipynb
 """
 
-# ──────────────────────────────────────────────────────────
-# Imports
-# ──────────────────────────────────────────────────────────
+from qiskit import QuantumCircuit
 
-# TODO: import QuantumCircuit from qiskit
+# Fixed secret strings — must match across all three framework files
+SECRET_STRINGS = {
+    3: "101",
+    4: "1011",
+    5: "10110",
+    6: "101101",
+    7: "1011010",
+    8: "10110101",
+}
 
-
-# ──────────────────────────────────────────────────────────
-# Constants — fixed secret strings for reproducibility
-# ──────────────────────────────────────────────────────────
-
-# TODO: Define SECRET_STRINGS dict mapping n → secret string
-#   e.g., SECRET_STRINGS = {3: "101", 4: "1011", 5: "10110", ...}
-#   Keeping this identical across all three framework files is critical
-#   for a fair cross-framework comparison.
-
-
-# ──────────────────────────────────────────────────────────
-# Circuit Definition
-# ──────────────────────────────────────────────────────────
 
 def get_circuit(n: int = 3):
     """
-    Build and return the Qiskit Bernstein–Vazirani circuit.
+    Build the Bernstein–Vazirani circuit for n input qubits.
+
+    After measurement, the input register should read the secret string s
+    with probability 1 (deterministic algorithm).
 
     Args:
-        n (int): Number of input qubits. Total qubits = n+1. Default 3.
+        n: Number of input qubits (3–8).
 
     Returns:
-        QuantumCircuit: The BV circuit. Measuring input qubits should
-        yield exactly the secret string SECRET_STRINGS[n].
-
-    Circuit structure:
-        1. ancilla = |−⟩  (X then H)
-        2. H⊗n on input qubits
-        3. Oracle: cx(i, ancilla) for each i where s[i] == '1'
-        4. H⊗n on input qubits again
-        5. Measure input qubits
-
-    Notes:
-        - The number of CNOT gates in the oracle = Hamming weight of s.
-        - Circuit depth is dominated by the parallel H layers (depth 1 each)
-          and the sequential oracle CNOTs (depth = Hamming weight of s,
-          assuming no parallelism between them).
+        QuantumCircuit: BV circuit. Measurement output = secret string s.
     """
+    if n not in SECRET_STRINGS:
+        raise ValueError(f"No secret string defined for n={n}. Use n ∈ {sorted(SECRET_STRINGS.keys())}.")
 
-    # TODO: Validate n is in SECRET_STRINGS, raise ValueError if not
-    # TODO: Retrieve secret = SECRET_STRINGS[n]
+    s = SECRET_STRINGS[n]
+    total = n + 1   # n input + 1 ancilla
+    qc = QuantumCircuit(total, n)
 
-    # TODO: Create QuantumCircuit with n+1 qubits and n classical bits
+    # Initialise ancilla to |−⟩
+    qc.x(n)
 
-    # ── Ancilla preparation ────────────────────────────
-    # TODO: Apply X then H to ancilla qubit (index n)
+    # Apply H to all qubits
+    qc.h(range(total))
 
-    # ── Input Hadamard layer ───────────────────────────
-    # TODO: Apply H to all n input qubits
+    # Oracle: CNOT from input qubit i to ancilla if s[i] == '1'
+    for i, bit in enumerate(s):
+        if bit == '1':
+            qc.cx(i, n)
 
-    # ── Oracle ─────────────────────────────────────────
-    # TODO: barrier
-    # TODO: For each index i where secret[i] == '1', apply cx(i, n)
-    # TODO: barrier
+    # Apply H to input qubits only
+    qc.h(range(n))
 
-    # ── Second Hadamard layer ──────────────────────────
-    # TODO: Apply H to all n input qubits
+    # Measure input register — should reveal s
+    qc.measure(range(n), range(n))
 
-    # ── Measurement ───────────────────────────────────
-    # TODO: Measure input qubits 0..n-1 into classical bits
-
-    # TODO: return circuit
-    pass
+    return qc
 
 
-# ──────────────────────────────────────────────────────────
-# Module entry-point
-# ──────────────────────────────────────────────────────────
-
-# TODO: Add if __name__ == "__main__" that:
-#   - Iterates over n = 3..6 and prints each circuit diagram
-#   - Prints the secret string used and the total number of oracle CNOTs
+if __name__ == '__main__':
+    for n in [3, 4, 5]:
+        qc = get_circuit(n)
+        s = SECRET_STRINGS[n]
+        print(f"\nBernstein–Vazirani (n={n}, secret='{s}'):")
+        print(qc.draw('text'))
+        print(f"  Gate count: {qc.count_ops()}")

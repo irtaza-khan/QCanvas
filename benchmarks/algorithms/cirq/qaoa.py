@@ -2,51 +2,58 @@
 Cirq Implementation: QAOA (variable: 2–6 qubits)
 Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
-Algorithm: QAOA MaxCut
+Algorithm: QAOA – Quantum Approximate Optimisation Algorithm (p=1)
 Category: Variational
 Qubit Range: 2–6
 Framework: Cirq (idiomatic style)
 
-Same problem as qiskit/qaoa.py (MaxCut on triangle/path graph, p=1 layer,
-gamma=π/4, beta=π/4). Implements Rzz as CNOT → Rz → CNOT manually in Cirq.
+Problem: Max-Cut on a ring graph (nearest-neighbour edges).
+Cost unitary: Rzz(2γ) = CNOT · Rz(2γ) · CNOT on each edge
+Mixer unitary: Rx(2β) on each qubit
 
-Cirq does not have a native Rzz gate; see the implementation notes below.
+Cirq uses cirq.CNOT, cirq.rz, cirq.rx native operations.
+Parameters: γ = π/4, β = π/8.
+
+Called by: benchmarks/scripts/compile_all.py  (n ∈ 2..6)
 """
 
-# TODO: import cirq
-# TODO: import numpy as np
+import numpy as np
+import cirq
 
-# TODO: Get graph edges: same get_graph_edges(n) logic as Qiskit version
 
-def get_circuit(n: int = 3, p: int = 1, gamma: float = None, beta: float = None):
+def get_circuit(n: int = 2):
     """
-    Build and return the Cirq QAOA circuit.
+    Build QAOA p=1 Max-Cut circuit for n nodes on a ring in Cirq.
 
     Args:
-        n (int): Number of qubits / nodes (2–6). Default 3.
-        p (int): QAOA layers. Default 1.
-        gamma (float): Cost parameter. Default π/4.
-        beta (float): Mixer parameter. Default π/4.
+        n: Number of qubits (2–6).
 
     Returns:
-        cirq.Circuit
-
-    Rzz decomposition in Cirq (no native ZZ gate):
-        CNOT(i, j) → Rz(2*gamma)(qubit j) → CNOT(i, j)
-        using: cirq.CNOT(q_i, q_j), cirq.rz(2*gamma)(q_j), cirq.CNOT(q_i, q_j)
+        cirq.Circuit: QAOA circuit.
     """
+    qubits = cirq.LineQubit.range(n)
+    gamma  = np.pi / 4
+    beta   = np.pi / 8
 
-    # TODO: Set defaults: gamma = np.pi/4, beta = np.pi/4
-    # TODO: qubits = cirq.LineQubit.range(n)
-    # TODO: edges = get_graph_edges(n)
-    # TODO: ops = []
-    # TODO: H on all qubits (superposition init)
-    # TODO: p QAOA layers:
-    #   Cost: for each edge (i,j): CNOT(qi,qj), rz(2*gamma)(qj), CNOT(qi,qj)
-    #   Mixer: rx(2*beta)(q) for all q
-    # TODO: measure(*qubits, key='result')
-    # TODO: return cirq.Circuit(ops)
-    pass
+    edges = [(i, (i + 1) % n) for i in range(n)]
+    ops = list(cirq.H(q) for q in qubits)
+
+    # Cost unitary
+    for u, v in edges:
+        ops.append(cirq.CNOT(qubits[u], qubits[v]))
+        ops.append(cirq.rz(2 * gamma)(qubits[v]))
+        ops.append(cirq.CNOT(qubits[u], qubits[v]))
+
+    # Mixer unitary
+    ops.extend(cirq.rx(2 * beta)(q) for q in qubits)
+
+    ops.append(cirq.measure(*qubits, key='result'))
+
+    return cirq.Circuit(ops)
 
 
-# TODO: if __name__ == "__main__": print QAOA for n=3 and n=5
+if __name__ == '__main__':
+    for n in [2, 3, 4]:
+        c = get_circuit(n)
+        print(f"\nQAOA p=1 ring (n={n}):")
+        print(c)

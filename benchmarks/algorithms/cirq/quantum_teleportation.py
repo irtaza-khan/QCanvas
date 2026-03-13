@@ -2,89 +2,61 @@
 Cirq Implementation: Quantum Teleportation (3 qubits)
 Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
-Algorithm: Quantum Teleportation Protocol
+Algorithm: Quantum Teleportation
 Category: Quantum Communication
-Qubit Range: 3 (fixed)
+Qubit Range: 3
 Framework: Cirq (idiomatic style)
 
-Same protocol as quantum_teleportation.py in qiskit/, but expressed in Cirq.
+Cirq uses ClassicallyControlledOperation for conditional gates,
+which is different from Qiskit's c_if() syntax — this is a key
+QASM structural difference captured by compile_all.py.
 
-Idiomatic Cirq conventions:
-  - cirq.ClassicallyControlledOperation for mid-circuit conditioned gates
-  - cirq.measure(qubit, key='m0') with named keys for classical bits
-  - Operations appended moment-by-moment to preserve causal ordering
-
-Key QASM structural difference:
-  Qiskit uses c_if() which generates 'if (c == 1) { x q[2]; }' in QASM 3.0.
-  Cirq uses ClassicallyControlledOperation which may generate different QASM
-  control-flow syntax. This difference is a primary comparison point.
-
-The qubit layout and protocol steps are IDENTICAL to the Qiskit version
-to ensure the oracle (protocol) is semantically equivalent:
-  q[0] = Alice's qubit (initialised in |+⟩)
-  q[1] = Alice's ancilla (part of Bell pair)
-  q[2] = Bob's qubit (will receive |+⟩ after teleportation)
-
-This file is called by:
+Called by:
   - benchmarks/scripts/compile_all.py
-  - benchmarks/notebooks/nb01_compile_and_static_analysis.ipynb
+  - benchmarks/notebooks/nb04_case_studies.ipynb
 """
 
-# ──────────────────────────────────────────────────────────
-# Imports
-# ──────────────────────────────────────────────────────────
+import cirq
 
-# TODO: import cirq
-
-
-# ──────────────────────────────────────────────────────────
-# Circuit Definition
-# ──────────────────────────────────────────────────────────
 
 def get_circuit():
     """
-    Build and return the Cirq quantum teleportation circuit.
+    Build the 3-qubit quantum teleportation circuit in Cirq.
 
     Returns:
-        cirq.Circuit: 3-qubit teleportation circuit with mid-circuit
-        measurement and ClassicallyControlledOperation corrections.
-
-    Notes:
-        - cirq.measure(q, key='m_alice_0') for each of Alice's measurements
-        - cirq.X(q2).on_each() is NOT used here — use cirq.X(q2) directly
-        - Classically-controlled operations: use
-            cirq.X(q2).with_classical_controls('m_alice_0')
-          to apply X on Bob's qubit when measurement 'm_alice_0' == 1.
-        - The key name used in measure() must match the key in with_classical_controls().
+        cirq.Circuit: Teleportation with ClassicallyControlledOperation.
     """
+    q0, q1, q2 = cirq.LineQubit.range(3)
 
-    # TODO: q0, q1, q2 = cirq.LineQubit.range(3)
+    # Classical bits for Alice's measurement results
+    m0 = cirq.measure(q0, key='m0')
+    m1 = cirq.measure(q1, key='m1')
 
-    # ── State preparation ──────────────────────────────
-    # TODO: cirq.H(q0)  — prepare |+⟩ to teleport
+    circuit = cirq.Circuit([
+        # Prepare state to teleport (|+⟩ on q0)
+        cirq.H(q0),
 
-    # ── Bell pair ──────────────────────────────────────
-    # TODO: cirq.H(q1), cirq.CNOT(q1, q2)
+        # Bell pair between Alice (q1) and Bob (q2)
+        cirq.H(q1),
+        cirq.CNOT(q1, q2),
 
-    # ── Alice's entanglement ───────────────────────────
-    # TODO: cirq.CNOT(q0, q1), cirq.H(q0)
+        # Alice's Bell measurement
+        cirq.CNOT(q0, q1),
+        cirq.H(q0),
+        m0,
+        m1,
 
-    # ── Alice's measurements ───────────────────────────
-    # TODO: cirq.measure(q0, key='m0'), cirq.measure(q1, key='m1')
+        # Bob's corrections (classically controlled)
+        cirq.X(q2).on(q2).with_classical_controls('m1'),
+        cirq.Z(q2).on(q2).with_classical_controls('m0'),
 
-    # ── Bob's corrections ─────────────────────────────
-    # TODO: cirq.X(q2).with_classical_controls('m0')
-    # TODO: cirq.Z(q2).with_classical_controls('m1')
+        # Bob measures
+        cirq.measure(q2, key='teleported'),
+    ])
 
-    # ── Bob's measurement ─────────────────────────────
-    # TODO: cirq.measure(q2, key='output')
-
-    # TODO: Assemble all operations into cirq.Circuit([...]) and return
-    pass
+    return circuit
 
 
-# ──────────────────────────────────────────────────────────
-# Module entry-point
-# ──────────────────────────────────────────────────────────
-
-# TODO: if __name__ == "__main__": print circuit, number of operations, moment count
+if __name__ == '__main__':
+    c = get_circuit()
+    print(c)

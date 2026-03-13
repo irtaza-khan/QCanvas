@@ -33,87 +33,440 @@ Dependencies:
 # Imports
 # ──────────────────────────────────────────────────────────
 
-# TODO: import os, re
-# TODO: import pandas as pd
+import os
+import sys
+import re
+import pandas as pd
+
+# Absolute path to QCanvas root — ensures paths work regardless of cwd
+_SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
+_QCANVAS_ROOT = os.path.abspath(os.path.join(_SCRIPT_DIR, '..', '..'))
 
 
 # ──────────────────────────────────────────────────────────
 # Constants
 # ──────────────────────────────────────────────────────────
 
-# TODO: QASM_DIR = "benchmarks/qasm_outputs"
-# TODO: METRICS_DIR = "benchmarks/metrics"
+QASM_DIR    = os.path.join(_QCANVAS_ROOT, 'benchmarks', 'qasm_outputs')
+METRICS_DIR = os.path.join(_QCANVAS_ROOT, 'benchmarks', 'metrics')
 
-# TODO: MULTI_QUBIT_GATE_NAMES = {'cx', 'cnot', 'cz', 'ccx', 'swap', 'ctrl', 'iswap', 'ecr'}
-#   (Add any other 2+ qubit gates that appear in QCanvas QASM output)
+# Gate names that indicate a multi-qubit operation.
+# CX and CNOT are the most common 2-qubit gates produced by QCanvas;
+# CCX (Toffoli) is 3-qubit. 'ctrl' is the QASM 3.0 modifier keyword.
+MULTI_QUBIT_GATE_NAMES = {
+    'cx', 'cnot', 'cz', 'ccx', 'c3x', 'c4x',
+    'swap', 'iswap', 'ecr', 'ctrl',
+    'rzx', 'rxx', 'ryy', 'rzz',   # two-qubit parametric gates
+}
+
+# Gate names to individually report per-framework breakdown (Table 1 in paper)
+TRACKED_GATE_TYPES = ['h', 'cx', 'rz', 'rx', 'ry', 'x', 'z', 'y', 's', 't',
+                      'sdg', 'tdg', 'cz', 'swap', 'ccx', 'measure', 'reset']
+
+# Lines starting with these tokens are NOT gate invocations
+_NON_GATE_PREFIXES = (
+    '//',       # comment
+    'OPENQASM', # header
+    'include',  # include statement
+    'qubit',    # qubit declaration
+    'bit',      # classical bit declaration
+    'creg',     # legacy classical register
+    'qreg',     # legacy qubit register
+    'gate ',    # gate definition block (trailing space avoids false match on "gate" invocations)
+    'input',    # QASM 3.0 input parameter declaration
+    'const',    # constant
+    '#',        # pragma / meta-comment
+    'def ',     # subroutine definition
+    '{',        # block open
+    '}',        # block close
+)
 
 
 # ──────────────────────────────────────────────────────────
 # QASM parsing helpers
 # ──────────────────────────────────────────────────────────
 
-# TODO: Define extract_qubit_count(qasm_str: str) -> int:
-#   Parse 'qubit[N] q;' declaration and return N.
-#   Use regex: re.search(r'qubit\[(\d+)\]', qasm_str)
+def extract_qubit_count(qasm_str: str) -> int:
+    """
+    Parse the 'qubit[N] q;' declaration in a QASM 3.0 file and return N.
 
-# TODO: Define extract_gate_lines(qasm_str: str) -> list[str]:
-#   Return all lines that are gate invocations (not comments, declarations, headers).
-#   Filter out lines starting with: OPENQASM, include, //, qubit, bit, gate , input, const, #
-#   Return stripped non-empty lines.
+    Also handles legacy QASM 2.0 'qreg q[N];' syntax, which may appear in
+    some QCanvas outputs when the underlying framework backend emits it.
 
-# TODO: Define extract_gate_types(gate_lines: list) -> dict:
-#   For each gate line, extract the gate name (first token or first word before '(').
-#   Return a dict mapping gate_name → count.
+    Returns 0 if no qubit declaration is found.
+    """
+    # QASM 3.0 style: `qubit[N] regname;`
+    match = re.search(r'qubit\[(\d+)\]', qasm_str)
+    if match:
+        return int(match.group(1))
 
-# TODO: Define compute_circuit_depth(qasm_str: str, n_qubits: int) -> int:
-#   Compute the circuit depth by simulating qubit time slots.
-#   Algorithm:
-#     - Maintain a 'qubit_time' array of length n_qubits (how many gates deep each qubit is)
-#     - For each gate invocation line, determine which qubits it uses
-#       (parse qubit references like q[0], q[1] from the line)
-#     - Update qubit_time[i] = max(qubit_time affected qubits) + 1
-#     - Circuit depth = max(qubit_time)
-#   Note: This is an approximation. For exact depth, a DAG-based approach is needed.
-#         The approximation is acceptable for relative comparison across frameworks.
+    # QASM 2.0 legacy style: `qreg q[N];`
+    match = re.search(r'qreg\s+\w+\[(\d+)\]', qasm_str)
+    if match:
+        return int(match.group(1))
 
-# TODO: Define extract_modifier_counts(qasm_str: str) -> dict:
-#   Count occurrences of QASM 3.0 modifiers using regex:
-#     ctrl_count  = len(re.findall(r'ctrl\s*@', qasm_str))
-#     inv_count   = len(re.findall(r'inv\s*@', qasm_str))
-#     pow_count   = len(re.findall(r'pow\s*\(', qasm_str))
-#   Return {'ctrl': ctrl_count, 'inv': inv_count, 'pow': pow_count}
+    return 0
 
-# TODO: Define count_parameters(qasm_str: str) -> int:
-#   Count 'input float' declarations in the QASM, which represent symbolic parameters.
-#   Use: len(re.findall(r'input\s+float', qasm_str))
+
+def extract_gate_lines(qasm_str: str) -> list:
+    """
+    Return all non-empty lines that represent gate invocations.
+
+    Filters out:
+      - Comment lines (//)
+      - QASM header (OPENQASM …)
+      - include statements
+      - Qubit/bit/register declarations
+      - Gate definition block headers (gate …)
+      - QASM 3.0 input / const parameter declarations
+      - Block braces { }
+      - Blank lines
+
+    Returns:
+        List of stripped strings, each a single gate call or measure operation.
+    """
+    lines = []
+    for raw_line in qasm_str.splitlines():
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+        if any(stripped.startswith(prefix) for prefix in _NON_GATE_PREFIXES):
+            continue
+        lines.append(stripped)
+    return lines
+
+
+def extract_gate_types(gate_lines: list) -> dict:
+    """
+    Count gate occurrences by gate name from a list of gate invocation lines.
+
+    The gate name is the first token on each line, before any '(' (parameters)
+    or ' ' (qubit arguments). QASM 3.0 modifier prefixes (ctrl @, inv @) are
+    stripped before extraction so we capture the base gate name.
+
+    Returns:
+        Dict mapping gate_name (lowercase) → occurrence count.
+    """
+    gate_counts: dict = {}
+
+    modifier_pattern = re.compile(r'\b(ctrl|inv|pow)\s*(\([^)]*\))?\s*@\s*')
+
+    for line in gate_lines:
+        # Remove QASM 3.0 modifiers to get the base gate name
+        clean_line = modifier_pattern.sub('', line).strip()
+
+        if not clean_line:
+            continue
+
+        # First token is the gate name; remove parameter list (text in parentheses)
+        first_token = clean_line.split('(')[0].split(' ')[0].split('[')[0]
+        gate_name   = first_token.lower().rstrip(';')
+
+        if gate_name:
+            gate_counts[gate_name] = gate_counts.get(gate_name, 0) + 1
+
+    return gate_counts
+
+
+def compute_circuit_depth(qasm_str: str, n_qubits: int) -> int:
+    """
+    Estimate circuit depth by simulating per-qubit time slots.
+
+    Algorithm:
+      - Maintain a 'qubit_time' array of length n_qubits (gate depth per qubit).
+      - For each gate invocation line, parse qubit indices (e.g. q[0], q[1]).
+      - Depth after this gate = max(qubit_time[affected_qubits]) + 1.
+      - Circuit depth = max(qubit_time).
+
+    This is a structural approximation sufficient for relative cross-framework
+    comparison. A full topological DAG is not required because:
+      (a) QASM 3.0 gates are written line-by-line in execution order.
+      (b) Relative depth comparisons are valid even if absolute values are
+          slightly overestimated (both over- and under-counting are symmetric
+          across frameworks using the same approximation).
+
+    Args:
+        qasm_str:  Full QASM file content.
+        n_qubits:  Number of qubits in the circuit (from extract_qubit_count).
+
+    Returns:
+        int: Estimated circuit depth (≥ 0).
+    """
+    if n_qubits <= 0:
+        return 0
+
+    qubit_time = [0] * n_qubits
+    gate_lines = extract_gate_lines(qasm_str)
+
+    # Regex to find qubit index references like q[0], q[1], q[12]
+    qubit_ref_pattern = re.compile(r'\[\s*(\d+)\s*\]')
+
+    for line in gate_lines:
+        indices = [int(m) for m in qubit_ref_pattern.findall(line)
+                   if int(m) < n_qubits]
+
+        if not indices:
+            continue
+
+        # Depth at this step = max current depth of involved qubits + 1
+        new_depth = max(qubit_time[i] for i in indices) + 1
+        for i in indices:
+            qubit_time[i] = new_depth
+
+    return max(qubit_time) if qubit_time else 0
+
+
+def extract_modifier_counts(qasm_str: str) -> dict:
+    """
+    Count QASM 3.0 gate modifier occurrences in the circuit.
+
+    Modifiers are a QASM 3.0-specific feature that QCanvas leverages for
+    expressing controlled, inverted, and powered gates more concisely.
+    Their frequency provides a unique paper contribution not present in QPack.
+
+    Counted patterns:
+      ctrl @    → classically/quantumly controlled gate
+      inv  @    → inverse (dagger) of a gate
+      pow(…)    → power of a gate
+
+    Returns:
+        dict: {'ctrl': int, 'inv': int, 'pow': int}
+    """
+    return {
+        'ctrl': len(re.findall(r'ctrl\s*@',  qasm_str)),
+        'inv':  len(re.findall(r'inv\s*@',   qasm_str)),
+        'pow':  len(re.findall(r'pow\s*\(',  qasm_str)),
+    }
+
+
+def count_parameters(qasm_str: str) -> int:
+    """
+    Count symbolic parameter declarations in QASM 3.0.
+
+    'input float[64] param;' declarations appear in variational circuits
+    (VQE, QAOA) where circuit parameters are left symbolic for re-use.
+    Their count reflects the parametric complexity of the circuit.
+
+    Returns:
+        int: Number of 'input float' declarations found.
+    """
+    return len(re.findall(r'input\s+float', qasm_str))
+
+
+# ──────────────────────────────────────────────────────────
+# Filename parsing helper
+# ──────────────────────────────────────────────────────────
+
+def _parse_filename(filename: str) -> dict:
+    """
+    Extract algorithm name, n_qubits, and framework from a QASM filename.
+
+    Expected naming convention (set by compile_all.py):
+      <algorithm>_<n>q_<framework>.qasm
+      e.g. bell_state_2q_qiskit.qasm
+           grovers_algorithm_4q_cirq.qasm
+
+    Returns dict with keys: algorithm, n_qubits (int), framework.
+    Returns None if the filename does not match the expected pattern.
+    """
+    base   = os.path.splitext(filename)[0]  # strip .qasm
+    parts  = base.split('_')
+
+    # Locate the 'Nq' token — e.g. '4q', '8q'
+    nq_idx = next(
+        (i for i, p in enumerate(parts) if re.fullmatch(r'\d+q', p)),
+        None
+    )
+    if nq_idx is None:
+        return None
+
+    n_qubits  = int(parts[nq_idx].rstrip('q'))
+    framework = '_'.join(parts[nq_idx + 1:])   # everything after 'Nq'
+    algorithm = '_'.join(parts[:nq_idx])        # everything before 'Nq'
+
+    return {
+        'algorithm': algorithm,
+        'n_qubits':  n_qubits,
+        'framework': framework,
+    }
 
 
 # ──────────────────────────────────────────────────────────
 # Per-file analysis
 # ──────────────────────────────────────────────────────────
 
-# TODO: Define analyze_qasm_file(qasm_path: str) -> dict:
-#   1. Read qasm_path content
-#   2. Parse algorithm name, n_qubits, framework from filename
-#      (filename format: <algo>_<n>q_<framework>.qasm)
-#   3. Call all helper functions above
-#   4. Return a flat dict with all metrics + source metadata:
-#      {algorithm, framework, n_qubits, total_gates, circuit_depth,
-#       multi_qubit_gates, multi_qubit_ratio, measurement_count,
-#       ctrl_count, inv_count, pow_count, num_parameters,
-#       gate_H, gate_CX, gate_RZ, gate_RX, gate_RY, gate_X, gate_Z, gate_S, gate_T, ...}
+def analyze_qasm_file(qasm_path: str) -> dict:
+    """
+    Perform full static analysis on a single QASM file and return a flat
+    metrics dictionary suitable for a CSV row.
+
+    Extracts all structural metrics without running any simulation:
+      Qubit count, gate count, circuit depth, multi-qubit gate ratio,
+      measurement count, modifier counts, parameter count, and per-type
+      gate counts for all tracked gate types.
+
+    Args:
+        qasm_path: Absolute or relative path to the .qasm file.
+
+    Returns:
+        dict with keys matching the structural_metrics.csv schema:
+          algorithm, framework, n_qubits, total_gates, circuit_depth,
+          multi_qubit_gates, multi_qubit_ratio, measurement_count,
+          ctrl_count, inv_count, pow_count, num_parameters,
+          gate_H, gate_CX, gate_RZ, gate_RX, gate_RY, gate_X, gate_Z,
+          gate_S, gate_T, gate_SDG, gate_TDG, gate_CZ, gate_SWAP, gate_CCX,
+          gate_MEASURE, gate_RESET
+
+        Returns a dict with NaN values and 'ERROR' metadata if the file
+        cannot be read or parsed.
+    """
+    filename = os.path.basename(qasm_path)
+    meta     = _parse_filename(filename)
+
+    if meta is None:
+        # Cannot parse metadata — return a sentinel row for investigation
+        return {
+            'algorithm': filename, 'framework': 'unknown', 'n_qubits': 0,
+            'total_gates': 0, 'circuit_depth': 0,
+            'multi_qubit_gates': 0, 'multi_qubit_ratio': 0.0,
+            'measurement_count': 0,
+            'ctrl_count': 0, 'inv_count': 0, 'pow_count': 0,
+            'num_parameters': 0,
+            'parse_error': f'Filename not in expected format: {filename}',
+        }
+
+    try:
+        with open(qasm_path, 'r', encoding='utf-8') as fh:
+            qasm_str = fh.read()
+    except OSError as exc:
+        return {**meta, 'total_gates': 0, 'circuit_depth': 0,
+                'multi_qubit_gates': 0, 'multi_qubit_ratio': 0.0,
+                'measurement_count': 0,
+                'ctrl_count': 0, 'inv_count': 0, 'pow_count': 0,
+                'num_parameters': 0,
+                'parse_error': str(exc)}
+
+    # --- Core metrics ---
+    n_qubits    = extract_qubit_count(qasm_str) or meta['n_qubits']
+    gate_lines  = extract_gate_lines(qasm_str)
+    gate_types  = extract_gate_types(gate_lines)
+    modifiers   = extract_modifier_counts(qasm_str)
+    n_params    = count_parameters(qasm_str)
+    depth       = compute_circuit_depth(qasm_str, n_qubits)
+
+    total_gates = sum(gate_types.values())
+
+    # Multi-qubit gate count: sum all gate names that are in MULTI_QUBIT_GATE_NAMES
+    multi_qubit_gates = sum(
+        cnt for name, cnt in gate_types.items()
+        if name.lower() in MULTI_QUBIT_GATE_NAMES
+    )
+    multi_qubit_ratio = multi_qubit_gates / total_gates if total_gates > 0 else 0.0
+    measurement_count = gate_types.get('measure', 0)
+
+    # --- Assemble flat output dictionary ---
+    row = {
+        'algorithm':         meta['algorithm'],
+        'framework':         meta['framework'],
+        'n_qubits':          n_qubits,
+        'total_gates':       total_gates,
+        'circuit_depth':     depth,
+        'multi_qubit_gates': multi_qubit_gates,
+        'multi_qubit_ratio': round(multi_qubit_ratio, 4),
+        'measurement_count': measurement_count,
+        'ctrl_count':        modifiers['ctrl'],
+        'inv_count':         modifiers['inv'],
+        'pow_count':         modifiers['pow'],
+        'num_parameters':    n_params,
+    }
+
+    # Per-type gate counts for the tracked gate types (columns gate_H, gate_CX, …)
+    for gname in TRACKED_GATE_TYPES:
+        col_key       = f'gate_{gname.upper()}'
+        row[col_key]  = gate_types.get(gname, 0)
+
+    return row
 
 
 # ──────────────────────────────────────────────────────────
 # Main runner
 # ──────────────────────────────────────────────────────────
 
-# TODO: Define run_static_analysis() -> pd.DataFrame:
-#   1. List all .qasm files in QASM_DIR
-#   2. Call analyze_qasm_file() for each
-#   3. Return pd.DataFrame of all results
+def run_static_analysis(qasm_dir: str = QASM_DIR) -> pd.DataFrame:
+    """
+    Run structural analysis on all .qasm files in qasm_dir.
 
-# TODO: if __name__ == "__main__":
-#   - Run run_static_analysis()
-#   - Save to METRICS_DIR/structural_metrics.csv
-#   - Print summary statistics (mean gate count per framework, mean depth, etc.)
+    Iterates over every .qasm file (sorted for reproducibility), calls
+    analyze_qasm_file() on each, and returns the results as a DataFrame.
+
+    Args:
+        qasm_dir: Directory containing generated .qasm files.
+
+    Returns:
+        pd.DataFrame with one row per QASM file and columns as documented
+        in analyze_qasm_file().  Files that fail parsing are included with
+        a 'parse_error' column populated.
+    """
+    if not os.path.isdir(qasm_dir):
+        raise FileNotFoundError(
+            f"QASM output directory not found: {qasm_dir}\n"
+            f"Run compile_all.py first to generate .qasm files."
+        )
+
+    qasm_files = sorted([
+        f for f in os.listdir(qasm_dir) if f.endswith('.qasm')
+    ])
+
+    if not qasm_files:
+        raise FileNotFoundError(
+            f"No .qasm files found in: {qasm_dir}\n"
+            f"Run compile_all.py to generate them."
+        )
+
+    print(f"[analyze_qasm] Found {len(qasm_files)} QASM files in {qasm_dir}/")
+
+    rows = []
+    for fname in qasm_files:
+        full_path = os.path.join(qasm_dir, fname)
+        row       = analyze_qasm_file(full_path)
+        rows.append(row)
+
+        if 'parse_error' in row:
+            print(f"  ⚠  {fname}: {row['parse_error']}")
+        else:
+            print(f"  ✓  {fname}: {row['total_gates']} gates, "
+                  f"depth={row['circuit_depth']}, "
+                  f"2Q ratio={row['multi_qubit_ratio']:.1%}")
+
+    return pd.DataFrame(rows)
+
+
+# ──────────────────────────────────────────────────────────
+# Entry-point
+# ──────────────────────────────────────────────────────────
+
+if __name__ == '__main__':
+    print(f"\n{'='*65}")
+    print(f"  Static QASM Analysis — Paper 5 Cross-Framework Benchmarking")
+    print(f"{'='*65}\n")
+
+    df = run_static_analysis(QASM_DIR)
+
+    os.makedirs(METRICS_DIR, exist_ok=True)
+    out_path = os.path.join(METRICS_DIR, 'structural_metrics.csv')
+    df.to_csv(out_path, index=False)
+    print(f"\n[analyze_qasm] Saved → {out_path}  ({len(df)} rows)\n")
+
+    # --- Summary statistics ---
+    print("Summary — mean gate count per framework across all algorithms:")
+    summary = df.groupby('framework')[['total_gates', 'circuit_depth',
+                                        'multi_qubit_ratio']].mean().round(2)
+    print(summary.to_string())
+
+    print("\nTop 5 algorithms by total gate count:")
+    top5 = df.sort_values('total_gates', ascending=False).head(5)[
+        ['algorithm', 'framework', 'n_qubits', 'total_gates', 'circuit_depth']
+    ]
+    print(top5.to_string(index=False))
+
+    print(f"\n{'='*65}\n")

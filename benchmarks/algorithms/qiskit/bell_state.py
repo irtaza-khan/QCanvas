@@ -7,71 +7,40 @@ Category: Foundational
 Qubit Range: 2
 Framework: Qiskit (idiomatic style)
 
-This file implements the Bell state preparation circuit idiomatically
-in Qiskit, following Qiskit's QuantumCircuit API conventions.
-It is part of the benchmark suite for Paper 5.
-
-Idiomatic Qiskit conventions used:
-  - QuantumRegister / ClassicalRegister for named registers
-  - Method chaining on a QuantumCircuit object (.h(), .cx(), .measure())
-  - Little-endian bitstring ordering in measurement output
-
 Expected output distribution:
   |00⟩ → ~50%
   |11⟩ → ~50%
   (after bit-reversal correction for Qiskit's little-endian convention)
 
-This file is called by:
-  - benchmarks/scripts/compile_all.py   (to generate QASM 3.0)
+Called by:
+  - benchmarks/scripts/compile_all.py
   - benchmarks/notebooks/nb01_compile_and_static_analysis.ipynb
   - benchmarks/notebooks/nb04_case_studies.ipynb (Case Study 1)
 """
 
-# ──────────────────────────────────────────────────────────
-# Imports
-# ──────────────────────────────────────────────────────────
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
-# TODO: import QuantumCircuit, QuantumRegister, ClassicalRegister from qiskit
-
-
-# ──────────────────────────────────────────────────────────
-# Circuit Definition
-# ──────────────────────────────────────────────────────────
 
 def get_circuit():
     """
     Build and return the Qiskit Bell state circuit.
 
     Returns:
-        QuantumCircuit: A 2-qubit circuit with:
-          - H gate on qubit 0
-          - CNOT gate with control=0, target=1
-          - Measurement of both qubits
-
-    Notes:
-        - Named registers (qr, cr) are used for clarity in generated QASM.
-        - Qiskit outputs bitstrings in little-endian order (qubit 0 is
-          the rightmost character). The compile_all.py runner accounts
-          for this with the normalize_bitstring() utility.
+        QuantumCircuit: 2-qubit circuit preparing |Φ+⟩ = (|00⟩ + |11⟩) / √2.
     """
+    qr = QuantumRegister(2, 'q')
+    cr = ClassicalRegister(2, 'c')
+    qc = QuantumCircuit(qr, cr)
 
-    # TODO: Create QuantumRegister with 2 qubits named 'q'
-    # TODO: Create ClassicalRegister with 2 bits named 'c'
-    # TODO: Create QuantumCircuit from both registers
+    qc.h(qr[0])
+    qc.cx(qr[0], qr[1])
+    qc.measure(qr, cr)
 
-    # TODO: Apply H gate to qubit 0
-    # TODO: Apply CNOT (cx) with control=0, target=1
-    # TODO: Measure both qubits into the classical register
-
-    # TODO: return the circuit
-    pass
+    return qc
 
 
-# ──────────────────────────────────────────────────────────
-# Module entry-point (for quick visual check)
-# ──────────────────────────────────────────────────────────
-
-# TODO: Add an if __name__ == "__main__" block that:
-#   - calls get_circuit()
-#   - prints the circuit diagram (qc.draw('text'))
-#   - prints the number of qubits and classical bits
+if __name__ == '__main__':
+    qc = get_circuit()
+    print(qc.draw('text'))
+    print(f"\nQubits: {qc.num_qubits}  |  Classical bits: {qc.num_clbits}")
+    print(f"Gate count: {qc.count_ops()}")

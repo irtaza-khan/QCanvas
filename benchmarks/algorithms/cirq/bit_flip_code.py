@@ -1,60 +1,48 @@
 """
-Cirq Implementation: Bit-Flip Error Correcting Code (3 qubits)
+Cirq Implementation: Bit-Flip Error Correction Code (3 qubits)
 Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
 Algorithm: 3-Qubit Bit-Flip Code
 Category: Error Correction
-Qubit Range: 3 (fixed)
+Qubit Range: 3
 Framework: Cirq (idiomatic style)
 
-Same protocol as qiskit/bit_flip_code.py but using Cirq's
-ClassicallyControlledOperation for syndrome-based correction.
+Encode → bit-flip error on q[0] → majority-vote correction → decode → measure.
 
-Key comparison point:
-  Qiskit: c_if() → QASM 3.0 'if (syndrome == 1)' block
-  Cirq:   cirq.X(data).with_classical_controls('syndrome_0')
-          → may produce different QASM 3.0 control flow syntax
+Called by: benchmarks/scripts/compile_all.py
 """
 
-# TODO: import cirq
+import cirq
+
 
 def get_circuit():
-    """
-    Build and return the Cirq bit-flip error correction circuit.
+    """Build 3-qubit bit-flip code circuit in Cirq."""
+    q0, q1, q2 = cirq.LineQubit.range(3)
+    ops = []
 
-    Returns:
-        cirq.Circuit: 3-qubit bit-flip code with syndrome measurement
-        and classical error correction.
+    # Prepare |+⟩ on data qubit
+    ops.append(cirq.H(q0))
 
-    Notes:
-        - Cirq's with_classical_controls() takes the classical key string
-          from a prior measure() operation.
-        - Both data and ancilla qubits are cirq.LineQubit instances.
-        - The output measurement key is 'logical_output'.
-    """
+    # Encoding: fan-out CNOTs
+    ops.append(cirq.CNOT(q0, q1))
+    ops.append(cirq.CNOT(q0, q2))
 
-    # TODO: data = cirq.LineQubit(0); anc0 = cirq.LineQubit(1); anc1 = cirq.LineQubit(2)
+    # Simulated error: bit-flip on q0
+    ops.append(cirq.X(q0))
 
-    # ── Initialise data qubit in |+⟩ ─────────────────
-    # TODO: cirq.H(data)
+    # Majority-vote correction via Toffoli (Fredkin approach)
+    ops.append(cirq.CCX(q1, q2, q0))
 
-    # ── Encoding ──────────────────────────────────────
-    # TODO: cirq.CNOT(data, anc0), cirq.CNOT(data, anc1)
+    # Decoding
+    ops.append(cirq.CNOT(q0, q1))
+    ops.append(cirq.CNOT(q0, q2))
 
-    # ── Syndrome measurement ──────────────────────────
-    # TODO: cirq.CNOT(data, anc0), cirq.measure(anc0, key='s0')
-    # TODO: cirq.CNOT(data, anc1), cirq.measure(anc1, key='s1')
+    # Measure
+    ops.append(cirq.measure(q0, q1, q2, key='result'))
 
-    # ── Error correction ──────────────────────────────
-    # TODO: cirq.X(data).with_classical_controls('s0')   (if s0==1, correct data)
-    # Note: More complex conditions (s0 AND NOT s1) require checking Cirq's API
-    #       for multi-key classical control or use a classical preprocessing step
-
-    # ── Final measurement ─────────────────────────────
-    # TODO: cirq.measure(data, key='logical_output')
-
-    # TODO: Assemble into cirq.Circuit and return
-    pass
+    return cirq.Circuit(ops)
 
 
-# TODO: if __name__ == "__main__": print circuit and gate count
+if __name__ == '__main__':
+    c = get_circuit()
+    print(c)

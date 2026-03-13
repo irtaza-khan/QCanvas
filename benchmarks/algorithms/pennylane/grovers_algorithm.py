@@ -7,72 +7,81 @@ Category: Search
 Qubit Range: 2–6
 Framework: PennyLane (idiomatic style)
 
-Key comparison point (Case Study 2):
-  PennyLane provides qml.GroverOperator as a BUILT-IN TEMPLATE.
-  This is the primary structural difference vs Qiskit and Cirq which
-  require manual construction of the oracle + diffusion operator.
+Uses PennyLane's built-in qml.GroverOperator template for the diffusion operator,
+which is the idiomatic PennyLane approach. The oracle is hand-built using
+qml.FlipSign (or equivalent multi-controlled Z via qml.ctrl).
 
-Two implementation options:
-  Option A (idiomatic): Use qml.GroverOperator → may produce fewer or more
-            gates than the manual construction, depending on PennyLane version.
-  Option B (manual): Build oracle + diffusion from primitives (same as Qiskit/Cirq).
+Uses the same MARKED_STATES as Qiskit and Cirq versions.
 
-For this benchmark, we use OPTION A (qml.GroverOperator) because:
-  - It IS the idiomatic PennyLane approach
-  - It reveals template overhead vs. manual construction
-  - The QASM generated from templates is the most interesting comparison
-
-The manual oracle for the phase flip is still needed to mark the specific
-target state; qml.GroverOperator handles only the diffusion (reflection) operator.
-
-MARKED_STATES (MUST match other framework files):
-  n=2 → "11", n=3 → "101", n=4 → "1011", n=5 → "10110", n=6 → "101101"
+Called by: benchmarks/scripts/compile_all.py  (n ∈ 2..6)
 """
 
-# TODO: import pennylane as qml
-# TODO: import numpy as np
+import numpy as np
+import pennylane as qml
 
-# TODO: MARKED_STATES = {2: "11", 3: "101", 4: "1011", 5: "10110", 6: "101101"}
+MARKED_STATES = {
+    2: "11",
+    3: "101",
+    4: "1011",
+    5: "10110",
+    6: "101101",
+}
+
 
 def get_circuit(n: int = 2):
     """
-    Build and return the PennyLane Grover QNode.
+    Create PennyLane Grover's algorithm QNode for n qubits.
+
+    Uses qml.GroverOperator (idiomatic PennyLane) for diffusion.
+    Oracle implemented via qml.Hadamard + qml.MultiControlledX + qml.Hadamard.
 
     Args:
-        n (int): Number of search qubits (2–6). Default 2.
+        n: Number of search qubits (2–6).
 
     Returns:
-        function: QNode.
-
-    Notes:
-        - Uses qml.GroverOperator for the diffusion step (idiomatic).
-        - Phase oracle is built manually: X on 0-bits → multi-controlled-Z → X.
-        - Optimal iterations = int(np.floor(np.pi / 4 * np.sqrt(2**n))).
-        - return qml.probs(wires=list(range(n)))
+        callable: PennyLane QNode.
     """
+    if n not in MARKED_STATES:
+        raise ValueError(f"n must be in {sorted(MARKED_STATES.keys())}")
 
-    # TODO: dev = qml.device('default.qubit', wires=n)
-    # TODO: marked_state = MARKED_STATES[n]
-    # TODO: num_iterations = int(np.floor(np.pi / 4 * np.sqrt(2**n)))
+    marked         = MARKED_STATES[n]
+    num_iterations = max(1, int(np.floor(np.pi / 4 * np.sqrt(2 ** n))))
+    wires          = list(range(n))
+    dev            = qml.device('default.qubit', wires=n)
 
-    # TODO: @qml.qnode(dev)
-    #   def grover_circuit():
-    #       # Equal superposition
-    #       for i in range(n): qml.Hadamard(wires=i)
-    #       # Grover iterations
-    #       for _ in range(num_iterations):
-    #           # Phase oracle: mark the target state
-    #           for i in range(n):
-    #               if marked_state[i] == '0': qml.PauliX(wires=i)
-    #           qml.ctrl(qml.PauliZ, control=list(range(n-1)))(wires=n-1)  # multi-controlled Z
-    #           for i in range(n):
-    #               if marked_state[i] == '0': qml.PauliX(wires=i)
-    #           # Diffusion step (GroverOperator)
-    #           qml.GroverOperator(wires=list(range(n)))
-    #       return qml.probs(wires=list(range(n)))
+    # Zero-bit indices for this marked state
+    zero_bits = [i for i, b in enumerate(marked) if b == '0']
 
-    # TODO: return grover_circuit
-    pass
+    @qml.qnode(dev)
+    def grover_circuit():
+        # Initial superposition
+        for w in wires:
+            qml.Hadamard(wires=w)
+
+        for _ in range(num_iterations):
+            # --- Phase oracle ---
+            # Flip zero-bits
+            for z in zero_bits:
+                qml.PauliX(wires=z)
+            # Multi-controlled Z: H on last, MCX, H
+            qml.Hadamard(wires=n - 1)
+            qml.MultiControlledX(wires=wires)   # controls=wires[:-1], target=wires[-1]
+            qml.Hadamard(wires=n - 1)
+            # Undo zero-bit flips
+            for z in zero_bits:
+                qml.PauliX(wires=z)
+
+            # --- Grover diffusion operator (PennyLane idiomatic) ---
+            qml.GroverOperator(wires=wires)
+
+        return qml.probs(wires=wires)
+
+    return grover_circuit
 
 
-# TODO: if __name__ == "__main__": run for n=2,3,4; print marked state probabilities
+if __name__ == '__main__':
+    for n in [2, 3, 4]:
+        qnode = get_circuit(n)
+        iters = max(1, int(np.floor(np.pi / 4 * np.sqrt(2 ** n))))
+        print(f"\nGrover's (n={n}, marked='{MARKED_STATES[n]}', iters={iters}):")
+        print(qml.draw(qnode)())

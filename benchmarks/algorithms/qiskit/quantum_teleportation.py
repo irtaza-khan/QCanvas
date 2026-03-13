@@ -2,106 +2,69 @@
 Qiskit Implementation: Quantum Teleportation (3 qubits)
 Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
-Algorithm: Quantum Teleportation Protocol
+Algorithm: Quantum Teleportation
 Category: Quantum Communication
-Qubit Range: 3 (fixed)
+Qubit Range: 3
 Framework: Qiskit (idiomatic style)
 
-This file implements the standard Alice-Bob quantum teleportation protocol
-idiomatically in Qiskit. This algorithm is notable because it requires
-mid-circuit measurements and classically-controlled gates, which each
-framework handles differently — making it an interesting structural
-divergence test case.
+Circuit structure:
+  q[0] = qubit to teleport (initialised to |+⟩ for a non-trivial state)
+  q[1] = Alice's Bell pair qubit
+  q[2] = Bob's Bell pair qubit
 
-Qubit layout:
-  q[0] = Alice's qubit to teleport (initialised in some state |ψ⟩)
-  q[1] = Alice's half of the Bell pair (ancilla)
-  q[2] = Bob's qubit (output)
+  Phase 1: Prepare Bell pair between Alice (q[1]) and Bob (q[2])
+  Phase 2: Alice entangles her qubit q[0] with q[1], measures both
+  Phase 3: Bob applies corrections conditionally on Alice's measurement results
 
-Protocol steps:
-  1. Prepare Bell pair between q[1] and q[2]
-  2. Alice entangles q[0] with q[1] (CNOT + H)
-  3. Alice measures q[0] and q[1] → classical bits c[0], c[1]
-  4. Bob applies X gate conditionally on c[0]
-  5. Bob applies Z gate conditionally on c[1]
-  6. Bob's qubit q[2] is now in state |ψ⟩
+Idiomatic Qiskit: Uses c_if() for classically-controlled corrections.
 
-Idiomatic Qiskit convention:
-  - c_if() for classically-controlled operations (Qiskit-specific)
-  - measure() into named classical bits before conditional gates
-
-Key structural difference vs Cirq / PennyLane:
-  - Qiskit uses c_if() on gate objects
-  - Cirq uses ClassicallyControlledOperation  
-  - PennyLane uses qml.cond() with qml.measure() (newer API)
-  This difference may produce different QASM 3.0 control-flow syntax.
-
-This file is called by:
+Called by:
   - benchmarks/scripts/compile_all.py
-  - benchmarks/notebooks/nb01_compile_and_static_analysis.ipynb
+  - benchmarks/notebooks/nb04_case_studies.ipynb
 """
 
-# ──────────────────────────────────────────────────────────
-# Imports
-# ──────────────────────────────────────────────────────────
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
-# TODO: import QuantumCircuit, QuantumRegister, ClassicalRegister from qiskit
-
-
-# ──────────────────────────────────────────────────────────
-# Circuit Definition
-# ──────────────────────────────────────────────────────────
 
 def get_circuit():
     """
-    Build and return the Qiskit quantum teleportation circuit.
+    Build and return the 3-qubit quantum teleportation circuit.
 
     Returns:
-        QuantumCircuit: A 3-qubit circuit implementing the teleportation
-        protocol with mid-circuit measurement and classically-controlled
-        correction gates.
-
-    Notes:
-        - The initial state of q[0] can be |+⟩ (H applied) or any single-qubit
-          rotation. Use |+⟩ as the state to teleport for this benchmark.
-        - The classically-controlled X and Z gates use Qiskit's c_if() method,
-          which generates QASM 3.0 'if' statements in the output.
-        - Verify correctness: after teleportation, q[2] should be in state |+⟩,
-          giving a uniform measurement distribution (50/50 on |0⟩ / |1⟩).
+        QuantumCircuit: Teleportation protocol with classical feed-forward.
     """
+    qr = QuantumRegister(3, 'q')
+    cr = ClassicalRegister(3, 'c')
+    qc = QuantumCircuit(qr, cr)
 
-    # TODO: Create 3 QuantumRegisters and 3 ClassicalRegisters (or use 2+1 layout)
+    # --- Prepare state to teleport: |+⟩ on q[0] ---
+    qc.h(qr[0])
 
-    # ── State preparation ──────────────────────────────
-    # TODO: Apply H to q[0] to set it in state |+⟩ (the state to teleport)
+    # --- Create Bell pair between Alice (q[1]) and Bob (q[2]) ---
+    qc.h(qr[1])
+    qc.cx(qr[1], qr[2])
 
-    # ── Bell pair creation ─────────────────────────────
-    # TODO: Apply H to q[1]
-    # TODO: Apply CNOT (cx) with control=q[1], target=q[2]
+    # --- Alice's operations ---
+    qc.cx(qr[0], qr[1])
+    qc.h(qr[0])
 
-    # ── Alice's operations ─────────────────────────────
-    # TODO: Apply CNOT with control=q[0], target=q[1]
-    # TODO: Apply H to q[0]
+    # --- Measure Alice's qubits ---
+    qc.measure(qr[0], cr[0])
+    qc.measure(qr[1], cr[1])
 
-    # ── Alice's measurements ───────────────────────────
-    # TODO: Measure q[0] → c[0]
-    # TODO: Measure q[1] → c[1]
+    # --- Bob's corrections (classically controlled) ---
+    # Apply X if cr[1] == 1
+    qc.x(qr[2]).c_if(cr[1], 1)
+    # Apply Z if cr[0] == 1
+    qc.z(qr[2]).c_if(cr[0], 1)
 
-    # ── Bob's corrections (classically controlled) ─────
-    # TODO: Apply X to q[2] conditioned on c[0] == 1  (use c_if)
-    # TODO: Apply Z to q[2] conditioned on c[1] == 1  (use c_if)
+    # --- Measure Bob's qubit ---
+    qc.measure(qr[2], cr[2])
 
-    # ── Final measurement ─────────────────────────────
-    # TODO: Measure q[2] → c[2]
-
-    # TODO: return circuit
-    pass
+    return qc
 
 
-# ──────────────────────────────────────────────────────────
-# Module entry-point
-# ──────────────────────────────────────────────────────────
-
-# TODO: Add if __name__ == "__main__" that:
-#   - Calls get_circuit() and prints the circuit diagram
-#   - Notes the total gate count and classical control flow structure
+if __name__ == '__main__':
+    qc = get_circuit()
+    print(qc.draw('text'))
+    print(f"\nQubits: {qc.num_qubits}  |  Gate count: {qc.count_ops()}")

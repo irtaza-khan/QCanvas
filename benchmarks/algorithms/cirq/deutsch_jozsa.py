@@ -4,105 +4,57 @@ Paper 5 – Cross-Framework Quantum Algorithm Benchmarking
 
 Algorithm: Deutsch–Jozsa
 Category: Oracle-Based
-Qubit Range: 3–8
+Qubit Range: 3–8 (n input qubits + 1 ancilla)
 Framework: Cirq (idiomatic style)
 
-Same algorithm as deutsch_jozsa.py in qiskit/, implemented idiomatically in Cirq.
-
-Idiomatic Cirq conventions:
-  - cirq.LineQubit.range(n+1) for n input qubits + 1 ancilla
-  - Operations assembled with cirq.Circuit([*ops1, cirq.Moment([...]), *ops2])
-    to explicitly control moment structure (parallelism)
-  - cirq.X(ancilla) then cirq.H(ancilla) to prepare |−⟩
-  - cirq.CNOT(qubits[i], ancilla) for oracle CNOT gates
-
-Oracle implementations:
-  - CONSTANT oracle: no additional gates (empty moment between H layers)
-  - BALANCED oracle: CNOT from each input qubit to ancilla
-
-Structural comparison note:
-  Cirq's moment-based construction may cause H gates on multiple qubits
-  to be emitted in a single parallel moment in QASM, whereas Qiskit may
-  emit them sequentially. This can cause circuit DEPTH to differ even
-  when gate COUNT is identical.
-
-This file is called by:
-  - benchmarks/scripts/compile_all.py  (for n ∈ 3..8, both oracle types)
-  - benchmarks/notebooks/nb01_compile_and_static_analysis.ipynb
+Called by:
+  - benchmarks/scripts/compile_all.py  (n ∈ 3..8)
+  - benchmarks/notebooks/nb03_statistical_analysis.ipynb
 """
 
-# ──────────────────────────────────────────────────────────
-# Imports
-# ──────────────────────────────────────────────────────────
-
-# TODO: import cirq
+import cirq
 
 
-# ──────────────────────────────────────────────────────────
-# Constants Oracle
-# ──────────────────────────────────────────────────────────
-
-def get_circuit_constant(n: int = 3):
+def get_circuit(n: int = 3, oracle_type: str = 'balanced'):
     """
-    Cirq Deutsch–Jozsa with constant oracle (f ≡ 0).
+    Build the Deutsch–Jozsa circuit for n input qubits in Cirq.
 
     Args:
-        n (int): Number of input qubits. Total = n+1.
+        n: Number of input qubits (3–8).
+        oracle_type: 'balanced', 'constant_0', or 'constant_1'.
 
     Returns:
-        cirq.Circuit
+        cirq.Circuit: Full DJ circuit. All-zero measurement → constant.
     """
+    inputs  = cirq.LineQubit.range(n)
+    ancilla = cirq.LineQubit(n)
 
-    # TODO: qubits = cirq.LineQubit.range(n+1); ancilla = qubits[n]
-    # TODO: Prepare ancilla: X(ancilla), H(ancilla)
-    # TODO: H on all input qubits in same moment
-    # TODO: Constant oracle: no-op (add empty moment or just barrier comment)
-    # TODO: H on all input qubits again (second layer)
-    # TODO: cirq.measure(*qubits[:n], key='result')
-    # TODO: return cirq.Circuit([...])
-    pass
+    ops = []
 
+    # Initialise ancilla to |−⟩
+    ops.append(cirq.X(ancilla))
+    ops.extend(cirq.H(q) for q in inputs)
+    ops.append(cirq.H(ancilla))
 
-# ──────────────────────────────────────────────────────────
-# Balanced Oracle
-# ──────────────────────────────────────────────────────────
+    # Oracle
+    if oracle_type == 'balanced':
+        for q in inputs:
+            ops.append(cirq.CNOT(q, ancilla))
+    elif oracle_type == 'constant_1':
+        ops.append(cirq.X(ancilla))
+    # constant_0: do nothing
 
-def get_circuit_balanced(n: int = 3):
-    """
-    Cirq Deutsch–Jozsa with balanced oracle (CNOT from each input to ancilla).
+    # Apply H to input qubits
+    ops.extend(cirq.H(q) for q in inputs)
 
-    Args:
-        n (int): Number of input qubits. Total = n+1.
+    # Measure input qubits
+    ops.append(cirq.measure(*inputs, key='result'))
 
-    Returns:
-        cirq.Circuit
-    """
-
-    # TODO: qubits = cirq.LineQubit.range(n+1); ancilla = qubits[n]
-    # TODO: Prepare ancilla: X(ancilla), H(ancilla)
-    # TODO: H on all input qubits
-    # TODO: Balanced oracle: [cirq.CNOT(qubits[i], ancilla) for i in range(n)]
-    # TODO: H on all input qubits again
-    # TODO: cirq.measure(*qubits[:n], key='result')
-    # TODO: return cirq.Circuit([...])
-    pass
+    return cirq.Circuit(ops)
 
 
-# ──────────────────────────────────────────────────────────
-# Convenience dispatcher
-# ──────────────────────────────────────────────────────────
-
-def get_circuit(n: int = 3, oracle_type: str = "balanced"):
-    """
-    Dispatch to constant or balanced circuit. See Qiskit version for full docs.
-    """
-
-    # TODO: dispatch to get_circuit_constant or get_circuit_balanced
-    pass
-
-
-# ──────────────────────────────────────────────────────────
-# Module entry-point
-# ──────────────────────────────────────────────────────────
-
-# TODO: if __name__ == "__main__": print both oracle variants for n=3
+if __name__ == '__main__':
+    for n in [3, 4, 5]:
+        c = get_circuit(n)
+        print(f"\nDeutsch–Jozsa balanced (n={n}):")
+        print(c)

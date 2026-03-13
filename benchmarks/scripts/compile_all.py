@@ -5,10 +5,12 @@ Phase 2 – Compilation & Static Analysis
 
 This script orchestrates the full compilation of all (algorithm, framework) pairs.
 For each pair it:
-  1. Loads the algorithm function from the appropriate algorithm file
-  2. Invokes the correct QCanvas parser (QiskitASTVisitor / CirqASTVisitor / PennyLaneASTVisitor)
-  3. Calls the QASM3Builder converter to generate OpenQASM 3.0
-  4. Saves the generated QASM string to benchmarks/qasm_outputs/<algo>_<framework>.qasm
+  1. Loads the algorithm source code from benchmarks/algorithms/<framework>/<algo>.py
+  2. Passes the source code string to the appropriate QCanvas converter:
+       QiskitToQASM3Converter, CirqToQASM3Converter, or PennyLaneToQASM3Converter
+  3. The converter performs AST-based parsing → QASM3Builder → OpenQASM 3.0 string
+  4. Saves the generated QASM string to:
+       benchmarks/qasm_outputs/<algo>_<n>q_<framework>.qasm
   5. Records compilation time (10 repeated runs → mean ± std)
   6. Saves a compilation timing CSV to benchmarks/metrics/compilation_times.csv
 
@@ -19,13 +21,15 @@ Output files:
   - benchmarks/qasm_outputs/<algo>_<n>q_<framework>.qasm   (one per combination)
   - benchmarks/metrics/compilation_times.csv
 
-Dependencies (called from other QCanvas modules):
-  - quantum_converters/parsers/qiskit_parser.py     → QiskitASTVisitor
-  - quantum_converters/parsers/cirq_parser.py       → CirqASTVisitor
-  - quantum_converters/parsers/pennylane_parser.py  → PennyLaneASTVisitor
-  - quantum_converters/converters/qiskit_to_qasm.py → qiskit_to_qasm3()
-  - quantum_converters/converters/cirq_to_qasm.py   → cirq_to_qasm3()
-  - quantum_converters/converters/pennylane_to_qasm.py → pennylane_to_qasm3()
+QCanvas Converter API:
+  Each converter class exposes:
+    converter.convert(source_code: str) → ConversionResult
+  where ConversionResult.qasm_code is the generated OpenQASM 3.0 string.
+
+  Public convenience functions are also available:
+    from quantum_converters.converters.qiskit_to_qasm import convert_qiskit_to_qasm3
+    from quantum_converters.converters.cirq_to_qasm   import convert_cirq_to_qasm3
+    from quantum_converters.converters.pennylane_to_qasm import convert_pennylane_to_qasm3
 
 Called by:
   - benchmarks/notebooks/nb01_compile_and_static_analysis.ipynb (via %run or subprocess)
@@ -35,106 +39,382 @@ Called by:
 # Imports
 # ──────────────────────────────────────────────────────────
 
-# TODO: import os, sys, time, json
-# TODO: import numpy as np
-# TODO: import pandas as pd
+import os
+import sys
+import time
+import inspect
+import numpy as np
+import pandas as pd
 
-# TODO: Add QCanvas root to sys.path so we can import from quantum_converters/
-# TODO: from quantum_converters.converters.qiskit_to_qasm import qiskit_to_qasm3
-# TODO: from quantum_converters.converters.cirq_to_qasm import cirq_to_qasm3
-# TODO: from quantum_converters.converters.pennylane_to_qasm import pennylane_to_qasm3
+# Add QCanvas project root to Python path so QCanvas modules are importable
+# when running this script directly from benchmarks/scripts/ or as a subprocess.
+_QCANVAS_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if _QCANVAS_ROOT not in sys.path:
+    sys.path.insert(0, _QCANVAS_ROOT)
 
-# TODO: Import all algorithm getter functions from benchmarks/algorithms/
-#   e.g. from benchmarks.algorithms.qiskit import bell_state as qs_bell
-#        from benchmarks.algorithms.cirq import bell_state as cq_bell
-#        etc.
+# QCanvas converter classes — source-language → OpenQASM 3.0
+from quantum_converters.converters.qiskit_to_qasm    import QiskitToQASM3Converter
+from quantum_converters.converters.cirq_to_qasm      import CirqToQASM3Converter
+from quantum_converters.converters.pennylane_to_qasm import PennyLaneToQASM3Converter
 
 
 # ──────────────────────────────────────────────────────────
 # Constants
 # ──────────────────────────────────────────────────────────
 
-# TODO: N_REPEATS = 10  — number of compilation repetitions for timing stats
-# TODO: SHOT_COUNTS = [1024, 4096, 8192]  — used later by simulate_all.py
-# TODO: QASM_OUTPUT_DIR = "benchmarks/qasm_outputs"
-# TODO: METRICS_DIR = "benchmarks/metrics"
+# Number of compilation repetitions for timing statistics.
+# Paper §3.3: "Each experiment is repeated 10 times; results report mean ± std."
+N_REPEATS = 10
+
+# Shot counts used later by simulate_all.py (documented here for cross-reference)
+SHOT_COUNTS = [1024, 4096, 8192]
+
+# Directory paths — absolute, anchored to QCanvas root so that this script
+# works correctly regardless of where it is invoked from (project root,
+# benchmarks/scripts/, or a Jupyter notebook in benchmarks/notebooks/).
+ALGORITHMS_DIR   = os.path.join(_QCANVAS_ROOT, 'benchmarks', 'algorithms')
+QASM_OUTPUT_DIR  = os.path.join(_QCANVAS_ROOT, 'benchmarks', 'qasm_outputs')
+METRICS_DIR      = os.path.join(_QCANVAS_ROOT, 'benchmarks', 'metrics')
 
 
 # ──────────────────────────────────────────────────────────
 # Algorithm Registry
 # ──────────────────────────────────────────────────────────
 
-# TODO: Define ALGORITHM_REGISTRY as a list of dicts, e.g.:
-# [
-#   {
-#     'name': 'bell_state',
-#     'qubits': [2],           # fixed qubit count
-#     'qiskit_fn': qs_bell.get_circuit,
-#     'cirq_fn':   cq_bell.get_circuit,
-#     'pl_fn':     pl_bell.get_circuit,
-#   },
-#   {
-#     'name': 'ghz_state',
-#     'qubits': [3, 4, 5, 6, 7, 8],   # variable qubit counts for scaling
-#     'qiskit_fn': qs_ghz.get_circuit,
-#     ...
-#   },
-#   ... (one entry per algorithm)
-# ]
-#
-# For algorithms with variable qubit counts,
-# the runner will iterate over all values in 'qubits'.
+# Each entry specifies one algorithm and the qubit counts to test.
+# For fixed-size algorithms (Bell State, Teleportation), 'qubits' has one entry.
+# For scaling algorithms (GHZ, Grover's, etc.), 'qubits' is a list to iterate over.
+# The qubit count is passed as an argument to get_circuit(n) if the function accepts one.
+
+ALGORITHM_REGISTRY = [
+    # ── Foundational ──────────────────────────────────────────
+    {
+        'name':   'bell_state',
+        'qubits': [2],
+        'description': 'Bell State — simplest circuit, equality sanity check',
+    },
+    {
+        'name':   'ghz_state',
+        'qubits': [3, 4, 5, 6, 7, 8],
+        'description': 'GHZ State — entanglement scaling study (RQ4)',
+    },
+    # ── Quantum Communication ──────────────────────────────────
+    {
+        'name':   'quantum_teleportation',
+        'qubits': [3],
+        'description': 'Quantum Teleportation — mid-circuit measurement handling',
+    },
+    # ── Oracle-Based ──────────────────────────────────────────
+    {
+        'name':   'deutsch_jozsa',
+        'qubits': [3, 4, 5, 6, 7, 8],
+        'description': 'Deutsch–Jozsa — oracle encoding divergence across frameworks',
+    },
+    {
+        'name':   'bernstein_vazirani',
+        'qubits': [3, 4, 5, 6, 7, 8],
+        'description': 'Bernstein–Vazirani — hidden string oracle',
+    },
+    # ── Search ────────────────────────────────────────────────
+    {
+        'name':   'grovers_algorithm',
+        'qubits': [2, 3, 4, 5, 6],
+        'description': 'Grover\'s Algorithm — diffusion operator decomposition divergence',
+    },
+    # ── Randomness ────────────────────────────────────────────
+    {
+        'name':   'qrng',
+        'qubits': [4, 5, 6, 7, 8],
+        'description': 'QRNG — pure Hadamard baseline, isolates gate-translation overhead',
+    },
+    # ── Variational ───────────────────────────────────────────
+    {
+        'name':   'vqe',
+        'qubits': [2, 3, 4, 5, 6],
+        'description': 'VQE — ansatz construction and parameter handling comparison',
+    },
+    {
+        'name':   'qaoa',
+        'qubits': [2, 3, 4, 5, 6],
+        'description': 'QAOA — cost Hamiltonian encoding, p=1 layer',
+    },
+    # ── Quantum ML ────────────────────────────────────────────
+    {
+        'name':   'qml_xor_classifier',
+        'qubits': [2, 3, 4],
+        'description': 'QML XOR Classifier — angle encoding + variational layer',
+    },
+    # ── Error Correction ──────────────────────────────────────
+    {
+        'name':   'bit_flip_code',
+        'qubits': [3],
+        'description': 'Bit-Flip Code — syndrome measurement and ancilla handling',
+    },
+    {
+        'name':   'phase_flip_code',
+        'qubits': [3],
+        'description': 'Phase-Flip Code — Hadamard-basis error correction',
+    },
+]
+
+# Framework-specific converter instances (instantiated once, reused per compilation)
+_CONVERTERS = {
+    'qiskit':    QiskitToQASM3Converter(),
+    'cirq':      CirqToQASM3Converter(),
+    'pennylane': PennyLaneToQASM3Converter(),
+}
 
 
 # ──────────────────────────────────────────────────────────
 # Utility: Bitstring normalisation
 # ──────────────────────────────────────────────────────────
 
-# TODO: Define normalize_bitstring(bitstring: str, source_framework: str) -> str:
-#   Reverses the bitstring if source_framework == 'qiskit' (little-endian correction).
-#   For Cirq and PennyLane: returns unchanged.
+def normalize_bitstring(bitstring: str, source_framework: str) -> str:
+    """
+    Normalise a measurement bitstring to big-endian (most-significant qubit first).
+
+    Qiskit outputs bitstrings in little-endian order: qubit 0 is the rightmost
+    character. All other analysis functions assume big-endian. This correction
+    is applied during post-processing of Qiskit simulation distributions.
+
+    Cirq and PennyLane use natural qubit ordering (big-endian) — no correction.
+
+    Reference: Qiskit documentation §"Bit ordering in the Qiskit SDK"
+
+    Args:
+        bitstring:        Raw bitstring from the simulation backend.
+        source_framework: Framework that produced the QASM ('qiskit', 'cirq', 'pennylane').
+
+    Returns:
+        str: Normalised bitstring in big-endian order.
+    """
+    if source_framework.lower() == 'qiskit':
+        return bitstring[::-1]
+    return bitstring
+
+
+# ──────────────────────────────────────────────────────────
+# Source code loader
+# ──────────────────────────────────────────────────────────
+
+def _load_algorithm_source(algo_name: str, framework: str) -> str:
+    """
+    Read the algorithm's Python source file and return its content as a string.
+
+    The QCanvas converter pipeline accepts the raw source code string, parses
+    it into a CircuitAST via an AST visitor, and converts it to QASM 3.0 via
+    QASM3Builder — no in-process code execution of user algorithms required.
+
+    Expected file location:
+      benchmarks/algorithms/<framework>/<algo_name>.py
+
+    Args:
+        algo_name: Algorithm identifier (snake_case), e.g. 'grovers_algorithm'.
+        framework: Framework subfolder name: 'qiskit', 'cirq', or 'pennylane'.
+
+    Returns:
+        str: Full Python source code of the algorithm file.
+
+    Raises:
+        FileNotFoundError: If the algorithm file does not exist.
+    """
+    path = os.path.join(ALGORITHMS_DIR, framework, f'{algo_name}.py')
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Algorithm file not found: {path}\n"
+            f"Expected: benchmarks/algorithms/{framework}/{algo_name}.py"
+        )
+    with open(path, 'r', encoding='utf-8') as fh:
+        return fh.read()
 
 
 # ──────────────────────────────────────────────────────────
 # Core compilation function
 # ──────────────────────────────────────────────────────────
 
-# TODO: Define run_compilation(circuit_fn, converter_fn, n_repeats=N_REPEATS) -> dict:
-#   1. Call circuit_fn() to get the framework-native circuit object
-#   2. Repeat n_repeats times:
-#      - time.perf_counter() before and after converter_fn(circuit)
-#      - Record elapsed time in ms
-#   3. Return {
-#        'qasm_str': <the generated QASM string from last run>,
-#        'times_ms': [list of n_repeats floats],
-#        'mean_ms': np.mean(times_ms),
-#        'std_ms':  np.std(times_ms),
-#      }
+def run_compilation(
+    algo_name:  str,
+    framework:  str,
+    n_qubits:   int,
+    n_repeats:  int = N_REPEATS,
+) -> dict:
+    """
+    Compile a single (algorithm, framework, n_qubits) combination to QASM 3.0,
+    repeating n_repeats times to obtain timing statistics.
+
+    On each repeat the converter is invoked on the same source string; the
+    QASM output from the LAST repeat is returned (all repeats should produce
+    identical QASM for deterministic circuits).
+
+    Compilation timing measures:
+      (a) Source string → CircuitAST via AST visitor   (parsing)
+      (b) CircuitAST → OpenQASM 3.0 string via QASM3Builder  (code generation)
+    Both are included in the measured wall-clock time.
+
+    Args:
+        algo_name:  Algorithm identifier (e.g. 'bell_state').
+        framework:  Framework name ('qiskit', 'cirq', or 'pennylane').
+        n_qubits:   Target qubit count (appended to QASM filename for identification;
+                    the algorithm source file defines the actual qubit count).
+        n_repeats:  Number of timing repetitions (default = N_REPEATS = 10).
+
+    Returns:
+        dict with keys:
+          'qasm_str'     (str)  : Generated OpenQASM 3.0 string (from last repeat)
+          'times_ms'     (list) : Compilation time in ms for each repeat
+          'mean_ms'      (float): Mean compilation time over n_repeats
+          'std_ms'       (float): Standard deviation of compilation times
+          'success'      (bool) : True if compilation succeeded, False otherwise
+          'error'        (str)  : Error message if success=False; empty otherwise
+    """
+    try:
+        source  = _load_algorithm_source(algo_name, framework)
+        conv    = _CONVERTERS[framework]
+        times   = []
+        qasm_str = ''
+
+        for _ in range(n_repeats):
+            t_start = time.perf_counter()
+            result  = conv.convert(source)
+            t_end   = time.perf_counter()
+
+            times.append((t_end - t_start) * 1000.0)   # ms
+            qasm_str = result.qasm_code
+
+        return {
+            'qasm_str': qasm_str,
+            'times_ms': times,
+            'mean_ms':  float(np.mean(times)),
+            'std_ms':   float(np.std(times)),
+            'success':  True,
+            'error':    '',
+        }
+
+    except FileNotFoundError as exc:
+        return {'qasm_str': '', 'times_ms': [], 'mean_ms': float('nan'),
+                'std_ms': float('nan'), 'success': False, 'error': str(exc)}
+    except Exception as exc:
+        return {'qasm_str': '', 'times_ms': [], 'mean_ms': float('nan'),
+                'std_ms': float('nan'), 'success': False, 'error': str(exc)}
 
 
 # ──────────────────────────────────────────────────────────
 # Main runner
 # ──────────────────────────────────────────────────────────
 
-# TODO: Define run_all_compilations() -> pd.DataFrame:
-#   For each entry in ALGORITHM_REGISTRY:
-#     For each n_qubits in entry['qubits']:
-#       For each (framework_name, circuit_fn, converter_fn) in
-#         [('qiskit', entry['qiskit_fn'], qiskit_to_qasm3),
-#          ('cirq',   entry['cirq_fn'],   cirq_to_qasm3),
-#          ('pennylane', entry['pl_fn'],  pennylane_to_qasm3)]:
-#         result = run_compilation(circuit_fn(n_qubits), converter_fn)
-#         Save result['qasm_str'] to QASM_OUTPUT_DIR/<name>_<n_qubits>q_<framework>.qasm
-#         Append row to results list
-#   Return pd.DataFrame(results) with columns:
-#     [algorithm, framework, n_qubits, mean_compile_ms, std_compile_ms]
+def run_all_compilations(
+    n_repeats: int = N_REPEATS,
+    verbose:   bool = True,
+) -> pd.DataFrame:
+    """
+    Compile every (algorithm, n_qubits, framework) combination defined in
+    ALGORITHM_REGISTRY, save the QASM output files, and return a timing DataFrame.
+
+    For each combination:
+      1. Load algorithm source from benchmarks/algorithms/<framework>/<algo>.py
+      2. Run the QCanvas conversion pipeline N_REPEATS times to gather timing data
+      3. Save the final QASM string to:
+           benchmarks/qasm_outputs/<algo>_<n>q_<framework>.qasm
+      4. Record algorithm, framework, n_qubits, mean_compile_ms, std_compile_ms
+
+    Args:
+        n_repeats: Number of compilation repetitions per combination.
+        verbose:   Whether to print per-combination progress lines.
+
+    Returns:
+        pd.DataFrame with columns:
+          [algorithm, framework, n_qubits, mean_compile_ms, std_compile_ms,
+           qasm_path, success]
+    """
+    os.makedirs(QASM_OUTPUT_DIR, exist_ok=True)
+    os.makedirs(METRICS_DIR,     exist_ok=True)
+
+    rows    = []
+    n_total = sum(
+        len(entry['qubits']) * 3   # 3 frameworks
+        for entry in ALGORITHM_REGISTRY
+    )
+    done = 0
+
+    for entry in ALGORITHM_REGISTRY:
+        algo_name = entry['name']
+
+        for n_qubits in entry['qubits']:
+            for framework in ['qiskit', 'cirq', 'pennylane']:
+                done += 1
+                label = f"[{done}/{n_total}] {algo_name} ({n_qubits}q) — {framework}"
+
+                if verbose:
+                    print(f"  Compiling: {label} …", end=' ', flush=True)
+
+                result = run_compilation(algo_name, framework, n_qubits, n_repeats)
+
+                qasm_filename = f"{algo_name}_{n_qubits}q_{framework}.qasm"
+                qasm_path     = os.path.join(QASM_OUTPUT_DIR, qasm_filename)
+
+                if result['success']:
+                    with open(qasm_path, 'w', encoding='utf-8') as fh:
+                        fh.write(result['qasm_str'])
+
+                    if verbose:
+                        print(f"✓  {result['mean_ms']:.2f} ± {result['std_ms']:.2f} ms")
+                else:
+                    qasm_path = ''
+                    if verbose:
+                        print(f"✗  FAILED: {result['error'][:80]}")
+
+                rows.append({
+                    'algorithm':       algo_name,
+                    'framework':       framework,
+                    'n_qubits':        n_qubits,
+                    'mean_compile_ms': result['mean_ms'],
+                    'std_compile_ms':  result['std_ms'],
+                    'qasm_path':       qasm_path,
+                    'success':         result['success'],
+                })
+
+    return pd.DataFrame(rows)
 
 
 # ──────────────────────────────────────────────────────────
 # Entry-point
 # ──────────────────────────────────────────────────────────
 
-# TODO: if __name__ == "__main__":
-#   - Call run_all_compilations()
-#   - Save DataFrame to METRICS_DIR/compilation_times.csv
-#   - Print summary table
+if __name__ == '__main__':
+    print(f"\n{'='*65}")
+    print(f"  Compilation Runner — Paper 5 Cross-Framework Benchmarking")
+    print(f"  Repeats: {N_REPEATS} per combination")
+    print(f"  Algorithms: {len(ALGORITHM_REGISTRY)}")
+    total_combos = sum(len(e['qubits']) * 3 for e in ALGORITHM_REGISTRY)
+    print(f"  Total combinations: {total_combos}")
+    print(f"{'='*65}\n")
+
+    df = run_all_compilations(n_repeats=N_REPEATS, verbose=True)
+
+    # Save timing CSV
+    out_path = os.path.join(METRICS_DIR, 'compilation_times.csv')
+    df.to_csv(out_path, index=False)
+    print(f"\n[compile_all] Saved → {out_path}  ({len(df)} rows)\n")
+
+    # Summary table
+    success_df  = df[df['success']]
+    failed_df   = df[~df['success']]
+
+    print(f"Summary — {len(success_df)}/{len(df)} combinations succeeded.\n")
+
+    if not success_df.empty:
+        print("Mean compilation time per framework (all algorithms):")
+        summary = (
+            success_df.groupby('framework')[['mean_compile_ms']]
+            .mean()
+            .round(3)
+            .rename(columns={'mean_compile_ms': 'avg_compile_ms'})
+        )
+        print(summary.to_string())
+
+    if not failed_df.empty:
+        print(f"\n⚠  {len(failed_df)} combinations failed:")
+        for _, row in failed_df.iterrows():
+            print(f"   • {row['algorithm']} ({row['n_qubits']}q) {row['framework']}")
+
+    print(f"\n{'='*65}\n")
