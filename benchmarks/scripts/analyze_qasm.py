@@ -347,7 +347,10 @@ def analyze_qasm_file(qasm_path: str) -> dict:
                 'parse_error': str(exc)}
 
     # --- Core metrics ---
-    n_qubits    = extract_qubit_count(qasm_str) or meta['n_qubits']
+    # Prioritize filename-derived qubit count (benchmark dimension) over parsed count
+    # to ensure consistency in grouping/filtering even if AST parser underestimates.
+    n_qubits    = meta['n_qubits']
+    parsed_q    = extract_qubit_count(qasm_str)
     gate_lines  = extract_gate_lines(qasm_str)
     gate_types  = extract_gate_types(gate_lines)
     modifiers   = extract_modifier_counts(qasm_str)

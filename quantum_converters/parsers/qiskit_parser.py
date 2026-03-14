@@ -870,6 +870,50 @@ class QiskitASTVisitor(ast.NodeVisitor):
                     return f"pi/{int(right.value)}"
         return None
 
+    def _extract_pi_multiplication(self, node: ast.expr) -> Optional[str]:
+        """Extract expressions like expr * np.pi or np.pi * expr."""
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mult):
+            left, right = node.left, node.right
+            
+            # Check if either side is pi
+            pi_left = self._extract_pi_constant(left)
+            pi_right = self._extract_pi_constant(right)
+            
+            if pi_right:
+                # Case: expr * pi
+                # Avoid infinite recursion if left is also a BinOp we're currently processing
+                if isinstance(left, ast.BinOp) and isinstance(left.op, ast.Mult):
+                    return f"expr*{pi_right}"
+                other = self._extract_parameter(left)
+                return f"{other}*{pi_right}"
+            
+            if pi_left:
+                # Case: pi * expr
+                if isinstance(right, ast.BinOp) and isinstance(right.op, ast.Mult):
+                    return f"{pi_left}*expr"
+                other = self._extract_parameter(right)
+                return f"{pi_left}*{other}"
+        return None
+
+    def _extract_parameter_value(self, node: ast.expr) -> str:
+        """Fallback for extracting a string representation of a parameter expression."""
+        try:
+            if hasattr(ast, 'unparse'):
+                return ast.unparse(node)
+            
+            # Basic fallback for older Python versions
+            if isinstance(node, ast.Name):
+                return node.id
+            if isinstance(node, ast.Constant):
+                return str(node.value)
+            if isinstance(node, ast.Subscript):
+                value = self._extract_parameter_value(node.value)
+                # This is a bit recursive but handles theta[i]
+                return f"{value}[...]"
+            return "param"
+        except Exception:
+            return "param"
+
 
 class QiskitASTParser:
     """

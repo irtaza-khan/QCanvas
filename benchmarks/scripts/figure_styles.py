@@ -206,9 +206,13 @@ def plot_grouped_bar(
     x_indices = np.arange(n_x)
 
     for idx, fw in enumerate(groups):
-        subset  = df[df[group_col] == fw].set_index(x_col)
+        subset = df[df[group_col] == fw]
+        # Ensure unique indices for lookup by averaging duplicates if any exist
+        # This prevents "ValueError: setting an array element with a sequence"
+        subset = subset.groupby(x_col).mean(numeric_only=True)
+        
         heights = [subset[y_col].get(x, 0) for x in x_values]
-        errors  = [subset[error_col].get(x, 0) for x in x_values] if error_col else None
+        errors  = [subset[error_col].get(x, 0) for x in x_values] if error_col and error_col in subset.columns else None
         offset  = (idx - n_groups / 2 + 0.5) * bar_width
 
         label = FRAMEWORK_LABELS.get(fw, fw)
