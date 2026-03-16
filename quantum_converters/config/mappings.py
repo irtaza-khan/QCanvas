@@ -97,6 +97,10 @@ _PENNYLANE_TO_QASM = FrameworkGateRegistry(
         
         # Iteration II: Global phase
         "gphase": GateMap(openqasm_gate="gphase", target_gate="GlobalPhase", param_order=["gamma"]),
+
+        # Grover and Multi-controlled (Common in algorithms)
+        "mcx": GateMap(openqasm_gate="mcx", target_gate="MultiControlledX"),
+        "grover": GateMap(openqasm_gate="grover", target_gate="GroverOperator"),
     },
 )
 

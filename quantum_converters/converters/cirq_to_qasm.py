@@ -355,9 +355,11 @@ class CirqToQASM3Converter:
             self._handle_controlled_gate(builder, gate, qubits_str)
             return
 
-        # Handle different gate types
-        self._handle_standard_gates(builder, gate_name, qubits_str, modifiers, actual_exponent)
-        self._handle_parameterized_gates(builder, gate_name, qubits_str, modifiers, actual_exponent, gate)
+        # Handle different gate types sequentially, stopping once handled
+        if self._handle_standard_gates(builder, gate_name, qubits_str, modifiers, actual_exponent):
+            return
+        if self._handle_parameterized_gates(builder, gate_name, qubits_str, modifiers, actual_exponent, gate):
+            return
         self._handle_special_gates(builder, gate_name, qubits_str, qubit_indices, gate)
 
     def _extract_gate_properties(self, gate) -> tuple:
@@ -402,6 +404,8 @@ class CirqToQASM3Converter:
         qasm_name = gate_map.get(gate_name)
         if qasm_name:
             builder.apply_gate(qasm_name, qubits_str, modifiers=modifiers if modifiers else None)
+            return True
+        return False
 
     def _is_standard_exponent(self, exponent) -> bool:
         """Check if exponent represents a standard gate (not parameterized)."""
@@ -414,10 +418,14 @@ class CirqToQASM3Converter:
 
         if gate_name in ['XPowGate', 'YPowGate', 'ZPowGate'] and actual_exponent is not None and abs(actual_exponent) != 1:
             self._apply_rotation_gate(builder, gate_name, qubits_str, actual_exponent, modifiers)
+            return True
         elif gate_name.lower() in ['rx', 'ry', 'rz']:
             self._apply_direct_rotation_gate(builder, gate_name, qubits_str, gate, modifiers)
+            return True
         elif gate_name == 'PhasedXPowGate':
             self._apply_phased_x_gate(builder, qubits_str, actual_exponent, gate, modifiers)
+            return True
+        return False
 
     def _apply_rotation_gate(self, builder: QASM3Builder, gate_name: str, qubits_str: list,
                            exponent, modifiers: dict):
@@ -686,9 +694,13 @@ class CirqToQASM3Converter:
     def _add_ast_for_loop(self, builder: QASM3Builder, operation: ForLoopNode):
         """Add a for loop from AST to QASM builder."""
         # OpenQASM 3.0 for loop syntax: for int i in [0:7] { ... }
-        # Note: range_end is exclusive in Python, but inclusive in OpenQASM range syntax
-        openqasm_end = operation.range_end - 1 if operation.range_end > operation.range_start else operation.range_start
-        range_spec = f"[{operation.range_start}:{openqasm_end}]"
+        if isinstance(operation.range_end, int) and isinstance(operation.range_start, int):
+            openqasm_end = operation.range_end - 1 if operation.range_end > operation.range_start else operation.range_start
+            range_spec = f"[{operation.range_start}:{openqasm_end}]"
+        else:
+            # Symbolic range (e.g., from [0:n])
+            # OpenQASM 3.0 range syntax is inclusive, Python's is exclusive
+            range_spec = f"[{operation.range_start}:{operation.range_end}-1]"
         variable_decl = f"int {operation.variable}"
         
         # Convert loop body operations to QASM statements

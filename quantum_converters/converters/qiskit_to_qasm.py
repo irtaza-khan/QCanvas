@@ -489,6 +489,16 @@ class QiskitToQASM3Converter:
     def _handle_barrier(self, builder: QASM3Builder, qubits_str: list):
         """Handle barrier operations."""
         builder.add_barrier(qubits_str if qubits_str else None)
+
+    def _handle_measurement(self, builder: QASM3Builder, qubits_str: list, clbit_indices: list):
+        """Handle measurement operation."""
+        for q_str, c_idx in zip(qubits_str, clbit_indices):
+            builder.add_measurement(q_str, f"c[{c_idx}]")
+
+    def _handle_reset(self, builder: QASM3Builder, qubits_str: list):
+        """Handle reset operation."""
+        for q_str in qubits_str:
+            builder.add_reset(q_str)
     
     def _analyze_circuit_ast(self, circuit_ast) -> ConversionStats:
         try:
@@ -618,8 +628,13 @@ class QiskitToQASM3Converter:
         # OpenQASM 3.0 for loop syntax: for int i in [0:7] { ... }
         # Note: range_end is exclusive in Python, but inclusive in OpenQASM range syntax
         # So Python range(8) = [0,1,2,3,4,5,6,7] becomes [0:7] in OpenQASM
-        openqasm_end = op.range_end - 1 if op.range_end > op.range_start else op.range_start
-        range_spec = f"[{op.range_start}:{openqasm_end}]"
+        if isinstance(op.range_end, int) and isinstance(op.range_start, int):
+            openqasm_end = op.range_end - 1 if op.range_end > op.range_start else op.range_start
+            range_spec = f"[{op.range_start}:{openqasm_end}]"
+        else:
+            # Symbolic range (e.g., from [0:n])
+            # OpenQASM 3.0 range syntax is inclusive, Python's is exclusive
+            range_spec = f"[{op.range_start}:{op.range_end}-1]"
         variable_decl = f"int {op.variable}"
         
         # Convert loop body operations to QASM statements
@@ -744,25 +759,29 @@ class QiskitToQASM3Converter:
         # Preprocess source code for compatibility
         qiskit_source = self._preprocess_qiskit_source(qiskit_source)
 
-        # Use AST-based conversion only (no execution fallback)
-        if VERBOSE:
-            vprint("[QiskitToQASM3Converter] Using AST-based translation")
+        # Try AST-based path first (secure, no execution)
         try:
+            if VERBOSE:
+                vprint("[QiskitToQASM3Converter] Attempt AST-based translation")
             parser = QiskitASTParser()
-            t_parse = time.time()
             circuit_ast = parser.parse(qiskit_source)
-            if VERBOSE:
-                vprint(f"[QiskitToQASM3Converter] AST parsed in {(time.time()-t_parse)*1000:.1f} ms")
-            t_ana = time.time()
             stats = self._analyze_circuit_ast(circuit_ast)
-            if VERBOSE:
-                vprint(f"[QiskitToQASM3Converter] AST analyzed in {(time.time()-t_ana)*1000:.1f} ms")
             qasm3_program = self._convert_ast_to_qasm3(circuit_ast)
             return ConversionResult(qasm_code=qasm3_program, stats=stats)
         except Exception as e:
             if VERBOSE:
-                vprint(f"[QiskitToQASM3Converter] AST parsing failed: {e}")
-            raise ValueError(f"Failed to parse Qiskit source code: {str(e)}. Please ensure the code contains valid Qiskit circuit operations.")
+                vprint(f"[QiskitToQASM3Converter] AST failed: {e}")
+
+        # Fallback: execute source to obtain QuantumCircuit
+        if VERBOSE:
+            vprint("[QiskitToQASM3Converter] Falling back to runtime execution path")
+        try:
+            circuit = self._execute_qiskit_source(qiskit_source)
+            stats = self._analyze_qiskit_circuit(circuit)
+            qasm3_program = self._convert_to_qasm3(circuit)
+            return ConversionResult(qasm_code=qasm3_program, stats=stats)
+        except Exception as e:
+            raise ValueError(f"Failed to convert Qiskit source code: {str(e)}")
 
 
 # Public API function for easy module usage

@@ -123,8 +123,8 @@ class ForLoopNode:
         metadata: Additional loop metadata
     """
     variable: str
-    range_start: int
-    range_end: int
+    range_start: Union[int, str]
+    range_end: Union[int, str]
     body: List[Union[GateNode, MeasurementNode, ResetNode, BarrierNode, 'ForLoopNode', 'IfStatementNode']] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -159,12 +159,14 @@ class CircuitAST:
         clbits: Number of classical bits in the circuit
         operations: List of circuit operations (gates, measurements, etc.)
         parameters: Dict of circuit parameters
+        variables: Dict of circuit variables (e.g., loop variables, constants)
         metadata: Additional circuit metadata
     """
     qubits: int = 0
     clbits: int = 0
     operations: List[Union[GateNode, MeasurementNode, ResetNode, BarrierNode, 'ForLoopNode', 'IfStatementNode']] = field(default_factory=list)
     parameters: Dict[str, Any] = field(default_factory=dict)
+    variables: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def add_gate(self, gate: GateNode) -> None:

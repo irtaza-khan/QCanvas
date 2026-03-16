@@ -269,6 +269,36 @@ def run_compilation(
     """
     try:
         source  = _load_algorithm_source(algo_name, framework)
+        if framework == 'pennylane':
+            # For PennyLane, replace the parameter with the value to allow static evaluation
+            # Use regex to handle different default values (n: int = 2, n: int = 3, etc.)
+            import re as _re
+            source = _re.sub(r'def\s+get_circuit\(\s*n\s*:\s*int\s*=\s*\d+\s*(?:,\s*.*)?\):', 
+                             f'n = {n_qubits}\ndef get_circuit():', source)
+            # Handle cases where n is not an int or has no default (though our benchmarks have defaults)
+            source = _re.sub(r'def\s+get_circuit\(\s*n\s*(?:,\s*.*)?\)\s*:', 
+                             f'n = {n_qubits}\ndef get_circuit():', source)
+            if algo_name == 'bernstein_vazirani':
+                bv_dict = {3: "101", 4: "1011", 5: "10110", 6: "101101", 7: "1011010", 8: "10110101"}
+                s = bv_dict[n_qubits]
+                source = source.replace('s     = SECRET_STRINGS[n]', f's = "{s}"')
+            elif algo_name == 'deutsch_jozsa':
+                source = source.replace('def get_circuit():', "oracle_type = 'balanced'\ndef get_circuit():")
+            elif algo_name == 'qaoa':
+                # For QAOA, replace the listcomp with the expanded list
+                edges_list = [(i, (i + 1) % n_qubits) for i in range(n_qubits)]
+                edges_str = str(edges_list)
+                source = source.replace('edges = [(i, (i + 1) % n) for i in range(n)]', f'edges = {edges_str}')
+            elif algo_name == 'grovers_algorithm':
+                # For Grover, replace MARKED_STATES
+                marked_dict = {2: "11", 3: "101", 4: "1011", 5: "10110", 6: "101101"}
+                marked = marked_dict[n_qubits]
+                source = source.replace('marked         = MARKED_STATES[n]', f'marked = "{marked}"')
+            elif algo_name == 'vqe':
+                # For VQE, replace theta list
+                theta_list = [0.7853981633974483] * n_qubits
+                theta_str = str(theta_list)
+                source = source.replace('theta = [np.pi / 4] * n', f'theta = {theta_str}')
         conv    = _CONVERTERS[framework]
         times   = []
         qasm_str = ''

@@ -11,13 +11,13 @@ the VERBOSE console flag.
 """
 
 # Verbose logging for parsers/converters (set to False to silence)
-VERBOSE: bool = False
+VERBOSE: bool = True
 
 # Global builder prelude flags (used by all converters)
 # Controls whether classical variables and mathematical constants are emitted
 # in the standard prelude. Adjust here to affect all conversion outputs.
 INCLUDE_VARS: bool = False
-INCLUDE_CONSTANTS: bool = False
+INCLUDE_CONSTANTS: bool = True
 
 import os
 import sys

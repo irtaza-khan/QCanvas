@@ -460,13 +460,16 @@ class QASM3Builder:
         
         Args:
             variable: Loop variable name (can include type, e.g., "uint i")
-            range_spec: Range specification (e.g., "[0:10]" or "{0, 2, 4, 6}")
+            range_spec: Range specification (e.g., "[0:10]", "[0:n-1]" or "{0, 2, 4, 6}")
             body: List of statements in loop body
         """
         self.lines.append(f"for {variable} in {range_spec} {{")
         for stmt in body:
-            # Statements are already indented by the builder, so we add them as-is
-            self.lines.append(f"    {stmt}")
+            # Add indentation
+            if not stmt.startswith("    "):
+                self.lines.append(f"    {stmt}")
+            else:
+                self.lines.append(stmt)
         self.lines.append("}")
         
     def add_while_loop(self, condition: str, body: List[str]):

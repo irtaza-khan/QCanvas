@@ -56,10 +56,10 @@ Version: 1.0.0
 """
 
 import ast
-import logging
+import numpy as np
 from config.config import VERBOSE, vprint
 from quantum_converters.config import get_pl_inverse_qasm_map
-from typing import List, Any, Set, Optional, Tuple, Dict
+from typing import List, Any, Set, Optional, Tuple, Dict, Union
 
 from quantum_converters.base.circuit_ast import (
     CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
@@ -90,25 +90,63 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
     # Detect qml.device(..., wires=N) and track variable assignments
     def visit_Assign(self, node: ast.Assign) -> None:
         try:
-            # Track simple variable assignments like n_bits = 8
+            # Track simple variable assignments
             if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
                 var_name = node.targets[0].id
-                # Handle ast.Constant (Python 3.8+)
-                if isinstance(node.value, ast.Constant):
-                    self.variables[var_name] = node.value.value
+                val = self._extract_parameter(node.value)
+                if val != 'expr':
+                    self.variables[var_name] = val
                     if VERBOSE:
-                        vprint(f"[PennyLaneASTVisitor] Tracked variable: {var_name} = {node.value.value}")
-                # Handle ast.Num (deprecated, for older Python)
-                elif isinstance(node.value, ast.Num):
-                    self.variables[var_name] = node.value.n
-                    if VERBOSE:
-                        vprint(f"[PennyLaneASTVisitor] Tracked variable (Num): {var_name} = {node.value.n}")
+                        vprint(f"[PennyLaneASTVisitor] Tracked variable: {var_name} = {val}")
+                elif isinstance(node.value, ast.Name) and node.value.id in self.variables:
+                    self.variables[var_name] = self.variables[node.value.id]
             
             if isinstance(node.value, ast.Call) and self._is_qml_call(node.value, 'device'):
                 self._extract_wires_from_device(node.value)
         except Exception:
             pass
         self.generic_visit(node)
+
+    def _is_main_guard(self, node: ast.If) -> bool:
+        """Check if an if statement is the 'if __name__ == "__main__":' guard."""
+        if not isinstance(node.test, ast.Compare):
+            return False
+        
+        # Check __name__
+        if not (isinstance(node.test.left, ast.Name) and node.test.left.id == '__name__'):
+            return False
+        
+        # Check ==
+        if not (len(node.test.ops) == 1 and isinstance(node.test.ops[0], ast.Eq)):
+            return False
+            
+        # Check "__main__"
+        if len(node.test.comparators) != 1:
+            return False
+        comp = node.test.comparators[0]
+        if isinstance(comp, ast.Constant) and comp.value == '__main__':
+            return True
+        elif isinstance(comp, ast.Str) and comp.s == '__main__':
+            return True
+            
+        return False
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """Handle function definitions, tracking arguments with defaults."""
+        # Track arguments with default values
+        if node.args.defaults:
+            num_defaults = len(node.args.defaults)
+            args_with_defaults = node.args.args[-num_defaults:]
+            for arg, default in zip(args_with_defaults, node.args.defaults):
+                val = self._extract_constant_value(default)
+                if val is not None:
+                    self.variables[arg.arg] = val
+                    if VERBOSE:
+                        vprint(f"[PennyLaneASTVisitor] Tracked function arg default: {arg.arg} = {val}")
+
+        # Parse the function body for circuit operations
+        for stmt in node.body:
+            self.visit(stmt)
 
     def visit_Expr(self, node: ast.Expr) -> None:
         # Capture qml gate/measurement expressions
@@ -124,12 +162,89 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             pass
         self.generic_visit(node)
 
+    def visit_Return(self, node: ast.Return) -> None:
+        """Handle return statements, which often contain PennyLane measurements."""
+        if node.value:
+            # Check if returning a qml measurement call
+            if isinstance(node.value, ast.Call):
+                self._handle_qml_call(node.value)
+            # Check if returning a tuple of calls
+            elif isinstance(node.value, ast.Tuple):
+                for elt in node.value.elts:
+                    if isinstance(elt, ast.Call):
+                        self._handle_qml_call(elt)
+        self.generic_visit(node)
+
     def visit_For(self, node: ast.For) -> None:
         """Handle for loops in PennyLane code."""
         if VERBOSE:
             vprint("[PennyLaneASTVisitor] visit_For: inspecting for loop")
         
-        # Extract loop variable
+        # Special handling for enumerate with tuple target
+        if (isinstance(node.target, ast.Tuple) and len(node.target.elts) == 2 and
+            isinstance(node.target.elts[0], ast.Name) and isinstance(node.target.elts[1], ast.Name) and
+            isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'enumerate' and
+            len(node.iter.args) == 1):
+            
+            iter_arg = node.iter.args[0]
+            s = None
+            if isinstance(iter_arg, ast.Str):
+                s = iter_arg.s
+            elif isinstance(iter_arg, ast.Constant) and isinstance(iter_arg.value, str):
+                s = iter_arg.value
+            elif isinstance(iter_arg, ast.Name) and iter_arg.id in self.variables:
+                val = self.variables[iter_arg.id]
+                if isinstance(val, str):
+                    s = val
+            
+            if s is not None:
+                # for i, bit in enumerate("string")
+                i_var = node.target.elts[0].id
+                bit_var = node.target.elts[1].id
+                if VERBOSE:
+                    vprint(f"[PennyLaneASTVisitor] Expanding enumerate loop for {s} with vars {i_var}, {bit_var}")
+                for i, char in enumerate(s):
+                    self.variables[i_var] = i
+                    self.variables[bit_var] = char
+                    for stmt in node.body:
+                        self.visit(stmt)
+                return  # Don't create ForLoopNode, already expanded
+
+        # Special handling for iteration over list variable
+        if (isinstance(node.target, ast.Name) and
+            isinstance(node.iter, ast.Name) and node.iter.id in self.variables and
+            isinstance(self.variables[node.iter.id], list)):
+            # for var in list_var
+            list_var = self.variables[node.iter.id]
+            loop_var = node.target.id
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor] Expanding list loop for {node.iter.id} with var {loop_var}")
+            for val in list_var:
+                self.variables[loop_var] = val
+                for stmt in node.body:
+                    self.visit(stmt)
+            return
+
+        # Special handling for tuple iteration over list of tuples
+        if (isinstance(node.target, ast.Tuple) and len(node.target.elts) == 2 and
+            isinstance(node.target.elts[0], ast.Name) and isinstance(node.target.elts[1], ast.Name) and
+            isinstance(node.iter, ast.Name) and node.iter.id in self.variables and
+            isinstance(self.variables[node.iter.id], list) and
+            all(isinstance(item, tuple) and len(item) == 2 for item in self.variables[node.iter.id])):
+            # for u, v in edges
+            list_var = self.variables[node.iter.id]
+            u_var = node.target.elts[0].id
+            v_var = node.target.elts[1].id
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor] Expanding tuple list loop for {node.iter.id} with vars {u_var}, {v_var}")
+            for u, v in list_var:
+                self.variables[u_var] = u
+                self.variables[v_var] = v
+                for stmt in node.body:
+                    self.visit(stmt)
+            return
+
+        # Extract loop variable for simple range loops
         if not isinstance(node.target, ast.Name):
             self.generic_visit(node)
             return
@@ -143,37 +258,61 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             self.generic_visit(node)
             return
         
-        # Collect operations in the loop body
-        loop_body = []
-        saved_operations = self.operations
-        self.operations = loop_body
-        
-        # Visit all statements in the loop body
-        for stmt in node.body:
-            self.visit(stmt)
-        
-        # Restore operations list
-        self.operations = saved_operations
-        
-        # Create ForLoopNode
-        for_loop = ForLoopNode(
-            variable=loop_var,
-            range_start=range_start,
-            range_end=range_end,
-            body=loop_body
-        )
-        self.operations.append(for_loop)
-        
-        if VERBOSE:
-            vprint(f"[PennyLaneASTVisitor] Added for loop: {loop_var} in range({range_start}, {range_end})")
+        if isinstance(range_start, int) and isinstance(range_end, int):
+            # Expand the loop since we have concrete values
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor] Expanding range loop: {loop_var} in range({range_start}, {range_end})")
+            for val in range(range_start, range_end):
+                self.variables[loop_var] = val
+                for stmt in node.body:
+                    self.visit(stmt)
+        else:
+            # Fallback for symbolic range: if we wanted to support OpenQASM 3.0 loops,
+            # we would create a ForLoopNode here. For now, we skip or visit generically.
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor] Symbolic range loop detected ({range_start}, {range_end}); skipping expansion")
+            self.generic_visit(node)
 
     def visit_If(self, node: ast.If) -> None:
         """Handle if statements in PennyLane code."""
         if VERBOSE:
             vprint("[PennyLaneASTVisitor] visit_If: inspecting if statement")
         
+        # Skip 'if __name__ == "__main__":' blocks
+        if self._is_main_guard(node):
+            if VERBOSE:
+                vprint("[PennyLaneASTVisitor] Skipping __main__ guard block")
+            return
+
         # Extract condition
         condition = self._extract_condition(node.test)
+
+        # Attempt to evaluate condition statically if all dependent variables are known
+        try:
+            # We use a limited namespace for evaluation
+            # Use ast.unparse if available (Python 3.9+)
+            condition_expr = ast.unparse(node.test) if hasattr(ast, "unparse") else condition
+            
+            # Map common OpenQASM 3.0 operators back to Python if needed, 
+            # but unparse should give us valid Python.
+            
+            if eval(condition_expr, {"__builtins__": {}}, self.variables):
+                if VERBOSE:
+                    vprint(f"[PennyLaneASTVisitor] Static If evaluation: True for '{condition}'")
+                for stmt in node.body:
+                    self.visit(stmt)
+                return
+            else:
+                if VERBOSE:
+                    vprint(f"[PennyLaneASTVisitor] Static If evaluation: False for '{condition}'")
+                if node.orelse:
+                    for stmt in node.orelse:
+                        self.visit(stmt)
+                return
+        except Exception as e:
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor] Static If evaluation failed for '{condition}': {e}")
+            pass
         
         # Collect operations in the if body
         if_body = []
@@ -195,16 +334,20 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         # Restore operations list
         self.operations = saved_operations
         
-        # Create IfStatementNode
-        if_stmt = IfStatementNode(
-            condition=condition,
-            body=if_body,
-            else_body=else_body
-        )
-        self.operations.append(if_stmt)
-        
-        if VERBOSE:
-            vprint(f"[PennyLaneASTVisitor] Added if statement: {condition}")
+        # Create IfStatementNode only if it contains circuit operations
+        if if_body or else_body:
+            if_stmt = IfStatementNode(
+                condition=condition,
+                body=if_body,
+                else_body=else_body
+            )
+            self.operations.append(if_stmt)
+            
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor] Added if statement: {condition}")
+        else:
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor] Skipping empty if statement: {condition}")
 
     def _extract_range(self, node: ast.expr) -> Tuple[Optional[int], Optional[int]]:
         """Extract range start and end from a range() call."""
@@ -216,18 +359,45 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         
         # Handle range(n) -> [0:n]
         if len(node.args) == 1:
-            end = self._extract_constant_value(node.args[0])
+            end = self._extract_range_bound(node.args[0])
             if end is not None:
                 return 0, end
         
         # Handle range(start, end) -> [start:end]
         if len(node.args) == 2:
-            start = self._extract_constant_value(node.args[0])
-            end = self._extract_constant_value(node.args[1])
+            start = self._extract_range_bound(node.args[0])
+            end = self._extract_range_bound(node.args[1])
             if start is not None and end is not None:
                 return start, end
         
         return None, None
+
+    def _extract_range_bound(self, node: ast.expr) -> Union[int, str, None]:
+        """Extract a range bound - could be an int, variable name, or simple expression."""
+        # Try to resolve constant values (including tracked variables)
+        val = self._extract_constant_value(node)
+        if val is not None:
+            return val
+
+        # Handle simple binary expressions like n-1 or n+1 when variable is known
+        if isinstance(node, ast.BinOp):
+            left = self._extract_range_bound(node.left)
+            right = self._extract_range_bound(node.right)
+            if isinstance(left, int) and isinstance(right, int):
+                if isinstance(node.op, ast.Sub):
+                    return left - right
+                if isinstance(node.op, ast.Add):
+                    return left + right
+                if isinstance(node.op, ast.Mult):
+                    return left * right
+                if isinstance(node.op, ast.Div) and right != 0:
+                    return left // right
+
+        # If it's a variable name, return the name string
+        if isinstance(node, ast.Name):
+            return node.id
+
+        return None
 
     def _extract_constant_value(self, node: ast.expr) -> Optional[int]:
         """Extract a constant integer value from an AST node."""
@@ -356,10 +526,16 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         }
         return op_map.get(type(op), "==")
 
-    def _is_qml_call(self, call: ast.Call, attr_name: str) -> bool:
-        func = call.func
-        return isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name) \
-            and func.value.id == 'qml' and func.attr == attr_name
+    def _is_qml_call(self, call: ast.Call, attr_name: Optional[str] = None) -> bool:
+        """Check if this is a qml function call, optionally matching a specific attribute."""
+        is_qml = (isinstance(call.func, ast.Attribute) and
+                  isinstance(call.func.value, ast.Name) and
+                  call.func.value.id == 'qml')
+        if not is_qml:
+            return False
+        if attr_name:
+            return call.func.attr == attr_name
+        return True
 
     def _extract_wires_from_device(self, call: ast.Call) -> None:
         for kw in call.keywords:
@@ -377,36 +553,83 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
 
     def _handle_qml_call(self, call: ast.Call) -> None:
         if not self._is_qml_call(call):
+            if VERBOSE:
+                vprint("[PennyLaneASTVisitor]   Not a qml call")
             return
 
         method_name = call.func.attr
+        if VERBOSE:
+            vprint(f"[PennyLaneASTVisitor] Handling qml.{method_name}")
 
-        # Handle measurements - qml.measure(wires=i)
-        if method_name == 'measure':
+        # Handle measurements - qml.measure(wires=i), qml.probs(wires=[...]), etc.
+        if method_name in ['measure', 'probs', 'sample', 'expval', 'state']:
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor]   Routing to measurement handler: {method_name}")
             self._handle_measurement_pennylane(call)
             return
 
         gate_map = self._get_gate_mapping()
+
+        if method_name == 'MultiControlledX':
+            qubits = self._extract_wires(call)
+            if qubits:
+                # In MultiControlledX(wires=wires), the last wire is target, others are controls
+                controls = qubits[:-1]
+                if len(qubits) == 3:
+                    self.operations.append(GateNode(name='ccx', qubits=qubits))
+                else:
+                    self.operations.append(GateNode(name='x', qubits=qubits, modifiers={'ctrl': controls}))
+                return
+
+        if method_name == 'GroverOperator':
+            qubits = self._extract_wires(call)
+            if qubits:
+                self._decompose_grover_operator(qubits)
+                return
 
         if method_name in gate_map:
             self._log_qml_call(method_name, call)
             qubits = self._extract_wires(call)
             params = self._extract_params(call, method_name)
 
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor]   Extracted wires: {qubits}")
+                vprint(f"[PennyLaneASTVisitor]   Extracted params: {params}")
+
             if not qubits:
+                if VERBOSE:
+                    vprint(f"[PennyLaneASTVisitor]   SKIP: No wires resolved for {method_name}")
                 return  # If no wires were resolvable, skip
 
             self.operations.append(GateNode(name=gate_map[method_name], qubits=qubits, parameters=params))
             if VERBOSE:
                 vprint(f"[PennyLaneASTVisitor] Added op {method_name} wires={qubits} params={params}")
+        else:
+            if VERBOSE:
+                vprint(f"[PennyLaneASTVisitor]   Gate {method_name} not in mapping")
 
-        # Ignore unsupported qml constructs in Iteration I (no-op)
-
-    def _is_qml_call(self, call: ast.Call) -> bool:
-        """Check if this is a qml function call."""
-        return (isinstance(call.func, ast.Attribute) and
-                isinstance(call.func.value, ast.Name) and
-                call.func.value.id == 'qml')
+    def _decompose_grover_operator(self, wires: List[int]):
+        """Decompose Grover's diffusion operator into standard gates."""
+        # H on all
+        for w in wires:
+            self.operations.append(GateNode(name='h', qubits=[w]))
+        # X on all
+        for w in wires:
+            self.operations.append(GateNode(name='x', qubits=[w]))
+        # MCZ: H on last, MCX, H
+        self.operations.append(GateNode(name='h', qubits=[wires[-1]]))
+        controls = wires[:-1]
+        if len(wires) == 3:
+            self.operations.append(GateNode(name='ccx', qubits=wires))
+        else:
+            self.operations.append(GateNode(name='x', qubits=wires, modifiers={'ctrl': controls}))
+        self.operations.append(GateNode(name='h', qubits=[wires[-1]]))
+        # X on all
+        for w in wires:
+            self.operations.append(GateNode(name='x', qubits=[w]))
+        # H on all
+        for w in wires:
+            self.operations.append(GateNode(name='h', qubits=[w]))
 
     def _handle_measurement_pennylane(self, call: ast.Call) -> None:
         """
@@ -486,6 +709,12 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             return [int(node.value)]
         if isinstance(node, ast.Name):
             # Variable wire index (e.g., wires=i in a for loop)
+            if node.id in self.variables:
+                val = self.variables[node.id]
+                if isinstance(val, int):
+                    return [val]
+                if isinstance(val, list):
+                    return val
             return [node.id]
         if isinstance(node, ast.List):
             result: List[Any] = []
@@ -493,9 +722,60 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
                 if isinstance(elt, ast.Constant) and isinstance(elt.value, int):
                     result.append(int(elt.value))
                 elif isinstance(elt, ast.Name):
-                    result.append(elt.id)
+                    if elt.id in self.variables:
+                        val = self.variables[elt.id]
+                        if isinstance(val, int):
+                            result.append(val)
+                        else:
+                            result.append(elt.id)
+                    else:
+                        result.append(elt.id)
+                elif isinstance(elt, ast.BinOp):
+                    # Support expressions like i + 1 (common in loop wires)
+                    try:
+                        expr = ast.unparse(elt) if hasattr(ast, 'unparse') else None
+                        if expr:
+                            try:
+                                # Try evaluating the expression with current variables
+                                val = eval(expr, {"__builtins__": {}}, self.variables)
+                                if isinstance(val, int):
+                                    result.append(val)
+                                else:
+                                    result.append(expr.replace(' ', ''))
+                            except Exception:
+                                # Fallback to symbolic if evaluation fails
+                                result.append(expr.replace(' ', ''))
+                        else:
+                            result.append('expr')
+                    except Exception:
+                        result.append('expr')
             return result
-        # Unsupported dynamic wires
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name):
+                if node.func.id == 'range' and len(node.args) == 1:
+                    arg = self._parse_wires_value(node.args[0])
+                    if arg and isinstance(arg[0], int):
+                        return list(range(arg[0]))
+                elif node.func.id == 'list' and len(node.args) == 1:
+                    arg = self._parse_wires_value(node.args[0])
+                    if arg:
+                        return arg
+            return []
+        
+        if isinstance(node, ast.BinOp):
+            try:
+                expr = ast.unparse(node) if hasattr(ast, 'unparse') else None
+                if expr:
+                    try:
+                        val = eval(expr, {"__builtins__": {}}, self.variables)
+                        if isinstance(val, int):
+                            return [val]
+                        return [expr.replace(' ', '')]
+                    except Exception:
+                        return [expr.replace(' ', '')]
+            except Exception:
+                return ['expr']
+
         return []
 
     def _extract_params(self, call: ast.Call, method_name: str) -> List[Any]:
@@ -529,6 +809,14 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             return self._handle_attribute_parameter(node)
         elif isinstance(node, ast.BinOp):
             return self._handle_binary_op_parameter(node)
+        elif isinstance(node, ast.List):
+            return self._handle_list_parameter(node)
+        elif isinstance(node, ast.Subscript):
+            return self._handle_subscript_parameter(node)
+        elif isinstance(node, ast.ListComp):
+            return self._handle_listcomp_parameter(node)
+        elif isinstance(node, ast.Call):
+            return self._handle_call_parameter(node)
         else:
             return 'expr'  # Fallback
 
@@ -549,6 +837,8 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
 
     def _handle_name_parameter(self, node: ast.Name):
         """Handle named/symbolic parameters."""
+        if node.id in self.variables:
+            return self.variables[node.id]
         self.parameters.add(node.id)
         return node.id
 
@@ -564,7 +854,7 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         if (isinstance(node.value, ast.Name) and
             node.value.id in ('np', 'numpy') and
             node.attr == 'pi'):
-            return 'pi'
+            return np.pi
         return 'expr'
 
     def _handle_binary_op_parameter(self, node: ast.BinOp):
@@ -573,22 +863,110 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         right = self._extract_parameter(node.right)
 
         if isinstance(node.op, ast.Add):
+            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+                return left + right
+            if isinstance(left, list) and isinstance(right, list):
+                return left + right
             return f"{left} + {right}"
         elif isinstance(node.op, ast.Sub):
+            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+                return left - right
             return f"{left} - {right}"
         elif isinstance(node.op, ast.Mult):
+            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+                return left * right
+            if isinstance(left, list) and isinstance(right, int):
+                return left * right
             return f"{left}*{right}"
         elif isinstance(node.op, ast.Div):
+            if isinstance(left, (int, float)) and isinstance(right, (int, float)) and right != 0:
+                return left / right
             return self._format_division(left, right)
         else:
             return 'expr'
 
-    def _format_division(self, left, right):
-        """Format division operations, preferring pi/n style when possible."""
-        if left == 'pi' and isinstance(right, (int, float)):
-            if isinstance(right, int) or float(right).is_integer():
-                return f"pi/{int(right)}"
-        return f"{left}/{right}"
+    def _handle_list_parameter(self, node: ast.List):
+        """Handle list literals."""
+        return [self._extract_parameter(elt) for elt in node.elts]
+
+    def _handle_subscript_parameter(self, node: ast.Subscript):
+        """Handle subscript access like theta[w] or list[:n]."""
+        try:
+            # Try to unparse the whole subscript expression (e.g., "theta[w]" or "DATA_POINT[:n]")
+            expr = ast.unparse(node) if hasattr(ast, 'unparse') else None
+            if expr:
+                try:
+                    # Evaluate identifying variables in scope
+                    val = eval(expr, {"__builtins__": {}}, self.variables)
+                    if isinstance(val, (int, float, list)):
+                        return val
+                except Exception:
+                    # Fallback to symbolic representation if eval fails
+                    return expr.replace(' ', '')
+        except Exception:
+            pass
+            
+        # Legacy fallback logic for older Python or complex cases
+        if isinstance(node.value, ast.Name) and node.value.id in self.variables:
+            base = self.variables[node.value.id]
+            # Handle Index (deprecated) or modern slice
+            index_node = node.slice.value if hasattr(node.slice, 'value') else node.slice
+            index = self._extract_parameter(index_node)
+            if isinstance(base, list) and isinstance(index, int) and 0 <= index < len(base):
+                return base[index]
+            elif isinstance(base, list) and isinstance(index, str):
+                return f"{node.value.id}[{index}]"
+                
+        return 'expr'
+
+    def _handle_listcomp_parameter(self, node: ast.ListComp):
+        """Handle list comprehensions via static evaluation."""
+        try:
+            expr = ast.unparse(node)
+            safe_globals = {
+                "__builtins__": {
+                    "range": range,
+                    "list": list,
+                    "len": len,
+                    "enumerate": enumerate,
+                    "int": int,
+                    "float": float,
+                },
+                "np": np,
+                "numpy": np,
+            }
+            return eval(expr, safe_globals, self.variables)
+        except:
+            return 'expr'
+
+    def _handle_call_parameter(self, node: ast.Call):
+        """Handle function calls like list(range(n)) or np.floor(...)."""
+        try:
+            expr = ast.unparse(node)
+            # Define allowed builtins and libraries
+            safe_globals = {
+                "__builtins__": {
+                    "range": range,
+                    "list": list,
+                    "len": len,
+                    "enumerate": enumerate,
+                    "int": int,
+                    "float": float,
+                    "max": max,
+                    "min": min,
+                    "round": round,
+                },
+                "np": np,
+                "numpy": np,
+            }
+            # Special handling for qml.device - don't evaluate that as a parameter
+            if self._is_qml_call(node):
+                return 'expr'
+                
+            val = eval(expr, safe_globals, self.variables)
+            return val
+        except:
+            return 'expr'
 
 
 class PennyLaneASTParser:
@@ -624,7 +1002,8 @@ class PennyLaneASTParser:
             qubits=self.visitor.qubits,
             clbits=clbit_count,
             operations=self.visitor.operations,
-            parameters=list(self.visitor.parameters)
+            parameters=list(self.visitor.parameters),
+            variables=self.visitor.variables
         )
 
         vprint("[PennyLaneASTParser] Built CircuitAST")
@@ -637,8 +1016,11 @@ class PennyLaneASTParser:
         for op in self.visitor.operations:
             # Check ForLoopNode ranges
             if isinstance(op, ForLoopNode):
-                if op.range_end is not None:
-                    max_qubit = max(max_qubit, op.range_end)
+                # Python range end is exclusive; ensure we allocate enough qubits for possible q[i+1] usage.
+                if isinstance(op.range_end, int):
+                    max_qubit = max(max_qubit, op.range_end + 1)
+                elif op.range_end is not None:
+                    max_qubit = max(max_qubit, 1)
             # Check GateNode qubits
             elif isinstance(op, GateNode):
                 for q in op.qubits:

@@ -511,7 +511,7 @@ class PennyLaneToQASM3Converter:
 
     def _is_standard_gate(self, gate_name: str) -> bool:
         """Check if gate is a standard single-qubit or multi-qubit gate."""
-        return gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id', 'swap', 'cx', 'cz', 'cy', 'ch', 'ccx', 'cswap', 'ccz']
+        return gate_name in ['h', 'x', 'y', 'z', 's', 't', 'sx', 'i', 'id', 'swap', 'cx', 'cz', 'cy', 'ch', 'ccx', 'cswap', 'ccz', 'mcx', 'grover']
 
     def _is_parameterized_gate(self, gate_name: str) -> bool:
         """Check if gate is a parameterized gate."""
@@ -537,8 +537,13 @@ class PennyLaneToQASM3Converter:
         """Add a for loop from AST to QASM builder."""
         # OpenQASM 3.0 for loop syntax: for int i in [0:7] { ... }
         # Note: range_end is exclusive in Python, but inclusive in OpenQASM range syntax
-        openqasm_end = operation.range_end - 1 if operation.range_end > operation.range_start else operation.range_start
-        range_spec = f"[{operation.range_start}:{openqasm_end}]"
+        if isinstance(operation.range_end, int) and isinstance(operation.range_start, int):
+            openqasm_end = operation.range_end - 1 if operation.range_end > operation.range_start else operation.range_start
+            range_spec = f"[{operation.range_start}:{openqasm_end}]"
+        else:
+            # Symbolic range (e.g., from [0:n])
+            # OpenQASM 3.0 range syntax is inclusive, Python's is exclusive
+            range_spec = f"[{operation.range_start}:{operation.range_end}-1]"
         variable_decl = f"int {operation.variable}"
         
         # Convert loop body operations to QASM statements
@@ -600,6 +605,10 @@ class PennyLaneToQASM3Converter:
             for param_name in circuit_ast.parameters:
                 builder.declare_variable(param_name, 'float')
             builder.add_blank_line()
+        # We skip declaring circuit_ast.variables because they are used internally 
+        # during PennyLane AST parsing to expand loops and resolve parameters.
+        # Emitting them to QASM can cause name collisions with reserved keywords (e.g., 'bit').
+        
         builder.add_section_comment("Circuit operations")
         for op in circuit_ast.operations:
             self._add_ast_operation(builder, op)
@@ -679,6 +688,10 @@ class PennyLaneToQASM3Converter:
         builder.add_blank_line()
 
         builder.add_section_comment("Classical operations")
+        # Declare and initialize temporary variables used in legacy conversion code.
+        # QASM requires variables to be declared before use.
+        builder.declare_variable("temp_angle", "angle")
+        builder.declare_variable("loop_index", "int")
         builder.add_assignment("temp_angle", "pi_2")
         builder.add_assignment("loop_index", "0")
         builder.add_blank_line()
@@ -800,9 +813,14 @@ class PennyLaneToQASM3Converter:
     def _detect_loop_patterns(self, pennylane_code: str) -> dict:
         """Detect common loop patterns in the code."""
         p_default = self._extract_default_p(pennylane_code)
+
+        # Detect loops like `for i in range(n - 1):` or `for i in range(n):` (common in Pennylane benchmarks)
+        has_loop_i_n = bool(re.search(r"for\s+i\s+in\s+range\(\s*(?:n|n_qubits|num_qubits)\s*\)", pennylane_code))
+        has_loop_i_n_minus_1 = bool(re.search(r"for\s+i\s+in\s+range\(\s*(?:n|n_qubits|num_qubits)\s*-\s*1\s*\)", pennylane_code))
+
         return {
-            'has_loop_i_n': 'for i in range(n_qubits):' in pennylane_code or 'for i in range(num_qubits):' in pennylane_code,
-            'has_loop_i_n_minus_1': 'for i in range(n_qubits - 1):' in pennylane_code or 'for i in range(n_qubits-1):' in pennylane_code,
+            'has_loop_i_n': has_loop_i_n,
+            'has_loop_i_n_minus_1': has_loop_i_n_minus_1,
             'has_layer_loop': 'for layer in range(p):' in pennylane_code,
             'p_default': p_default
         }
