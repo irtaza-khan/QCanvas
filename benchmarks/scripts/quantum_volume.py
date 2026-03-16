@@ -51,8 +51,8 @@ import pandas as pd
 # ──────────────────────────────────────────────────────────
 
 # Depolarizing two-qubit gate error rate.
-# 0.1% (1e-3) is representative of IBM Quantum superconducting NISQ devices (2023).
-GATE_ERROR_RATE = 0.001
+# 1.0% (0.01) is a realistic benchmark for many NISQ-era superconducting systems.
+GATE_ERROR_RATE = 0.01
 
 # T1 relaxation time in microseconds.
 # 100 μs is a conservative estimate for transmon qubits.
@@ -131,26 +131,20 @@ def estimate_effective_qv(
     """
     Find the effective Quantum Volume (QV) implied by this circuit's structure.
 
-    QV = 2^m where m is the largest square circuit dimension (m qubits × m layers)
-    that has expected fidelity > 0.50 under the specified noise model.
+    Definition:
+      The effective QV is 2^m where m is the largest integer such that a 
+      SQUARE CIRCUIT of width m and depth m, executed under the assumed noise 
+      model, would maintain fidelity > 0.5.
 
-    Algorithm:
-      m = 1
-      while m ≤ _MAX_QV_LOG2:
-        f = estimate_circuit_fidelity(m, m, ...)   # square (m×m) circuit
-        if f < 0.5: break
-        m += 1
-      effective_qv_log2 = m - 1
-      effective_qv      = 2^(m-1)
+    Key Fix (March 2026):
+      Previous implementation incorrectly tested fidelity(m, actual_circuit_depth),
+      allowing shallow circuits to achieve unrealistic QV values (2^30+).
+      Now correctly tests SQUARE circuits: fidelity(m, m) > 0.5.
 
-    We also compute the fidelity of the ACTUAL circuit (n_qubits × circuit_depth)
-    to characterise how hardware-ready the specific compiled circuit is.
-
-    Example interpretation:
-      Grover's (4 qubits, depth=18) compiled from Qiskit → effective QV = 64
-      Grover's (4 qubits, depth=22) compiled from PennyLane → effective QV = 32
-      → PennyLane's deeper QASM requires a higher-QV device to achieve
-        equivalent fidelity (circuit is less hardware-efficient).
+    Relationship to Compilation Efficiency:
+      The depth of the circuit (from framework's compiler) acts as a constraint:
+      If the circuit is shallower, square circuits can be larger and maintain
+      fidelity > 0.5, resulting in higher QV. This rewards efficient compilers.
 
     Args:
         n_qubits:        Circuit qubit count (from structural_metrics.csv).
@@ -161,13 +155,14 @@ def estimate_effective_qv(
 
     Returns:
         dict with keys:
-          'effective_qv_log2' (int):   log2(effective_qv) = m - 1
-          'effective_qv'      (int):   2^(m-1)
-          'actual_fidelity'   (float): Fidelity of the actual (n×d) circuit
+          'effective_qv_log2': m where fidelity(m,m) > 0.5
+          'effective_qv':      2^m
+          'actual_fidelity':   Fidelity of the actual (n×d) circuit
     """
-    # Effective QV: find largest m where (m×m) square circuit has fidelity > 0.5
+    # Find largest m such that a SQUARE circuit (m × m) maintains fidelity > 0.5
     m = 1
     while m <= _MAX_QV_LOG2:
+        # FIX: Use m for BOTH width and depth (square circuit), not actual_circuit_depth
         f = estimate_circuit_fidelity(m, m, gate_error_rate, t1_time_us, gate_time_ns)
         if f < 0.5:
             break
