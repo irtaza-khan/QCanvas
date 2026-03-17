@@ -500,6 +500,9 @@ def plot_radar(
     angles = np.linspace(0, 2 * np.pi, n_axes, endpoint=False).tolist()
     angles += angles[:1]
 
+    line_styles = {'qiskit': '-', 'cirq': '--', 'pennylane': '-'}
+    z_orders = {'qiskit': 3, 'pennylane': 4, 'cirq': 5}
+
     for fw in framework_order:
         if fw not in scores_dict:
             continue
@@ -511,13 +514,20 @@ def plot_radar(
         color = FRAMEWORK_COLORS.get(fw, '#888888')
         label = FRAMEWORK_LABELS.get(fw, fw)
 
-        ax.plot(angles, values, color=color, linewidth=2.0,
-                linestyle='solid', label=label)
+        marker = FRAMEWORK_MARKERS.get(fw, 'o')
+        ax.plot(
+            angles, values,
+            color=color,
+            linewidth=2.2,
+            linestyle=line_styles.get(fw, '-'),
+            marker=marker,
+            markersize=6,
+            markerfacecolor='none' if fw == 'qiskit' else color,
+            markeredgewidth=2.0,
+            label=label,
+            zorder=z_orders.get(fw, 3),
+        )
         ax.fill(angles, values, color=color, alpha=0.12)
-
-        # Mark each vertex with a small dot
-        ax.scatter(angles[:-1], values[:-1],
-                   s=50, color=color, zorder=5)
 
     # Place axis labels at the spoke angles
     ax.set_xticks(angles[:-1])
