@@ -51,6 +51,9 @@ import matplotlib.patches as mpatches
 import seaborn as sns
 import pandas as pd
 
+# Anchored to this file: benchmarks/scripts/ → up one → benchmarks/
+_BENCHMARKS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 # ──────────────────────────────────────────────────────────
 # Framework colour palette
@@ -144,7 +147,7 @@ def save_figure(fig: plt.Figure, name: str, results_subdir: str = 'structural') 
     Save a matplotlib figure to two formats for paper-ready output.
 
     Saves to:
-      benchmarks/results/<results_subdir>/<name>.pdf   — for LaTeX \includegraphics
+    benchmarks/results/<results_subdir>/<name>.pdf   — for LaTeX \\includegraphics
       benchmarks/results/<results_subdir>/<name>.png   — for quick visual review
 
     Args:
@@ -153,7 +156,7 @@ def save_figure(fig: plt.Figure, name: str, results_subdir: str = 'structural') 
         results_subdir: Subfolder inside benchmarks/results/ ('structural',
                         'simulation', 'scaling', or root '').
     """
-    base_dir = os.path.join('benchmarks', 'results', results_subdir)
+    base_dir = os.path.join(_BENCHMARKS_DIR, 'results', results_subdir)
     os.makedirs(base_dir, exist_ok=True)
 
     for ext in ('pdf', 'png'):
@@ -271,6 +274,28 @@ def plot_scaling_lines(
     """
     apply_paper_style()
 
+    line_styles = {
+        'qiskit': '-',
+        'cirq': '--',
+        'pennylane': '-',
+    }
+    z_orders = {
+        'pennylane': 2,
+        'cirq': 3,
+        'qiskit': 4,
+    }
+    jitter_map = {
+        'qiskit': -0.04,
+        'cirq': 0.04,
+        'pennylane': 0.0,
+    }
+
+    overlap_points = {
+        (row[x_col], row[y_col])
+        for _, row in df.groupby([x_col, y_col]).size().reset_index(name='count').iterrows()
+        if row['count'] > 1
+    }
+
     for fw in FRAMEWORK_ORDER:
         subset = df[df[framework_col] == fw].sort_values(x_col)
         if subset.empty:
@@ -281,8 +306,29 @@ def plot_scaling_lines(
         color  = FRAMEWORK_COLORS[fw]
         marker = FRAMEWORK_MARKERS[fw]
 
-        ax.plot(xs, ys, color=color, marker=marker, linewidth=1.8,
-                markersize=6, label=FRAMEWORK_LABELS[fw])
+        xs_plot = xs.astype(float).copy()
+        if overlap_points:
+            for idx, (xv, yv) in enumerate(zip(xs, ys)):
+                if (xv, yv) in overlap_points:
+                    xs_plot[idx] += jitter_map.get(fw, 0.0)
+
+        marker_face = 'none' if fw == 'qiskit' else 'white'
+        marker_size = 8 if fw == 'qiskit' else 7
+
+        ax.plot(
+            xs_plot,
+            ys,
+            color=color,
+            marker=marker,
+            linewidth=2.0,
+            linestyle=line_styles.get(fw, '-'),
+            markersize=marker_size,
+            markerfacecolor=marker_face,
+            markeredgewidth=1.6,
+            alpha=0.95,
+            zorder=z_orders.get(fw, 3),
+            label=FRAMEWORK_LABELS[fw],
+        )
 
         if std_col and std_col in subset.columns:
             stds = subset[std_col].values
