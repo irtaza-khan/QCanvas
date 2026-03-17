@@ -203,7 +203,8 @@ def js_divergence(dist_a: dict, dist_b: dict) -> float:
     p /= p_sum
     q /= q_sum
 
-    return float(jensenshannon(p, q))
+    # base=2 gives range [0, 1]; default base=e gives [0, sqrt(ln 2)] ≈ [0, 0.832]
+    return float(jensenshannon(p, q, base=2))
 
 
 # ──────────────────────────────────────────────────────────
@@ -329,10 +330,13 @@ def run_all_statistical_tests(
 
         pairs = pairwise_jsd(distributions)
 
-        # Extract known pair keys with fallbacks
-        qk_cq = pairs.get('qiskit_vs_cirq',      {})
-        qk_pl = pairs.get('qiskit_vs_pennylane',  {})
-        cq_pl = pairs.get('cirq_vs_pennylane',    {})
+        # Extract pair keys independent of framework insertion order
+        def _get_pair(a: str, b: str) -> dict:
+            return pairs.get(f'{a}_vs_{b}', pairs.get(f'{b}_vs_{a}', {}))
+
+        qk_cq = _get_pair('qiskit', 'cirq')
+        qk_pl = _get_pair('qiskit', 'pennylane')
+        cq_pl = _get_pair('cirq', 'pennylane')
 
         all_eq = all(
             v.get('jsd', 1.0) < JSD_EQUIVALENT_THRESHOLD
@@ -367,10 +371,11 @@ def fit_power_law(n_qubits: list, gate_counts: list) -> dict:
     This is the QPack §IV-C scalability exponent, adapted for gate count rather
     than runtime — appropriate for our structural analysis goal (RQ4).
 
-    Scaling classification:
-      a < 1  → sub-linear  (sub-linear gate growth; rare — may indicate constant-depth)
-      a ≈ 1  → linear       (ideal; gates grow proportionally with qubit count)
-      a > 1  → super-linear (circuit grows faster than qubit count; investigate oracle)
+        Scaling classification:
+            constant-depth → gate count invariant with N (a = 0 by convention)
+            a < 1          → sub-linear  (sub-linear gate growth)
+            a ≈ 1          → linear       (gates grow proportionally with qubit count)
+            a > 1          → super-linear (circuit grows faster than qubit count; investigate oracle)
 
     Fitting is performed by linear regression in log-log space, which is more
     numerically stable than direct nonlinear curve fitting for power laws.
@@ -384,7 +389,7 @@ def fit_power_law(n_qubits: list, gate_counts: list) -> dict:
           'a'             (float): Power-law exponent (QPack S_pure_scalability)
           'coefficient'   (float): Prefactor C (= exp(intercept) in log space)
           'r2'            (float): R² goodness-of-fit on log-log data
-          'scaling_class' (str) : 'sub-linear' | 'linear' | 'super-linear'
+          'scaling_class' (str) : 'constant-depth' | 'sub-linear' | 'linear' | 'super-linear'
     """
     n_arr = np.array(n_qubits,    dtype=float)
     g_arr = np.array(gate_counts, dtype=float)
@@ -398,6 +403,15 @@ def fit_power_law(n_qubits: list, gate_counts: list) -> dict:
     log_n = np.log(n_arr[valid])
     log_g = np.log(g_arr[valid])
 
+    # Handle near-constant series explicitly (avoids unstable/meaningless R²)
+    if np.ptp(log_g) < 1e-12:
+        return {
+            'a':             0.0,
+            'coefficient':   float(np.exp(np.mean(log_g))),
+            'r2':            1.0,
+            'scaling_class': 'constant-depth',
+        }
+
     # Linear regression: log_g = a * log_n + log_C
     coeffs   = np.polyfit(log_n, log_g, 1)
     a        = float(coeffs[0])
@@ -408,10 +422,13 @@ def fit_power_law(n_qubits: list, gate_counts: list) -> dict:
     log_g_pred = a * log_n + log_C
     ss_res   = float(np.sum((log_g - log_g_pred) ** 2))
     ss_tot   = float(np.sum((log_g - np.mean(log_g)) ** 2))
-    r2       = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
+    r2       = 1.0 - (ss_res / ss_tot) if ss_tot > 1e-12 else 1.0
+    r2       = float(max(min(r2, 1.0), 0.0))
 
     # Classify scaling behaviour
-    if a < 0.9:
+    if abs(a) < 1e-12:
+        scaling_class = 'constant-depth'
+    elif a < 0.9:
         scaling_class = 'sub-linear'
     elif a <= 1.1:
         scaling_class = 'linear'
