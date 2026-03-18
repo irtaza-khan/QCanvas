@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Search, Replace, X, ChevronDown, ChevronUp, Regex, WholeWord } from 'lucide-react'
-import { useFileStore } from '@/lib/store'
+import { Search } from '@/components/Icons';
+import { Replace, X, ChevronDown, ChevronUp, Regex, WholeWord } from 'lucide-react';;import { useFileStore } from '@/lib/store'
 import toast from 'react-hot-toast'
 
 interface FindReplaceProps {

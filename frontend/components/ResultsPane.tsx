@@ -1,25 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Terminal,
-  BarChart3,
-  Minimize2,
-  Maximize2,
-  Trash2,
-  Copy,
-  Download,
-  FileCode2,
-  AlertCircle,
-  AlertTriangle,
-  XCircle,
-  CheckCircle,
-  Activity,
-  Cpu,
-  Zap,
-  TrendingUp
-} from 'lucide-react'
-import toast from 'react-hot-toast'
+import { Terminal, BarChart3, Copy, Download, AlertCircle, AlertTriangle, Activity, Cpu, Zap, TrendingUp } from '@/components/Icons';
+import { Minimize2, Maximize2, XCircle, CheckCircle, Trash2, FileCode2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useFileStore } from '@/lib/store'
 import {
   Chart as ChartJS,

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { FileIcon, Code2, Save } from 'lucide-react'
+import { File as FileIcon, Save, Code } from '@/components/Icons';
 import { useFileStore } from '@/lib/store'
 import { debounce } from '@/lib/utils'
 import { getHoverForSymbol, formatHoverMarkdown } from '@/lib/quantumHoverSymbols'
@@ -424,7 +424,7 @@ export default function EditorPane() {
       {/* Editor Header */}
       <div className="h-12 bg-editor-sidebar border-b border-editor-border flex items-center justify-between px-4">
         <div className="flex items-center space-x-2">
-          <Code2 className="w-4 h-4 text-editor-text" />
+          <Code className="w-4 h-4 text-editor-text" />
           <span className="text-sm font-medium text-white">{activeFile.name}</span>
           <span className="text-xs text-gray-500 bg-editor-bg px-2 py-1 rounded">
             {activeFile.language}

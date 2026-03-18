@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronDown, Settings } from 'lucide-react'
-import { InputLanguage } from '@/types'
+import { Settings } from '@/components/Icons';
+import { ChevronDown } from 'lucide-react';;import { InputLanguage } from '@/types'
 
 interface SimulationControlsProps {
   readonly inputLanguage: InputLanguage | ""
@@ -31,7 +31,7 @@ export default function SimulationControls({
   }, [shots])
 
   return (
-    <div className="min-h-[72px] bg-gradient-to-r from-editor-sidebar via-editor-bg to-editor-sidebar border-b border-editor-border flex items-center justify-between px-6 py-3 animate-fade-in">
+    <div className="min-h-[72px] bg-editor-sidebar border-b border-editor-border flex items-center justify-between px-6 py-3 animate-fade-in">
       {/* Left Side - Title */}
       <div className="flex items-center space-x-3 animate-slide-in-left">
         <div className="p-2 bg-quantum-blue-light/10 rounded-lg border border-quantum-blue-light/20 animate-pulse-subtle">

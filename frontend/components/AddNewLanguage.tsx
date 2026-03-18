@@ -1,20 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { 
-  X, 
-  Upload, 
-  File, 
-  CheckCircle, 
-  AlertCircle, 
-  Code2, 
-  FileCode, 
-  ArrowLeft,
-  ArrowRight,
-  Info,
-  Zap
-} from 'lucide-react'
-import toast from 'react-hot-toast'
+import { Upload, File, AlertCircle, Zap } from '@/components/Icons';
+import { Code } from '@/components/Icons';
+import { X, CheckCircle, ArrowLeft, ArrowRight, Info } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface AddNewLanguageProps {
   isOpen: boolean
@@ -470,7 +460,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
             <div className="w-96 border-l border-white/10 p-6 bg-gradient-to-b from-white/5 to-transparent">
               <div className="sticky top-6">
                 <div className="flex items-center space-x-2 mb-4">
-                  <FileCode className="w-5 h-5 text-quantum-blue-light" />
+                  <File className="w-5 h-5 text-quantum-blue-light" />
                   <h3 className="font-semibold text-white">Converter Requirements</h3>
                 </div>
                 
