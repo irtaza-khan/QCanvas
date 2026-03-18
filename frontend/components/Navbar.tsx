@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Moon, Sun, Menu, X } from 'lucide-react'
-import { useFileStore } from '@/lib/store'
+import { Moon, Sun } from '@/components/Icons';
+import { Menu, X } from 'lucide-react';;import { useFileStore } from '@/lib/store'
 import { config } from '@/lib/config'
 
 interface NavbarProps {

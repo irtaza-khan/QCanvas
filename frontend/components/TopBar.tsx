@@ -3,31 +3,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image"; // <-- Add this line
 import Link from "next/link";
-import {
-  Play,
-  Save,
-  RefreshCw,
-  Moon,
-  Sun,
-  Menu,
-  LogOut,
-  Settings,
-  Zap,
-  Keyboard,
-  X,
-  HelpCircle,
-  BookOpen,
-  Code,
-  Github,
-  Mail,
-  ChevronDown,
-  FileText,
-  Download,
-  Share2,
-  Search,
-  Replace,
-  Lightbulb,
-} from "lucide-react";
+import { Play, Save, Moon, Sun, Settings, Zap, HelpCircle, Book, Code, FileText, Download, Search, Lightbulb } from '@/components/Icons';
+import { RefreshCw, Menu, LogOut, Keyboard, X, Github, Mail, ChevronDown, Share2, Replace } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useFileStore } from "@/lib/store";
@@ -136,7 +113,7 @@ export default function TopBar({
 
   const helpMenuItems = [
     {
-      icon: <BookOpen className="w-4 h-4" />,
+      icon: <Book className="w-4 h-4" />,
       label: "Documentation",
       action: () => window.open("/docs", "_blank"),
     },

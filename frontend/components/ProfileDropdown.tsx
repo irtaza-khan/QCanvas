@@ -2,14 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import {
-    User,
-    LogOut,
-    Award,
-    ChevronDown,
-    Sparkles,
-    CircuitBoard
-} from "lucide-react";
+import { Award } from '@/components/Icons';
+import { Circuit } from '@/components/Icons';
+import { User, LogOut, ChevronDown, Sparkles } from 'lucide-react';
 import { useAuthStore } from "@/lib/authStore";
 import { useGamificationStore, getLevelBadge, formatXP } from "@/lib/gamificationStore";
 

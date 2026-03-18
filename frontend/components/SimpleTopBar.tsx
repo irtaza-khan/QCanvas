@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun } from '@/components/Icons';;
 import { useFileStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/authStore";
 import ProfileDropdown from "./ProfileDropdown";
@@ -32,28 +32,28 @@ export default function SimpleTopBar() {
 
     return (
         <div className="h-14 border-b border-white/10 bg-editor-bg flex items-center justify-between px-4 fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-opacity-90">
-            {/* Left: Logo */}
             <div className="flex items-center">
-                <Link href="/app" className="flex items-center space-x-3 group">
-                    <div className="relative w-8 h-8">
+                <Link href="/app" className="flex items-center space-x-2 group">
+                    <div className="flex items-center justify-center w-8 h-8">
                         <Image
                             src="/QCanvas-logo-Black.svg"
                             alt="QCanvas Logo"
-                            fill
+                            width={32}
+                            height={32}
                             className="object-contain block dark:hidden transition-transform group-hover:scale-110"
                             priority
                         />
                         <Image
                             src="/QCanvas-logo-White.svg"
                             alt="QCanvas Logo"
-                            fill
+                            width={32}
+                            height={32}
                             className="object-contain hidden dark:block transition-transform group-hover:scale-110"
                             priority
                         />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden md:block">
-                        <span className="text-white">Q</span>
-                        <span className="text-quantum-blue-light">Canvas</span>
+                    <span className="font-bold text-lg hidden sm:block quantum-gradient bg-clip-text text-transparent group-hover:scale-105 transition-transform">
+                        QCanvas
                     </span>
                 </Link>
             </div>

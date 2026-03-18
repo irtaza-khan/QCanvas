@@ -1,34 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  File as FileIcon,
-  Folder,
-  Plus,
-  MoreHorizontal,
-  Edit2,
-  Trash2,
-  X,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Code,
-  FileText,
-  Zap,
-  Star,
-  Clock,
-  Search,
-  Filter,
-  Download,
-  Upload,
-  FolderPlus,
-  FileCode,
-  Languages,
-  Users,
-  Lock,
-  Globe
-} from 'lucide-react'
-import toast from 'react-hot-toast'
+import { Folder, Code, FileText, Zap, Star, Clock, Search, Download, Upload, FolderPlus, File as FileIcon, Languages, Globe } from '@/components/Icons';
+import { Plus, MoreHorizontal, Edit2, X, Check, ChevronDown, ChevronRight, Filter, Users, Lock, Trash2, LayoutTemplate } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useFileStore } from '@/lib/store'
 import { File, Project } from '@/types'
 import { isValidFilename, sanitizeFilename, formatFileSize, formatTimestamp } from '@/lib/utils'
@@ -361,7 +336,7 @@ export default function Sidebar() {
 
   if (sidebarCollapsed) {
     return (
-      <div className="w-12 bg-gradient-to-b from-editor-sidebar to-gray-900 border-r border-editor-border flex flex-col items-center py-4 space-y-2">
+      <div className="w-12 bg-editor-sidebar border-r border-editor-border flex flex-col items-center py-4 space-y-2">
         <button
           onClick={toggleSidebar}
           className="p-2 hover:bg-quantum-blue-light/20 rounded-lg transition-colors"
@@ -374,7 +349,7 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="sidebar bg-gradient-to-b from-editor-sidebar to-gray-900 border-r border-editor-border flex flex-col h-full overflow-hidden">
+    <div className="sidebar bg-editor-sidebar border-r border-editor-border flex flex-col h-full overflow-hidden">
 
       {/* Projects Section */}
       <div className="flex-shrink-0">
@@ -476,7 +451,7 @@ export default function Sidebar() {
               className="btn-ghost p-1.5 hover:bg-quantum-blue-light/20 rounded-lg transition-colors"
               title="Templates"
             >
-              <FileCode className="w-4 h-4" />
+              <LayoutTemplate className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowAddLanguage(true)}

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Share2, Copy, Check, Tag } from "lucide-react";
+import { Copy } from '@/components/Icons';
+import { Share } from '@/components/Icons';
+import { X, Check, Tag } from 'lucide-react';
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/authStore";
 import { sharedApi } from "@/lib/api";
@@ -171,7 +173,7 @@ export default function ShareModal({
           <div>
             <h2 className="text-2xl font-bold text-white flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10">
-                <Share2 className="w-6 h-6 text-blue-400" />
+                <Share className="w-6 h-6 text-blue-400" />
               </div>
               <span className="quantum-gradient bg-clip-text text-transparent">Share Project</span>
             </h2>
@@ -385,7 +387,7 @@ export default function ShareModal({
                   </>
                 ) : (
                   <>
-                    <Share2 className="w-5 h-5" />
+                    <Share className="w-5 h-5" />
                     <span>Share Project Now</span>
                   </>
                 )}
