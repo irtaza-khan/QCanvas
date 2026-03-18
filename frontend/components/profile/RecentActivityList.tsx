@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { useAuthStore } from "@/lib/authStore";
 import { useGamificationStore, getActivityDisplayName, getActivityIcon } from "@/lib/gamificationStore";
-import { Zap, Play, Repeat, Save, FolderPlus, BookCheck, Trophy, Share2, Users, Rocket, Sparkles } from "lucide-react";
+import { Zap, Play, Save, FolderPlus, Trophy, Rocket, Share, Book } from '@/components/Icons';
+import { Repeat, Users, Sparkles } from 'lucide-react';
 
 // Icon mapping
 const iconMap: Record<string, any> = {
@@ -13,9 +14,9 @@ const iconMap: Record<string, any> = {
     'sparkles': Sparkles,
     'save': Save,
     'folder-plus': FolderPlus,
-    'book-check': BookCheck,
+    'book-check': Book,
     'trophy': Trophy,
-    'share-2': Share2,
+    'share-2': Share,
     'users': Users,
     'zap': Zap,
 };

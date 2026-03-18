@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuthStore } from "@/lib/authStore";
 import { useGamificationStore, getLevelBadge } from "@/lib/gamificationStore";
-import { Edit2, MapPin, Calendar, Shield, Sparkles } from "lucide-react";
+import { Edit2, MapPin, Calendar, Shield, Sparkles } from 'lucide-react';;
 import { useEffect } from "react";
 import EditProfileModal from "@/components/profile/EditProfileModal";
 
@@ -111,22 +111,7 @@ export default function ProfileHeader() {
                         {bio}
                     </p>
 
-                    {/* XP Progress Bar */}
-                    {stats && (
-                        <div className="mt-4">
-                            <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                                <span>XP to next level</span>
-                                <span>{stats.xp_to_next_level.toLocaleString()} XP remaining</span>
-                            </div>
-                            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-quantum-blue to-purple-500 rounded-full transition-all duration-700"
-                                    style={{ width: `${Math.min(xpProgress, 100)}%` }}
-                                />
-                            </div>
-                            <div className="text-[10px] text-gray-600 mt-0.5 text-right">{Math.round(xpProgress)}% to Level {level + 1}</div>
-                        </div>
-                    )}
+
 
                     {/* Metadata row */}
                     <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">

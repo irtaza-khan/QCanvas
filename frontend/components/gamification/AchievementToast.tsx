@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trophy, X, Star, Zap, Award, CheckCircle2, Activity } from "lucide-react";
+import { Trophy, Star, Zap, Award, Target, Activity } from '@/components/Icons';
+import { X } from 'lucide-react';
 import { AchievementUnlock } from "@/lib/gamificationStore";
 
 interface AchievementToastProps {
@@ -44,7 +45,7 @@ const RARITY_LABELS: Record<string, string> = {
 const getIcon = (name: string) => {
     switch (name) {
         case "rocket": return Zap;
-        case "target": return CheckCircle2;
+        case "target": return Target;
         case "compass": return Activity;
         case "award": return Award;
         case "star": return Star;

@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, Trophy } from "lucide-react";
+import { Trophy } from '@/components/Icons';
+import { ChevronRight } from 'lucide-react';;
 import AchievementCard from "@/components/gamification/AchievementCard";
 import { useGamificationStore, getCategoryDisplayName, AchievementData } from "@/lib/gamificationStore";
 import { useAuthStore } from "@/lib/authStore";

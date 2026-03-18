@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import {
-    X, User, AtSign, FileText, Save, Loader2,
-    CheckCircle2, AlertCircle, Camera, Sparkles
-} from "lucide-react";
+import { FileText, Save, Loader2, AlertCircle } from '@/components/Icons';
+import { X, User, AtSign, Camera, Sparkles, CheckCircle2 } from 'lucide-react';;
 import { useAuthStore } from "@/lib/authStore";
 import { authApi } from "@/lib/api";
 import toast from "react-hot-toast";

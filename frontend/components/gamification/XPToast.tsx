@@ -7,7 +7,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Zap, TrendingUp, Award, Sparkles } from 'lucide-react';
+import { Zap, TrendingUp, Award } from '@/components/Icons';
+import { Sparkles } from 'lucide-react';
 import { XPGainEvent } from '@/lib/gamificationStore';
 
 interface XPToastProps {

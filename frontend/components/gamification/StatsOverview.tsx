@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Star, Zap } from "lucide-react";
+import { Trophy, Star, Zap } from '@/components/Icons';;
 import { Achievement } from "./AchievementCard";
 
 interface StatsOverviewProps {

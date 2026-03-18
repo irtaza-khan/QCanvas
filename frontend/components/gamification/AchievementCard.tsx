@@ -1,6 +1,7 @@
 "use client";
 
-import { Award, Lock, CheckCircle2, Star, Zap, Activity } from "lucide-react";
+import { Award, Target, Star, Zap, Activity } from '@/components/Icons';
+import { Lock } from 'lucide-react';
 
 export type AchievementRarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary";
 
@@ -42,7 +43,7 @@ const RARITY_COLORS = {
 const getIcon = (name: string) => {
   switch (name) {
     case "rocket": return Zap;
-    case "target": return CheckCircle2;
+    case "target": return Target;
     case "compass": return Activity;
     case "award": return Award;
     case "star": return Star;

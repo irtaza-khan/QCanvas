@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp } from '@/components/Icons';;
 import { useGamificationStore } from "@/lib/gamificationStore";
 import { useAuthStore } from "@/lib/authStore";
 
@@ -36,7 +36,7 @@ export default function XPHistoryChart({ standalone = false }: { standalone?: bo
     const totalWeeklyXP = buckets.reduce((s, b) => s + b.xp, 0);
 
     const chart = (
-        <div className="flex items-end justify-between h-36 gap-2 pt-2">
+        <div className="flex items-end justify-between h-44 gap-2 pt-4">
             {buckets.map((item, index) => {
                 const heightPercent = maxXP > 0 ? (item.xp / maxXP) * 100 : 0;
                 const isToday = index === buckets.length - 1;
@@ -48,18 +48,17 @@ export default function XPHistoryChart({ standalone = false }: { standalone?: bo
                                 {item.xp > 0 ? `${item.xp} XP` : "No activity"}
                             </div>
 
-                            {/* Bar background (always visible) */}
+                                {/* Bar background (always visible) */}
                             <div className="w-full max-w-[32px] relative">
                                 <div
-                                    className="w-full bg-white/[0.04] rounded-t-sm"
-                                    style={{ height: "144px" }}
+                                    className="w-full bg-gray-200 dark:bg-white/5 rounded-t-sm h-36"
                                 />
                                 {/* Actual bar */}
                                 {item.xp > 0 && (
                                     <div
                                         className={`absolute bottom-0 w-full rounded-t-sm transition-all duration-500 ${isToday
-                                            ? "bg-gradient-to-t from-purple-600 to-purple-400"
-                                            : "bg-gradient-to-t from-quantum-blue to-quantum-blue-light/60 hover:from-quantum-blue-light hover:to-white/70"
+                                            ? "bg-gradient-to-t from-purple-600 to-purple-400 hover:from-purple-500"
+                                            : "bg-gradient-to-t from-blue-600 to-blue-400 hover:from-blue-500"
                                             }`}
                                         style={{ height: `${heightPercent}%` }}
                                     />
@@ -96,25 +95,20 @@ export default function XPHistoryChart({ standalone = false }: { standalone?: bo
 
     // Inline mode (inside parent card)
     return (
-        <div>
-            <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                    <div className="flex gap-2 items-center ml-1">
-                        <div className="w-2 h-2 rounded-sm bg-gradient-to-br from-quantum-blue to-cyan-400" />
-                        <span className="text-[11px] text-gray-500">Past days</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-sm bg-gradient-to-br from-purple-600 to-purple-400" />
-                        <span className="text-[11px] text-gray-500">Today</span>
-                    </div>
-                </div>
-                {totalWeeklyXP > 0 && (
-                    <span className="text-xs font-semibold text-quantum-blue-light bg-quantum-blue/10 px-2 py-0.5 rounded">
-                        +{totalWeeklyXP} XP this week
+        <div className="space-y-4">
+            {totalWeeklyXP > 0 && (
+                <div className="flex flex-col -mt-2">
+                    <span className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent">
+                        +{totalWeeklyXP} XP
                     </span>
-                )}
+                    <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold opacity-80">
+                        This Week&apos;s Gains
+                    </span>
+                </div>
+            )}
+            <div className="mt-8">
+                {chart}
             </div>
-            {chart}
         </div>
     );
 }
