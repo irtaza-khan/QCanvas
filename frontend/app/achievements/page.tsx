@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { RefreshCw, Trophy, Filter, Lock } from "lucide-react";
+import { Trophy } from '@/components/Icons';
+import { RefreshCw, Filter, Lock } from 'lucide-react';;
 import AchievementCard from "@/components/gamification/AchievementCard";
 import StatsOverview from "@/components/gamification/StatsOverview";
 import SimpleTopBar from "@/components/SimpleTopBar";

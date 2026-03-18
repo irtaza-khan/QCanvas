@@ -3,23 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import {
-  Zap,
-  Code,
-  Play,
-  BookOpen,
-  GitBranch,
-  ChevronDown,
-  Sparkles,
-  Cpu,
-  Atom,
-  Lightbulb,
-  ArrowRight,
-  Star,
-  Users,
-  Globe,
-} from 'lucide-react'
-import { useFileStore } from '@/lib/store'
+import { Zap, Code, Play, Book, GitBranch, Cpu, Atom, Lightbulb, Star, Globe } from '@/components/Icons';
+import { ChevronDown, ArrowRight, Users, Sparkles } from 'lucide-react';
+import { useFileStore } from '@/lib/store';
 import { config, getCopyrightText } from '@/lib/config'
 import Navbar from '@/components/Navbar'
 
@@ -299,7 +285,7 @@ def grovers_search():
             {/* Feature 3 */}
             <div className="quantum-glass-dark card-accent-teal rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(6,182,212,0.1)]">
               <div className="w-12 h-12 bg-cyan-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-cyan-500/25 transition-all duration-300">
-                <BookOpen className="w-6 h-6 text-cyan-400" />
+                <Book className="w-6 h-6 text-cyan-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-cyan-400 transition-colors duration-300">Educational Platform</h3>
               <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
@@ -478,7 +464,7 @@ def grovers_search():
               href="/docs"
               className="btn-ghost text-lg px-8 py-4 flex items-center justify-center group"
             >
-              <BookOpen className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300" />
+              <Book className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300" />
               <span>Read Documentation</span>
             </Link>
           </div>

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Github, BookOpen, Play, Moon, Sun, User, Mail, Lock } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { Book, Play, Moon, Sun } from '@/components/Icons';
+import { Eye, EyeOff, Github, User, Mail, Lock } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useFileStore } from '@/lib/store'
 import { useAuthStore } from '@/lib/authStore'
 import { authApi } from '@/lib/api'
@@ -370,7 +371,7 @@ export default function SignupPage() {
                 href="/about"
                 className="flex items-center text-sm text-gray-400 hover:text-indigo-400 transition-colors"
               >
-                <BookOpen className="w-4 h-4 mr-1" />
+                <Book className="w-4 h-4 mr-1" />
                 About
               </a>
               <a

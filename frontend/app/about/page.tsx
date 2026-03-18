@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Zap, Users, Github, Moon, Sun, Menu, X, Linkedin, Mail } from 'lucide-react'
-import { useFileStore } from '@/lib/store'
+import { Zap, Moon, Sun } from '@/components/Icons';
+import { Users, Github, Menu, X, Linkedin, Mail } from 'lucide-react';;import { useFileStore } from '@/lib/store'
 import { config, getCopyrightText } from '@/lib/config'
 
 export default function AboutPage() {

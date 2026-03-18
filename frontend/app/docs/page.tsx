@@ -1,16 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import {
-  Moon, Sun, Menu, X, BookOpen, Code, Cpu, BarChart3, Zap, Settings, Play,
-  ChevronRight, Star, Atom, Sparkles, Lightbulb,
-  ArrowRight, CheckCircle, Info, Database,
-  Layers, Terminal, FileText, Shield, Cloud, Server,
-  Monitor, Wrench, Target, Rocket, Clock, TrendingUp, GitBranch
-} from 'lucide-react'
-import { useFileStore } from '@/lib/store'
+import { Moon, Sun, Book, Code, Cpu, BarChart3, Zap, Settings, Play, Star, Atom, Lightbulb, Database, Layers, Terminal, FileText, Cloud, Server, Wrench, Target, Rocket, Clock, TrendingUp, GitBranch } from '@/components/Icons';
+import { Menu, X, ChevronRight, ArrowRight, CheckCircle, Shield, Monitor, Sparkles, Info } from 'lucide-react';
+import { useFileStore } from '@/lib/store';
 import { config, getCopyrightText } from '@/lib/config'
 
 interface DocSection {
@@ -29,12 +24,40 @@ export default function DocsPage() {
   const { theme, toggleTheme } = useFileStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   useEffect(() => {
     setIsVisible(true)
     const handleScroll = () => setScrollY(window.scrollY)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    // Intersection Observer for scroll spy
+    const sectionIds = ['overview', 'getting-started', 'features', 'architecture', 'api', 'hybrid-execution']
+    
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id)
+          }
+        })
+      },
+      {
+        // Detect when the section is in the top portion of the viewport
+        rootMargin: '-10% 0% -70% 0%',
+        threshold: 0
+      }
+    )
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id)
+      if (el) observerRef.current?.observe(el)
+    })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      observerRef.current?.disconnect()
+    }
   }, [])
 
   const scrollToSection = (sectionId: string) => {
@@ -61,7 +84,7 @@ export default function DocsPage() {
               <Atom className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="quantum-gradient bg-clip-text text-transparent">Welcome to QCanvas</span>
+              <span className="quantum-gradient bg-clip-text text-transparent">Overview</span>
             </h2>
             <p className="text-xl text-editor-text max-w-3xl mx-auto leading-relaxed">
               {config.project.description}
@@ -92,7 +115,7 @@ export default function DocsPage() {
             </div>
             <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
               <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
-                <BookOpen className="w-6 h-6 text-white" />
+                <Book className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Educational Platform</h3>
               <p className="text-editor-text text-sm">Learn quantum computing through guided examples</p>
@@ -139,7 +162,7 @@ export default function DocsPage() {
               <Play className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
-              <span className="quantum-gradient bg-clip-text text-transparent">Your First Steps</span>
+              <span className="quantum-gradient bg-clip-text text-transparent">Getting Started</span>
             </h2>
             <p className="text-lg text-editor-text max-w-2xl mx-auto">
               Get up and running with QCanvas in minutes. Learn the basics and start building quantum circuits.
@@ -200,7 +223,7 @@ export default function DocsPage() {
               <div className="bg-black/20 rounded-lg p-4 border border-white/5 mb-4">
                 <h4 className="text-white font-medium mb-3">Bell State Circuit</h4>
                 <pre className="text-xs text-editor-text overflow-x-auto">
-{`# Qiskit Bell State
+                  {`# Qiskit Bell State
 from qiskit import QuantumCircuit
 
 qc = QuantumCircuit(2, 2)
@@ -323,7 +346,7 @@ print(qc)`}
               <Zap className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
-              <span className="quantum-gradient bg-clip-text text-transparent">Powerful Features</span>
+              <span className="quantum-gradient bg-clip-text text-transparent">Features</span>
             </h2>
             <p className="text-lg text-editor-text max-w-2xl mx-auto">
               Comprehensive quantum computing tools for conversion, simulation, and visualization
@@ -424,7 +447,7 @@ print(qc)`}
             <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                  <BookOpen className="w-6 h-6 text-white" />
+                  <Book className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-white">Educational Tools</h3>
@@ -498,7 +521,7 @@ print(qc)`}
               <Layers className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
-              <span className="quantum-gradient bg-clip-text text-transparent">System Architecture</span>
+              <span className="quantum-gradient bg-clip-text text-transparent">Architecture</span>
             </h2>
             <p className="text-lg text-editor-text max-w-2xl mx-auto">
               Modern, scalable architecture designed for quantum computing workflows
@@ -509,7 +532,7 @@ print(qc)`}
             <h3 className="text-2xl font-bold text-white mb-6">High-Level Architecture</h3>
             <div className="bg-black/20 rounded-lg p-6 border border-white/5">
               <pre className="text-xs text-editor-text overflow-x-auto">
-{`Frontend (Next.js)          Backend (FastAPI)          Quantum Processing
+                {`Frontend (Next.js)          Backend (FastAPI)          Quantum Processing
 ├── React Components     ├── REST API Layer       ├── Quantum Converters
 ├── Code Editor          ├── WebSocket Manager    ├── Quantum Simulator
 ├── Visualization        ├── Service Layer        └── Circuit Optimizers
@@ -666,7 +689,7 @@ print(qc)`}
                   </div>
                   <p className="text-editor-text text-sm mb-3">Convert framework code to OpenQASM 3.0</p>
                   <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 dark:bg-gray-900 bg-gray-100 p-2 rounded">
-{`{
+                    {`{
   "source_code": "from qiskit import...",
   "source_framework": "qiskit",
   "conversion_type": "classic"
@@ -698,7 +721,7 @@ print(qc)`}
                   </div>
                   <p className="text-editor-text text-sm mb-3">Execute OpenQASM 3.0 with QSim</p>
                   <pre className="text-xs text-editor-text overflow-x-auto bg-gray-900 dark:bg-gray-900 bg-gray-100 p-2 rounded">
-{`{
+                    {`{
   "qasm_code": "OPENQASM 3.0; ...",
   "backend": "cirq",  // cirq, qiskit, pennylane
   "shots": 1024
@@ -789,7 +812,7 @@ print(qc)`}
               <div className="bg-black/20 rounded-lg p-4 border border-white/5">
                 <h4 className="text-white font-medium mb-2">Connection</h4>
                 <pre className="text-xs text-editor-text bg-gray-900 dark:bg-gray-900 bg-gray-100 p-2 rounded">
-ws://localhost:8000/ws
+                  ws://localhost:8000/ws
                 </pre>
               </div>
               <div className="bg-black/20 rounded-lg p-4 border border-white/5">
@@ -828,7 +851,7 @@ ws://localhost:8000/ws
               <Code className="w-6 h-6 mr-3 text-quantum-blue-light" />
               Available Functions
             </h3>
-            
+
             <div className="space-y-6">
               {/* compile function */}
               <div className="bg-black/20 rounded-lg p-6 border border-white/5">
@@ -854,7 +877,7 @@ ws://localhost:8000/ws
                   </div>
                   <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mt-4">
                     <pre className="text-xs text-editor-text overflow-x-auto">
-{`from qcanvas import compile
+                      {`from qcanvas import compile
 import cirq
 
 q = cirq.LineQubit.range(2)
@@ -896,7 +919,7 @@ print(qasm)`}
                   </div>
                   <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mt-4">
                     <pre className="text-xs text-editor-text overflow-x-auto">
-{`import qsim
+                      {`import qsim
 
 qasm = '''
 OPENQASM 3.0;
@@ -943,7 +966,7 @@ print(result.probabilities)`}
                   </div>
                   <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mt-4">
                     <pre className="text-xs text-editor-text overflow-x-auto">
-{`from qcanvas import compile_and_execute
+                      {`from qcanvas import compile_and_execute
 import cirq
 
 q = cirq.LineQubit.range(2)
@@ -972,7 +995,7 @@ print(result.probabilities)`}
             <p className="text-editor-text mb-6">
               The <code className="text-quantum-blue-light">SimulationResult</code> object returned by <code className="text-quantum-blue-light">qsim.run()</code> and <code className="text-quantum-blue-light">compile_and_execute()</code> provides comprehensive access to simulation data.
             </p>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
@@ -1082,7 +1105,7 @@ print(result.probabilities)`}
                 </h4>
                 <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mb-4">
                   <pre className="text-xs text-editor-text overflow-x-auto">
-{`import cirq
+                    {`import cirq
 
 q = cirq.LineQubit.range(2)
 circuit = cirq.Circuit([
@@ -1096,7 +1119,7 @@ print(circuit)`}
                 </div>
                 <div className="bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded-lg p-3 border border-gray-700 dark:border-gray-700 border-gray-300">
                   <pre className="text-xs text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
-{`0: ───H───@───M───
+                    {`0: ───H───@───M───
            │
 1: ────────X───M───`}
                   </pre>
@@ -1113,7 +1136,7 @@ print(circuit)`}
                 </h4>
                 <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mb-4">
                   <pre className="text-xs text-editor-text overflow-x-auto">
-{`from qiskit import QuantumCircuit
+                    {`from qiskit import QuantumCircuit
 
 qc = QuantumCircuit(2, 2)
 qc.h(0)
@@ -1125,7 +1148,7 @@ print(qc)`}
                 </div>
                 <div className="bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded-lg p-3 border border-gray-700 dark:border-gray-700 border-gray-300">
                   <pre className="text-xs text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
-{`     ┌───┐     ┌─┐
+                    {`     ┌───┐     ┌─┐
 q_0: ┤ H ├──■──┤M├
      └───┘ │ ┌┴┐└╥┘
 q_1: ──────┼─┤M├─╫─
@@ -1145,7 +1168,7 @@ c: 2/══════╪══╬══╩═`}
                 </h4>
                 <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mb-4">
                   <pre className="text-xs text-editor-text overflow-x-auto">
-{`import pennylane as qml
+                    {`import pennylane as qml
 
 dev = qml.device('default.qubit', wires=2)
 
@@ -1160,7 +1183,7 @@ print(qml.draw(circuit)())`}
                 </div>
                 <div className="bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded-lg p-3 border border-gray-700 dark:border-gray-700 border-gray-300">
                   <pre className="text-xs text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
-{`0: ──H──╭C──┤ ⟨Z⟩
+                    {`0: ──H──╭C──┤ ⟨Z⟩
 1: ──────╰X──┤`}
                   </pre>
                 </div>
@@ -1177,7 +1200,7 @@ print(qml.draw(circuit)())`}
             <div className="bg-black/20 rounded-lg p-6 border border-white/5">
               <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4">
                 <pre className="text-sm text-editor-text overflow-x-auto">
-{`import cirq
+                  {`import cirq
 from qcanvas import compile, compile_and_execute
 import qsim
 
@@ -1269,23 +1292,16 @@ print(f"\\nOne-step result: {result2.counts}")`}
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`transition-colors duration-200 px-3 py-2 text-base font-medium ${
-                    item.active
-                      ? 'text-quantum-blue-light'
-                      : 'dark:text-white text-gray-800 hover:text-quantum-blue-light'
-                  }`}
+                  className={`transition-colors duration-200 px-3 py-2 text-base font-medium ${item.active
+                    ? 'text-quantum-blue-light'
+                    : 'dark:text-white text-gray-800 hover:text-quantum-blue-light'
+                    }`}
                 >
                   {item.label}
                 </button>
               ))}
 
-              <Link
-                href="/"
-                className="relative group px-3 py-2"
-              >
-                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Home</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
-              </Link>
+
             </div>
 
             {/* Theme Toggle */}
@@ -1322,22 +1338,16 @@ print(f"\\nOne-step result: {result2.counts}")`}
                   <button
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className={`block w-full text-left transition-colors duration-200 ${
-                      activeSection === item.id
-                        ? 'text-quantum-blue-light'
-                        : 'text-editor-text hover:text-white'
-                    }`}
+                    className={`block w-full text-left transition-colors duration-200 ${activeSection === item.id
+                      ? 'text-quantum-blue-light'
+                      : 'text-editor-text hover:text-white'
+                      }`}
                   >
                     {item.label}
                   </button>
                 ))}
 
-                <Link
-                  href="/"
-                  className="block text-editor-text hover:text-white transition-colors duration-200"
-                >
-                  Home
-                </Link>
+
 
                 <div className="flex items-center justify-between pt-4 border-t border-white/10">
                   <button
@@ -1380,7 +1390,7 @@ print(f"\\nOne-step result: {result2.counts}")`}
 
         <div className={`text-center max-w-6xl mx-auto relative z-10 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full quantum-gradient mb-8 shadow-2xl">
-            <BookOpen className="w-10 h-10 text-white" />
+            <Book className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
             <span className="quantum-gradient bg-clip-text text-transparent">Documentation</span>
@@ -1404,7 +1414,7 @@ print(f"\\nOne-step result: {result2.counts}")`}
               className="btn-ghost text-lg px-8 py-4 flex items-center group hover-lift relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-quantum-blue-light/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <BookOpen className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
+              <Book className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
               <span className="relative z-10">Read Documentation</span>
             </button>
           </div>
@@ -1435,23 +1445,6 @@ print(f"\\nOne-step result: {result2.counts}")`}
       {sections.map((section) => (
         <section key={section.id} id={section.id} className="py-20 px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
-                {section.icon}
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                <span className="quantum-gradient bg-clip-text text-transparent">{section.title}</span>
-              </h2>
-              {section.subtitle && (
-                <p className="text-lg text-editor-text max-w-2xl mx-auto">{section.subtitle}</p>
-              )}
-              {section.badge && (
-                <span className="inline-block mt-4 px-3 py-1 bg-quantum-blue-light/20 text-quantum-blue-light text-sm rounded-full border border-quantum-blue-light/30">
-                  {section.badge}
-                </span>
-              )}
-            </div>
-
             <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10">
               {section.content}
             </div>

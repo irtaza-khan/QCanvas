@@ -9,10 +9,7 @@ import XPHistoryChart from "@/components/profile/XPHistoryChart";
 import RecentActivityList from "@/components/profile/RecentActivityList";
 import AchievementsPreview from "@/components/profile/AchievementsPreview";
 import SimpleTopBar from "@/components/SimpleTopBar";
-import {
-    Zap, Flame, Award, TrendingUp, Activity,
-    Trophy, Star, Target, BarChart2, Layers
-} from "lucide-react";
+import { Zap, Flame, Award, TrendingUp, Activity, Trophy, Star, Target, Layers, BarChart3 } from '@/components/Icons';
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({
@@ -108,13 +105,13 @@ export default function ProfilePage() {
     const completionPct = totalAchievements > 0 ? Math.round((unlockedCount / totalAchievements) * 100) : 0;
 
     const tabs = [
-        { id: "overview" as const, label: "Overview", icon: BarChart2 },
+        { id: "overview" as const, label: "Overview", icon: BarChart3 },
         { id: "achievements" as const, label: "Achievements", icon: Trophy },
         { id: "activity" as const, label: "Activity", icon: Activity },
     ];
 
     return (
-        <div className="min-h-screen bg-[#0a0a1a] text-white">
+        <div className="min-h-screen dark:bg-[#0a0a1a] bg-gray-50 text-gray-900 dark:text-white transition-colors duration-300">
             <SimpleTopBar />
 
             {/* Spacer below topbar */}
@@ -162,29 +159,38 @@ export default function ProfilePage() {
                                 <SectionHeader icon={Target} title="Progress" />
                                 <div className="space-y-4">
                                     {/* Level */}
-                                    <div>
-                                        <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                            <span>Level {level} — {getLevelBadge(level)}</span>
-                                            <span className="text-quantum-blue-light font-semibold">{Math.round(stats?.progress_percentage || 0)}%</span>
+                                    <div 
+                                        title={`${stats?.xp_to_next_level.toLocaleString()} XP remaining to Level ${level + 1}`}
+                                        className="group/xp cursor-help"
+                                    >
+                                        <div className="flex justify-between text-xs text-gray-500 mb-1.5 transition-colors group-hover/xp:text-quantum-blue-light">
+                                            <span className="font-medium">Level {level} — {getLevelBadge(level)}</span>
+                                            <span className="font-bold">{Math.round(stats?.progress_percentage || 0)}%</span>
                                         </div>
-                                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden border border-black/5 dark:border-white/5 relative">
                                             <div
-                                                className="h-full bg-gradient-to-r from-quantum-blue via-blue-400 to-purple-500 rounded-full transition-all duration-700"
-                                                style={{ width: `${Math.min(stats?.progress_percentage || 0, 100)}%` }}
+                                                className="h-full rounded-full transition-all duration-1000 ease-out"
+                                                style={{ 
+                                                    backgroundImage: "linear-gradient(to right, #2563eb, #6366f1, #9333ea)",
+                                                    width: `${Math.min(stats?.progress_percentage || 0, 100)}%` 
+                                                }}
                                             />
                                         </div>
                                     </div>
 
                                     {/* Achievements completion */}
-                                    <div>
-                                        <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                            <span>Achievements ({unlockedCount}/{totalAchievements})</span>
-                                            <span className="text-yellow-400 font-semibold">{completionPct}%</span>
+                                    <div className="group/ach hover:opacity-90 transition-opacity">
+                                        <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+                                            <span className="font-medium">Achievements ({unlockedCount}/{totalAchievements})</span>
+                                            <span className="text-yellow-500 font-bold">{completionPct}%</span>
                                         </div>
-                                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden border border-black/5 dark:border-white/5 relative">
                                             <div
-                                                className="h-full bg-gradient-to-r from-yellow-500 to-orange-400 rounded-full transition-all duration-700"
-                                                style={{ width: `${completionPct}%` }}
+                                                className="h-full rounded-full transition-all duration-1000 ease-out"
+                                                style={{ 
+                                                    backgroundImage: "linear-gradient(to right, #eab308, #f97316)",
+                                                    width: `${completionPct}%` 
+                                                }}
                                             />
                                         </div>
                                     </div>
