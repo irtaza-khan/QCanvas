@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="800px" height="800px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <g transform="rotate(-90 11 7)">
+    <path d="M4.29289322,0.292893219 C4.68341751,-0.0976310729 5.31658249,-0.0976310729 5.70710678,0.292893219 C6.09763107,0.683417511 6.09763107,1.31658249 5.70710678,1.70710678 L1.90917969,5.46118164 C1.5186554,5.85170593 0.885490417,5.85170593 0.494966125,5.46118164 C0.104441833,5.07065735 0.104441833,4.43749237 0.494966125,4.04696808 L4.29289322,0.292893219 Z"
+      transform="translate(1 1)"
+      fill="#FFA0A0"
+      fill-opacity="0"
+      stroke="#FFA0A0"
+      stroke-width="1"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-dasharray="24"
+      stroke-dashoffset="24">
+      <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.00s" dur="0.42s" to="0" />
+      <animate fill="freeze" attributeName="fill-opacity" begin="0.30s" dur="0.12s" to="1" />
+    </path>
+
+    <path d="M10.7071068,13.2928932 C11.0976311,13.6834175 11.0976311,14.3165825 10.7071068,14.7071068 C10.3165825,15.0976311 9.68341751,15.0976311 9.29289322,14.7071068 L0.292893219,5.70710678 C-0.0976310729,5.31658249 -0.0976310729,4.68341751 0.292893219,4.29289322 L4.29289322,0.292893219 C4.68341751,-0.0976310729 5.31658249,-0.0976310729 5.70710678,0.292893219 C6.09763107,0.683417511 6.09763107,1.31658249 5.70710678,1.70710678 L2.41421356,5 L10.7071068,13.2928932 Z"
+      fill="#7600FF"
+      fill-opacity="0"
+      stroke="#7600FF"
+      stroke-width="1"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-dasharray="46"
+      stroke-dashoffset="46">
+      <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.20s" dur="0.70s" to="0" />
+      <animate fill="freeze" attributeName="fill-opacity" begin="0.74s" dur="0.16s" to="1" />
+    </path>
+  </g>
+</svg>

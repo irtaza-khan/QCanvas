@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="800px" height="800px" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M10 1H6V6L1 6V10H6V15H10V10H15V6L10 6V1Z"
+    fill="#000000"
+    fill-opacity="0"
+    stroke="#000000"
+    stroke-width="0.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-dasharray="56"
+    stroke-dashoffset="56">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.00s" dur="0.70s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="0.54s" dur="0.16s" to="1" />
+  </path>
+</svg>

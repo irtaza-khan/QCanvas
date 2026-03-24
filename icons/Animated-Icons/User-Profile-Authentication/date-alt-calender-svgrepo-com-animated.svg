@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg fill="#000000" width="800px" height="800px" viewBox="0 0 24 24" id="date-alt-calender" data-name="Flat Color" xmlns="http://www.w3.org/2000/svg" class="icon flat-color">
+  <rect id="secondary" x="2" y="3" width="20" height="17" rx="2"
+    fill="rgb(44, 169, 188)" fill-opacity="0" stroke="rgb(44, 169, 188)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+    stroke-dasharray="80" stroke-dashoffset="80">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.00s" dur="0.44s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="0.30s" dur="0.14s" to="1" />
+  </rect>
+  <circle id="primary" cx="12" cy="15" r="7"
+    fill="rgb(0, 0, 0)" fill-opacity="0" stroke="rgb(0, 0, 0)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+    stroke-dasharray="50" stroke-dashoffset="50">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.18s" dur="0.40s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="0.46s" dur="0.12s" to="1" />
+  </circle>
+  <path id="primary-2" data-name="primary" d="M20,3H4A2,2,0,0,0,2,5V9H22V5A2,2,0,0,0,20,3Z"
+    fill="rgb(0, 0, 0)" fill-opacity="0" stroke="rgb(0, 0, 0)" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"
+    stroke-dasharray="44" stroke-dashoffset="44">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.28s" dur="0.30s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="0.48s" dur="0.10s" to="1" />
+  </path>
+  <path id="secondary-2" data-name="secondary" d="M16,6a1,1,0,0,1-1-1V3a1,1,0,0,1,2,0V5A1,1,0,0,1,16,6ZM9,5V3A1,1,0,0,0,7,3V5A1,1,0,0,0,9,5Zm1.5,12V13a1,1,0,0,0-2,0v4a1,1,0,0,0,2,0Zm4,.24,1-4a1,1,0,0,0-.18-.86A1,1,0,0,0,14.5,12h-2a1,1,0,0,0,0,2h.72l-.69,2.76A1,1,0,0,0,13.26,18a1,1,0,0,0,1.21-.73Z"
+    fill="rgb(44, 169, 188)" fill-opacity="0" stroke="rgb(44, 169, 188)" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round"
+    stroke-dasharray="90" stroke-dashoffset="90">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.40s" dur="0.38s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="0.66s" dur="0.12s" to="1" />
+  </path>
+</svg>

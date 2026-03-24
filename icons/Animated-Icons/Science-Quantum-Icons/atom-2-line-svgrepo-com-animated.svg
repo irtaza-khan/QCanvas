@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="800px" height="800px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <path d="M18.893 7.936a8.003 8.003 0 0 1-7.774 12.016m-6.012-3.888a8.003 8.003 0 0 1 7.774-12.016"
+    stroke="#000000"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="2"
+    stroke-dasharray="90"
+    stroke-dashoffset="90">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.00s" dur="0.50s" to="0" />
+  </path>
+
+  <circle cx="17.657" cy="6.343" r="2" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" transform="rotate(45 17.657 6.343)"
+    fill="none" stroke-dasharray="14" stroke-dashoffset="14">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.30s" dur="0.20s" to="0" />
+  </circle>
+
+  <circle cx="6.343" cy="17.657" r="2" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" transform="rotate(45 6.343 17.657)"
+    fill="none" stroke-dasharray="14" stroke-dashoffset="14">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.40s" dur="0.20s" to="0" />
+  </circle>
+
+  <circle cx="12" cy="12" r="2" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" transform="rotate(45 12 12)"
+    fill="none" stroke-dasharray="14" stroke-dashoffset="14">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.50s" dur="0.20s" to="0" />
+  </circle>
+</svg>

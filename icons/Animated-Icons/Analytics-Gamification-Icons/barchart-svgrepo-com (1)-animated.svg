@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="800px" height="800px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" preserveAspectRatio="xMidYMid meet">
+  <path d="M478.685 44.5H32a4.5 4.5 0 0 1 0-9h446.685a4.5 4.5 0 0 1 0 9zm4.5 44.918a4.5 4.5 0 0 0-4.5-4.5H32a4.5 4.5 0 0 0 0 9h446.685a4.5 4.5 0 0 0 4.5-4.5zm0 49.418a4.5 4.5 0 0 0-4.5-4.5H32a4.5 4.5 0 0 0 0 9h446.685a4.5 4.5 0 0 0 4.5-4.5zm0 49.418a4.5 4.5 0 0 0-4.5-4.5H32a4.5 4.5 0 0 0 0 9h446.685a4.5 4.5 0 0 0 4.5-4.5zm0 49.418a4.5 4.5 0 0 0-4.5-4.5H32a4.5 4.5 0 0 0 0 9h446.685a4.5 4.5 0 0 0 4.5-4.5zm0 49.418a4.5 4.5 0 0 0-4.5-4.5H32a4.5 4.5 0 0 0 0 9h446.685a4.5 4.5 0 0 0 4.5-4.5zm0 49.418a4.5 4.5 0 0 0-4.5-4.5H32a4.5 4.5 0 0 0 0 9h446.685a4.5 4.5 0 0 0 4.5-4.5zm0 49.418a4.5 4.5 0 0 0-4.5-4.5H32a4.5 4.5 0 0 0 0 9h446.685a4.5 4.5 0 0 0 4.5-4.5zm0 49.418a4.5 4.5 0 0 0-4.5-4.5H32a4.5 4.5 0 0 0 0 9h446.685a4.5 4.5 0 0 0 4.5-4.5z"
+    fill="#DCE2E2"
+    fill-opacity="0"
+    stroke="#DCE2E2"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-dasharray="2600"
+    stroke-dashoffset="2600">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.00s" dur="0.70s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="0.55s" dur="0.20s" to="1" />
+  </path>
+
+  <path d="M183.96 483.418H82.669V137.39c0-12.364 10.023-22.387 22.387-22.387h56.517c12.364 0 22.387 10.023 22.387 22.387v346.028z"
+    fill="#FF473E"
+    fill-opacity="0"
+    stroke="#FF473E"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-dasharray="900"
+    stroke-dashoffset="900">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.75s" dur="0.45s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="1.08s" dur="0.14s" to="1" />
+  </path>
+
+  <path d="M318.431 483.418H217.14V296.187c0-12.364 10.023-22.387 22.387-22.387h56.517c12.364 0 22.387 10.023 22.387 22.387v187.231z"
+    fill="#00B1FF"
+    fill-opacity="0"
+    stroke="#00B1FF"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-dasharray="750"
+    stroke-dashoffset="750">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="1.15s" dur="0.40s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="1.45s" dur="0.14s" to="1" />
+  </path>
+
+  <path d="M452.902 483.418h-101.29V80.91c0-12.364 10.023-22.387 22.387-22.387h56.517c12.364 0 22.387 10.023 22.387 22.387v402.508z"
+    fill="#A97DFF"
+    fill-opacity="0"
+    stroke="#A97DFF"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-dasharray="980"
+    stroke-dashoffset="980">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="1.50s" dur="0.45s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="1.84s" dur="0.14s" to="1" />
+  </path>
+
+  <path d="M478.685 489.418H32a7 7 0 0 1-7-7V40a7 7 0 1 1 14 0v435.418h439.685a7 7 0 1 1 0 14z"
+    fill="#B9C5C6"
+    fill-opacity="0"
+    stroke="#B9C5C6"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-dasharray="1400"
+    stroke-dashoffset="1400">
+    <animate fill="freeze" attributeName="stroke-dashoffset" begin="1.95s" dur="0.50s" to="0" />
+    <animate fill="freeze" attributeName="fill-opacity" begin="2.30s" dur="0.16s" to="1" />
+  </path>
+</svg>
