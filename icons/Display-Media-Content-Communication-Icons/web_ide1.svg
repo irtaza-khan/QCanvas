@@ -1,0 +1,8 @@
+<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none"
+     xmlns="http://www.w3.org/2000/svg">
+  <path d="M7 21H17M9 17V21M15 17V21M6.2 17H17.8C18.92 17 19.48 17 19.91 16.78C20.28 16.59 20.59 16.28 20.78 15.91C21 15.48 21 14.92 21 13.8V6.2C21 5.08 21 4.52 20.78 4.09C20.59 3.72 20.28 3.41 19.91 3.22C19.48 3 18.92 3 17.8 3H6.2C5.08 3 4.52 3 4.09 3.22C3.72 3.41 3.41 3.72 3.22 4.09C3 4.52 3 5.08 3 6.2V13.8C3 14.92 3 15.48 3.22 15.91C3.41 16.28 3.72 16.59 4.09 16.78C4.52 17 5.08 17 6.2 17Z"
+        stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Centered code symbol -->
+  <text x="8" y="11.5" font-size="5" font-family="monospace" fill="#000">&lt;/&gt;</text>
+</svg>

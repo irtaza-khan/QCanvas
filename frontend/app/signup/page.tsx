@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Book, Play, Moon, Sun } from '@/components/Icons';
+import { Book, Play, Moon, Sun, CodeSquareIcon } from '@/components/Icons';
 import { Eye, EyeOff, Github, User, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFileStore } from '@/lib/store'
@@ -218,7 +218,7 @@ export default function SignupPage() {
                   required
                   value={formData.fullName}
                   onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg focus-quantum text-white placeholder-gray-500 transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus:bg-white/10"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg focus-quantum text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 hover:border-gray-400 dark:hover:border-white/20 hover:bg-white dark:hover:bg-white/10 focus:bg-white dark:focus:bg-white/10"
                   placeholder="Enter your full name"
                   disabled={isLoading}
                 />
@@ -238,7 +238,7 @@ export default function SignupPage() {
                   required
                   value={formData.username}
                   onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg focus-quantum text-white placeholder-gray-500 transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus:bg-white/10"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg focus-quantum text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 hover:border-gray-400 dark:hover:border-white/20 hover:bg-white dark:hover:bg-white/10 focus:bg-white dark:focus:bg-white/10"
                   placeholder="Enter username"
                   disabled={isLoading}
                 />
@@ -258,7 +258,7 @@ export default function SignupPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg focus-quantum text-white placeholder-gray-500 transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus:bg-white/10"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg focus-quantum text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 hover:border-gray-400 dark:hover:border-white/20 hover:bg-white dark:hover:bg-white/10 focus:bg-white dark:focus:bg-white/10"
                   placeholder="Enter your email address"
                   disabled={isLoading}
                 />
@@ -278,7 +278,7 @@ export default function SignupPage() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className="w-full pl-10 pr-12 py-2.5 bg-white/5 border border-white/10 rounded-lg focus-quantum text-white placeholder-gray-500 transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus:bg-white/10"
+                  className="w-full pl-10 pr-12 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg focus-quantum text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 hover:border-gray-400 dark:hover:border-white/20 hover:bg-white dark:hover:bg-white/10 focus:bg-white dark:focus:bg-white/10"
                   placeholder="Create a password"
                   disabled={isLoading}
                 />
@@ -306,7 +306,7 @@ export default function SignupPage() {
                   required
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  className="w-full pl-10 pr-12 py-2.5 bg-white/5 border border-white/10 rounded-lg focus-quantum text-white placeholder-gray-500 transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus:bg-white/10"
+                  className="w-full pl-10 pr-12 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg focus-quantum text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 hover:border-gray-400 dark:hover:border-white/20 hover:bg-white dark:hover:bg-white/10 focus:bg-white dark:focus:bg-white/10"
                   placeholder="Confirm your password"
                   disabled={isLoading}
                 />
@@ -378,7 +378,7 @@ export default function SignupPage() {
                 href="/examples"
                 className="flex items-center text-sm text-black dark:text-gray-400 hover:text-violet-400 transition-colors"
               >
-                <Play className="w-4 h-4 mr-1" />
+                <CodeSquareIcon className="w-4 h-4 mr-1" />
                 Examples
               </a>
               <a

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Zap, Moon, Sun } from '@/components/Icons';
+import { AboutUsIcon, Moon, Sun } from '@/components/Icons';
 import { Users, Github, Menu, X, Linkedin, Mail } from 'lucide-react';;import { useFileStore } from '@/lib/store'
 import { config, getCopyrightText } from '@/lib/config'
 
@@ -160,7 +160,7 @@ export default function AboutPage() {
 
         <div className="text-center max-w-6xl mx-auto relative z-10">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl">
-            <Zap className="w-12 h-12 text-white" />
+            <AboutUsIcon className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
             About <span className="quantum-gradient bg-clip-text text-transparent">Us</span>

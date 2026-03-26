@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Moon, Sun, Book, Code, Cpu, BarChart3, Zap, Settings, Play, Star, Atom, Lightbulb, Database, Layers, Terminal, FileText, Cloud, Server, Wrench, Target, Rocket, Clock, TrendingUp, GitBranch } from '@/components/Icons';
+import { Moon, Sun, Book, Code, Cpu, BarChart3, Zap, Settings, Play, Star, Atom, Lightbulb, Database, Layers, Terminal, FileText, Cloud, Server, Wrench, Target, Rocket, Clock, TrendingUp, GitBranch, FrameworkConversionIcon, FlagIcon, SparklesIcon, ApiIcon } from '@/components/Icons';
 import { Menu, X, ChevronRight, ArrowRight, CheckCircle, Shield, Monitor, Sparkles, Info } from 'lucide-react';
 import { useFileStore } from '@/lib/store';
 import { config, getCopyrightText } from '@/lib/config'
@@ -94,7 +94,7 @@ export default function DocsPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
               <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Code className="w-6 h-6 text-white" />
+                <FrameworkConversionIcon className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Framework Conversion</h3>
               <p className="text-editor-text text-sm">Convert between Qiskit, Cirq, and PennyLane seamlessly</p>
@@ -152,14 +152,14 @@ export default function DocsPage() {
       id: 'getting-started',
       title: 'Getting Started',
       subtitle: 'Quick start guide',
-      icon: <Play className="w-5 h-5" />,
+      icon: <FlagIcon className="w-5 h-5" />,
       badge: 'Beginner',
       category: 'Getting Started',
       content: (
         <div className="space-y-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
-              <Play className="w-8 h-8 text-white" />
+              <FlagIcon className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
               <span className="quantum-gradient bg-clip-text text-transparent">Getting Started</span>
@@ -336,14 +336,14 @@ print(qc)`}
       id: 'features',
       title: 'Features',
       subtitle: 'Platform capabilities',
-      icon: <Zap className="w-5 h-5" />,
+      icon: <SparklesIcon className="w-5 h-5" />,
       badge: 'Complete',
       category: 'Platform',
       content: (
         <div className="space-y-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
-              <Zap className="w-8 h-8 text-white" />
+              <SparklesIcon className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
               <span className="quantum-gradient bg-clip-text text-transparent">Features</span>
@@ -357,7 +357,7 @@ print(qc)`}
             <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                  <Code className="w-6 h-6 text-white" />
+                  <FrameworkConversionIcon className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-white">Framework Conversion</h3>
@@ -658,14 +658,14 @@ print(qc)`}
       id: 'api',
       title: 'API Reference',
       subtitle: 'Technical documentation',
-      icon: <Terminal className="w-5 h-5" />,
+      icon: <ApiIcon className="w-5 h-5" />,
       badge: 'Reference',
       category: 'Technical',
       content: (
         <div className="space-y-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
-              <Terminal className="w-8 h-8 text-white" />
+              <ApiIcon className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
               <span className="quantum-gradient bg-clip-text text-transparent">API Reference</span>
@@ -678,7 +678,7 @@ print(qc)`}
           <div className="grid md:grid-cols-2 gap-8">
             <div className="quantum-glass-dark rounded-xl p-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                <Code className="w-5 h-5 mr-2 text-blue-400" />
+                <FrameworkConversionIcon className="w-5 h-5 mr-2 text-blue-400" />
                 Conversion API
               </h3>
               <div className="space-y-4">
@@ -1420,14 +1420,14 @@ print(f"\\nOne-step result: {result2.counts}")`}
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
             <div className="quantum-glass-dark rounded-xl p-4 text-center">
               <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">{config.stats.frameworks}</div>
               <div className="text-editor-text text-sm">Quantum Frameworks</div>
             </div>
             <div className="quantum-glass-dark rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">OpenQASM 3.0</div>
-              <div className="text-editor-text text-sm">Standard Support</div>
+              <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1 whitespace-nowrap">OpenQASM 3.0</div>
+              <div className="text-editor-text text-sm whitespace-nowrap">Standard Support</div>
             </div>
             <div className="quantum-glass-dark rounded-xl p-4 text-center">
               <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">Real-time</div>

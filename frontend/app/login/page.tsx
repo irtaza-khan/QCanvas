@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Book, Play, Moon, Sun } from '@/components/Icons';
+import { Book, Play, Moon, Sun, CodeSquareIcon } from '@/components/Icons';
 import { Eye, EyeOff, Github } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFileStore } from '@/lib/store'
@@ -205,34 +205,34 @@ export default function LoginPage() {
               <label htmlFor="email" className="block text-sm font-medium text-black dark:text-gray-300 mb-2">
                 Email Address
               </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus-quantum text-white placeholder-gray-500 transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus:bg-white/10"
-                placeholder="Enter your email"
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-black dark:text-gray-300 mb-2">
-                Password
-              </label>
-              <div className="relative">
                 <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  id="email"
+                  type="email"
                   required
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus-quantum text-white placeholder-gray-500 pr-12 transition-all duration-200 hover:border-white/20 hover:bg-white/10 focus:bg-white/10"
-                  placeholder="Enter your password"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg focus-quantum text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 hover:border-gray-400 dark:hover:border-white/20 hover:bg-white dark:hover:bg-white/10 focus:bg-white dark:focus:bg-white/10"
+                  placeholder="Enter your email"
                   disabled={isLoading}
                 />
+              </div>
+
+              {/* Password Field */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-black dark:text-gray-300 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg focus-quantum text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 pr-12 transition-all duration-200 hover:border-gray-400 dark:hover:border-white/20 hover:bg-white dark:hover:bg-white/10 focus:bg-white dark:focus:bg-white/10"
+                    placeholder="Enter your password"
+                    disabled={isLoading}
+                  />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -300,7 +300,7 @@ export default function LoginPage() {
                 href="/examples"
                 className="flex items-center text-sm text-black dark:text-gray-400 hover:text-violet-400 transition-colors"
               >
-                <Play className="w-4 h-4 mr-1" />
+                <CodeSquareIcon className="w-4 h-4 mr-1" />
                 Examples
               </a>
               <a

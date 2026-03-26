@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings } from '@/components/Icons';
+import { SettingsIcon } from '@/components/Icons';
 import { ChevronDown } from 'lucide-react';;import { InputLanguage } from '@/types'
 
 interface SimulationControlsProps {
@@ -35,7 +35,7 @@ export default function SimulationControls({
       {/* Left Side - Title */}
       <div className="flex items-center space-x-3 animate-slide-in-left">
         <div className="p-2 bg-quantum-blue-light/10 rounded-lg border border-quantum-blue-light/20 animate-pulse-subtle">
-          <Settings className="w-4 h-4 text-quantum-blue-light" />
+          <SettingsIcon className="w-4 h-4 text-quantum-blue-light" />
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white tracking-wide">Simulation Settings</h3>
