@@ -24,7 +24,7 @@ interface AchievementCardProps {
 }
 
 const RARITY_STYLES = {
-  Common: "border-gray-200 bg-white text-gray-600 dark:border-gray-600/50 dark:bg-gray-900/40 dark:text-gray-400",
+  Common: "border-gray-200 bg-white text-black dark:text-gray-600 dark:border-gray-600/50 dark:bg-gray-900/40 dark:text-gray-400",
   Uncommon: "border-green-200 bg-green-50 text-green-700 dark:border-green-500/50 dark:bg-green-900/20 dark:text-green-400 shadow-sm dark:shadow-[0_0_15px_-3px_rgba(34,197,94,0.1)]",
   Rare: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/50 dark:bg-blue-900/20 dark:text-blue-400 shadow-sm dark:shadow-[0_0_15px_-3px_rgba(59,130,246,0.15)]",
   Epic: "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-500/50 dark:bg-purple-900/20 dark:text-purple-400 shadow-sm dark:shadow-[0_0_20px_-3px_rgba(168,85,247,0.2)]",
@@ -32,7 +32,7 @@ const RARITY_STYLES = {
 };
 
 const RARITY_COLORS = {
-  Common: "text-gray-500 dark:text-gray-500",
+  Common: "text-black dark:text-gray-500 dark:text-gray-500",
   Uncommon: "text-green-600 dark:text-green-500",
   Rare: "text-blue-600 dark:text-blue-500",
   Epic: "text-purple-600 dark:text-purple-500",
@@ -76,7 +76,7 @@ export default function AchievementCard({ achievement }: AchievementCardProps) {
         <div className={`
           w-14 h-14 rounded-xl flex items-center justify-center shrink-0 border
           ${isLocked
-            ? "bg-gray-100 border-gray-200 text-gray-400 dark:bg-black/30 dark:border-white/10 dark:text-gray-600"
+            ? "bg-gray-100 border-gray-200 text-black dark:text-gray-400 dark:bg-black/30 dark:border-white/10 dark:text-gray-600"
             : `bg-opacity-10 dark:bg-black/20 border-current ${RARITY_COLORS[achievement.rarity]}`
           }
         `}>
@@ -86,22 +86,22 @@ export default function AchievementCard({ achievement }: AchievementCardProps) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start mb-1">
-            <h3 className={`font-bold text-base truncate pr-2 ${isLocked ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}`}>
+            <h3 className={`font-bold text-base truncate pr-2 ${isLocked ? "text-black dark:text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}`}>
               {achievement.name}
             </h3>
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-current ${isLocked ? "text-gray-500 border-gray-200 dark:text-gray-600 dark:border-gray-700" : RARITY_COLORS[achievement.rarity]
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-current ${isLocked ? "text-black dark:text-gray-500 border-gray-200 dark:text-gray-600 dark:border-gray-700" : RARITY_COLORS[achievement.rarity]
               }`}>
               {achievement.rarity}
             </span>
           </div>
 
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+          <p className="text-sm text-black dark:text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
             {achievement.description}
           </p>
 
           {/* Progress Bar or Unlocked Date */}
           <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between text-xs font-medium text-black dark:text-gray-500 dark:text-gray-400">
               <span>{
                 !isLocked
                   ? "Completed"
@@ -131,7 +131,7 @@ export default function AchievementCard({ achievement }: AchievementCardProps) {
       <div className={`
         absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg border
         ${isLocked
-          ? "bg-gray-800 border-gray-700 text-gray-500"
+          ? "bg-gray-800 border-gray-700 text-black dark:text-gray-500"
           : "bg-editor-bg border-white/10 text-yellow-400 border-yellow-500/20"
         }
       `}>

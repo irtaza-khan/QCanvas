@@ -137,13 +137,13 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-white">Edit Profile</h2>
-                            <p className="text-[11px] text-gray-500">Update your public information</p>
+                            <p className="text-[11px] text-black dark:text-gray-500">Update your public information</p>
                         </div>
                     </div>
                     <button
                         id="edit-profile-close-btn"
                         onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-white/10 transition-all"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -157,13 +157,13 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                                 {initials || "?"}
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#141622] border border-white/10 flex items-center justify-center">
-                                <Camera className="w-3 h-3 text-gray-400" />
+                                <Camera className="w-3 h-3 text-black dark:text-gray-400" />
                             </div>
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-white">{fullName || "Your Name"}</p>
-                            <p className="text-xs text-gray-500">@{username || "username"}</p>
-                            <p className="text-[10px] text-gray-600 mt-1">Avatar is auto-generated from your initials</p>
+                            <p className="text-xs text-black dark:text-gray-500">@{username || "username"}</p>
+                            <p className="text-[10px] text-black dark:text-gray-600 mt-1">Avatar is auto-generated from your initials</p>
                         </div>
                     </div>
                 </div>
@@ -172,11 +172,11 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                 <div className="px-6 pb-2 space-y-4">
                     {/* Full Name */}
                     <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                        <label className="block text-xs font-semibold text-black dark:text-gray-400 uppercase tracking-wider mb-1.5">
                             Full Name
                         </label>
                         <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black dark:text-gray-500 pointer-events-none" />
                             <input
                                 id="edit-profile-fullname"
                                 type="text"
@@ -199,11 +199,11 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
                     {/* Username */}
                     <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                        <label className="block text-xs font-semibold text-black dark:text-gray-400 uppercase tracking-wider mb-1.5">
                             Username
                         </label>
                         <div className="relative">
-                            <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                            <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black dark:text-gray-500 pointer-events-none" />
                             <input
                                 id="edit-profile-username"
                                 type="text"
@@ -226,11 +226,11 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
                     {/* Bio */}
                     <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
-                            Bio <span className="text-gray-600 normal-case font-normal">(optional)</span>
+                        <label className="block text-xs font-semibold text-black dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                            Bio <span className="text-black dark:text-gray-600 normal-case font-normal">(optional)</span>
                         </label>
                         <div className="relative">
-                            <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-500 pointer-events-none" />
+                            <FileText className="absolute left-3 top-3 w-4 h-4 text-black dark:text-gray-500 pointer-events-none" />
                             <textarea
                                 id="edit-profile-bio"
                                 value={bio}
@@ -243,7 +243,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                                 className={`w-full bg-white/[0.05] border ${errors.bio ? "border-red-500/60 focus:border-red-500" : "border-white/10 focus:border-quantum-blue/60"
                                     } rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 outline-none transition-colors resize-none`}
                             />
-                            <span className={`absolute bottom-2 right-3 text-[10px] ${bio.length > MAX_BIO_LENGTH ? "text-red-400" : "text-gray-600"}`}>
+                            <span className={`absolute bottom-2 right-3 text-[10px] ${bio.length > MAX_BIO_LENGTH ? "text-red-400" : "text-black dark:text-gray-600"}`}>
                                 {bio.length}/{MAX_BIO_LENGTH}
                             </span>
                         </div>
@@ -256,18 +256,18 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
                     {/* Email (read-only) */}
                     <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
-                            Email <span className="text-gray-600 normal-case font-normal">(cannot be changed)</span>
+                        <label className="block text-xs font-semibold text-black dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                            Email <span className="text-black dark:text-gray-600 normal-case font-normal">(cannot be changed)</span>
                         </label>
                         <div className="relative">
                             <input
                                 type="email"
                                 value={user?.email || ""}
                                 disabled
-                                className="w-full bg-white/[0.02] border border-white/5 rounded-lg px-4 py-2.5 text-sm text-gray-600 outline-none cursor-not-allowed select-none"
+                                className="w-full bg-white/[0.02] border border-white/5 rounded-lg px-4 py-2.5 text-sm text-black dark:text-gray-600 outline-none cursor-not-allowed select-none"
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <span className="text-[10px] bg-white/5 text-gray-600 px-1.5 py-0.5 rounded">locked</span>
+                                <span className="text-[10px] bg-white/5 text-black dark:text-gray-600 px-1.5 py-0.5 rounded">locked</span>
                             </div>
                         </div>
                     </div>
@@ -277,7 +277,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                 <div className="px-6 py-4 mt-2 flex items-center justify-between border-t border-white/[0.06]">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
+                        className="px-4 py-2 text-sm text-black dark:text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
                     >
                         Cancel
                     </button>
@@ -291,7 +291,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                                 ? "bg-green-500/20 border border-green-500/40 text-green-400"
                                 : hasChanges
                                     ? "bg-gradient-to-r from-quantum-blue to-purple-600 text-white hover:opacity-90 shadow-lg shadow-blue-900/30"
-                                    : "bg-white/5 border border-white/10 text-gray-600 cursor-not-allowed"
+                                    : "bg-white/5 border border-white/10 text-black dark:text-gray-600 cursor-not-allowed"
                             }`}
                     >
                         {success ? (

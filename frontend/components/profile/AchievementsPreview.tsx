@@ -74,7 +74,7 @@ export default function AchievementsPreview({ expanded = false }: { expanded?: b
                         Achievements
                     </h3>
                 </div>
-                <p className="text-gray-500 text-sm">Sign in to track your achievements.</p>
+                <p className="text-black dark:text-gray-500 text-sm">Sign in to track your achievements.</p>
             </div>
         );
     }
@@ -83,7 +83,7 @@ export default function AchievementsPreview({ expanded = false }: { expanded?: b
         return (
             <div className="space-y-3">
                 {displayItems.length === 0 ? (
-                    <p className="text-gray-500 text-sm text-center py-8">No achievements yet — start using QCanvas!</p>
+                    <p className="text-black dark:text-gray-500 text-sm text-center py-8">No achievements yet — start using QCanvas!</p>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {displayItems.map((achievement) => (
@@ -102,7 +102,7 @@ export default function AchievementsPreview({ expanded = false }: { expanded?: b
                     <Trophy className="w-5 h-5 text-yellow-400" />
                     Achievements
                     {achievements.length > 0 && (
-                        <span className="text-xs text-gray-500 font-normal">
+                        <span className="text-xs text-black dark:text-gray-500 font-normal">
                             {mapped.filter((a) => a.isUnlocked).length}/{mapped.length}
                         </span>
                     )}
@@ -122,7 +122,7 @@ export default function AchievementsPreview({ expanded = false }: { expanded?: b
             </div>
 
             {displayItems.length === 0 && (
-                <p className="text-gray-500 text-sm text-center py-4">
+                <p className="text-black dark:text-gray-500 text-sm text-center py-4">
                     Start using QCanvas to earn your first achievements!
                 </p>
             )}

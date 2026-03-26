@@ -86,7 +86,7 @@ export default function ProfileHeader() {
                             <button
                                 id="open-edit-profile-btn"
                                 onClick={() => setEditOpen(true)}
-                                className="flex items-center gap-2 px-3.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-quantum-blue/40 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition-all group/btn"
+                                className="flex items-center gap-2 px-3.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-quantum-blue/40 rounded-lg text-sm font-medium text-black dark:text-gray-300 hover:text-white transition-all group/btn"
                             >
                                 <Edit2 className="w-3.5 h-3.5 group-hover/btn:text-quantum-blue-light transition-colors" />
                                 Edit Profile
@@ -103,28 +103,28 @@ export default function ProfileHeader() {
                                 Lv.{level}
                             </span>
                         </div>
-                        <p className="text-gray-400 text-sm mt-0.5">@{displayUser.username}</p>
+                        <p className="text-black dark:text-gray-400 text-sm mt-0.5">@{displayUser.username}</p>
                     </div>
 
                     {/* Bio */}
-                    <p className="mt-3 text-gray-300 text-sm leading-relaxed">
+                    <p className="mt-3 text-black dark:text-gray-300 text-sm leading-relaxed">
                         {bio}
                     </p>
 
 
 
                     {/* Metadata row */}
-                    <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
+                    <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-black dark:text-gray-500">
                         <div className="flex items-center gap-1.5">
-                            <Shield className="w-3.5 h-3.5 text-gray-500" />
+                            <Shield className="w-3.5 h-3.5 text-black dark:text-gray-500" />
                             <span>{badge}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-gray-500" />
+                            <MapPin className="w-3.5 h-3.5 text-black dark:text-gray-500" />
                             <span>Quantum Realm</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                            <Calendar className="w-3.5 h-3.5 text-black dark:text-gray-500" />
                             <span>Joined {joinDate}</span>
                         </div>
                     </div>

@@ -26,12 +26,12 @@ export default function StatsOverview({ achievements }: StatsOverviewProps) {
                     <Zap className="w-16 h-16 text-quantum-blue-light" />
                 </div>
                 <div className="relative z-10">
-                    <p className="text-gray-400 text-sm font-medium mb-1">Total XP Earned</p>
+                    <p className="text-black dark:text-gray-400 text-sm font-medium mb-1">Total XP Earned</p>
                     <div className="flex items-baseline gap-2">
                         <h3 className="text-3xl font-bold text-white tracking-tight">{totalXP.toLocaleString()}</h3>
                         <span className="text-xs text-quantum-blue-light font-bold">XP</span>
                     </div>
-                    <div className="mt-2 text-xs text-gray-500">From achievements only</div>
+                    <div className="mt-2 text-xs text-black dark:text-gray-500">From achievements only</div>
                 </div>
             </div>
 
@@ -41,10 +41,10 @@ export default function StatsOverview({ achievements }: StatsOverviewProps) {
                     <Trophy className="w-16 h-16 text-green-400" />
                 </div>
                 <div className="relative z-10">
-                    <p className="text-gray-400 text-sm font-medium mb-1">Badges Unlocked</p>
+                    <p className="text-black dark:text-gray-400 text-sm font-medium mb-1">Badges Unlocked</p>
                     <div className="flex items-baseline gap-2">
                         <h3 className="text-3xl font-bold text-white tracking-tight">{totalUnlocked}</h3>
-                        <span className="text-gray-500 text-lg">/ {achievements.length}</span>
+                        <span className="text-black dark:text-gray-500 text-lg">/ {achievements.length}</span>
                     </div>
                     <div className="mt-2 w-full bg-black/30 h-1.5 rounded-full overflow-hidden">
                         <div
@@ -61,7 +61,7 @@ export default function StatsOverview({ achievements }: StatsOverviewProps) {
                     <Star className="w-16 h-16 text-yellow-400" />
                 </div>
                 <div className="relative z-10">
-                    <p className="text-gray-400 text-sm font-medium mb-1">Rarest Unlock</p>
+                    <p className="text-black dark:text-gray-400 text-sm font-medium mb-1">Rarest Unlock</p>
                     {rarestUnlocked ? (
                         <div>
                             <h3 className="text-lg font-bold text-white truncate max-w-[180px]" title={rarestUnlocked.name}>
@@ -72,7 +72,7 @@ export default function StatsOverview({ achievements }: StatsOverviewProps) {
                             </span>
                         </div>
                     ) : (
-                        <div className="text-gray-500 text-sm italic py-2">No badges yet</div>
+                        <div className="text-black dark:text-gray-500 text-sm italic py-2">No badges yet</div>
                     )}
                 </div>
             </div>

@@ -65,7 +65,7 @@ export default function XPHistoryChart({ standalone = false }: { standalone?: bo
                                 )}
                             </div>
                         </div>
-                        <span className={`text-[10px] font-medium uppercase ${isToday ? "text-purple-400" : "text-gray-500"}`}>
+                        <span className={`text-[10px] font-medium uppercase ${isToday ? "text-purple-400" : "text-black dark:text-gray-500"}`}>
                             {item.day}
                         </span>
                     </div>
@@ -83,7 +83,7 @@ export default function XPHistoryChart({ standalone = false }: { standalone?: bo
                         Weekly Activity
                     </h3>
                     <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded">
+                        <span className="text-xs text-black dark:text-gray-400 bg-white/5 px-2 py-1 rounded">
                             {totalWeeklyXP > 0 ? `+${totalWeeklyXP} XP this week` : "Last 7 Days"}
                         </span>
                     </div>
@@ -101,7 +101,7 @@ export default function XPHistoryChart({ standalone = false }: { standalone?: bo
                     <span className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent">
                         +{totalWeeklyXP} XP
                     </span>
-                    <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold opacity-80">
+                    <span className="text-[10px] uppercase tracking-wider text-black dark:text-gray-500 font-semibold opacity-80">
                         This Week&apos;s Gains
                     </span>
                 </div>
