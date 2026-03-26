@@ -80,7 +80,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
                 <button
                   key={item.name}
                   onClick={() => scrollToFeatures?.('features')}
-                  className="text-gray-400 hover:text-white transition-colors duration-200 hover-underline text-sm font-medium"
+                  className="text-black dark:text-gray-400 hover:text-white transition-colors duration-200 hover-underline text-sm font-medium"
                 >
                   {item.name}
                 </button>
@@ -91,7 +91,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
                   className={
                     isActive(item.path)
                       ? 'text-white font-medium text-sm relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-gradient-to-r after:from-indigo-500 after:to-cyan-500 after:rounded-full'
-                      : 'text-gray-400 hover:text-white transition-colors duration-200 hover-underline text-sm font-medium'
+                      : 'text-black dark:text-gray-400 hover:text-white transition-colors duration-200 hover-underline text-sm font-medium'
                   }
                 >
                   {item.name}
@@ -105,7 +105,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
               className="p-2 rounded-xl bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition-all duration-300"
               title="Toggle theme"
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-gray-400" /> : <Moon className="w-4 h-4 text-gray-400" />}
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-black dark:text-gray-400" /> : <Moon className="w-4 h-4 text-black dark:text-gray-400" />}
             </button>
 
             {/* Auth Buttons */}
@@ -121,7 +121,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
                 <>
                   <Link
                     href="/login"
-                    className="text-gray-400 hover:text-white transition-colors duration-200 font-medium text-sm"
+                    className="text-black dark:text-gray-400 hover:text-white transition-colors duration-200 font-medium text-sm"
                   >
                     Sign In
                   </Link>
@@ -157,7 +157,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
                       scrollToFeatures?.('features')
                       setIsMenuOpen(false)
                     }}
-                    className="block w-full text-left text-gray-400 hover:text-white transition-colors duration-200"
+                    className="block w-full text-left text-black dark:text-gray-400 hover:text-white transition-colors duration-200"
                   >
                     {item.name}
                   </button>
@@ -168,7 +168,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
                     className={
                       isActive(item.path)
                         ? 'block text-white font-medium'
-                        : 'block text-gray-400 hover:text-white transition-colors duration-200'
+                        : 'block text-black dark:text-gray-400 hover:text-white transition-colors duration-200'
                     }
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -180,7 +180,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
               <div className="flex items-center justify-between pt-4 border-t border-white/5">
                 <button
                   onClick={toggleTheme}
-                  className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors duration-200"
+                  className="flex items-center space-x-2 text-black dark:text-gray-400 hover:text-white transition-colors duration-200"
                 >
                   {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                   <span>Theme</span>
@@ -192,7 +192,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
                     </Link>
                   ) : (
                     <>
-                      <Link href="/login" className="text-gray-400 hover:text-white transition-colors duration-200">
+                      <Link href="/login" className="text-black dark:text-gray-400 hover:text-white transition-colors duration-200">
                         Sign In
                       </Link>
                       <Link href="/login" className="btn-quantum text-sm px-3 py-1.5">

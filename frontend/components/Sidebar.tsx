@@ -330,7 +330,7 @@ export default function Sidebar() {
       case 'json':
         return <FileText className="w-4 h-4 text-green-400" />
       default:
-        return <FileIcon className="w-4 h-4 text-gray-400" />
+        return <FileIcon className="w-4 h-4 text-black dark:text-gray-400" />
     }
   }
 
@@ -375,7 +375,7 @@ export default function Sidebar() {
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {/* Root (My Files) */}
               <div
-                className={`flex items-center space-x-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${activeProjectId === null ? 'bg-quantum-blue-light/20 text-white' : 'text-gray-400 hover:bg-editor-border/30'}`}
+                className={`flex items-center space-x-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${activeProjectId === null ? 'bg-quantum-blue-light/20 text-white' : 'text-black dark:text-gray-400 hover:bg-editor-border/30'}`}
                 onClick={() => handleProjectClick(null)}
               >
                 <Folder className="w-4 h-4 text-quantum-blue-light" />
@@ -386,12 +386,12 @@ export default function Sidebar() {
               {projects.map(project => (
                 <div
                   key={project.id}
-                  className={`flex items-center space-x-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${activeProjectId === project.id ? 'bg-quantum-blue-light/20 text-white' : 'text-gray-400 hover:bg-editor-border/30'}`}
+                  className={`flex items-center space-x-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${activeProjectId === project.id ? 'bg-quantum-blue-light/20 text-white' : 'text-black dark:text-gray-400 hover:bg-editor-border/30'}`}
                   onClick={() => handleProjectClick(project.id)}
                 >
                   <Folder className={`w-4 h-4 ${project.is_public ? 'text-green-400' : 'text-yellow-400'}`} />
                   <span className="text-sm truncate flex-1">{project.name}</span>
-                  {project.is_public && <Globe className="w-3 h-3 text-gray-500" />}
+                  {project.is_public && <Globe className="w-3 h-3 text-black dark:text-gray-500" />}
                 </div>
               ))}
 
@@ -407,7 +407,7 @@ export default function Sidebar() {
                     autoFocus
                   />
                   <div className="flex items-center justify-between">
-                    <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
+                    <label className="flex items-center space-x-2 text-xs text-black dark:text-gray-400 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={newProjectIsPublic}
@@ -474,7 +474,7 @@ export default function Sidebar() {
         {isFilesExpanded && (
           <div className="space-y-2">
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black dark:text-gray-400" />
               <input
                 type="text"
                 placeholder="Search files..."
@@ -506,7 +506,7 @@ export default function Sidebar() {
             <div className="p-3 border-b border-editor-border bg-editor-bg/50">
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center space-x-2">
-                  <FileIcon className="w-4 h-4 text-gray-400" />
+                  <FileIcon className="w-4 h-4 text-black dark:text-gray-400" />
                   <input
                     type="text"
                     value={newFileName}
@@ -524,7 +524,7 @@ export default function Sidebar() {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
+                  <label className="flex items-center space-x-2 text-xs text-black dark:text-gray-400 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={newFileIsShared}
@@ -625,7 +625,7 @@ export default function Sidebar() {
 
                 {/* File Details */}
                 {activeFileId === file.id && (
-                  <div className="px-6 py-3 text-xs text-gray-400 border-b border-editor-border bg-editor-bg/30 rounded-lg mt-1">
+                  <div className="px-6 py-3 text-xs text-black dark:text-gray-400 border-b border-editor-border bg-editor-bg/30 rounded-lg mt-1">
                     <div className="flex items-center space-x-2 mb-1">
                       <span className="font-medium">Language:</span>
                       <span className="px-2 py-0.5 bg-editor-border rounded text-white">{file.language}</span>
@@ -636,7 +636,7 @@ export default function Sidebar() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="font-medium">Shared:</span>
-                      <span className={file.isShared ? "text-green-400" : "text-gray-500"}>{file.isShared ? "Yes" : "No"}</span>
+                      <span className={file.isShared ? "text-green-400" : "text-black dark:text-gray-500"}>{file.isShared ? "Yes" : "No"}</span>
                     </div>
                   </div>
                 )}
@@ -646,7 +646,7 @@ export default function Sidebar() {
 
           {/* Empty State */}
           {filteredFiles.length === 0 && (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-black dark:text-gray-500">
               <FileIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p className="text-sm mb-2">
                 {searchTerm || filterType !== 'all' ? 'No files match your search' : 'No files yet'}
@@ -695,7 +695,7 @@ export default function Sidebar() {
                   </div>
                   <p className="text-sm text-editor-text mb-3">{template.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">{template.language}</span>
+                    <span className="text-xs text-black dark:text-gray-400">{template.language}</span>
                     <button className="text-xs text-quantum-blue-light hover:underline">
                       Use Template
                     </button>

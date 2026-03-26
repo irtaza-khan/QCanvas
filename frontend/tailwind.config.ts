@@ -87,7 +87,7 @@ const config: Config = {
           bg: '#1e1e1e',
           sidebar: '#252526',
           border: '#3e3e42',
-          text: '#d4d4d4',
+          text: 'var(--editor-text)',
           accent: '#007acc',
           'bg-light': '#2d2d30',
           'border-light': '#4e4e52'

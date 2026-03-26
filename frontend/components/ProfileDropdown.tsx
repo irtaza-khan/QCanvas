@@ -75,7 +75,7 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
 
                 {/* Name & Badge (Hidden on mobile) */}
                 <div className="hidden lg:flex flex-col items-start">
-                    <span className="text-xs font-semibold text-gray-300 group-hover:text-white transition-colors">
+                    <span className="text-xs font-semibold text-black dark:text-gray-300 group-hover:text-white transition-colors">
                         {user.username}
                     </span>
                     <span className="text-[10px] text-quantum-blue-light flex items-center gap-1">
@@ -84,7 +84,7 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
                     </span>
                 </div>
 
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-black dark:text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Dropdown Menu */}
@@ -98,14 +98,14 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
                             </div>
                             <div className="flex-1 overflow-hidden">
                                 <h3 className="font-bold text-white truncate">{user.full_name}</h3>
-                                <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                                <p className="text-xs text-black dark:text-gray-400 truncate">{user.email}</p>
                             </div>
                         </div>
 
                         {/* Gamification Progress */}
                         <div className="space-y-1.5">
                             <div className="flex justify-between text-xs">
-                                <span className="text-gray-300 font-medium">Level {level}</span>
+                                <span className="text-black dark:text-gray-300 font-medium">Level {level}</span>
                                 <span className="text-quantum-blue-light">
                                     {formatXP(Math.max(0, xp - currentLevelXp))} / {formatXP(Math.max(0, nextLevelXp - currentLevelXp))} XP
                                 </span>
@@ -123,19 +123,19 @@ export default function ProfileDropdown({ onLogout }: ProfileDropdownProps) {
                     <div className="p-2 space-y-1">
                         <Link
                             href="/profile"
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-black dark:text-gray-300 hover:bg-white/5 hover:text-white transition-colors group"
                             onClick={() => setIsOpen(false)}
                         >
-                            <User className="w-4 h-4 text-gray-400 group-hover:text-quantum-blue-light" />
+                            <User className="w-4 h-4 text-black dark:text-gray-400 group-hover:text-quantum-blue-light" />
                             <span>View Profile</span>
                         </Link>
 
                         <Link
                             href="/achievements"
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-black dark:text-gray-300 hover:bg-white/5 hover:text-white transition-colors group"
                             onClick={() => setIsOpen(false)}
                         >
-                            <Award className="w-4 h-4 text-gray-400 group-hover:text-yellow-400" />
+                            <Award className="w-4 h-4 text-black dark:text-gray-400 group-hover:text-yellow-400" />
                             <span>Achievements</span>
                         </Link>
 

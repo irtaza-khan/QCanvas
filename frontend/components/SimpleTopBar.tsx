@@ -63,7 +63,7 @@ export default function SimpleTopBar() {
                 {/* Theme Toggle */}
                 <button
                     onClick={toggleTheme}
-                    className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="p-2 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
                     title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
                 >
                     {theme === 'dark' ? (

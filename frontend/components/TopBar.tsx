@@ -1098,7 +1098,7 @@ export default function TopBar({
 
                     {/* Theme Selection */}
                     <div className="space-y-2 mb-4 pb-4 border-b border-white/10">
-                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                      <label className="text-xs font-medium text-black dark:text-gray-400 uppercase tracking-wide">
                         Theme
                       </label>
                       <div className="grid grid-cols-2 gap-2">
@@ -1111,7 +1111,7 @@ export default function TopBar({
                           }}
                           className={`flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg border transition-all duration-200 ${theme === 'dark'
                             ? 'bg-quantum-blue-light/20 border-quantum-blue-light text-white shadow-lg shadow-quantum-blue-light/20'
-                            : 'bg-editor-bg/50 border-editor-border text-gray-400 hover:border-quantum-blue-light/50'
+                            : 'bg-editor-bg/50 border-editor-border text-black dark:text-gray-400 hover:border-quantum-blue-light/50'
                             }`}
                         >
                           <Moon className="w-4 h-4" />
@@ -1126,7 +1126,7 @@ export default function TopBar({
                           }}
                           className={`flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg border transition-all duration-200 ${theme === 'light'
                             ? 'bg-yellow-500/20 border-yellow-500 text-white shadow-lg shadow-yellow-500/20'
-                            : 'bg-editor-bg/50 border-editor-border text-gray-400 hover:border-yellow-500/50'
+                            : 'bg-editor-bg/50 border-editor-border text-black dark:text-gray-400 hover:border-yellow-500/50'
                             }`}
                         >
                           <Sun className="w-4 h-4" />
@@ -1137,7 +1137,7 @@ export default function TopBar({
 
                     {/* Additional Settings */}
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                      <label className="text-xs font-medium text-black dark:text-gray-400 uppercase tracking-wide">
                         Preferences
                       </label>
 
@@ -1150,7 +1150,7 @@ export default function TopBar({
                         className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
                       >
                         <div className="flex items-center space-x-2">
-                          <Save className="w-4 h-4 text-gray-400" />
+                          <Save className="w-4 h-4 text-black dark:text-gray-400" />
                           <span className="text-sm text-white">Auto-save</span>
                         </div>
                         <div className="relative inline-flex items-center">
@@ -1169,7 +1169,7 @@ export default function TopBar({
                         className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
                       >
                         <div className="flex items-center space-x-2">
-                          <Code className="w-4 h-4 text-gray-400" />
+                          <Code className="w-4 h-4 text-black dark:text-gray-400" />
                           <span className="text-sm text-white">Format on save</span>
                         </div>
                         <div className="relative inline-flex items-center">
@@ -1188,7 +1188,7 @@ export default function TopBar({
                         className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors w-full"
                       >
                         <div className="flex items-center space-x-2">
-                          <Lightbulb className="w-4 h-4 text-gray-400" />
+                          <Lightbulb className="w-4 h-4 text-black dark:text-gray-400" />
                           <span className="text-sm text-white">Show hover explanations</span>
                         </div>
                         <div className="relative inline-flex items-center">
