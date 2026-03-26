@@ -14,7 +14,7 @@ import CircuitVisualization from './CircuitVisualization'
 const CircuitVisualization3D = dynamic(() => import('./CircuitVisualization3D'), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-full text-gray-500">
+    <div className="flex items-center justify-center h-full text-black dark:text-gray-500">
       Loading 3D View...
     </div>
   ),
@@ -406,11 +406,11 @@ export default function EditorPane() {
       <div className="editor-pane">
         <div className="flex-1 flex items-center justify-center bg-editor-bg">
           <div className="text-center">
-            <FileIcon className="w-16 h-16 mx-auto mb-4 text-gray-500 opacity-50" />
+            <FileIcon className="w-16 h-16 mx-auto mb-4 text-black dark:text-gray-500 opacity-50" />
             <h3 className="text-lg font-medium text-editor-text mb-2">
               No File Selected
             </h3>
-            <p className="text-gray-500 text-sm">
+            <p className="text-black dark:text-gray-500 text-sm">
               Select a file from the sidebar to start editing
             </p>
           </div>
@@ -426,7 +426,7 @@ export default function EditorPane() {
         <div className="flex items-center space-x-2">
           <Code className="w-4 h-4 text-editor-text" />
           <span className="text-sm font-medium text-white">{activeFile.name}</span>
-          <span className="text-xs text-gray-500 bg-editor-bg px-2 py-1 rounded">
+          <span className="text-xs text-black dark:text-gray-500 bg-editor-bg px-2 py-1 rounded">
             {activeFile.language}
           </span>
         </div>
@@ -459,7 +459,7 @@ export default function EditorPane() {
                   <button
                     onClick={() => setIs3DMode(false)}
                     className={`relative z-10 px-3 py-1 text-xs font-medium rounded-sm transition-colors ${
-                      !is3DMode ? 'text-white' : 'text-gray-400 hover:text-gray-200'
+                      !is3DMode ? 'text-white' : 'text-black dark:text-gray-400 hover:text-gray-200'
                     }`}
                   >
                     2D
@@ -467,7 +467,7 @@ export default function EditorPane() {
                   <button
                     onClick={() => setIs3DMode(true)}
                     className={`relative z-10 px-3 py-1 text-xs font-medium rounded-sm transition-colors ${
-                      is3DMode ? 'text-white' : 'text-gray-400 hover:text-gray-200'
+                      is3DMode ? 'text-white' : 'text-black dark:text-gray-400 hover:text-gray-200'
                     }`}
                   >
                     3D
@@ -503,7 +503,7 @@ export default function EditorPane() {
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-medium text-white">Circuit Visualization</h4>
               {isParsing && (
-                <span className="text-xs text-gray-400 flex items-center">
+                <span className="text-xs text-black dark:text-gray-400 flex items-center">
                   <div className="w-3 h-3 border border-quantum-blue-light border-t-transparent rounded-full animate-spin mr-1"></div>
                   Parsing...
                 </span>

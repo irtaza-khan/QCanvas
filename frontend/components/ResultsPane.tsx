@@ -446,7 +446,7 @@ export default function ResultsPane() {
       case 'info':
         return <AlertCircle className="w-4 h-4 text-blue-400" />
       default:
-        return <AlertCircle className="w-4 h-4 text-gray-400" />
+        return <AlertCircle className="w-4 h-4 text-black dark:text-gray-400" />
     }
   }
 
@@ -459,7 +459,7 @@ export default function ResultsPane() {
       case 'info':
         return 'text-blue-400'
       default:
-        return 'text-gray-400'
+        return 'text-black dark:text-gray-400'
     }
   }
 
@@ -568,7 +568,7 @@ export default function ResultsPane() {
         {activeTab === 'console' && (
           <div className="h-full overflow-y-auto results-content">
             {logs.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-black dark:text-gray-500">
                 <Terminal className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No console output yet</p>
               </div>
@@ -576,7 +576,7 @@ export default function ResultsPane() {
               <div className="space-y-1">
                 {logs.map((log) => (
                   <div key={log.id} className="flex items-start space-x-3 py-1 hover:bg-editor-border hover:bg-opacity-50 rounded px-2">
-                    <span className="text-xs text-gray-500 mt-0.5 min-w-[60px]">
+                    <span className="text-xs text-black dark:text-gray-500 mt-0.5 min-w-[60px]">
                       {formatTimestamp(log.timestamp)}
                     </span>
                     <span className={`${getLogColor(log.type)} mt-0.5`}>
@@ -623,7 +623,7 @@ export default function ResultsPane() {
                         </span>
                       </div>
                       {hybridResult.execution_time && (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-black dark:text-gray-400">
                           {hybridResult.execution_time}
                         </span>
                       )}
@@ -704,14 +704,14 @@ export default function ResultsPane() {
                         {hybridResult.simulation_results.map((result, idx) => (
                           <div key={idx} className="bg-editor-bg border border-editor-border rounded-lg p-3">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-medium text-gray-400">
+                              <span className="text-xs font-medium text-black dark:text-gray-400">
                                 Simulation #{idx + 1}
                               </span>
                               <div className="flex items-center space-x-2 text-xs">
                                 <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded">
                                   {result.backend}
                                 </span>
-                                <span className="text-gray-400">
+                                <span className="text-black dark:text-gray-400">
                                   {result.shots} shots
                                 </span>
                               </div>
@@ -723,7 +723,7 @@ export default function ResultsPane() {
                                 return sortedStates.map(([state, count]) => (
                                   <div key={state} className="flex items-center justify-between px-2 py-1 bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded">
                                     <span className="font-mono text-white dark:text-white text-gray-800">|{state}⟩</span>
-                                    <span className="text-gray-300 dark:text-gray-300 text-gray-700">
+                                    <span className="text-black dark:text-gray-300 dark:text-gray-300 text-gray-700">
                                       {count} ({((count / result.shots) * 100).toFixed(1)}%)
                                     </span>
                                   </div>
@@ -781,22 +781,22 @@ export default function ResultsPane() {
                     <h4 className="text-sm font-medium text-white mb-2">Circuit Information</h4>
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
-                        <span className="text-gray-400">Qubits:</span>
+                        <span className="text-black dark:text-gray-400">Qubits:</span>
                         <span className="text-white ml-2">{simulationResults.metadata.n_qubits}</span>
                       </div>
                       <div>
-                        <span className="text-gray-400">Backend:</span>
+                        <span className="text-black dark:text-gray-400">Backend:</span>
                         <span className="text-white ml-2">{simulationResults.metadata.backend}</span>
                       </div>
                       <div>
-                        <span className="text-gray-400">Shots:</span>
+                        <span className="text-black dark:text-gray-400">Shots:</span>
                         <span className="text-white ml-2">{simulationResults.metadata.shots}</span>
                       </div>
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-black dark:text-gray-500">
                   <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50 text-yellow-400" />
                   <p className="text-sm">
                     {executionMode === 'hybrid'
@@ -805,7 +805,7 @@ export default function ResultsPane() {
                   </p>
                   {executionMode === 'hybrid' && (
                     <div className="mt-4 text-left max-w-md mx-auto bg-editor-bg p-4 rounded-lg border border-editor-border">
-                      <p className="text-xs text-gray-400 mb-3">Example hybrid code:</p>
+                      <p className="text-xs text-black dark:text-gray-400 mb-3">Example hybrid code:</p>
                       <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap">
                         {`import cirq
 from qcanvas import compile
@@ -908,21 +908,21 @@ print(result.counts)`}
                 <div className="mt-4 pt-4 border-t border-editor-border">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-400">Total Shots:</span>
+                      <span className="text-black dark:text-gray-400">Total Shots:</span>
                       <span className="text-white ml-2 font-mono">{quantumResults.shots}</span>
                     </div>
                     <div>
-                      <span className="text-gray-400">Backend:</span>
+                      <span className="text-black dark:text-gray-400">Backend:</span>
                       <span className="text-white ml-2 font-mono">{quantumResults.backend}</span>
                     </div>
                     {simulationResults?.metadata.visitor && (
                       <div>
-                        <span className="text-gray-400">Visitor:</span>
+                        <span className="text-black dark:text-gray-400">Visitor:</span>
                         <span className="text-white ml-2 font-mono">{simulationResults.metadata.visitor}</span>
                       </div>
                     )}
                     <div>
-                      <span className="text-gray-400">States:</span>
+                      <span className="text-black dark:text-gray-400">States:</span>
                       <span className="text-white ml-2 font-mono">{Object.keys(quantumResults.counts).length}</span>
                     </div>
                   </div>
@@ -939,13 +939,13 @@ print(result.counts)`}
                     const sortedStates = getAllStatesWithCounts(probsAsCounts, 0, shots)
                     return (
                       <div className="mt-4 pt-4 border-t border-editor-border">
-                        <h5 className="text-xs font-medium text-gray-400 mb-2">State Probabilities</h5>
+                        <h5 className="text-xs font-medium text-black dark:text-gray-400 mb-2">State Probabilities</h5>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                           {sortedStates.map(([state]) => {
                             const prob = simulationResults.probs![state] || 0
                             return (
                               <div key={state} className="bg-editor-bg border border-editor-border rounded px-2 py-1">
-                                <span className="text-gray-400">|{state}⟩:</span>
+                                <span className="text-black dark:text-gray-400">|{state}⟩:</span>
                                 <span className="text-white ml-1 font-mono">{(prob * 100).toFixed(2)}%</span>
                               </div>
                             )
@@ -957,7 +957,7 @@ print(result.counts)`}
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-black dark:text-gray-500">
                 <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50 text-yellow-400" />
                 <p className="text-sm">No execution results available. Run the circuit to see histogram.</p>
               </div>
@@ -968,7 +968,7 @@ print(result.counts)`}
         {activeTab === 'qasm' && (
           <div className="h-full overflow-y-auto results-content">
             {!compiledQasm ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-black dark:text-gray-500">
                 <FileCode2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No compiled OpenQASM yet. Select &quot;Compile&quot; mode and run to generate QASM.</p>
               </div>
@@ -983,7 +983,7 @@ print(result.counts)`}
         {activeTab === 'errors' && (
           <div className="h-full overflow-y-auto results-content">
             {errors.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-black dark:text-gray-500">
                 <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-50 text-green-400" />
                 <p className="text-sm">No errors found! Your code looks good.</p>
               </div>
@@ -1028,7 +1028,7 @@ print(result.counts)`}
                               <p className={`text-sm font-medium ${getErrorColor(error.severity)}`}>
                                 {error.message}
                               </p>
-                              <div className="flex items-center space-x-4 mt-1 text-xs text-gray-400">
+                              <div className="flex items-center space-x-4 mt-1 text-xs text-black dark:text-gray-400">
                                 <span>File: {error.file}</span>
                                 {error.line > 0 && <span>Line {error.line}:{error.column}</span>}
                                 <span className="px-2 py-1 bg-editor-border rounded text-white capitalize">
@@ -1041,16 +1041,16 @@ print(result.counts)`}
                               className="p-1 hover:bg-editor-border rounded transition-colors ml-2"
                               title="Copy error message"
                             >
-                              <Copy className="w-3 h-3 text-gray-400" />
+                              <Copy className="w-3 h-3 text-black dark:text-gray-400" />
                             </button>
                           </div>
 
                           {/* Error details */}
                           <div className="mt-3 bg-gray-900 border border-gray-700 rounded p-2">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-gray-400">Error Details:</span>
+                              <span className="text-xs text-black dark:text-gray-400">Error Details:</span>
                               {error.line > 0 && (
-                                <span className="text-xs text-gray-500">Line {error.line}</span>
+                                <span className="text-xs text-black dark:text-gray-500">Line {error.line}</span>
                               )}
                             </div>
                             <pre className="text-xs text-red-300 font-mono bg-red-900/20 px-2 py-1 rounded whitespace-pre-wrap break-words">
@@ -1098,13 +1098,13 @@ print(result.counts)`}
                       }`}>
                       {executionStats.execution.status}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">Status</div>
+                    <div className="text-xs text-black dark:text-gray-400 mt-1">Status</div>
                   </div>
                 </div>
                 <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30">
                   <div className="flex flex-col items-center justify-center">
                     <div className="text-2xl font-bold text-blue-400">{executionStats.execution.totalTime}</div>
-                    <div className="text-xs text-gray-400 mt-1">Total Time</div>
+                    <div className="text-xs text-black dark:text-gray-400 mt-1">Total Time</div>
                   </div>
                 </div>
                 <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
@@ -1114,7 +1114,7 @@ print(result.counts)`}
                         ? `${executionStats.execution.fidelity.toFixed(1)}%`
                         : 'N/A'}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">Fidelity</div>
+                    <div className="text-xs text-black dark:text-gray-400 mt-1">Fidelity</div>
                   </div>
                 </div>
               </div>
@@ -1131,19 +1131,19 @@ print(result.counts)`}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-3 rounded-lg bg-white/5">
                       <div className="text-lg font-semibold text-cyan-400">{executionStats.execution.simulationTime}</div>
-                      <div className="text-xs text-gray-400">Simulation</div>
+                      <div className="text-xs text-black dark:text-gray-400">Simulation</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-white/5">
                       <div className="text-lg font-semibold text-emerald-400">{executionStats.execution.shots.toLocaleString()}</div>
-                      <div className="text-xs text-gray-400">Total Shots</div>
+                      <div className="text-xs text-black dark:text-gray-400">Total Shots</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-white/5">
                       <div className="text-lg font-semibold text-amber-400">{executionStats.execution.memoryUsage}</div>
-                      <div className="text-xs text-gray-400">Memory</div>
+                      <div className="text-xs text-black dark:text-gray-400">Memory</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-white/5">
                       <div className="text-lg font-semibold text-rose-400">{executionStats.execution.cpuUsage}</div>
-                      <div className="text-xs text-gray-400">CPU</div>
+                      <div className="text-xs text-black dark:text-gray-400">CPU</div>
                     </div>
                   </div>
 
@@ -1151,18 +1151,18 @@ print(result.counts)`}
                   <div className="mt-4 pt-4 border-t border-editor-border flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center">
-                        <span className="text-xs text-gray-400 mr-2">Backend:</span>
+                        <span className="text-xs text-black dark:text-gray-400 mr-2">Backend:</span>
                         <span className="px-2 py-1 rounded-md bg-indigo-500/20 text-indigo-300 text-xs font-mono">{executionStats.execution.backend}</span>
                       </div>
                       {simulationResults?.metadata.visitor && (
                         <div className="flex items-center">
-                          <span className="text-xs text-gray-400 mr-2">Visitor:</span>
+                          <span className="text-xs text-black dark:text-gray-400 mr-2">Visitor:</span>
                           <span className="px-2 py-1 rounded-md bg-violet-500/20 text-violet-300 text-xs font-mono">{simulationResults.metadata.visitor}</span>
                         </div>
                       )}
                     </div>
                     <div className="flex items-center">
-                      <span className="text-xs text-gray-400 mr-2">Successful:</span>
+                      <span className="text-xs text-black dark:text-gray-400 mr-2">Successful:</span>
                       <span className="text-sm font-medium text-green-400">{executionStats.execution.successfulShots.toLocaleString()}</span>
                     </div>
                   </div>
@@ -1182,21 +1182,21 @@ print(result.counts)`}
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       <div className="text-center p-3 rounded-lg bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 border border-indigo-500/20">
                         <div className="text-xl font-bold text-indigo-400">{Object.keys(simulationResults.counts).length}</div>
-                        <div className="text-xs text-gray-400">Unique States</div>
+                        <div className="text-xs text-black dark:text-gray-400">Unique States</div>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-gradient-to-br from-teal-500/10 to-teal-600/5 border border-teal-500/20">
                         <div className="text-xl font-bold text-teal-400">{Object.values(simulationResults.counts).reduce((a, b) => a + b, 0).toLocaleString()}</div>
-                        <div className="text-xs text-gray-400">Total Counts</div>
+                        <div className="text-xs text-black dark:text-gray-400">Total Counts</div>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20">
                         <div className="text-xl font-bold text-pink-400">{simulationResults.metadata.n_qubits}</div>
-                        <div className="text-xs text-gray-400">Qubits</div>
+                        <div className="text-xs text-black dark:text-gray-400">Qubits</div>
                       </div>
                     </div>
 
                     {/* Top States */}
                     <div className="space-y-2">
-                      <h5 className="text-xs font-medium text-gray-400">Top Measurement Outcomes</h5>
+                      <h5 className="text-xs font-medium text-black dark:text-gray-400">Top Measurement Outcomes</h5>
                       {Object.entries(simulationResults.counts)
                         .sort(([, a], [, b]) => b - a)
                         .slice(0, 4)
@@ -1212,7 +1212,7 @@ print(result.counts)`}
                                   style={{ width: `${percentage}%` }}
                                 />
                               </div>
-                              <span className="text-sm text-gray-300 w-20 text-right">{percentage.toFixed(1)}%</span>
+                              <span className="text-sm text-black dark:text-gray-300 w-20 text-right">{percentage.toFixed(1)}%</span>
                             </div>
                           )
                         })}
@@ -1233,36 +1233,36 @@ print(result.counts)`}
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
                     <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
                       <div className="text-lg font-semibold text-white">{executionStats.circuit.depth}</div>
-                      <div className="text-xs text-gray-400">Depth</div>
+                      <div className="text-xs text-black dark:text-gray-400">Depth</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
                       <div className="text-lg font-semibold text-white">{executionStats.circuit.width}</div>
-                      <div className="text-xs text-gray-400">Qubits</div>
+                      <div className="text-xs text-black dark:text-gray-400">Qubits</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
                       <div className={`text-lg font-semibold ${executionStats.circuit.complexity === 'High' ? 'text-red-400' :
                         executionStats.circuit.complexity === 'Medium' ? 'text-yellow-400' : 'text-green-400'
                         }`}>{executionStats.circuit.complexity}</div>
-                      <div className="text-xs text-gray-400">Complexity</div>
+                      <div className="text-xs text-black dark:text-gray-400">Complexity</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
                       <div className="text-lg font-semibold text-cyan-400">{executionStats.circuit.entanglingGates}</div>
-                      <div className="text-xs text-gray-400">Entangling</div>
+                      <div className="text-xs text-black dark:text-gray-400">Entangling</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
                       <div className="text-lg font-semibold text-violet-400">{executionStats.circuit.singleQubitGates}</div>
-                      <div className="text-xs text-gray-400">Single-Qubit</div>
+                      <div className="text-xs text-black dark:text-gray-400">Single-Qubit</div>
                     </div>
                   </div>
 
                   {/* Gate Distribution */}
                   {Object.keys(executionStats.circuit.gates).length > 0 && (
                     <div className="pt-3 border-t border-editor-border">
-                      <h5 className="text-xs font-medium text-gray-400 mb-3">Gate Distribution</h5>
+                      <h5 className="text-xs font-medium text-black dark:text-gray-400 mb-3">Gate Distribution</h5>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {Object.entries(executionStats.circuit.gates).map(([gate, count]) => (
                           <div key={gate} className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5">
-                            <span className="text-xs font-mono text-gray-300">{gate.toUpperCase()}</span>
+                            <span className="text-xs font-mono text-black dark:text-gray-300">{gate.toUpperCase()}</span>
                             <span className="text-sm font-semibold text-white">{count}</span>
                           </div>
                         ))}
@@ -1285,7 +1285,7 @@ print(result.counts)`}
                     {/* Compilation Stats */}
                     <div className="space-y-3">
                       <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
-                        <span className="text-sm text-gray-400">Status</span>
+                        <span className="text-sm text-black dark:text-gray-400">Status</span>
                         <span className={`px-2 py-1 rounded-md text-xs font-medium ${executionStats.compilation.status === 'success' || executionStats.compilation.status === 'completed'
                           ? 'bg-green-500/20 text-green-400'
                           : executionStats.compilation.status === 'pending'
@@ -1294,17 +1294,17 @@ print(result.counts)`}
                           }`}>{executionStats.compilation.status}</span>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
-                        <span className="text-sm text-gray-400">Time</span>
+                        <span className="text-sm text-black dark:text-gray-400">Time</span>
                         <span className="text-sm font-medium text-white">{executionStats.compilation.time}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
                           <div className="text-lg font-bold text-yellow-400">{executionStats.compilation.warnings}</div>
-                          <div className="text-xs text-gray-400">Warnings</div>
+                          <div className="text-xs text-black dark:text-gray-400">Warnings</div>
                         </div>
                         <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
                           <div className="text-lg font-bold text-red-400">{executionStats.compilation.errors}</div>
-                          <div className="text-xs text-gray-400">Errors</div>
+                          <div className="text-xs text-black dark:text-gray-400">Errors</div>
                         </div>
                       </div>
                     </div>
@@ -1312,20 +1312,20 @@ print(result.counts)`}
                     {/* Optimization Stats */}
                     <div className="space-y-3">
                       <div className="p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
-                        <div className="text-xs text-gray-400 mb-2">Optimization Level {executionStats.optimization.level}</div>
+                        <div className="text-xs text-black dark:text-gray-400 mb-2">Optimization Level {executionStats.optimization.level}</div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <div className="text-lg font-bold text-green-400">-{executionStats.optimization.gatesReduced}</div>
-                            <div className="text-xs text-gray-400">Gates Reduced</div>
+                            <div className="text-xs text-black dark:text-gray-400">Gates Reduced</div>
                           </div>
                           <div>
                             <div className="text-lg font-bold text-green-400">-{executionStats.optimization.depthReduced}</div>
-                            <div className="text-xs text-gray-400">Depth Reduced</div>
+                            <div className="text-xs text-black dark:text-gray-400">Depth Reduced</div>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
-                        <span className="text-sm text-gray-400">Opt. Time</span>
+                        <span className="text-sm text-black dark:text-gray-400">Opt. Time</span>
                         <span className="text-sm font-medium text-white">{executionStats.optimization.timeSpent}</span>
                       </div>
                       {executionStats.optimization.techniques.length > 0 && (

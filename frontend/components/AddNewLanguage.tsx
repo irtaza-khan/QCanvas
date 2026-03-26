@@ -185,7 +185,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                     ? 'bg-quantum-blue-light text-white' 
                     : currentStep === step && !isSubmitted
                     ? 'bg-white/20 text-white border-2 border-quantum-blue-light'
-                    : 'bg-white/10 text-gray-400'
+                    : 'bg-white/10 text-black dark:text-gray-400'
                 }`}>
                   {isSubmitted && step === 3 ? (
                     <CheckCircle className="w-5 h-5" />
@@ -203,13 +203,13 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
           </div>
           
           <div className="flex justify-between mt-2 text-sm">
-            <span className={currentStep >= 1 ? 'text-quantum-blue-light' : 'text-gray-400'}>
+            <span className={currentStep >= 1 ? 'text-quantum-blue-light' : 'text-black dark:text-gray-400'}>
               Language Details
             </span>
-            <span className={currentStep >= 2 ? 'text-quantum-blue-light' : 'text-gray-400'}>
+            <span className={currentStep >= 2 ? 'text-quantum-blue-light' : 'text-black dark:text-gray-400'}>
               Upload Converter
             </span>
-            <span className={currentStep >= 3 || isSubmitted ? 'text-quantum-blue-light' : 'text-gray-400'}>
+            <span className={currentStep >= 3 || isSubmitted ? 'text-quantum-blue-light' : 'text-black dark:text-gray-400'}>
               Review & Submit
             </span>
           </div>
@@ -225,7 +225,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-2">Language Information</h3>
-                      <p className="text-gray-300 text-sm">
+                      <p className="text-black dark:text-gray-300 text-sm">
                         Tell us about the quantum programming language you&apos;d like to add to Q-Canvas.
                       </p>
                     </div>
@@ -245,7 +245,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                           className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-quantum-blue-light focus:border-transparent transition-all"
                           autoFocus
                         />
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-black dark:text-gray-400 mt-1">
                           This will be used to identify your language in the converter system
                         </p>
                       </div>
@@ -277,7 +277,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-2">Upload Converter File</h3>
-                      <p className="text-gray-300 text-sm">
+                      <p className="text-black dark:text-gray-300 text-sm">
                         Upload your Python converter file that translates {formData.languageName} to OpenQASM 3.0.
                       </p>
                     </div>
@@ -310,7 +310,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                           <CheckCircle className="w-12 h-12 text-green-400 mx-auto" />
                           <div>
                             <p className="text-white font-medium">{formData.converterFile.name}</p>
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-black dark:text-gray-400">
                               {(formData.converterFile.size / 1024).toFixed(1)} KB
                             </p>
                           </div>
@@ -326,12 +326,12 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+                          <Upload className="w-12 h-12 text-black dark:text-gray-400 mx-auto" />
                           <div>
                             <p className="text-white font-medium">
                               Drop your converter file here or click to browse
                             </p>
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-black dark:text-gray-400">
                               Python (.py) files only, max 5MB
                             </p>
                           </div>
@@ -364,7 +364,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-2">Review Your Submission</h3>
-                      <p className="text-gray-300 text-sm">
+                      <p className="text-black dark:text-gray-300 text-sm">
                         Please review the information before submitting your language addition request.
                       </p>
                     </div>
@@ -374,15 +374,15 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                         <h4 className="font-medium text-white mb-3">Submission Summary</h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-gray-300">Language Name:</span>
+                            <span className="text-black dark:text-gray-300">Language Name:</span>
                             <span className="text-white font-medium">{formData.languageName}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-300">Converter File:</span>
+                            <span className="text-black dark:text-gray-300">Converter File:</span>
                             <span className="text-white font-medium">{formData.converterFile?.name}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-300">File Size:</span>
+                            <span className="text-black dark:text-gray-300">File Size:</span>
                             <span className="text-white">
                               {formData.converterFile ? (formData.converterFile.size / 1024).toFixed(1) + ' KB' : 'N/A'}
                             </span>
@@ -431,7 +431,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-white mb-2">Request Submitted Successfully!</h3>
-                  <p className="text-gray-300 max-w-md mx-auto">
+                  <p className="text-black dark:text-gray-300 max-w-md mx-auto">
                     Your {formData.languageName} converter has been submitted to our administrators for review.
                     You&apos;ll be notified once it&apos;s been processed.
                   </p>
@@ -470,7 +470,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                       <h4 className="text-sm font-medium text-quantum-blue-light">{section.title}</h4>
                       <ul className="space-y-1">
                         {section.items.map((item, itemIndex) => (
-                          <li key={itemIndex} className="text-xs text-gray-300 pl-3 relative">
+                          <li key={itemIndex} className="text-xs text-black dark:text-gray-300 pl-3 relative">
                             <span className="absolute left-0 top-1 w-1 h-1 bg-quantum-blue-light rounded-full"></span>
                             {item}
                           </li>
@@ -481,7 +481,7 @@ export default function AddNewLanguage({ isOpen, onClose }: AddNewLanguageProps)
                 </div>
 
                 <div className="mt-6 p-3 bg-gradient-to-r from-quantum-blue-dark/50 to-quantum-purple-dark/50 rounded-lg border border-white/10">
-                  <p className="text-xs text-gray-300">
+                  <p className="text-xs text-black dark:text-gray-300">
                     <strong className="text-white">Example:</strong> For a language called &quot;MyFramework&quot;,
                     create <code className="text-quantum-blue-light">myframework_to_qasm.py</code> with
                     function <code className="text-quantum-blue-light">convert_myframework_to_qasm3()</code>

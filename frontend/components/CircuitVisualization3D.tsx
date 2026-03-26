@@ -177,7 +177,7 @@ export default function CircuitVisualization3D({ gates, qubits, className = '' }
     <div className={`relative ${className}`}>
       {gates.length === 0 ? (
         <div className="flex items-center justify-center h-full border-2 border-dashed border-gray-600 rounded-lg">
-          <p className="text-gray-400 text-sm">No circuit to visualize</p>
+          <p className="text-black dark:text-gray-400 text-sm">No circuit to visualize</p>
         </div>
       ) : (
         <Canvas camera={{ position: [5, 5, 10], fov: 50 }}>

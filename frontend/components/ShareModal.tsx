@@ -177,13 +177,13 @@ export default function ShareModal({
               </div>
               <span className="quantum-gradient bg-clip-text text-transparent">Share Project</span>
             </h2>
-            <p className="text-gray-400 text-sm mt-1 ml-14">
+            <p className="text-black dark:text-gray-400 text-sm mt-1 ml-14">
               Share your quantum circuit with the community
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-all duration-200"
+            className="p-2 rounded-lg hover:bg-white/10 text-black dark:text-gray-400 hover:text-white transition-all duration-200"
           >
             <X className="w-5 h-5" />
           </button>
@@ -196,7 +196,7 @@ export default function ShareModal({
           <div className="flex-1 p-6 overflow-y-auto custom-scrollbar border-b lg:border-b-0 lg:border-r border-white/10 flex flex-col gap-5">
             {/* Unique ID Field */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">
+              <label className="text-sm font-medium text-black dark:text-gray-300 ml-1">
                 Unique ID <span className="text-red-400">*</span>
               </label>
               <div className="relative group">
@@ -214,7 +214,7 @@ export default function ShareModal({
 
             {/* Title */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">
+              <label className="text-sm font-medium text-black dark:text-gray-300 ml-1">
                 Project Title <span className="text-red-400">*</span>
               </label>
               <input
@@ -228,7 +228,7 @@ export default function ShareModal({
 
             {/* Category */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">
+              <label className="text-sm font-medium text-black dark:text-gray-300 ml-1">
                 Category
               </label>
               <div className="relative">
@@ -243,7 +243,7 @@ export default function ShareModal({
                     </option>
                   ))}
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-black dark:text-gray-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
               </div>
@@ -252,7 +252,7 @@ export default function ShareModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Framework */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label className="text-sm font-medium text-black dark:text-gray-300 ml-1">
                   Framework
                 </label>
                 <div className="relative">
@@ -266,7 +266,7 @@ export default function ShareModal({
                     <option value="cirq" className="bg-gray-800">Cirq</option>
                     <option value="pennylane" className="bg-gray-800">PennyLane</option>
                   </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-black dark:text-gray-400">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </div>
                 </div>
@@ -274,7 +274,7 @@ export default function ShareModal({
 
               {/* Difficulty */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label className="text-sm font-medium text-black dark:text-gray-300 ml-1">
                   Difficulty
                 </label>
                 <div className="relative">
@@ -287,7 +287,7 @@ export default function ShareModal({
                     <option value="intermediate" className="bg-gray-800">Intermediate</option>
                     <option value="advanced" className="bg-gray-800">Advanced</option>
                   </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-black dark:text-gray-400">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </div>
                 </div>
@@ -298,7 +298,7 @@ export default function ShareModal({
             <div className="flex flex-col gap-3">
               {/* Description */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label className="text-sm font-medium text-black dark:text-gray-300 ml-1">
                   Description
                 </label>
                 <textarea
@@ -312,9 +312,9 @@ export default function ShareModal({
               
                {/* Tags */}
               <div className="space-y-2 relative">
-                <label className="text-sm font-medium text-gray-300 ml-1 flex items-center gap-2">
+                <label className="text-sm font-medium text-black dark:text-gray-300 ml-1 flex items-center gap-2">
                   Tags 
-                  <span className="text-xs text-gray-500 font-normal">(comma separated)</span>
+                  <span className="text-xs text-black dark:text-gray-500 font-normal">(comma separated)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -325,7 +325,7 @@ export default function ShareModal({
                     className="w-full px-4 py-2.5 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500/50 transition-colors placeholder-gray-500"
                     autoComplete="off"
                   />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-black dark:text-gray-500 pointer-events-none">
                     <Tag className="w-4 h-4" />
                   </div>
                 </div>
@@ -339,7 +339,7 @@ export default function ShareModal({
                           key={tag}
                           type="button"
                           onClick={() => addTag(tag)}
-                          className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white rounded-md transition-colors flex items-center gap-2 group"
+                          className="w-full text-left px-3 py-2 text-sm text-black dark:text-gray-300 hover:bg-white/10 hover:text-white rounded-md transition-colors flex items-center gap-2 group"
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500/50 group-hover:bg-blue-400 transition-colors"></span>
                           {tag}
@@ -356,7 +356,7 @@ export default function ShareModal({
           <div className="w-full lg:w-[45%] flex flex-col p-6 bg-black/10">
             {/* Code Preview - Expanded */}
             <div className="flex-1 space-y-2 flex flex-col min-h-0">
-              <label className="text-sm font-medium text-gray-300 ml-1 flex justify-between items-center">
+              <label className="text-sm font-medium text-black dark:text-gray-300 ml-1 flex justify-between items-center">
                 <span>Code Preview</span>
                 <span className="text-xs text-blue-200 bg-blue-500/20 px-2 py-0.5 rounded-full font-mono border border-blue-500/30 shadow-sm">
                   {fileContent.split('\n').length} lines
@@ -396,7 +396,7 @@ export default function ShareModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 font-medium text-sm"
+                className="w-full py-2.5 rounded-xl text-black dark:text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 font-medium text-sm"
               >
                 Cancel
               </button>

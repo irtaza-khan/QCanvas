@@ -299,7 +299,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
                 className="w-full px-3 py-1.5 bg-editor-bg border border-editor-border rounded text-white placeholder-gray-400 text-sm focus-quantum"
               />
               {totalMatches > 0 && (
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-black dark:text-gray-400">
                   {currentMatch}/{totalMatches}
                 </div>
               )}

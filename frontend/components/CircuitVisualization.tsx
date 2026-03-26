@@ -645,7 +645,7 @@ export default function CircuitVisualization({ gates, qubits, className = '' }: 
   if (gates.length === 0) {
     return (
       <div className={`flex items-center justify-center h-32 border-2 border-dashed border-gray-600 rounded-lg ${className}`}>
-        <p className="text-gray-400 text-sm">No circuit to visualize</p>
+        <p className="text-black dark:text-gray-400 text-sm">No circuit to visualize</p>
       </div>
     )
   }
@@ -673,7 +673,7 @@ export default function CircuitVisualization({ gates, qubits, className = '' }: 
           </div>
           <button
             onClick={() => setSelectedGate(null)}
-            className="mt-2 text-xs text-gray-400 hover:text-white"
+            className="mt-2 text-xs text-black dark:text-gray-400 hover:text-white"
           >
             Close
           </button>

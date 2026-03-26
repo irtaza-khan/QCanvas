@@ -39,7 +39,7 @@ export default function SimulationControls({
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white tracking-wide">Simulation Settings</h3>
-          <p className="text-xs text-gray-400">Configure your quantum execution</p>
+          <p className="text-xs text-black dark:text-gray-400">Configure your quantum execution</p>
         </div>
       </div>
       
@@ -51,7 +51,7 @@ export default function SimulationControls({
           onMouseEnter={() => setHoveredControl('framework')}
           onMouseLeave={() => setHoveredControl(null)}
         >
-          <div className="text-xs font-medium text-gray-400 mb-2 text-center transition-colors duration-200 group-hover:text-quantum-blue-light">
+          <div className="text-xs font-medium text-black dark:text-gray-400 mb-2 text-center transition-colors duration-200 group-hover:text-quantum-blue-light">
             Input Framework
           </div>
           <div className="relative">
@@ -68,13 +68,13 @@ export default function SimulationControls({
               title="Select Input Framework"
               aria-label="Input Framework"
             >
-              <option value="" className="bg-editor-bg text-gray-400">Select Framework</option>
+              <option value="" className="bg-editor-bg text-black dark:text-gray-400">Select Framework</option>
               <option value="qasm" className="bg-editor-bg text-white">OpenQASM</option>
               <option value="qiskit" className="bg-editor-bg text-white">Qiskit (IBM)</option>
               <option value="cirq" className="bg-editor-bg text-white">Cirq (Google)</option>
               <option value="pennylane" className="bg-editor-bg text-white">PennyLane (ML)</option>
             </select>
-            <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none transition-all duration-300 ${
+            <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black dark:text-gray-400 pointer-events-none transition-all duration-300 ${
               hoveredControl === 'framework' ? 'text-quantum-blue-light rotate-180' : ''
             }`} />
           </div>
@@ -86,7 +86,7 @@ export default function SimulationControls({
           onMouseEnter={() => setHoveredControl('backend')}
           onMouseLeave={() => setHoveredControl(null)}
         >
-          <div className="text-xs font-medium text-gray-400 mb-2 text-center transition-colors duration-200 group-hover:text-purple-400">
+          <div className="text-xs font-medium text-black dark:text-gray-400 mb-2 text-center transition-colors duration-200 group-hover:text-purple-400">
             Simulation Backend
           </div>
           <div className="relative">
@@ -103,12 +103,12 @@ export default function SimulationControls({
               title="Select Simulation Backend"
               aria-label="Simulation Backend"
             >
-              <option value="" className="bg-editor-bg text-gray-400">Select Backend</option>
+              <option value="" className="bg-editor-bg text-black dark:text-gray-400">Select Backend</option>
               <option value="cirq" className="bg-editor-bg text-white">Cirq Simulator</option>
               <option value="qiskit" className="bg-editor-bg text-white">Qiskit Aer</option>
               <option value="pennylane" className="bg-editor-bg text-white">PennyLane</option>
             </select>
-            <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none transition-all duration-300 ${
+            <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black dark:text-gray-400 pointer-events-none transition-all duration-300 ${
               hoveredControl === 'backend' ? 'text-purple-400 rotate-180' : ''
             }`} />
           </div>
@@ -120,7 +120,7 @@ export default function SimulationControls({
           onMouseEnter={() => setHoveredControl('shots')}
           onMouseLeave={() => setHoveredControl(null)}
         >
-          <div className="text-xs font-medium text-gray-400 mb-2 text-center transition-colors duration-200 group-hover:text-green-400">
+          <div className="text-xs font-medium text-black dark:text-gray-400 mb-2 text-center transition-colors duration-200 group-hover:text-green-400">
             Measurement Shots
           </div>
           <div className="relative">
