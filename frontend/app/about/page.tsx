@@ -189,17 +189,17 @@ export default function AboutPage() {
                   <h4 className="text-xl font-semibold text-white mb-4">{member.name}</h4>
                   <div className="flex justify-center space-x-3">
                     {member.email && (
-                      <a href={`mailto:${member.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
+                      <a href={`mailto:${member.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
                         <Mail className="w-5 h-5" />
                       </a>
                     )}
                     {member.github && (
-                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="GitHub">
+                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="GitHub">
                         <Github className="w-5 h-5" />
                       </a>
                     )}
                     {member.linkedin && (
-                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="LinkedIn">
+                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="LinkedIn">
                         <Linkedin className="w-5 h-5" />
                       </a>
                     )}
@@ -221,17 +221,17 @@ export default function AboutPage() {
                   <h4 className="text-xl font-semibold text-white mb-4">{member.name}</h4>
                   <div className="flex justify-center space-x-3">
                     {member.email && (
-                      <a href={`mailto:${member.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
+                      <a href={`mailto:${member.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
                         <Mail className="w-5 h-5" />
                       </a>
                     )}
                     {member.github && (
-                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="GitHub">
+                      <a href={member.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="GitHub">
                         <Github className="w-5 h-5" />
                       </a>
                     )}
                     {member.linkedin && (
-                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="LinkedIn">
+                      <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="LinkedIn">
                         <Linkedin className="w-5 h-5" />
                       </a>
                     )}
@@ -277,17 +277,17 @@ export default function AboutPage() {
                   <h4 className="text-xl font-semibold text-white mb-4">{supervisor.name}</h4>
                   <div className="flex justify-center space-x-3">
                     {supervisor.email && (
-                      <a href={`mailto:${supervisor.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
+                      <a href={`mailto:${supervisor.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
                         <Mail className="w-5 h-5" />
                       </a>
                     )}
                     {supervisor.github && (
-                      <a href={supervisor.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="GitHub">
+                      <a href={supervisor.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="GitHub">
                         <Github className="w-5 h-5" />
                       </a>
                     )}
                     {supervisor.linkedin && (
-                      <a href={supervisor.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="LinkedIn">
+                      <a href={supervisor.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="LinkedIn">
                         <Linkedin className="w-5 h-5" />
                       </a>
                     )}

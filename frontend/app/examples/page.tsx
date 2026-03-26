@@ -1143,7 +1143,7 @@ export default function ExamplesPage() {
                 className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                   activeTab === 'official'
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    : 'text-black dark:text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Code className="w-4 h-4" />
@@ -1154,7 +1154,7 @@ export default function ExamplesPage() {
                 className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                   activeTab === 'community'
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    : 'text-black dark:text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Share2 className="w-4 h-4" />
@@ -1258,7 +1258,7 @@ export default function ExamplesPage() {
                       {example.difficulty}
                     </span>
                     {example.tags.slice(0, 2).map(tag => (
-                      <span key={tag} className="px-2 py-1 rounded-full text-xs font-medium text-gray-300 bg-gray-700">
+                      <span key={tag} className="px-2 py-1 rounded-full text-xs font-medium text-black dark:text-gray-300 bg-gray-700">
                         {tag}
                       </span>
                     ))}
@@ -1301,7 +1301,7 @@ export default function ExamplesPage() {
             </div>
           ) : filteredExamples.length === 0 ? (
             <div className="text-center py-16 quantum-glass-dark rounded-2xl border border-white/10">
-              <Code className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <Code className="w-16 h-16 text-black dark:text-gray-600 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">
                 {activeTab === 'community' ? 'No community projects found' : 'No examples found'}
               </h3>

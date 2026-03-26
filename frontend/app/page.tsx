@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Zap, Code, Play, Book, GitBranch, Cpu, Atom, Lightbulb, Star, Globe } from '@/components/Icons';
+import { Zap, Code, Play, Book, GitBranch, Cpu, Atom, Lightbulb, Star, Globe, RocketAnimated, FrameworkConversionAnimated, WebIdeIcon, PlaySvgRepo, CodeSquareSvgRepo } from '@/components/Icons';
 import { ChevronDown, ArrowRight, Users, Sparkles } from 'lucide-react';
 import { useFileStore } from '@/lib/store';
 import { config, getCopyrightText } from '@/lib/config'
@@ -184,7 +184,7 @@ def grovers_search():
               <span className="gradient-text">Simple</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-black dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
               {config.project.description}
             </p>
 
@@ -210,15 +210,15 @@ def grovers_search():
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
               <div className="stat-card text-center group">
                 <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">{config.stats.frameworks}</div>
-                <div className="text-sm text-gray-500 group-hover:text-gray-300 transition-colors">Quantum Frameworks</div>
+                <div className="text-sm text-black dark:text-gray-500 group-hover:text-gray-300 transition-colors">Quantum Frameworks</div>
               </div>
               <div className="stat-card text-center group">
                 <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">{config.stats.standards}</div>
-                <div className="text-sm text-gray-500 group-hover:text-gray-300 transition-colors">Compatible</div>
+                <div className="text-sm text-black dark:text-gray-500 group-hover:text-gray-300 transition-colors">Compatible</div>
               </div>
               <div className="stat-card text-center group">
                 <div className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent mb-1">{config.stats.simulations}</div>
-                <div className="text-sm text-gray-500 group-hover:text-gray-300 transition-colors">Simulation</div>
+                <div className="text-sm text-black dark:text-gray-500 group-hover:text-gray-300 transition-colors">Simulation</div>
               </div>
             </div>
 
@@ -226,7 +226,7 @@ def grovers_search():
             <div className="animate-bounce">
               <button
                 onClick={() => scrollToSection('features')}
-                className="text-gray-500 hover:text-white transition-colors duration-200"
+                className="text-black dark:text-gray-500 hover:text-white transition-colors duration-200"
               >
                 <ChevronDown className="w-6 h-6" />
               </button>
@@ -243,7 +243,7 @@ def grovers_search():
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               <span className="quantum-gradient bg-clip-text text-transparent">Powerful Features</span>
             </h2>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg text-black dark:text-gray-400 max-w-2xl mx-auto">
               Everything you need to build, convert, and simulate quantum circuits
               with professional-grade tools and real-time feedback.
             </p>
@@ -253,10 +253,10 @@ def grovers_search():
             {/* Feature 1 */}
             <div className="quantum-glass-dark card-accent-blue rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(99,102,241,0.1)]">
               <div className="w-12 h-12 bg-indigo-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-indigo-500/25 transition-all duration-300">
-                <Code className="w-6 h-6 text-indigo-400" />
+                <FrameworkConversionAnimated className="w-8 h-8 text-indigo-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-indigo-400 transition-colors duration-300">Framework Conversion</h3>
-              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
+              <p className="text-black dark:text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Seamlessly convert between Cirq, Qiskit, and PennyLane with
                 intelligent parsing and OpenQASM 3.0 as the universal intermediate format.
               </p>
@@ -269,10 +269,10 @@ def grovers_search():
             {/* Feature 2 */}
             <div className="quantum-glass-dark card-accent-purple rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]">
               <div className="w-12 h-12 bg-violet-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-violet-500/25 transition-all duration-300">
-                <Play className="w-6 h-6 text-violet-400" />
+                <PlaySvgRepo className="w-8 h-8 text-violet-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-violet-400 transition-colors duration-300">Real-time Simulation</h3>
-              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
+              <p className="text-black dark:text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Experience instant quantum circuit simulation with multiple backends,
                 progress tracking, and interactive visualization powered by WebSocket.
               </p>
@@ -288,7 +288,7 @@ def grovers_search():
                 <Book className="w-6 h-6 text-cyan-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-cyan-400 transition-colors duration-300">Educational Platform</h3>
-              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
+              <p className="text-black dark:text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Learn quantum computing with guided examples, tutorials, and
                 an intuitive interface designed for both beginners and experts.
               </p>
@@ -301,10 +301,10 @@ def grovers_search():
             {/* Feature 4 */}
             <div className="quantum-glass-dark card-accent-green rounded-2xl p-8 hover-lift transition-all duration-500 group feature-card opacity-0 animate-fade-in hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]">
               <div className="w-12 h-12 bg-emerald-500/15 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/25 transition-all duration-300">
-                <Zap className="w-6 h-6 text-emerald-400" />
+                <WebIdeIcon className="w-8 h-8 text-emerald-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-emerald-400 transition-colors duration-300">Web IDE</h3>
-              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
+              <p className="text-black dark:text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Professional code editor with syntax highlighting, IntelliSense,
                 and live preview for quantum circuit development and debugging.
               </p>
@@ -320,7 +320,7 @@ def grovers_search():
                 <Users className="w-6 h-6 text-amber-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-amber-400 transition-colors duration-300">Community Sharing</h3>
-              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
+              <p className="text-black dark:text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Share your quantum circuits with the community through GitHub-style
                 repositories, collaboration tools, and public circuit galleries.
               </p>
@@ -336,7 +336,7 @@ def grovers_search():
                 <Globe className="w-6 h-6 text-pink-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-pink-400 transition-colors duration-300">OpenQASM 3.0</h3>
-              <p className="text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
+              <p className="text-black dark:text-gray-400 mb-4 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                 Full support for OpenQASM 3.0 standard with advanced features,
                 validation, and compatibility across all major quantum platforms.
               </p>
@@ -356,14 +356,14 @@ def grovers_search():
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               <span className="quantum-gradient bg-clip-text text-transparent">Interactive Examples</span>
             </h2>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
+            <p className="text-lg text-black dark:text-gray-400 max-w-2xl mx-auto mb-8">
               Explore quantum computing through hands-on examples and live demonstrations
             </p>
             <Link
               href="/examples"
               className="btn-quantum inline-flex items-center group"
             >
-              <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
+              <CodeSquareSvgRepo className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
               <span className="relative z-10">View All Examples</span>
             </Link>
           </div>
@@ -378,7 +378,7 @@ def grovers_search():
                 <Code className="w-12 h-12 text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-indigo-400 transition-colors duration-300">Bell State (Cirq)</h3>
-              <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
+              <p className="text-black dark:text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
                 Create quantum entanglement with H + CNOT gates. Expect 50% |00⟩ and 50% |11⟩
               </p>
               <div className="flex items-center justify-between">
@@ -396,7 +396,7 @@ def grovers_search():
                 <Play className="w-12 h-12 text-violet-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-violet-400 transition-colors duration-300">Teleportation (Qiskit)</h3>
-              <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
+              <p className="text-black dark:text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
                 Transfer quantum states using entanglement with Bell measurement and classical corrections
               </p>
               <div className="flex items-center justify-between">
@@ -414,7 +414,7 @@ def grovers_search():
                 <Atom className="w-12 h-12 text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors duration-300">Grover&apos;s Search (PennyLane)</h3>
-              <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
+              <p className="text-black dark:text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
                 Quantum search algorithm with oracle and diffusion operator for quadratic speedup
               </p>
               <div className="flex items-center justify-between">
@@ -448,7 +448,7 @@ def grovers_search():
             <br />
             <span className="text-white">Quantum Journey?</span>
           </h2>
-          <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
+          <p className="text-lg text-black dark:text-gray-400 mb-10 max-w-2xl mx-auto">
             Join thousands of researchers, students, and developers building
             the future of quantum computing with {config.project.name}.
           </p>
@@ -457,7 +457,7 @@ def grovers_search():
               href="/login"
               className="btn-quantum text-lg px-8 py-4 flex items-center justify-center group"
             >
-              <Zap className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
+              <RocketAnimated className="w-6 h-6 mr-2 group-hover:scale-110 transition-transform duration-300 relative z-10" />
               <span className="relative z-10">Launch QCanvas</span>
             </Link>
             <Link
@@ -498,27 +498,9 @@ def grovers_search():
                   QCanvas
                 </span>
               </Link>
-              <p className="text-gray-500 mb-4 max-w-md text-sm leading-relaxed">
+              <p className="text-gray-900 dark:text-gray-500 mb-4 max-w-md text-sm leading-relaxed">
                 {config.project.description}
               </p>
-              <div className="flex space-x-4">
-                <a
-                  href={config.social.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-500 hover:text-indigo-400 transition-colors duration-200"
-                >
-                  <GitBranch className="w-5 h-5" />
-                </a>
-                <a
-                  href={config.social.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-500 hover:text-indigo-400 transition-colors duration-200"
-                >
-                  <Globe className="w-5 h-5" />
-                </a>
-              </div>
             </div>
 
             <div>
@@ -528,7 +510,7 @@ def grovers_search():
                   <Link
                     key={link.path}
                     href={link.path as any}
-                    className="block text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit"
+                    className="block text-black dark:text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit"
                   >
                     {link.name}
                   </Link>
@@ -541,11 +523,13 @@ def grovers_search():
               <div className="space-y-2.5">
                 {config.footer.community.map((link) => (
                   <a
-                    key={link.url}
-                    href={link.url}
-                    target="_blank"
+                    key={link.name}
+                    href={link.name === 'GitHub' ? link.url : '#'}
+                    title={link.name === 'GitHub' ? '' : 'Coming Soon'}
+                    target={link.name === 'GitHub' ? '_blank' : undefined}
                     rel="noopener noreferrer"
-                    className="block text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit"
+                    className={`block text-gray-900 dark:text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit ${link.name !== 'GitHub' ? 'cursor-not-allowed opacity-60' : ''}`}
+                    onClick={(e) => { if(link.name !== 'GitHub') e.preventDefault(); }}
                   >
                     {link.name}
                   </a>
@@ -556,13 +540,13 @@ def grovers_search():
 
           <div className="gradient-divider mb-8"></div>
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-600 text-sm">
+            <p className="text-black dark:text-gray-600 text-sm">
               {getCopyrightText()}
             </p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <button className="text-gray-600 hover:text-gray-400 transition-colors duration-200 text-sm cursor-not-allowed" title="Coming Soon">Privacy</button>
-              <button className="text-gray-600 hover:text-gray-400 transition-colors duration-200 text-sm cursor-not-allowed" title="Coming Soon">Terms</button>
-              <a href={`mailto:${config.contact.support}`} className="text-gray-600 hover:text-indigo-400 transition-colors duration-200 text-sm">Support</a>
+              <button className="text-black dark:text-gray-600 hover:text-gray-400 transition-colors duration-200 text-sm cursor-not-allowed" title="Coming Soon">Privacy</button>
+              <button className="text-black dark:text-gray-600 hover:text-gray-400 transition-colors duration-200 text-sm cursor-not-allowed" title="Coming Soon">Terms</button>
+              <a href={`mailto:${config.contact.support}`} className="text-black dark:text-gray-600 hover:text-indigo-400 transition-colors duration-200 text-sm">Support</a>
             </div>
           </div>
         </div>

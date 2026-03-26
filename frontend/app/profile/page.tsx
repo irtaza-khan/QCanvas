@@ -32,8 +32,8 @@ function StatCard({
             </div>
             <div>
                 <p className="text-2xl font-bold text-white leading-tight">{value}</p>
-                <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide mt-0.5">{label}</p>
-                {sub && <p className="text-[10px] text-gray-600 mt-0.5">{sub}</p>}
+                <p className="text-[11px] text-black dark:text-gray-400 font-medium uppercase tracking-wide mt-0.5">{label}</p>
+                {sub && <p className="text-[10px] text-black dark:text-gray-600 mt-0.5">{sub}</p>}
             </div>
         </div>
     );
@@ -46,7 +46,7 @@ function SectionHeader({ icon: Icon, title, badge }: { icon: React.ElementType; 
             <Icon className="w-5 h-5 text-quantum-blue-light" />
             <h2 className="text-lg font-bold text-white">{title}</h2>
             {badge && (
-                <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">{badge}</span>
+                <span className="text-xs text-black dark:text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">{badge}</span>
             )}
         </div>
     );
@@ -163,7 +163,7 @@ export default function ProfilePage() {
                                         title={`${stats?.xp_to_next_level.toLocaleString()} XP remaining to Level ${level + 1}`}
                                         className="group/xp cursor-help"
                                     >
-                                        <div className="flex justify-between text-xs text-gray-500 mb-1.5 transition-colors group-hover/xp:text-quantum-blue-light">
+                                        <div className="flex justify-between text-xs text-black dark:text-gray-500 mb-1.5 transition-colors group-hover/xp:text-quantum-blue-light">
                                             <span className="font-medium">Level {level} — {getLevelBadge(level)}</span>
                                             <span className="font-bold">{Math.round(stats?.progress_percentage || 0)}%</span>
                                         </div>
@@ -180,7 +180,7 @@ export default function ProfilePage() {
 
                                     {/* Achievements completion */}
                                     <div className="group/ach hover:opacity-90 transition-opacity">
-                                        <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+                                        <div className="flex justify-between text-xs text-black dark:text-gray-500 mb-1.5">
                                             <span className="font-medium">Achievements ({unlockedCount}/{totalAchievements})</span>
                                             <span className="text-yellow-500 font-bold">{completionPct}%</span>
                                         </div>
@@ -203,10 +203,10 @@ export default function ProfilePage() {
                                         { label: "Achievements", value: `${unlockedCount}/${totalAchievements}`, icon: Trophy },
                                     ].map(({ label, value, icon: Ic }) => (
                                         <div key={label} className="bg-white/[0.03] border border-white/5 rounded-lg p-3 flex items-center gap-3">
-                                            <Ic className="w-4 h-4 text-gray-500 shrink-0" />
+                                            <Ic className="w-4 h-4 text-black dark:text-gray-500 shrink-0" />
                                             <div>
                                                 <p className="text-base font-bold text-white">{value}</p>
-                                                <p className="text-[10px] text-gray-500">{label}</p>
+                                                <p className="text-[10px] text-black dark:text-gray-500">{label}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -225,7 +225,7 @@ export default function ProfilePage() {
                                         onClick={() => setActiveTab(id)}
                                         className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${activeTab === id
                                             ? "bg-quantum-blue/20 text-white border border-quantum-blue/30 shadow-inner"
-                                            : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+                                            : "text-black dark:text-gray-500 hover:text-gray-300 hover:bg-white/5"
                                             }`}
                                     >
                                         <TIcon className="w-4 h-4 shrink-0" />

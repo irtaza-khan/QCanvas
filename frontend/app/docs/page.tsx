@@ -604,17 +604,17 @@ print(qc)`}
                       <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
                       <span className="text-editor-text">User Input</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <ArrowRight className="w-4 h-4 text-black dark:text-gray-400" />
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
                       <span className="text-editor-text">API Request</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <ArrowRight className="w-4 h-4 text-black dark:text-gray-400" />
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-green-400 rounded-full"></div>
                       <span className="text-editor-text">Framework Parser</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <ArrowRight className="w-4 h-4 text-black dark:text-gray-400" />
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
                       <span className="text-editor-text">OpenQASM 3.0</span>
@@ -631,17 +631,17 @@ print(qc)`}
                       <div className="w-3 h-3 bg-teal-400 rounded-full"></div>
                       <span className="text-editor-text">QASM Code</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <ArrowRight className="w-4 h-4 text-black dark:text-gray-400" />
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-cyan-400 rounded-full"></div>
                       <span className="text-editor-text">Backend Selection</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <ArrowRight className="w-4 h-4 text-black dark:text-gray-400" />
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-pink-400 rounded-full"></div>
                       <span className="text-editor-text">Circuit Execution</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <ArrowRight className="w-4 h-4 text-black dark:text-gray-400" />
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
                       <span className="text-editor-text">Results</span>
@@ -754,11 +754,11 @@ print(qc)`}
                 <p className="text-editor-text text-sm mb-3">Google&apos;s quantum computing framework with statevector simulation</p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Shots:</span>
+                    <span className="text-black dark:text-gray-400">Shots:</span>
                     <span className="text-white">1 - 10,000</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Best for:</span>
+                    <span className="text-black dark:text-gray-400">Best for:</span>
                     <span className="text-white">Near-term devices</span>
                   </div>
                 </div>
@@ -774,11 +774,11 @@ print(qc)`}
                 <p className="text-editor-text text-sm mb-3">IBM&apos;s comprehensive quantum SDK with QASM simulator backend</p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Shots:</span>
+                    <span className="text-black dark:text-gray-400">Shots:</span>
                     <span className="text-white">1 - 10,000</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Best for:</span>
+                    <span className="text-black dark:text-gray-400">Best for:</span>
                     <span className="text-white">IBM Quantum</span>
                   </div>
                 </div>
@@ -794,11 +794,11 @@ print(qc)`}
                 <p className="text-editor-text text-sm mb-3">Xanadu&apos;s quantum ML framework with default.qubit device</p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Shots:</span>
+                    <span className="text-black dark:text-gray-400">Shots:</span>
                     <span className="text-white">1 - 10,000</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Best for:</span>
+                    <span className="text-black dark:text-gray-400">Best for:</span>
                     <span className="text-white">QML & Variational</span>
                   </div>
                 </div>
@@ -858,21 +858,21 @@ print(qc)`}
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xl font-semibold text-white flex items-center">
                     <span className="text-quantum-blue-light mr-2">compile</span>
-                    <span className="text-sm font-normal text-gray-400">(circuit, framework=None)</span>
+                    <span className="text-sm font-normal text-black dark:text-gray-400">(circuit, framework=None)</span>
                   </h4>
                   <span className="text-xs bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full">Function</span>
                 </div>
                 <p className="text-editor-text mb-4">Compile a quantum circuit object to OpenQASM 3.0 format.</p>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-400 mb-2">Parameters:</p>
+                    <p className="text-sm text-black dark:text-gray-400 mb-2">Parameters:</p>
                     <ul className="text-sm text-editor-text space-y-1 ml-4">
                       <li><code className="text-quantum-blue-light">circuit</code> - Circuit object from Cirq, Qiskit, or PennyLane</li>
                       <li><code className="text-quantum-blue-light">framework</code> - Optional: "cirq", "qiskit", "pennylane" (auto-detected if not provided)</li>
                     </ul>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-2">Returns:</p>
+                    <p className="text-sm text-black dark:text-gray-400 mb-2">Returns:</p>
                     <p className="text-sm text-editor-text ml-4"><code className="text-quantum-blue-light">str</code> - OpenQASM 3.0 code</p>
                   </div>
                   <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mt-4">
@@ -899,14 +899,14 @@ print(qasm)`}
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xl font-semibold text-white flex items-center">
                     <span className="text-quantum-blue-light mr-2">qsim.run</span>
-                    <span className="text-sm font-normal text-gray-400">(qasm_code, shots=1024, backend="cirq")</span>
+                    <span className="text-sm font-normal text-black dark:text-gray-400">(qasm_code, shots=1024, backend="cirq")</span>
                   </h4>
                   <span className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Function</span>
                 </div>
                 <p className="text-editor-text mb-4">Execute OpenQASM 3.0 code using QSim quantum simulator.</p>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-400 mb-2">Parameters:</p>
+                    <p className="text-sm text-black dark:text-gray-400 mb-2">Parameters:</p>
                     <ul className="text-sm text-editor-text space-y-1 ml-4">
                       <li><code className="text-quantum-blue-light">qasm_code</code> - OpenQASM 3.0 code string</li>
                       <li><code className="text-quantum-blue-light">shots</code> - Number of measurement shots (default: 1024, use 0 for exact statevector)</li>
@@ -914,7 +914,7 @@ print(qasm)`}
                     </ul>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-2">Returns:</p>
+                    <p className="text-sm text-black dark:text-gray-400 mb-2">Returns:</p>
                     <p className="text-sm text-editor-text ml-4"><code className="text-quantum-blue-light">SimulationResult</code> - Result object with counts, probabilities, and metadata</p>
                   </div>
                   <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mt-4">
@@ -945,14 +945,14 @@ print(result.probabilities)`}
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xl font-semibold text-white flex items-center">
                     <span className="text-quantum-blue-light mr-2">compile_and_execute</span>
-                    <span className="text-sm font-normal text-gray-400">(circuit, framework=None, shots=1024, backend="cirq")</span>
+                    <span className="text-sm font-normal text-black dark:text-gray-400">(circuit, framework=None, shots=1024, backend="cirq")</span>
                   </h4>
                   <span className="text-xs bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full">Convenience</span>
                 </div>
                 <p className="text-editor-text mb-4">Compile a circuit and execute it in a single call.</p>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-400 mb-2">Parameters:</p>
+                    <p className="text-sm text-black dark:text-gray-400 mb-2">Parameters:</p>
                     <ul className="text-sm text-editor-text space-y-1 ml-4">
                       <li><code className="text-quantum-blue-light">circuit</code> - Circuit object from Cirq, Qiskit, or PennyLane</li>
                       <li><code className="text-quantum-blue-light">framework</code> - Optional: auto-detected if not provided</li>
@@ -961,7 +961,7 @@ print(result.probabilities)`}
                     </ul>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-2">Returns:</p>
+                    <p className="text-sm text-black dark:text-gray-400 mb-2">Returns:</p>
                     <p className="text-sm text-editor-text ml-4"><code className="text-quantum-blue-light">SimulationResult</code> - Result object with counts, probabilities, and metadata</p>
                   </div>
                   <div className="bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg p-4 mt-4">
@@ -1118,7 +1118,7 @@ print(circuit)`}
                   </pre>
                 </div>
                 <div className="bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded-lg p-3 border border-gray-700 dark:border-gray-700 border-gray-300">
-                  <pre className="text-xs text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
+                  <pre className="text-xs text-black dark:text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
                     {`0: ───H───@───M───
            │
 1: ────────X───M───`}
@@ -1147,7 +1147,7 @@ print(qc)`}
                   </pre>
                 </div>
                 <div className="bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded-lg p-3 border border-gray-700 dark:border-gray-700 border-gray-300">
-                  <pre className="text-xs text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
+                  <pre className="text-xs text-black dark:text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
                     {`     ┌───┐     ┌─┐
 q_0: ┤ H ├──■──┤M├
      └───┘ │ ┌┴┐└╥┘
@@ -1182,7 +1182,7 @@ print(qml.draw(circuit)())`}
                   </pre>
                 </div>
                 <div className="bg-gray-800 dark:bg-gray-800 bg-gray-100 rounded-lg p-3 border border-gray-700 dark:border-gray-700 border-gray-300">
-                  <pre className="text-xs text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
+                  <pre className="text-xs text-black dark:text-gray-300 dark:text-gray-300 text-gray-800 font-mono">
                     {`0: ──H──╭C──┤ ⟨Z⟩
 1: ──────╰X──┤`}
                   </pre>

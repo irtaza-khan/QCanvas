@@ -121,7 +121,7 @@ export default function LoginPage() {
           className="btn-ghost p-3 hover:bg-white/10 rounded-lg backdrop-blur-md"
           title="Toggle theme"
         >
-          {theme === 'dark' ? <Sun className="w-5 h-5 text-gray-300" /> : <Moon className="w-5 h-5 text-gray-300" />}
+          {theme === 'dark' ? <Sun className="w-5 h-5 text-black dark:text-gray-300" /> : <Moon className="w-5 h-5 text-black dark:text-gray-300" />}
         </button>
       </div>
 
@@ -191,7 +191,7 @@ export default function LoginPage() {
             <p className="text-editor-text text-lg">
               Quantum Unified Simulator
             </p>
-            <p className="text-gray-400 text-sm mt-2">
+            <p className="text-black dark:text-gray-400 text-sm mt-2">
               Write in Qiskit, Cirq, or PennyLane • Compile to OpenQASM 3.0 • Simulate with QSim
             </p>
           </div>
@@ -202,7 +202,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-black dark:text-gray-300 mb-2">
                 Email Address
               </label>
               <input
@@ -219,7 +219,7 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-black dark:text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -236,7 +236,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-white transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-black dark:text-gray-400 hover:text-white transition-colors"
                   disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -263,7 +263,7 @@ export default function LoginPage() {
 
           {/* Sign Up Link */}
           <div className="mt-6 pt-6 border-t border-white/10 text-center">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-black dark:text-gray-400">
               Don't have an account?{' '}
               <a href="/signup" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
                 Sign Up
@@ -273,7 +273,7 @@ export default function LoginPage() {
 
           {/* Demo Login */}
           <div className="mt-6 pt-6 border-t border-white/10">
-            <p className="text-sm text-gray-400 text-center mb-3">
+            <p className="text-sm text-black dark:text-gray-400 text-center mb-3">
               Want to try without signing up?
             </p>
             <button
@@ -291,14 +291,14 @@ export default function LoginPage() {
             <div className="flex justify-center space-x-4">
               <a
                 href="/about"
-                className="flex items-center text-sm text-gray-400 hover:text-indigo-400 transition-colors"
+                className="flex items-center text-sm text-black dark:text-gray-400 hover:text-indigo-400 transition-colors"
               >
                 <Book className="w-4 h-4 mr-1" />
                 About
               </a>
               <a
                 href="/examples"
-                className="flex items-center text-sm text-gray-400 hover:text-violet-400 transition-colors"
+                className="flex items-center text-sm text-black dark:text-gray-400 hover:text-violet-400 transition-colors"
               >
                 <Play className="w-4 h-4 mr-1" />
                 Examples
@@ -307,7 +307,7 @@ export default function LoginPage() {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center text-sm text-gray-400 hover:text-cyan-400 transition-colors"
+                className="flex items-center text-sm text-black dark:text-gray-400 hover:text-cyan-400 transition-colors"
               >
                 <Github className="w-4 h-4 mr-1" />
                 GitHub
@@ -317,7 +317,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-black dark:text-gray-500">
               Secure authentication powered by JWT tokens.
               <br />
               Demo account: demo@qcanvas.dev / demo123
