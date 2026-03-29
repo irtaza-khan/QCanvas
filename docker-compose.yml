@@ -7,9 +7,9 @@ services:
     ports:
       - "5433:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=qcanvas_db
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-qcanvas_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -35,9 +35,52 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: qcanvas_backend
+    working_dir: /app/backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Use Compose DNS names (not localhost) from inside container
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-qcanvas_db}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=${REDIS_DB:-0}
+      - PYTHONPATH=/app
+    volumes:
+      # Dev hot-reload (no rebuild needed for code changes)
+      - ./backend:/app/backend
+      - ./quantum_converters:/app/quantum_converters
+      - ./quantum_simulator:/app/quantum_simulator
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()\""
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - qcanvas_network
+
   sonarqube:
     image: sonarqube:community
     container_name: qcanvas_sonarqube
+    profiles: ["metrics"]
     ports:
       - "9000:9000"
     environment:

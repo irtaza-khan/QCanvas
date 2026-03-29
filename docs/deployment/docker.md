@@ -55,8 +55,8 @@ cd qcanvas
 ### 2. Configure Environment
 
 ```bash
-# Copy environment template
-cp environment.env .env
+# Copy environment template (Docker Compose)
+cp .env.example .env
 
 # Edit environment variables
 nano .env
@@ -65,33 +65,63 @@ nano .env
 ### 3. Start Services
 
 ```bash
-# Start all services
-docker-compose up -d
+# Start lean stack (postgres + redis + backend)
+docker compose up -d --build
 
 # Check service status
-docker-compose ps
+docker compose ps
 ```
 
 ### 4. Access QCanvas
 
-- **Frontend (Next.js)**: http://localhost:3000
 - **Backend API (FastAPI)**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
-- **Next.js API Routes**: http://localhost:3000/api
-- **Grafana**: http://localhost:3001 (admin/admin)
-- **Prometheus**: http://localhost:9090
+
+If you are running the frontend locally, configure it with:\n+`NEXT_PUBLIC_API_BASE=http://127.0.0.1:8000`
+
+Optional services:\n+- **SonarQube** (profile `metrics`): http://localhost:9000
 
 ### 5. Stop Services
 
 ```bash
 # Stop all services
-docker-compose down
+docker compose down
 
 # Stop and remove volumes
-docker-compose down -v
+docker compose down -v
+```
+
+### SonarQube (optional profile)
+
+Run SonarQube only when you need it:
+
+```bash
+docker compose --profile metrics up -d
 ```
 
 ## Development Deployment
+
+## Verification (backend-in-Docker, frontend-local workflow)
+
+After `docker compose up -d --build`:
+
+```bash
+# API root
+curl http://localhost:8000/
+
+# Health (compat)
+curl http://localhost:8000/health
+
+# Health (router)
+curl http://localhost:8000/api/health/
+```
+
+If you want to validate that the backend can reach Postgres/Redis, the simplest check is to hit an endpoint that persists or reads data (e.g. auth/projects/files). If you don’t have a known DB-touching endpoint handy, you can at least confirm the containers are healthy:
+
+```bash
+docker compose ps
+docker compose logs -f backend
+```
 
 ### Development Configuration
 
