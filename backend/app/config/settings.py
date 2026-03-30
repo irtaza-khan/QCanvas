@@ -25,7 +25,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    BACKEND_CORS_ORIGINS: list[str] = [
+        "http://localhost:3000", 
+        "http://localhost:8000",
+        "https://qcanvas.codes",
+        "https://www.qcanvas.codes"
+    ]
 
     def model_post_init(self, __context):
         if self.DATABASE_URL is None:

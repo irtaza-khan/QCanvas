@@ -86,16 +86,39 @@ let cachedApiBase: string | null = null
 async function getApiBase(): Promise<string> {
   if (cachedApiBase) return cachedApiBase
 
-  // 1. If Next.js is running in production (AWS Amplify), strictly use the live API
+  // 1. Browser-side detection (Foolproof against bad ENV variables)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      // We are visiting the website via localhost:3000 -> use local backend
+      cachedApiBase = 'http://127.0.0.1:8000'
+      console.log('[API] Local UI detected: Using local backend:', cachedApiBase)
+      return cachedApiBase
+    } else {
+      // We are visiting from qcanvas.codes -> use live backend!
+      let apiUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.qcanvas.codes'
+      // Safety net: ignore accidental localhost references baked into production builds
+      if (apiUrl.includes('127.0.0.1') || apiUrl.includes('localhost')) {
+        apiUrl = 'https://api.qcanvas.codes'
+      }
+      cachedApiBase = apiUrl
+      console.log('[API] Remote UI detected: Using remote backend:', cachedApiBase)
+      return cachedApiBase
+    }
+  }
+
+  // 2. Server-Side Rendering (SSR) Fallback logic
   if (process.env.NODE_ENV === 'production') {
-    cachedApiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.qcanvas.codes'
-    console.log('[API] Production mode: Using remote backend:', cachedApiBase)
+    let apiUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.qcanvas.codes'
+    if (apiUrl.includes('127.0.0.1') || apiUrl.includes('localhost')) {
+      apiUrl = 'https://api.qcanvas.codes'
+    }
+    cachedApiBase = apiUrl
     return cachedApiBase
   }
 
-  // 2. If Next.js is running locally (npm run dev), use the local API
-  cachedApiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000'
-  console.log('[API] Local dev mode: Using local backend:', cachedApiBase)
+  cachedApiBase = 'http://127.0.0.1:8000'
   return cachedApiBase
 }
 
