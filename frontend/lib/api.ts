@@ -17,36 +17,74 @@ const DISABLE_REMOTE_FALLBACK =
 
 let cachedApiBase: string | null = null
 
+// async function getApiBase(): Promise<string> {
+//   if (cachedApiBase) return cachedApiBase
+
+//   const localUrl = 'http://127.0.0.1:8000'
+//   const railwayUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://qcanvas-nextjs-production.up.railway.app'
+
+//   // Always prefer local when available
+//   try {
+//     const response = await fetch(`${localUrl}/api/health`, { method: 'GET' })
+//     if (response.ok) {
+//       cachedApiBase = localUrl
+//       console.log('[API] Using local backend:', localUrl)
+//       return localUrl
+//     }
+//   } catch (error) {
+//     console.log('[API] Local backend not reachable')
+//   }
+
+//   // If remote fallback is disabled, always return local URL
+//   if (DISABLE_REMOTE_FALLBACK) {
+//     cachedApiBase = localUrl
+//     console.warn('[API] Remote fallback disabled, forcing local backend even if unreachable')
+//     return localUrl
+//   }
+
 async function getApiBase(): Promise<string> {
   if (cachedApiBase) return cachedApiBase
 
+  // 1. The Local URL
   const localUrl = 'http://127.0.0.1:8000'
-  const railwayUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://qcanvas-nextjs-production.up.railway.app'
 
-  // Always prefer local when available
-  try {
-    const response = await fetch(`${localUrl}/api/health`, { method: 'GET' })
-    if (response.ok) {
-      cachedApiBase = localUrl
-      console.log('[API] Using local backend:', localUrl)
-      return localUrl
-    }
-  } catch (error) {
-    console.log('[API] Local backend not reachable')
-  }
+  // 2. The Production URL (from Amplify Environment Variables)
+  // If the variable isn't set, fallback to your hardcoded AWS URL just in case
+  const productionUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.qcanvas.codes'
 
-  // If remote fallback is disabled, always return local URL
+  // If we are explicitly forcing local mode (like during local development)
   if (DISABLE_REMOTE_FALLBACK) {
     cachedApiBase = localUrl
-    console.warn('[API] Remote fallback disabled, forcing local backend even if unreachable')
+    console.warn('[API] Remote fallback disabled, forcing local backend')
     return localUrl
   }
 
-  // Remote fallback enabled: use Railway/production URL
-  cachedApiBase = railwayUrl
-  console.log('[API] Falling back to remote backend:', railwayUrl)
-  return railwayUrl
+  // Determine if we should use local or production
+  try {
+    // Only try to ping localhost if we are NOT explicitly running in production
+    if (process.env.NODE_ENV !== 'production') {
+      const response = await fetch(`${localUrl}/api/health`, { method: 'GET' })
+      if (response.ok) {
+        cachedApiBase = localUrl
+        console.log('[API] Using local backend:', localUrl)
+        return localUrl
+      }
+    }
+  } catch (error) {
+    console.log('[API] Local backend not reachable or running in production')
+  }
+
+  // If local fails or we are in production, use the AWS URL
+  cachedApiBase = productionUrl
+  console.log('[API] Using remote backend:', productionUrl)
+  return productionUrl
 }
+
+// Remote fallback enabled: use Railway/production URL
+// cachedApiBase = railwayUrl
+// console.log('[API] Falling back to remote backend:', railwayUrl)
+// return railwayUrl
+// }
 
 // Generic API helper
 async function apiRequest<T>(

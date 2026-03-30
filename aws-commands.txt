@@ -1,0 +1,4 @@
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 626230557862.dkr.ecr.us-east-1.amazonaws.com
+docker build -t qcanvas-api:latest -f backend/Dockerfile .
+docker tag qcanvas-api:latest 626230557862.dkr.ecr.us-east-1.amazonaws.com/qcanvas-api:latest
+docker push 626230557862.dkr.ecr.us-east-1.amazonaws.com/qcanvas-api:latest
