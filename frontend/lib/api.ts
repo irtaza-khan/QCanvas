@@ -13,7 +13,7 @@ import { File, ApiResponse, CreateFileRequest, UpdateFileRequest } from '@/types
 //   - Fall back to NEXT_PUBLIC_API_BASE/Railway when local is unavailable
 
 const DISABLE_REMOTE_FALLBACK =
-  process.env.NEXT_PUBLIC_DISABLE_REMOTE_FALLBACK === 'true' || true
+  process.env.NEXT_PUBLIC_DISABLE_REMOTE_FALLBACK === 'true'
 
 let cachedApiBase: string | null = null
 
