@@ -89,7 +89,7 @@ async function getApiBase(): Promise<string> {
   // 1. Browser-side detection (Foolproof against bad ENV variables)
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname
-    
+
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       // We are visiting the website via localhost:3000 -> use local backend
       cachedApiBase = 'http://127.0.0.1:8000'
@@ -106,7 +106,7 @@ async function getApiBase(): Promise<string> {
       if (window.location.protocol === 'https:' && apiUrl.startsWith('http://')) {
         apiUrl = apiUrl.replace('http://', 'https://')
       }
-      
+
       cachedApiBase = apiUrl
       console.log('[API] Remote UI detected: Using remote backend:', cachedApiBase)
       return cachedApiBase
@@ -198,7 +198,7 @@ export const fileApi = {
   // Get files (root or project specific)
   async getFiles(projectId?: number, token?: string): Promise<ApiResponse<File[]>> {
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
-    const endpoint = projectId ? `/api/files?project_id=${projectId}` : '/api/files'
+    const endpoint = projectId ? `/api/files/?project_id=${projectId}` : '/api/files/'
     return apiRequest<File[]>(endpoint, { headers })
   },
 
