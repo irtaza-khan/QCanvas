@@ -15,7 +15,7 @@ import { File, ApiResponse, CreateFileRequest, UpdateFileRequest } from '@/types
 const DISABLE_REMOTE_FALLBACK =
   process.env.NEXT_PUBLIC_DISABLE_REMOTE_FALLBACK === 'true'
 
-let cachedApiBase: string | null = null
+// let cachedApiBase: string | null = null
 
 // async function getApiBase(): Promise<string> {
 //   if (cachedApiBase) return cachedApiBase
@@ -42,42 +42,61 @@ let cachedApiBase: string | null = null
 //     return localUrl
 //   }
 
+// let cachedApiBase: string | null = null
+// async function getApiBase(): Promise<string> {
+//   if (cachedApiBase) return cachedApiBase
+
+//   // 1. The Local URL
+//   const localUrl = 'http://127.0.0.1:8000'
+
+//   // 2. The Production URL (from Amplify Environment Variables)
+//   // If the variable isn't set, fallback to your hardcoded AWS URL just in case
+//   const productionUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.qcanvas.codes'
+
+//   // If we are explicitly forcing local mode (like during local development)
+//   if (DISABLE_REMOTE_FALLBACK) {
+//     cachedApiBase = localUrl
+//     console.warn('[API] Remote fallback disabled, forcing local backend')
+//     return localUrl
+//   }
+
+//   // Determine if we should use local or production
+//   try {
+//     // Only try to ping localhost if we are NOT explicitly running in production
+//     if (process.env.NODE_ENV !== 'production') {
+//       const response = await fetch(`${localUrl}/api/health`, { method: 'GET' })
+//       if (response.ok) {
+//         cachedApiBase = localUrl
+//         console.log('[API] Using local backend:', localUrl)
+//         return localUrl
+//       }
+//     }
+//   } catch (error) {
+//     console.log('[API] Local backend not reachable or running in production')
+//   }
+
+//   // If local fails or we are in production, use the AWS URL
+//   cachedApiBase = productionUrl
+//   console.log('[API] Using remote backend:', productionUrl)
+//   return productionUrl
+// }
+
+let cachedApiBase: string | null = null
+
 async function getApiBase(): Promise<string> {
   if (cachedApiBase) return cachedApiBase
 
-  // 1. The Local URL
-  const localUrl = 'http://127.0.0.1:8000'
-
-  // 2. The Production URL (from Amplify Environment Variables)
-  // If the variable isn't set, fallback to your hardcoded AWS URL just in case
-  const productionUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.qcanvas.codes'
-
-  // If we are explicitly forcing local mode (like during local development)
-  if (DISABLE_REMOTE_FALLBACK) {
-    cachedApiBase = localUrl
-    console.warn('[API] Remote fallback disabled, forcing local backend')
-    return localUrl
+  // 1. If Next.js is running in production (AWS Amplify), strictly use the live API
+  if (process.env.NODE_ENV === 'production') {
+    cachedApiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.qcanvas.codes'
+    console.log('[API] Production mode: Using remote backend:', cachedApiBase)
+    return cachedApiBase
   }
 
-  // Determine if we should use local or production
-  try {
-    // Only try to ping localhost if we are NOT explicitly running in production
-    if (process.env.NODE_ENV !== 'production') {
-      const response = await fetch(`${localUrl}/api/health`, { method: 'GET' })
-      if (response.ok) {
-        cachedApiBase = localUrl
-        console.log('[API] Using local backend:', localUrl)
-        return localUrl
-      }
-    }
-  } catch (error) {
-    console.log('[API] Local backend not reachable or running in production')
-  }
-
-  // If local fails or we are in production, use the AWS URL
-  cachedApiBase = productionUrl
-  console.log('[API] Using remote backend:', productionUrl)
-  return productionUrl
+  // 2. If Next.js is running locally (npm run dev), use the local API
+  cachedApiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000'
+  console.log('[API] Local dev mode: Using local backend:', cachedApiBase)
+  return cachedApiBase
 }
 
 // Remote fallback enabled: use Railway/production URL
