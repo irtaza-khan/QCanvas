@@ -195,9 +195,27 @@ async function apiRequest<T>(
 
 // File API functions
 export const fileApi = {
+  // // Get files (root or project specific)
+  // async getFiles(projectId?: number, token?: string): Promise<ApiResponse<File[]>> {
+  //   const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+  //   const endpoint = projectId ? `/api/files/?project_id=${projectId}` : '/api/files/'
+  //   return apiRequest<File[]>(endpoint, { headers })
+  // },
+
+  // // Create file
+  // async createFile(data: CreateFileRequest, token?: string): Promise<ApiResponse<File>> {
+  //   const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+  //   return apiRequest<File>('/api/files', {
+  //     method: 'POST',
+  //     body: JSON.stringify(data),
+  //     headers,
+  //   })
+  // },
+
   // Get files (root or project specific)
   async getFiles(projectId?: number, token?: string): Promise<ApiResponse<File[]>> {
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    // ADDED SLASH AFTER files/
     const endpoint = projectId ? `/api/files/?project_id=${projectId}` : '/api/files/'
     return apiRequest<File[]>(endpoint, { headers })
   },
@@ -205,12 +223,14 @@ export const fileApi = {
   // Create file
   async createFile(data: CreateFileRequest, token?: string): Promise<ApiResponse<File>> {
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
-    return apiRequest<File>('/api/files', {
+    // ADDED SLASH
+    return apiRequest<File>('/api/files/', {
       method: 'POST',
       body: JSON.stringify(data),
       headers,
     })
   },
+
 
   // Get specific file
   async getFile(id: number, token?: string): Promise<ApiResponse<File>> {
@@ -262,10 +282,16 @@ export const projectsApi = {
     return apiRequest<Project[]>('/api/projects/', { headers })
   },
 
-  // Get specific project
-  async getProject(id: number, token?: string): Promise<ApiResponse<Project>> {
+  // // Get specific project
+  // async getProject(id: number, token?: string): Promise<ApiResponse<Project>> {
+  //   const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+  //   return apiRequest<Project>(`/api/projects/${id}`, { headers })
+  // },
+
+  // Get all projects
+  async getProject(token?: string): Promise<ApiResponse<Project[]>> {
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
-    return apiRequest<Project>(`/api/projects/${id}`, { headers })
+    return apiRequest<Project[]>('/api/projects/', { headers }) // Ensure the slash is here
   },
 
   // Create project
