@@ -98,10 +98,15 @@ async function getApiBase(): Promise<string> {
     } else {
       // We are visiting from qcanvas.codes -> use live backend!
       let apiUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.qcanvas.codes'
-      // Safety net: ignore accidental localhost references baked into production builds
+      // Safety net 1: ignore accidental localhost references baked into production builds
       if (apiUrl.includes('127.0.0.1') || apiUrl.includes('localhost')) {
         apiUrl = 'https://api.qcanvas.codes'
       }
+      // Safety net 2: Prevent Mixed Content errors by forcing HTTPS if the frontend is HTTPS
+      if (window.location.protocol === 'https:' && apiUrl.startsWith('http://')) {
+        apiUrl = apiUrl.replace('http://', 'https://')
+      }
+      
       cachedApiBase = apiUrl
       console.log('[API] Remote UI detected: Using remote backend:', cachedApiBase)
       return cachedApiBase
