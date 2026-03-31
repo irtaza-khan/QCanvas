@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Terminal, BarChart3, Copy, Download, AlertCircle, AlertTriangle, Activity, Cpu, Zap, TrendingUp } from '@/components/Icons';
+import { Terminal, BarChart3, Copy, Download, AlertCircle, AlertTriangle, Activity, Cpu, Zap, TrendingUp, ResultIcon, OutputIcon } from '@/components/Icons';
 import { Minimize2, Maximize2, XCircle, CheckCircle, Trash2, FileCode2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFileStore } from '@/lib/store'
@@ -472,7 +472,7 @@ export default function ResultsPane() {
     return (
       <div className="h-8 bg-editor-sidebar border-t border-editor-border flex items-center justify-between px-4">
         <div className="flex items-center space-x-2">
-          <Terminal className="w-4 h-4 text-editor-text" />
+          <ResultIcon className="w-4 h-4 text-editor-text" />
           <span className="text-sm text-editor-text">Results</span>
         </div>
         <button
@@ -492,7 +492,7 @@ export default function ResultsPane() {
       <div className="h-12 bg-editor-sidebar border-b border-editor-border flex items-center justify-between px-4 flex-shrink-0">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <Terminal className="w-4 h-4 text-editor-text" />
+            <ResultIcon className="w-4 h-4 text-editor-text" />
             <span className="text-sm font-medium text-white">Results</span>
           </div>
 
@@ -500,7 +500,7 @@ export default function ResultsPane() {
           <div className="flex items-center space-x-1">
             {[
               { id: 'console', label: 'Console', icon: Terminal },
-              { id: 'output', label: 'Output', icon: Terminal },
+              { id: 'output', label: 'Output', icon: OutputIcon },
               { id: 'histogram', label: 'Histogram', icon: BarChart3 },
               { id: 'qasm', label: 'OpenQASM', icon: FileCode2 },
               { id: 'errors', label: 'Errors', icon: AlertCircle, count: errors.filter(e => e.severity === 'error').length },
