@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Moon, Sun, Book, Code, Cpu, BarChart3, Zap, Settings, Play, Star, Atom, Lightbulb, Database, Layers, Terminal, FileText, Cloud, Server, Wrench, Target, Rocket, Clock, TrendingUp, GitBranch, FrameworkConversionIcon, FlagIcon, SparklesIcon, ApiIcon } from '@/components/Icons';
+import { Moon, Sun, Book, Code, Cpu, BarChart3, Zap, Settings, Play, Star, Atom, Lightbulb, Database, Layers, Terminal, FileText, Cloud, Server, Wrench, Target, Rocket, Clock, TrendingUp, GitBranch, FrameworkConversionIcon, FlagIcon, SparklesIcon, ApiIcon, CirqIcon, PennyLaneIcon, QiskitIcon } from '@/components/Icons';
 import { Menu, X, ChevronRight, ArrowRight, CheckCircle, Shield, Monitor, Sparkles, Info } from 'lucide-react';
 import { useFileStore } from '@/lib/store';
 import { config, getCopyrightText } from '@/lib/config'
@@ -245,7 +245,7 @@ print(qc)`}
             <div className="grid md:grid-cols-3 gap-6">
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="w-16 h-16 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-500/30 transition-colors duration-300">
-                  <Code className="w-8 h-8 text-blue-400" />
+                  <QiskitIcon className="w-8 h-8 text-black dark:text-white" />
                 </div>
                 <h4 className="text-xl font-semibold text-white mb-2">Qiskit</h4>
                 <p className="text-editor-text text-sm mb-3">IBM&apos;s comprehensive quantum computing framework</p>
@@ -256,7 +256,7 @@ print(qc)`}
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="w-16 h-16 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-500/30 transition-colors duration-300">
-                  <Code className="w-8 h-8 text-purple-400" />
+                  <CirqIcon className="w-8 h-8 text-purple-400" />
                 </div>
                 <h4 className="text-xl font-semibold text-white mb-2">Cirq</h4>
                 <p className="text-editor-text text-sm mb-3">Google&apos;s framework for near-term quantum devices</p>
@@ -267,7 +267,7 @@ print(qc)`}
               </div>
               <div className="text-center group hover:scale-105 transition-transform duration-300">
                 <div className="w-16 h-16 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-500/30 transition-colors duration-300">
-                  <Code className="w-8 h-8 text-green-400" />
+                  <PennyLaneIcon className="w-8 h-8 text-green-400" />
                 </div>
                 <h4 className="text-xl font-semibold text-white mb-2">PennyLane</h4>
                 <p className="text-editor-text text-sm mb-3">Xanadu&apos;s quantum machine learning framework</p>
@@ -747,7 +747,7 @@ print(qc)`}
               <div className="bg-black/20 rounded-lg p-6 border border-white/5 hover:border-blue-500/50 transition-colors">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <Database className="w-5 h-5 text-blue-400" />
+                    <CirqIcon className="w-6 h-6 text-blue-400" />
                   </div>
                   <h4 className="text-lg font-semibold text-white ml-3">Cirq</h4>
                 </div>
@@ -767,7 +767,7 @@ print(qc)`}
               <div className="bg-black/20 rounded-lg p-6 border border-white/5 hover:border-purple-500/50 transition-colors">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                    <Layers className="w-5 h-5 text-purple-400" />
+                    <QiskitIcon className="w-6 h-6 text-black dark:text-white" />
                   </div>
                   <h4 className="text-lg font-semibold text-white ml-3">Qiskit</h4>
                 </div>
@@ -787,7 +787,7 @@ print(qc)`}
               <div className="bg-black/20 rounded-lg p-6 border border-white/5 hover:border-green-500/50 transition-colors">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-green-400" />
+                    <PennyLaneIcon className="w-6 h-6 text-green-400" />
                   </div>
                   <h4 className="text-lg font-semibold text-white ml-3">PennyLane</h4>
                 </div>
@@ -1099,7 +1099,7 @@ print(result.probabilities)`}
               <div className="bg-black/20 rounded-lg p-6 border border-white/5">
                 <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
                   <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
-                    <Code className="w-4 h-4 text-blue-400" />
+                    <CirqIcon className="w-5 h-5 text-blue-400" />
                   </div>
                   Cirq
                 </h4>
@@ -1130,7 +1130,7 @@ print(circuit)`}
               <div className="bg-black/20 rounded-lg p-6 border border-white/5">
                 <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
                   <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3">
-                    <Code className="w-4 h-4 text-purple-400" />
+                    <QiskitIcon className="w-5 h-5 text-black dark:text-white" />
                   </div>
                   Qiskit
                 </h4>
@@ -1162,7 +1162,7 @@ c: 2/══════╪══╬══╩═`}
               <div className="bg-black/20 rounded-lg p-6 border border-white/5">
                 <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
                   <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center mr-3">
-                    <Code className="w-4 h-4 text-green-400" />
+                    <PennyLaneIcon className="w-5 h-5 text-green-400" />
                   </div>
                   PennyLane
                 </h4>

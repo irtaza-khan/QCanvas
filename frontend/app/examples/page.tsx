@@ -1185,11 +1185,11 @@ export default function ExamplesPage() {
                   id="category-select"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-black/20 border border-white/5 rounded-lg focus-quantum text-white"
+                  className="w-full px-3 py-2 bg-black/5 dark:bg-black border border-white/5 rounded-lg focus-quantum text-black dark:text-white"
                 >
-                  <option value="all">All Categories</option>
+                  <option value="all" className="bg-white text-black dark:bg-black dark:text-white">All Categories</option>
                   {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                    <option key={category} value={category} className="bg-white text-black dark:bg-black dark:text-white">{category}</option>
                   ))}
                 </select>
               </div>
@@ -1201,11 +1201,11 @@ export default function ExamplesPage() {
                   id="framework-select"
                   value={selectedFramework}
                   onChange={(e) => setSelectedFramework(e.target.value)}
-                  className="w-full px-3 py-2 bg-black/20 border border-white/5 rounded-lg focus-quantum text-white"
+                  className="w-full px-3 py-2 bg-black/5 dark:bg-black border border-white/5 rounded-lg focus-quantum text-black dark:text-white"
                 >
-                  <option value="all">All Frameworks</option>
+                  <option value="all" className="bg-white text-black dark:bg-black dark:text-white">All Frameworks</option>
                   {frameworks.map(framework => (
-                    <option key={framework} value={framework}>{framework.charAt(0).toUpperCase() + framework.slice(1)}</option>
+                    <option key={framework} value={framework} className="bg-white text-black dark:bg-black dark:text-white">{framework.charAt(0).toUpperCase() + framework.slice(1)}</option>
                   ))}
                 </select>
               </div>
@@ -1217,11 +1217,11 @@ export default function ExamplesPage() {
                   id="difficulty-select"
                   value={selectedDifficulty}
                   onChange={(e) => setSelectedDifficulty(e.target.value)}
-                  className="w-full px-3 py-2 bg-black/20 border border-white/5 rounded-lg focus-quantum text-white"
+                  className="w-full px-3 py-2 bg-black/5 dark:bg-black border border-white/5 rounded-lg focus-quantum text-black dark:text-white"
                 >
-                  <option value="all">All Levels</option>
+                  <option value="all" className="bg-white text-black dark:bg-black dark:text-white">All Levels</option>
                   {difficulties.map(difficulty => (
-                    <option key={difficulty} value={difficulty}>{difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</option>
+                    <option key={difficulty} value={difficulty} className="bg-white text-black dark:bg-black dark:text-white">{difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</option>
                   ))}
                 </select>
               </div>
