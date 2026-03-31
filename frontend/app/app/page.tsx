@@ -130,7 +130,34 @@ export default function AppPage() {
   // Handle global save event
   useEffect(() => {
     const handleSave = () => {
-      useFileStore.getState().saveActiveFile()
+      const store = useFileStore.getState();
+      store.saveActiveFile();
+      
+      // Also download SVG to computer if available
+      const activeFile = store.files.find((f: any) => f.id === store.activeFileId);
+      if (activeFile) {
+        // Try to capture and save the circuit visualization if it exists in the DOM
+        const svgElement = document.querySelector('svg.min-w-full') as SVGSVGElement | null;
+        if (svgElement) {
+          try {
+            const serializer = new XMLSerializer();
+            let source = serializer.serializeToString(svgElement);
+            if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+              source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+            const svgUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+            const svgLink = document.createElement("a");
+            svgLink.href = svgUrl;
+            svgLink.download = activeFile.name.replace(/\.[^/.]+$/, "") + "_circuit.svg";
+            document.body.appendChild(svgLink);
+            svgLink.click();
+            document.body.removeChild(svgLink);
+          } catch (e) {
+            console.error("Failed to save SVG", e);
+          }
+        }
+      }
     }
 
     window.addEventListener('save-file', handleSave)
