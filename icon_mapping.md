@@ -1,0 +1,1124 @@
+# Icon Usage Documentation
+
+This document tracks the explicit usage of icons across the Next.js pages and components, linking them to their corresponding SVG assets and checking if animated versions are available in the folder structure.
+
+## `app\page.tsx`
+- **Component Name**: `<Atom />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\atom-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\atom-svgrepo-com-animated.svg]
+- **Component Name**: `<Sparkles />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Cpu />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\cpu-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\cpu-svgrepo-com-animated.svg]
+- **Component Name**: `<Zap />`
+  - **Used context**: Label near icon: 'Next-Generation Quantum Development'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+- **Component Name**: `<Play />`
+  - **Used context**: Label near icon: 'Try QCanvas Now'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<ArrowRight />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Lightbulb />`
+  - **Used context**: Label near icon: 'Explore Features'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\lightbulb-minimalistic-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<ChevronDown />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<FrameworkConversionAnimated />`
+  - **Used context**: Heading: 'Framework Conversion'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\App-Nav-UI\horizontal-top-right-main-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\App-Nav-UI\horizontal-top-right-main-svgrepo-com-animated.svg]
+- **Component Name**: `<Play />`
+  - **Used context**: Heading: 'Real-time Simulation'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<PlaySvgRepo />`
+  - **Used context**: Heading: 'Real-time Simulation'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Book />`
+  - **Used context**: Heading: 'Educational Platform'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\book-open-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<WebIdeIcon />`
+  - **Used context**: Heading: 'Web IDE'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\monitor-alt-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Users />`
+  - **Used context**: Heading: 'Community Sharing'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Globe />`
+  - **Used context**: Heading: 'OpenQASM 3.0'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\globe-alt-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Code />`
+  - **Used context**: Label near icon: 'View All Examples'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<CodeSquareSvgRepo />`
+  - **Used context**: Label near icon: 'View All Examples'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-square-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-square-svgrepo-com-animated.svg]
+- **Component Name**: `<Code />`
+  - **Used context**: Heading: 'Bell State (Cirq)'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<Play />`
+  - **Used context**: Heading: 'Teleportation (Qiskit)'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Atom />`
+  - **Used context**: Heading: 'Grover&apos;s Search (PennyLane)'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\atom-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\atom-svgrepo-com-animated.svg]
+- **Component Name**: `<Star />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\star-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\star-svgrepo-com-animated.svg]
+- **Component Name**: `<RocketAnimated />`
+  - **Used context**: Label near icon: 'Launch QCanvas'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\rocket-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\rocket-svgrepo-com-animated.svg]
+- **Component Name**: `<Book />`
+  - **Used context**: Label near icon: 'Read Documentation'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\book-open-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+
+## `app\about\page.tsx`
+- **Component Name**: `<Moon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Menu />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Moon />`
+  - **Used context**: Label near icon: 'Theme'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: Label near icon: 'Theme'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<AboutUsIcon />`
+  - **Used context**: Label near icon: 'Us'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\User-Profile-Authentication\about-us-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Users />`
+  - **Used context**: Heading: '{member.name}'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Mail />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Github />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Linkedin />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Users />`
+  - **Used context**: Heading: '{supervisor.name}'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `app\achievements\page.tsx`
+- **Component Name**: `<RefreshCw />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Trophy />`
+  - **Used context**: Heading: 'Completed                                 ({completed.length})'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com-animated.svg]
+- **Component Name**: `<Filter />`
+  - **Used context**: Heading: 'In Progress                                 ({inProgress.length})'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Lock />`
+  - **Used context**: Heading: 'Not Started                                 ({notStarted.length})'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Trophy />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com-animated.svg]
+
+## `app\docs\page.tsx`
+- **Component Name**: `<Info />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Atom />`
+  - **Used context**: Label near icon: 'Overview'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\atom-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\atom-svgrepo-com-animated.svg]
+- **Component Name**: `<FrameworkConversionIcon />`
+  - **Used context**: Heading: 'Framework Conversion'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\App-Nav-UI\horizontal-top-right-main-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\App-Nav-UI\horizontal-top-right-main-svgrepo-com-animated.svg]
+- **Component Name**: `<Play />`
+  - **Used context**: Heading: 'Real-time Simulation'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<BarChart3 />`
+  - **Used context**: Heading: 'Interactive Visualization'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\barchart-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\barchart-svgrepo-com-animated.svg]
+- **Component Name**: `<Book />`
+  - **Used context**: Heading: 'Educational Platform'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\book-open-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Rocket />`
+  - **Used context**: Heading: 'Project Mission'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\rocket-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\rocket-svgrepo-com-animated.svg]
+- **Component Name**: `<FlagIcon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\flag-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<FlagIcon />`
+  - **Used context**: Label near icon: 'Getting Started'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\flag-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Target />`
+  - **Used context**: Heading: 'Quick Start Guide'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\target-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\target-svgrepo-com-animated.svg]
+- **Component Name**: `<Lightbulb />`
+  - **Used context**: Heading: 'First Example'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\lightbulb-minimalistic-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Code />`
+  - **Used context**: Heading: 'Qiskit'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<Code />`
+  - **Used context**: Heading: 'Cirq'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<Code />`
+  - **Used context**: Heading: 'PennyLane'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<TrendingUp />`
+  - **Used context**: Heading: 'Learning Path'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trending-up-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trending-up-svgrepo-com-animated.svg]
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Basic quantum gates and circuits'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Framework conversion concepts'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Clock />`
+  - **Used context**: Label near icon: 'Advanced algorithms and optimization'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\clock-three-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Clock />`
+  - **Used context**: Label near icon: 'Noise modeling and error correction'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\clock-three-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Wrench />`
+  - **Used context**: Heading: 'Resources'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Play />`
+  - **Used context**: Label near icon: 'Interactive Examples'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<ChevronRight />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<FileText />`
+  - **Used context**: Label near icon: 'Complete Documentation'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\file-text-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\file-text-svgrepo-com-animated.svg]
+- **Component Name**: `<GitBranch />`
+  - **Used context**: Label near icon: 'Source Code'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\git-branch-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\git-branch-svgrepo-com-animated.svg]
+- **Component Name**: `<SparklesIcon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\sparkles-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\sparkles-svgrepo-com-animated.svg]
+- **Component Name**: `<Sparkles />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<SparklesIcon />`
+  - **Used context**: Label near icon: 'Features'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\sparkles-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\sparkles-svgrepo-com-animated.svg]
+- **Component Name**: `<Sparkles />`
+  - **Used context**: Label near icon: 'Features'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'AST-based parsing and intelligent gate mapping'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'OpenQASM 3.0 as universal intermediate representation'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Circuit optimization levels 0-3'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Validation and error reporting'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Play />`
+  - **Used context**: Heading: 'Quantum Simulation'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Statevector backend for exact simulation'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Density matrix backend for noise modeling'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Stabilizer backend for Clifford circuits'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Configurable shot counts (1-10,000)'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<BarChart3 />`
+  - **Used context**: Heading: 'Visualization'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\barchart-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\barchart-svgrepo-com-animated.svg]
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Real-time circuit visualization'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Histogram plots for measurement results'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'State vector and probability displays'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Export capabilities (JSON, CSV, PNG)'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Book />`
+  - **Used context**: Heading: 'Educational Tools'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\book-open-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Pre-built example circuits'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Framework comparison tutorials'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Interactive learning modules'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Beginner to advanced difficulty levels'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Settings />`
+  - **Used context**: Heading: 'Advanced Features'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\settings-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Terminal />`
+  - **Used context**: Heading: 'Web IDE'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\terminal-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\terminal-svgrepo-com-animated.svg]
+- **Component Name**: `<Shield />`
+  - **Used context**: Heading: 'Security'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Cloud />`
+  - **Used context**: Heading: 'Scalability'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\cloud-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Layers />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\layers-minimalistic-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Layers />`
+  - **Used context**: Label near icon: 'Architecture'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\layers-minimalistic-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Monitor />`
+  - **Used context**: Heading: 'Frontend Layer'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Next.js 14 with App Router'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'React 18 with TypeScript'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Monaco Editor integration'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Real-time WebSocket updates'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Server />`
+  - **Used context**: Heading: 'Backend Layer'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\server-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\server-svgrepo-com-animated.svg]
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'FastAPI with async support'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'PostgreSQL with SQLAlchemy'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Redis caching layer'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Pydantic data validation'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ArrowRight />`
+  - **Used context**: Label near icon: 'API Request'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ArrowRight />`
+  - **Used context**: Label near icon: 'Framework Parser'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ArrowRight />`
+  - **Used context**: Label near icon: 'OpenQASM 3.0'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ArrowRight />`
+  - **Used context**: Label near icon: 'Backend Selection'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ArrowRight />`
+  - **Used context**: Label near icon: 'Circuit Execution'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ArrowRight />`
+  - **Used context**: Label near icon: 'Results'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ApiIcon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ApiIcon />`
+  - **Used context**: Label near icon: 'API Reference'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<FrameworkConversionIcon />`
+  - **Used context**: Heading: 'Conversion API'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\App-Nav-UI\horizontal-top-right-main-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\App-Nav-UI\horizontal-top-right-main-svgrepo-com-animated.svg]
+- **Component Name**: `<Play />`
+  - **Used context**: Heading: 'Simulation API (QSim)'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Database />`
+  - **Used context**: Heading: 'Cirq'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\database-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\database-svgrepo-com-animated.svg]
+- **Component Name**: `<Layers />`
+  - **Used context**: Heading: 'Qiskit'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\layers-minimalistic-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Zap />`
+  - **Used context**: Heading: 'PennyLane'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+- **Component Name**: `<Cpu />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\cpu-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\cpu-svgrepo-com-animated.svg]
+- **Component Name**: `<Cpu />`
+  - **Used context**: Label near icon: 'Hybrid Execution API'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\cpu-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\cpu-svgrepo-com-animated.svg]
+- **Component Name**: `<Code />`
+  - **Used context**: Heading: 'Available Functions'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<BarChart3 />`
+  - **Used context**: Heading: 'SimulationResult Attributes'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\barchart-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\barchart-svgrepo-com-animated.svg]
+- **Component Name**: `<FileText />`
+  - **Used context**: Heading: 'Printing Circuits'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\file-text-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\file-text-svgrepo-com-animated.svg]
+- **Component Name**: `<Lightbulb />`
+  - **Used context**: Heading: 'Complete Workflow Example'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\lightbulb-minimalistic-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Moon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Menu />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Moon />`
+  - **Used context**: Label near icon: 'Theme'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: Label near icon: 'Theme'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Atom />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\atom-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\atom-svgrepo-com-animated.svg]
+- **Component Name**: `<Book />`
+  - **Used context**: Label near icon: 'Documentation'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\book-open-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Play />`
+  - **Used context**: Label near icon: 'Try QCanvas Now'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Book />`
+  - **Used context**: Label near icon: 'Read Documentation'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\book-open-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+
+## `app\examples\page.tsx`
+- **Component Name**: `<Moon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Menu />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Moon />`
+  - **Used context**: Label near icon: 'Theme'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: Label near icon: 'Theme'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Code />`
+  - **Used context**: Label near icon: 'Examples'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<Code />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<Share2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Copy />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\copy-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\copy-svgrepo-com-animated.svg]
+- **Component Name**: `<Play />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Code />`
+  - **Used context**: Heading: '{activeTab === 'community' ? 'No community projects found' : 'No examples found'}'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+
+## `app\login\page.tsx`
+- **Component Name**: `<Moon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Eye />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<EyeOff />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Play />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Book />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\book-open-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<CodeSquareIcon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-square-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-square-svgrepo-com-animated.svg]
+- **Component Name**: `<Github />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `app\signup\page.tsx`
+- **Component Name**: `<Moon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<User />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Mail />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Lock />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Eye />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<EyeOff />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Play />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Book />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\book-open-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<CodeSquareIcon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-square-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-square-svgrepo-com-animated.svg]
+- **Component Name**: `<Github />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\AddNewLanguage.tsx`
+- **Component Name**: `<Zap />`
+  - **Used context**: Heading: 'Add New Quantum Language'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Info />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ArrowRight />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Paragraph near icon: '{formData.converterFile.name}'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Upload />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\upload-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\upload-svgrepo-com-animated.svg]
+- **Component Name**: `<ArrowLeft />`
+  - **Used context**: Label near icon: 'Back'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<AlertCircle />`
+  - **Used context**: Heading: 'Before You Submit'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\alert-circle-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Label near icon: 'Submit Request'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Heading: 'Request Submitted Successfully!'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<File />`
+  - **Used context**: Heading: 'Converter Requirements'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-file-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-file-svgrepo-com-animated.svg]
+
+## `components\EditorPane.tsx`
+- **Component Name**: `<Code />`
+  - **Used context**: Label near icon: '{activeFile.name}'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<Save />`
+  - **Used context**: Label near icon: 'Save'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\save-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\save-svgrepo-com-animated.svg]
+
+## `components\FindReplace.tsx`
+- **Component Name**: `<Search />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\search-alt-2-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\search-alt-2-svgrepo-com-animated.svg]
+- **Component Name**: `<ChevronUp />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ChevronDown />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<WholeWord />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Regex />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Replace />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\Navbar.tsx`
+- **Component Name**: `<Moon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Menu />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Moon />`
+  - **Used context**: Label near icon: 'Theme'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: Label near icon: 'Theme'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+
+## `components\ProfileDropdown.tsx`
+- **Component Name**: `<Award />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\award-medal-badge-2-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\award-medal-badge-2-svgrepo-com-animated.svg]
+- **Component Name**: `<ChevronDown />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<User />`
+  - **Used context**: Label near icon: 'View Profile'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Award />`
+  - **Used context**: Label near icon: 'Achievements'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\award-medal-badge-2-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\award-medal-badge-2-svgrepo-com-animated.svg]
+- **Component Name**: `<LogOut />`
+  - **Used context**: Label near icon: 'Logout'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\ResultsPane.tsx`
+- **Component Name**: `<XCircle />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<AlertTriangle />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Display-Media-Content-Communication-Icons\alert-triangle-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<AlertCircle />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\alert-circle-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Terminal />`
+  - **Used context**: Label near icon: 'Results'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\terminal-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\terminal-svgrepo-com-animated.svg]
+- **Component Name**: `<Maximize2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Download />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\download-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\download-svgrepo-com-animated.svg]
+- **Component Name**: `<Trash2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Minimize2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Terminal />`
+  - **Used context**: Paragraph near icon: 'No console output yet'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\terminal-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\terminal-svgrepo-com-animated.svg]
+- **Component Name**: `<Copy />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\copy-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\copy-svgrepo-com-animated.svg]
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Terminal />`
+  - **Used context**: Heading: 'Print Output'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\terminal-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\terminal-svgrepo-com-animated.svg]
+- **Component Name**: `<AlertCircle />`
+  - **Used context**: Heading: 'Error Details'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\alert-circle-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<BarChart3 />`
+  - **Used context**: Heading: 'Simulation Results ({hybridResult.simulation_results.length})'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\barchart-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\barchart-svgrepo-com-animated.svg]
+- **Component Name**: `<FileCode2 />`
+  - **Used context**: Heading: 'Generated QASM'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Terminal />`
+  - **Used context**: Heading: 'Execution Summary'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\terminal-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\terminal-svgrepo-com-animated.svg]
+- **Component Name**: `<BarChart3 />`
+  - **Used context**: Paragraph near icon: 'No execution results available. Run the circuit to see histogram.'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\barchart-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\barchart-svgrepo-com-animated.svg]
+- **Component Name**: `<FileCode2 />`
+  - **Used context**: Paragraph near icon: 'No compiled OpenQASM yet. Select &quot;Compile&quot; mode and run to generate QASM.'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<CheckCircle />`
+  - **Used context**: Paragraph near icon: 'No errors found! Your code looks good.'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<AlertCircle />`
+  - **Used context**: Label near icon: 'Suggestion:'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\alert-circle-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<TrendingUp />`
+  - **Used context**: Heading: 'Performance Overview'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trending-up-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trending-up-svgrepo-com-animated.svg]
+- **Component Name**: `<Zap />`
+  - **Used context**: Heading: 'Measurement Results'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+- **Component Name**: `<Cpu />`
+  - **Used context**: Heading: 'Circuit Analysis'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\cpu-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\cpu-svgrepo-com-animated.svg]
+- **Component Name**: `<Zap />`
+  - **Used context**: Heading: 'Compilation & Optimization'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+
+## `components\ShareModal.tsx`
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Tag />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\Sidebar.tsx`
+- **Component Name**: `<Code />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<FileText />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\file-text-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\file-text-svgrepo-com-animated.svg]
+- **Component Name**: `<Folder />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\white-folder-interface-symbol-of-outline-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\white-folder-interface-symbol-of-outline-svgrepo-com-animated.svg]
+- **Component Name**: `<ChevronDown />`
+  - **Used context**: Label near icon: 'Projects'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ChevronRight />`
+  - **Used context**: Label near icon: 'Projects'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<FolderPlus />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\folder-plus-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\folder-plus-svgrepo-com-animated.svg]
+- **Component Name**: `<Folder />`
+  - **Used context**: Label near icon: 'My Files (Root)'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\white-folder-interface-symbol-of-outline-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\white-folder-interface-symbol-of-outline-svgrepo-com-animated.svg]
+- **Component Name**: `<Folder />`
+  - **Used context**: Label near icon: '{project.name}'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\white-folder-interface-symbol-of-outline-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\white-folder-interface-symbol-of-outline-svgrepo-com-animated.svg]
+- **Component Name**: `<Globe />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\globe-alt-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Check />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ChevronDown />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<ChevronRight />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<LayoutTemplate />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Languages />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\languages-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Plus />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Search />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\search-alt-2-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\search-alt-2-svgrepo-com-animated.svg]
+- **Component Name**: `<Users />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Edit2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Trash2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Trash2 />`
+  - **Used context**: Heading: 'Delete File'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\SimpleTopBar.tsx`
+- **Component Name**: `<Sun />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Moon />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+
+## `components\SimulationControls.tsx`
+- **Component Name**: `<SettingsIcon />`
+  - **Used context**: Heading: 'Simulation Settings'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\settings-1365-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\settings-1365-svgrepo-com-animated.svg]
+- **Component Name**: `<ChevronDown />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\TopBar.tsx`
+- **Component Name**: `<Book />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\book-open-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Code />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<Github />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Mail />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Menu />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Play />`
+  - **Used context**: Label near icon: '{executionMode === 'hybrid' ? 'Run Hybrid' : executionMode === 'compile' ? 'Compile' : 'Run'}'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\play-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Save />`
+  - **Used context**: Label near icon: 'Save'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\save-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\save-svgrepo-com-animated.svg]
+- **Component Name**: `<Download />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\download-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\download-svgrepo-com-animated.svg]
+- **Component Name**: `<Share2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Search />`
+  - **Used context**: Label near icon: 'Find'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\search-alt-2-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\search-alt-2-svgrepo-com-animated.svg]
+- **Component Name**: `<Replace />`
+  - **Used context**: Label near icon: 'Replace'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<HelpCircle />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\help-circle-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Keyboard />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Settings />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\settings-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Settings />`
+  - **Used context**: Heading: 'Settings'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\settings-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Moon />`
+  - **Used context**: Label near icon: 'Dark'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\moon-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Sun />`
+  - **Used context**: Label near icon: 'Light'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\sun-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Save />`
+  - **Used context**: Label near icon: 'Auto-save'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\save-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\save-svgrepo-com-animated.svg]
+- **Component Name**: `<Code />`
+  - **Used context**: Label near icon: 'Format on save'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\code-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\code-svgrepo-com-animated.svg]
+- **Component Name**: `<Lightbulb />`
+  - **Used context**: Label near icon: 'Show hover explanations'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\lightbulb-minimalistic-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<LogOut />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\gamification\AchievementCard.tsx`
+- **Component Name**: `<Lock />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\gamification\AchievementToast.tsx`
+- **Component Name**: `<Trophy />`
+  - **Used context**: Label near icon: 'Achievement Unlocked!'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com-animated.svg]
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\gamification\StatsOverview.tsx`
+- **Component Name**: `<Zap />`
+  - **Used context**: Paragraph near icon: 'Total XP Earned'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+- **Component Name**: `<Trophy />`
+  - **Used context**: Paragraph near icon: 'Badges Unlocked'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com-animated.svg]
+- **Component Name**: `<Star />`
+  - **Used context**: Paragraph near icon: 'Rarest Unlock'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\star-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\star-svgrepo-com-animated.svg]
+
+## `components\gamification\XPToast.tsx`
+- **Component Name**: `<Sparkles />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<TrendingUp />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trending-up-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trending-up-svgrepo-com-animated.svg]
+- **Component Name**: `<Zap />`
+  - **Used context**: Label near icon: '+{event.xp_gained} XP earned'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+- **Component Name**: `<Award />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\award-medal-badge-2-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\award-medal-badge-2-svgrepo-com-animated.svg]
+- **Component Name**: `<Zap />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+
+## `components\profile\AchievementsPreview.tsx`
+- **Component Name**: `<Trophy />`
+  - **Used context**: Heading: 'Achievements'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com-animated.svg]
+- **Component Name**: `<Trophy />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trophy-winner-prize-svgrepo-com-animated.svg]
+- **Component Name**: `<ChevronRight />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\profile\EditProfileModal.tsx`
+- **Component Name**: `<Sparkles />`
+  - **Used context**: Heading: 'Edit Profile'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<X />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Camera />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<User />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<AlertCircle />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\alert-circle-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<AtSign />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<FileText />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\file-text-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\file-text-svgrepo-com-animated.svg]
+- **Component Name**: `<CheckCircle2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Loader2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Display-Media-Content-Communication-Icons\loader-2-svgrepo-com.svg]
+  - *No animated version was found in the `Animated-Icons` repository structure for this specific vector.*
+- **Component Name**: `<Save />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Editor-Development-Icons\save-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Editor-Development-Icons\save-svgrepo-com-animated.svg]
+
+## `components\profile\ProfileHeader.tsx`
+- **Component Name**: `<Edit2 />`
+  - **Used context**: (No identifiable heading/text strictly bound)
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Sparkles />`
+  - **Used context**: Heading: '{displayUser.full_name}'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Shield />`
+  - **Used context**: Label near icon: '{badge}'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<MapPin />`
+  - **Used context**: Label near icon: 'Quantum Realm'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+- **Component Name**: `<Calendar />`
+  - **Used context**: Label near icon: 'Joined {joinDate}'
+  - **Status**: Pulled directly from `lucide-react` (No local SVG available).
+
+## `components\profile\RecentActivityList.tsx`
+- **Component Name**: `<Zap />`
+  - **Used context**: Heading: 'Recent Activity'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+- **Component Name**: `<Zap />`
+  - **Used context**: Paragraph near icon: 'No recent activity yet'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Science-Quantum-Icons\zap-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Science-Quantum-Icons\zap-svgrepo-com-animated.svg]
+
+## `components\profile\XPHistoryChart.tsx`
+- **Component Name**: `<TrendingUp />`
+  - **Used context**: Heading: 'Weekly Activity'
+  - **Mapped Base SVG**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Analytics-Gamification-Icons\trending-up-svgrepo-com.svg]
+  - **Animated Version**: @[c:\MyProperty\UNI\QCanvas\QCanvas\icons\Animated-Icons\Analytics-Gamification-Icons\trending-up-svgrepo-com-animated.svg]
+
