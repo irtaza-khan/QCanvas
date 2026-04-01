@@ -67,10 +67,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(AuditLogMiddleware)
 # Include API routes
 app.include_router(health.router)
 app.include_router(auth.router)

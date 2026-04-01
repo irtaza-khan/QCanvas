@@ -5,6 +5,7 @@ from app.config.database import get_db
 from app.models.database_models import User, Project, File
 from app.models.schemas import ProjectCreate, ProjectResponse, FileCreate, FileResponse, FileUpdate
 from app.api.routes.auth import get_current_user
+from app.services.gamification_service import GamificationService
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
@@ -24,6 +25,18 @@ def create_project(
     db.add(new_project)
     db.commit()
     db.refresh(new_project)
+    
+    # Award gamification XP
+    try:
+        GamificationService.award_xp(
+            db=db,
+            user_id=str(current_user.id),
+            activity_type="project_created",
+            metadata={"project_id": str(new_project.id), "name": new_project.name}
+        )
+    except Exception as e:
+        pass
+        
     return new_project
 
 from sqlalchemy import or_
@@ -86,6 +99,18 @@ def add_file_to_project(
     db.add(new_file)
     db.commit()
     db.refresh(new_file)
+    
+    # Award gamification XP
+    try:
+        GamificationService.award_xp(
+            db=db,
+            user_id=str(current_user.id),
+            activity_type="circuit_saved",
+            metadata={"filename": new_file.filename, "file_id": str(new_file.id), "project_id": str(project.id)}
+        )
+    except Exception as e:
+        pass
+        
     return new_file
 
 @router.put("/{project_id}/files/{file_id}", response_model=FileResponse)
@@ -124,4 +149,17 @@ def update_file(
         
     db.commit()
     db.refresh(file)
+    
+    # Award gamification XP if content changed
+    if file_update.content is not None:
+        try:
+            GamificationService.award_xp(
+                db=db,
+                user_id=str(current_user.id),
+                activity_type="circuit_saved",
+                metadata={"filename": file.filename, "file_id": str(file.id), "project_id": str(project.id)}
+            )
+        except Exception as e:
+            pass
+            
     return file

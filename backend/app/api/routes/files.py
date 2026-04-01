@@ -6,6 +6,7 @@ from app.models.database_models import User, File, Project
 from app.models.schemas import FileCreate, FileResponse, FileUpdate
 from app.api.routes.auth import get_current_user
 from sqlalchemy import or_
+from app.services.gamification_service import GamificationService
 
 router = APIRouter(prefix="/api/files", tags=["Files"])
 
@@ -37,6 +38,19 @@ def create_file(
     db.add(new_file)
     db.commit()
     db.refresh(new_file)
+    
+    # Award gamification XP
+    try:
+        GamificationService.award_xp(
+            db=db,
+            user_id=str(current_user.id),
+            activity_type="circuit_saved",
+            metadata={"filename": new_file.filename, "file_id": str(new_file.id)}
+        )
+    except Exception as e:
+        # Don't fail the file operation if gamification fails
+        pass
+        
     return new_file
 
 @router.get("/", response_model=List[FileResponse])
@@ -147,6 +161,19 @@ def update_file(
          
     db.commit()
     db.refresh(file)
+    
+    # Award gamification XP for changing content
+    if file_update.content is not None:
+        try:
+            GamificationService.award_xp(
+                db=db,
+                user_id=str(current_user.id),
+                activity_type="circuit_saved",
+                metadata={"filename": file.filename, "file_id": str(file.id)}
+            )
+        except Exception as e:
+            pass
+            
     return file
 
 @router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
