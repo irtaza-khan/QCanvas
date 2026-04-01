@@ -74,23 +74,43 @@ XP_REWARDS = {
     # Simulation activities
     'simulation_run': 10,
     'first_simulation': 50,  # First-time bonus
-    
+
     # Conversion activities
     'conversion': 30,
     'first_conversion': 60,  # First-time bonus
-    
+
     # Circuit management
     'circuit_saved': 5,
     'project_created': 25,
-    
+
     # Learning activities
     'tutorial_completed': 100,
     'challenge_completed': 150,
-    
+
     # Social activities
     'circuit_shared': 25,
     'helped_user': 50,
+
+    # ── Circuit structural properties ────────────────────────────────────────
+    # These are logged by the simulator route after QASM analysis.
+    # Without entries here, award_xp() returns early and the activity is
+    # never recorded, so achievement criteria can never be evaluated.
+    'superposition_circuit': 15,
+    'entangled_circuit': 20,
+
+    # ── Named algorithm achievements ─────────────────────────────────────────
+    'algorithm_deutsch': 50,
+    'algorithm_grover': 75,
+    'algorithm_shor': 100,
+    'algorithm_vqe': 75,
+    'algorithm_qaoa': 75,
+    
+    # ── Specialization Tracking ──────────────────────────────────────────────
+    'qiskit_circuit': 5,
+    'cirq_circuit': 5,
+    'pennylane_circuit': 5,
 }
+
 
 
 # ============================================================================
@@ -547,6 +567,15 @@ class GamificationService:
                     min_count = count
             current = min_count if min_count != float('inf') else 0
             return (min(current, target), target)
+            
+        elif criteria_type == 'multi_activity_threshold_count':
+            activity_types = criteria.get('activity_types', [])
+            threshold = criteria.get('threshold', 1)
+            target = criteria.get('count', len(activity_types))
+            
+            met_count = sum(1 for act_type in activity_types if activity_summary.get(act_type, {}).get('count', 0) >= threshold)
+            
+            return (min(met_count, target), target)
         
         return (0, 1)
 
@@ -667,6 +696,14 @@ class GamificationService:
                 if count < required_count:
                     return False
             return True
+            
+        elif criteria_type == 'multi_activity_threshold_count':
+            activity_types = criteria.get('activity_types', [])
+            threshold = criteria.get('threshold', 1)
+            required_count = criteria.get('count', len(activity_types))
+            
+            met_count = sum(1 for act_type in activity_types if activity_summary.get(act_type, {}).get('count', 0) >= threshold)
+            return met_count >= required_count
         
         return False
 
@@ -712,6 +749,8 @@ class GamificationService:
             elif criteria_type == 'distinct_activity_count':
                 unlock_target = criteria.get('count', 1)
             elif criteria_type == 'multi_activity_count':
+                unlock_target = criteria.get('count', 1)
+            elif criteria_type == 'multi_activity_threshold_count':
                 unlock_target = criteria.get('count', 1)
             else:
                 unlock_target = 1

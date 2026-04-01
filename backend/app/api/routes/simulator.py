@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import sys
 import os
+import re
 
 # Add the project root directory to Python path
 current_file = os.path.abspath(__file__)
@@ -22,6 +23,125 @@ router = APIRouter(prefix="/api/simulator", tags=["simulator"])
 
 # Initialize simulation service
 simulation_service = SimulationService()
+
+# ---------------------------------------------------------------------------
+# ALGORITHM HINT → ACTIVITY TYPE MAPPING
+# ---------------------------------------------------------------------------
+# The frontend may pass an optional "algorithm_hint" field with the name of
+# the algorithm the user is implementing. We map that to the correct
+# gamification activity type.
+ALGORITHM_HINT_MAP: Dict[str, str] = {
+    # Canonical names (lowercase)
+    "deutsch":       "algorithm_deutsch",
+    "deutsch_jozsa": "algorithm_deutsch",
+    "deutsch-jozsa": "algorithm_deutsch",
+    "grover":        "algorithm_grover",
+    "grover_search": "algorithm_grover",
+    "shor":          "algorithm_shor",
+    "shor_factoring": "algorithm_shor",
+    "vqe":           "algorithm_vqe",
+    "variational_quantum_eigensolver": "algorithm_vqe",
+    "qaoa":          "algorithm_qaoa",
+    "quantum_approximate_optimization": "algorithm_qaoa",
+}
+
+# ---------------------------------------------------------------------------
+# QASM STRUCTURAL ANALYSIS
+# Inspects gate sequences to detect structural properties of the circuit.
+# Returns a list of activity_types that should be logged.
+# ---------------------------------------------------------------------------
+def analyse_qasm_for_achievements(qasm_code: str) -> List[str]:
+    """
+    Inspect the QASM gate sequence to detect structural circuit properties.
+
+    Returns a list of zero or more gamification activity_types to award.
+    These are ADDITIVE — entanglement AND superposition can both fire on the
+    same circuit.
+    """
+    activities: List[str] = []
+    code_lower = qasm_code.lower()
+
+    # ------------------------------------------------------------------
+    # 1. SUPERPOSITION — Hadamard gate present
+    #    Any `h q[N]` or `h q_name` pattern.
+    # ------------------------------------------------------------------
+    if re.search(r'\bh\s+\w', code_lower):
+        activities.append("superposition_circuit")
+
+    # ------------------------------------------------------------------
+    # 2. ENTANGLEMENT — two-qubit entangling gate present
+    #    cx / cnot / cz / ch / cy / crx / cry / crz / cu / ccx / swap / cswap / iswap
+    # ------------------------------------------------------------------
+    entangling_pattern = r'\b(cx|cnot|cz|ch|cy|crx|cry|crz|cu|ccx|ccu|swap|cswap|iswap)\b'
+    if re.search(entangling_pattern, code_lower):
+        activities.append("entangled_circuit")
+
+    # ------------------------------------------------------------------
+    # 3. QAOA fingerprint — alternating cost (cx-rz-cx) + mixer (rx) layers
+    #    Look for rz(...) AND rx(...) both present (necessary condition).
+    #    Also look for the cx flanking rz (ZZ-interaction pattern).
+    # ------------------------------------------------------------------
+    has_rz = bool(re.search(r'\brz\s*\(', code_lower))
+    has_rx = bool(re.search(r'\brx\s*\(', code_lower))
+    has_cx_rz_cx = bool(re.search(r'cx\b.*\brz\s*\(.*\bcx\b', code_lower, re.DOTALL))
+    if has_rz and has_rx and has_cx_rz_cx:
+        activities.append("algorithm_qaoa")
+
+    # ------------------------------------------------------------------
+    # 4. VQE fingerprint — parameterized rotations WITHOUT the cx-rz-cx
+    #    cost-layer pattern. ry/rx/rz with numeric angles + entanglement.
+    # ------------------------------------------------------------------
+    has_ry = bool(re.search(r'\bry\s*\(', code_lower))
+    has_cx = bool(re.search(r'\bcx\b', code_lower))
+    # VQE: has parameterized rotations + entanglement but NOT detected as QAOA
+    if has_ry and has_cx and "algorithm_qaoa" not in activities:
+        # Must have at least 2 rotation angles (variational form heuristic)
+        angle_count = len(re.findall(r'\bry\s*\(', code_lower)) + len(re.findall(r'\brx\s*\(', code_lower))
+        if angle_count >= 2:
+            activities.append("algorithm_vqe")
+
+    # ------------------------------------------------------------------
+    # 5. Grover fingerprint — ccx (Toffoli) gate + h + x gates
+    #    The diffusion operator always needs ccx + H + X gates together.
+    # ------------------------------------------------------------------
+    has_ccx = bool(re.search(r'\bccx\b', code_lower))
+    has_x   = bool(re.search(r'\bx\s+\w', code_lower))
+    has_h   = bool(re.search(r'\bh\s+\w', code_lower))
+    if has_ccx and has_h and has_x:
+        activities.append("algorithm_grover")
+
+    # ------------------------------------------------------------------
+    # 6. Shor / QFT fingerprint — cascading phase rotations (cp gate with
+    #    fractions of pi) + swap gates = Quantum Fourier Transform subroutine
+    # ------------------------------------------------------------------
+    cp_gates = re.findall(r'\bcp\s*\((.*?)\)', code_lower)
+    has_swap = bool(re.search(r'\bswap\b', code_lower))
+    # Need at least 2 different cp angles (cascade) and swap gates
+    if len(cp_gates) >= 2 and has_swap:
+        activities.append("algorithm_shor")
+
+    # ------------------------------------------------------------------
+    # 7. Deutsch-Jozsa fingerprint — H-Oracle-H sandwich:
+    #    H gates at the very start AND near the end, with different gates
+    #    in between (the oracle). 
+    #    We detect this by checking: first gate is H, last measurement is
+    #    preceded by H, and ancilla qubit gets X+H at start.
+    # ------------------------------------------------------------------
+    lines = [l.strip() for l in qasm_code.splitlines() if l.strip() and not l.strip().startswith('//') and not l.strip().startswith('OPENQASM') and not l.strip().startswith('include') and not l.strip().startswith('qreg') and not l.strip().startswith('creg')]
+    gate_lines = [l for l in lines if not l.startswith('measure')]
+    if gate_lines:
+        first_gate = gate_lines[0].lower()
+        last_few = " ".join(gate_lines[-3:]).lower()
+        first_is_h = first_gate.startswith('h ')
+        last_has_h = bool(re.search(r'\bh\s+', last_few))
+        has_x_anchor = bool(re.search(r'\bx\s+\w', qasm_code.lower()))
+        if first_is_h and last_has_h and has_x_anchor:
+            # Only add Deutsch if Grover not already detected (avoid double-reporting)
+            if "algorithm_grover" not in activities:
+                activities.append("algorithm_deutsch")
+
+    return activities
+
 
 @router.post("/execute")
 @limiter.limit("20/minute")
@@ -146,24 +266,66 @@ async def execute_qasm_with_qsim(
         if current_user and result.get("success"):
             try:
                 from app.services.gamification_service import GamificationService
-                
-                # Extract circuit metadata for XP tracking
-                metadata = {
-                    "backend": backend,
-                    "shots": shots,
-                    "qubits": result.get("results", {}).get("metadata", {}).get("num_qubits", 0)
-                }
-                
-                # Award XP for simulation
+
+                qubits = result.get("results", {}).get("metadata", {}).get("num_qubits", 0)
+                base_metadata = {"backend": backend, "shots": shots, "qubits": qubits}
+
+                # Always award simulation_run XP
                 GamificationService.award_xp(
                     db=db,
                     user_id=str(current_user.id),
                     activity_type='simulation_run',
-                    metadata=metadata
+                    metadata=base_metadata
                 )
+
+                # ── Specialization Tracking ─────────────────────────────────
+                # Log the specific input framework used (or fallback to backend if QASM)
+                input_framework_val = request_data.get("input_framework")
+                if input_framework_val:
+                    framework_activity = f"{input_framework_val.lower()}_circuit"
+                else:
+                    framework_activity = f"{backend.lower()}_circuit"
+                
+                GamificationService.award_xp(
+                    db=db,
+                    user_id=str(current_user.id),
+                    activity_type=framework_activity,
+                    metadata=base_metadata
+                )
+                print(f"✅ Specialization tracking → logged '{framework_activity}'")
+
+
+                # ── Algorithm hint (sent explicitly by the frontend) ─────────
+                algorithm_hint = request_data.get("algorithm_hint", "").strip().lower()
+                if algorithm_hint:
+                    mapped_activity = ALGORITHM_HINT_MAP.get(algorithm_hint)
+                    if mapped_activity:
+                        GamificationService.award_xp(
+                            db=db,
+                            user_id=str(current_user.id),
+                            activity_type=mapped_activity,
+                            metadata={**base_metadata, "detected_by": "algorithm_hint", "hint": algorithm_hint}
+                        )
+                        print(f"✅ Algorithm hint '{algorithm_hint}' → logged '{mapped_activity}'")
+
+                # ── QASM structural analysis ─────────────────────────────────
+                detected_activities = analyse_qasm_for_achievements(qasm_input)
+                for act in detected_activities:
+                    # Don't double-log if the hint already covered this activity
+                    if act == ALGORITHM_HINT_MAP.get(algorithm_hint):
+                        continue
+                    GamificationService.award_xp(
+                        db=db,
+                        user_id=str(current_user.id),
+                        activity_type=act,
+                        metadata={**base_metadata, "detected_by": "qasm_analysis"}
+                    )
+                    print(f"✅ QASM analysis detected → logged '{act}'")
+
             except Exception as e:
                 # Don't fail the request if gamification fails
-                print(f"Failed to award XP for simulation: {e}")
+                print(f"❌ Failed to award XP for simulation: {e}")
+
         
         # Save to database if user is authenticated and simulation was successful
         if current_user and result.get("success"):
