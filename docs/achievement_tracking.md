@@ -610,18 +610,19 @@ This is the full list of activity type strings that trigger XP and feed into ach
 #### Multi-Framework Master
 | Field | Value |
 |-------|-------|
-| **Criteria type** | `multi_activity_count` |
+| **Criteria type** | `multi_activity_threshold_count` |
 | **Tracked via** | `qiskit_circuit`, `cirq_circuit`, `pennylane_circuit` activity logs |
-| **Threshold** | **Each** of the 3 activity types ≥ **25** |
-| **Progress formula** | `min(min_of_all_three, 25) / 25` (bottlenecked by the lowest count) |
+| **Threshold** | **3** (meaning all 3 activity types must each reach **50** count) |
+| **Progress formula** | `min(activities_that_reached_50, 3) / 3` |
 
 **Evaluation logic:**
 ```python
-# Returns False as soon as ANY framework falls below 25
+# Returns True only if all 3 frameworks have ≥50 count
+met_count = 0
 for act_type in ["qiskit_circuit", "cirq_circuit", "pennylane_circuit"]:
-    if activity_summary[act_type]['count'] < 25:
-        return False
-return True
+    if activity_summary[act_type]['count'] >= 50:
+        met_count += 1
+return met_count >= 3
 ```
 
 ---

@@ -362,7 +362,7 @@ ACHIEVEMENTS = [
         "name": "Multi-Framework Master",
         "description": "Become an expert in all 3 quantum frameworks.",
         "category": "specialization",
-        "criteria": {"type": "multi_activity_count", "activity_types": ["qiskit_circuit", "cirq_circuit", "pennylane_circuit"], "count": 25},
+        "criteria": {"type": "multi_activity_threshold_count", "activity_types": ["qiskit_circuit", "cirq_circuit", "pennylane_circuit"], "threshold": 50, "count": 3},
         "reward_xp": 1000,
         "rarity": "legendary",
         "icon_name": "award",
