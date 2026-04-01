@@ -4,17 +4,18 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Moon, Sun } from '@/components/Icons';
-import { Menu, X } from 'lucide-react';;import { useFileStore } from '@/lib/store'
+import { Menu, X } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { useFileStore } from '@/lib/store'
 import { config } from '@/lib/config'
 
 interface NavbarProps {
-  /** The currently active page path, e.g. '/' or '/examples'. Used to highlight the active link. */
-  activePath?: string
   /** If provided, a "Features" button is rendered that scrolls to this section ID on the current page. */
   scrollToFeatures?: (sectionId: string) => void
 }
 
-export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarProps) {
+export default function Navbar({ scrollToFeatures }: NavbarProps) {
+  const pathname = usePathname()
   const { theme, toggleTheme } = useFileStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
@@ -34,7 +35,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
   const navLinks = [
     ...(scrollToFeatures
       ? [{ name: 'Features', path: '#features', isScrollButton: true }]
-      : []),
+      : [{ name: 'Home', path: '/', isScrollButton: false }]),
     { name: 'Examples', path: '/examples', isScrollButton: false },
     { name: 'Documentation', path: '/docs', isScrollButton: false },
     { name: 'About', path: '/about', isScrollButton: false },
@@ -42,7 +43,7 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
 
   const isActive = (path: string) => {
     if (path.startsWith('#')) return false
-    return activePath === path
+    return pathname === path
   }
 
   return (
@@ -80,7 +81,11 @@ export default function Navbar({ activePath = '/', scrollToFeatures }: NavbarPro
                 <button
                   key={item.name}
                   onClick={() => scrollToFeatures?.('features')}
-                  className="text-black dark:text-gray-400 hover:text-white transition-colors duration-200 hover-underline text-sm font-medium"
+                  className={
+                    pathname === '/'
+                      ? 'text-white font-medium text-sm relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-gradient-to-r after:from-indigo-500 after:to-cyan-500 after:rounded-full'
+                      : 'text-black dark:text-gray-400 hover:text-white transition-colors duration-200 hover-underline text-sm font-medium'
+                  }
                 >
                   {item.name}
                 </button>

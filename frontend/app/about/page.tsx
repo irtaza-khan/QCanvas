@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { AboutUsIcon, Moon, Sun } from '@/components/Icons';
-import { Users, Github, Menu, X, Linkedin, Mail } from 'lucide-react';;import { useFileStore } from '@/lib/store'
-import { config, getCopyrightText } from '@/lib/config'
+import { AboutUsIcon, Moon, Sun, Atom } from '@/components/Icons';
+import { Users, Github, Menu, X, Linkedin, Mail, MessageSquare, ExternalLink, Code, ChevronRight, Sparkles, Cpu } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import { config, getCopyrightText, socialLinks, projectUrls } from '@/lib/config'
 
 export default function AboutPage() {
-  const { theme, toggleTheme } = useFileStore()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
 
   useEffect(() => {
@@ -17,8 +16,23 @@ export default function AboutPage() {
       setScrollY(window.scrollY)
     }
 
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal-show')
+        }
+      })
+    }, { threshold: 0.1 })
+
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+      observer.observe(el)
+    })
+
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      observer.disconnect()
+    }
   }, [])
 
   return (
@@ -27,127 +41,7 @@ export default function AboutPage() {
       <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-transparent to-[#0a0a1a] pointer-events-none" />
       <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] hero-spotlight opacity-30 blur-3xl pointer-events-none" />
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative">
-                <Image
-                  src="/QCanvas-logo-Black.svg"
-                  alt="QCanvas Logo"
-                  width={48}
-                  height={48}
-                  className="object-contain block dark:hidden transition-all duration-300 hover:scale-110 animate-pulse"
-                  priority
-                />
-                <Image
-                  src="/QCanvas-logo-White.svg"
-                  alt="QCanvas Logo"
-                  width={48}
-                  height={48}
-                  className="object-contain hidden dark:block transition-all duration-300 hover:scale-110 animate-pulse"
-                  priority
-                />
-              </div>
-              <span className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent transition-all duration-200">
-                QCanvas
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="relative group px-3 py-2">
-                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Home</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
-              </Link>
-              <Link href="/examples" className="relative group px-3 py-2">
-                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Examples</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
-              </Link>
-              <Link href="/docs" className="relative group px-3 py-2">
-                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Documentation</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
-              </Link>
-              <Link href="/about" className="relative group px-3 py-2">
-                 <span className="relative z-10 text-quantum-blue-light font-medium transition-colors duration-300 text-base tracking-wide">About Us</span>
-                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-quantum-blue-light box-shadow-glow"></span>
-              </Link>
-
-              {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg bg-white/5 border border-white/10 hover:border-quantum-blue-light transition-colors duration-200"
-                title="Toggle theme"
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5 text-editor-text" /> : <Moon className="w-5 h-5 text-editor-text" />}
-              </button>
-
-              {/* Auth Buttons */}
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/login"
-                  className="dark:text-white text-gray-800 hover:text-quantum-blue-light transition-colors duration-300 font-medium px-4"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/login"
-                  className="btn-quantum text-sm px-4 py-2"
-                >
-                  Get Started
-                </Link>
-              </div>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-white/5 border border-white/10"
-            >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden bg-black/95 backdrop-blur-lg border-t border-white/10">
-              <div className="px-4 py-4 space-y-4">
-                <Link href="/" className="block text-editor-text hover:text-white transition-colors duration-200">
-                  Home
-                </Link>
-                <Link href="/examples" className="block text-editor-text hover:text-white transition-colors duration-200">
-                  Examples
-                </Link>
-                <Link href="/docs" className="block text-editor-text hover:text-white transition-colors duration-200">
-                  Documentation
-                </Link>
-                <Link href="/about" className="block text-white font-medium transition-colors duration-200">
-                  About Us
-                </Link>
-
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                  <button
-                    onClick={toggleTheme}
-                    className="flex items-center space-x-2 text-editor-text hover:text-white transition-colors duration-200"
-                  >
-                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    <span>Theme</span>
-                  </button>
-                  <div className="flex space-x-3">
-                    <Link href="/login" className="text-editor-text hover:text-white transition-colors duration-200">
-                      Sign In
-                    </Link>
-                    <Link href="/login" className="btn-quantum text-sm px-3 py-1">
-                      Get Started
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 pt-20">
@@ -156,6 +50,19 @@ export default function AboutPage() {
           <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-indigo-500 opacity-[0.07] rounded-full blur-[100px]"></div>
           <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-violet-500 opacity-[0.07] rounded-full blur-[100px]"></div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500 opacity-[0.05] rounded-full blur-[80px]"></div>
+        </div>
+
+        {/* Floating elements — visible in background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-24 left-[8%] animate-float">
+            <Atom className="w-8 h-8 text-indigo-400 opacity-20" />
+          </div>
+          <div className="absolute top-1/3 right-[10%] animate-float-reverse" style={{ animationDelay: '2s' }}>
+            <Sparkles className="w-6 h-6 text-violet-400 opacity-25" />
+          </div>
+          <div className="absolute bottom-1/4 left-[12%] animate-float" style={{ animationDelay: '4s' }}>
+            <Cpu className="w-7 h-7 text-cyan-400 opacity-20" />
+          </div>
         </div>
 
         <div className="text-center max-w-6xl mx-auto relative z-10">
@@ -181,12 +88,17 @@ export default function AboutPage() {
           <div className="mb-16">
             <h3 className="text-2xl font-bold text-white text-center mb-8">QCanvas Team</h3>
             <div className="grid md:grid-cols-3 gap-8">
-              {config.qcanvasTeam.map((member) => (
-                <div key={member.name} className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center hover:border-quantum-blue-light transition-all duration-300">
-                  <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6">
+              {config.qcanvasTeam.map((member, idx) => (
+                <div 
+                  key={member.name} 
+                  className="reveal-on-scroll quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center hover-lift hover:border-quantum-blue-light transition-all duration-300"
+                  style={{ animationDelay: `${idx * 150}ms` }}
+                >
+                  <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
                     <Users className="w-10 h-10 text-white" />
                   </div>
-                  <h4 className="text-xl font-semibold text-white mb-4">{member.name}</h4>
+                  <h4 className="text-xl font-semibold text-white mb-1">{member.name}</h4>
+                  <p className="text-sm text-editor-text mb-4">Core Developer</p>
                   <div className="flex justify-center space-x-3">
                     {member.email && (
                       <a href={`mailto:${member.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
@@ -213,12 +125,17 @@ export default function AboutPage() {
           <div>
             <h3 className="text-2xl font-bold text-white text-center mb-8">QSim Team</h3>
             <div className="grid md:grid-cols-3 gap-8">
-              {config.qsimTeam.map((member) => (
-                <div key={member.name} className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 dark:border-white/10 border-gray-200 text-center hover:border-purple-500 dark:hover:border-purple-500 hover:border-purple-400 transition-all duration-300">
-                  <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg bg-gradient-to-r from-pink-500 to-rose-500 dark:from-purple-500 dark:to-pink-500">
+              {config.qsimTeam.map((member, idx) => (
+                <div 
+                  key={member.name} 
+                  className="reveal-on-scroll quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border dark:border-white/10 border-gray-200 text-center hover-lift hover:border-purple-500 dark:hover:border-purple-500 hover:border-purple-400 transition-all duration-300"
+                  style={{ animationDelay: `${(idx + 3) * 150}ms` }}
+                >
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg bg-gradient-to-r from-pink-500 to-rose-500 dark:from-purple-500 dark:to-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.3)]">
                     <Users className="w-10 h-10 text-white" />
                   </div>
-                  <h4 className="text-xl font-semibold text-white mb-4">{member.name}</h4>
+                  <h4 className="text-xl font-semibold text-white mb-1">{member.name}</h4>
+                  <p className="text-sm text-editor-text mb-4">Core Developer</p>
                   <div className="flex justify-center space-x-3">
                     {member.email && (
                       <a href={`mailto:${member.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
@@ -247,34 +164,24 @@ export default function AboutPage() {
       <div className="px-4 py-16 bg-gradient-to-b from-transparent to-black/30">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-8">Built under</h2>
-          <div className="quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10">
+          <div className="reveal-on-scroll quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10">
             <div className="text-4xl font-bold quantum-gradient bg-clip-text text-transparent mb-2">
               {config.initiative.name}
             </div>
             <p className="text-xl text-editor-text">{config.initiative.tagline}</p>
           </div>
 
-          {/* <div className="mt-12">
-            <h3 className="text-2xl font-semibold text-white mb-6">Project Supervisors</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              {config.supervisors.map((supervisor) => (
-                <div key={supervisor.name} className="quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border border-white/10 text-center">
-                  <h4 className="text-lg font-semibold text-white mb-2">{supervisor.name}</h4>
-                  <p className="text-editor-text">{supervisor.role}</p>
-                </div>
-              ))}
-            </div>
-          </div> */}
-
           <div className='mt-12'>
             <h3 className="text-2xl font-bold text-white text-center mb-6">Supervisors</h3>
             <div className="grid md:grid-cols-2 gap-6">
-              {config.supervisors.map((supervisor) => (
-                <div key={supervisor.name} className="quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border border-white/10 dark:border-white/10 border-gray-200 text-center hover:border-purple-500 dark:hover:border-purple-500 hover:border-purple-400 transition-all duration-300">
-                  {/* <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Users className="w-10 h-10 text-white" />
-                  </div> */}
-                  <h4 className="text-xl font-semibold text-white mb-4">{supervisor.name}</h4>
+              {config.supervisors.map((supervisor, idx) => (
+                <div 
+                  key={supervisor.name} 
+                  className="reveal-on-scroll quantum-glass-dark rounded-xl p-6 backdrop-blur-xl border dark:border-white/10 border-gray-200 text-center hover-lift hover:border-quantum-blue-light transition-all duration-300"
+                  style={{ animationDelay: `${(idx + 6) * 150}ms` }}
+                >
+                  <h4 className="text-xl font-semibold text-white mb-2">{supervisor.name}</h4>
+                  <p className="text-sm text-editor-text mb-4">{supervisor.role}</p>
                   <div className="flex justify-center space-x-3">
                     {supervisor.email && (
                       <a href={`mailto:${supervisor.email}`} className="p-2 bg-white/5 border border-white/10 rounded-lg text-black dark:text-gray-400 hover:text-white hover:bg-quantum-blue-light/20 transition-all duration-200" title="Email">
@@ -295,6 +202,50 @@ export default function AboutPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="px-4 py-16">
+        <div className="max-w-4xl mx-auto rounded-3xl p-10 relative overflow-hidden group">
+          {/* Animated Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-blue-600/20 group-hover:scale-110 transition-transform duration-700" />
+          <div className="absolute inset-0 backdrop-blur-xl border border-white/10 group-hover:border-white/20 transition-colors duration-300 rounded-3xl" />
+          
+          <div className="relative z-10 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">Want to Contribute?</h2>
+            <p className="text-lg text-editor-text mb-8 max-w-2xl mx-auto font-medium">
+              Join us in building the next generation of quantum computing tools. 
+              We're open to contributions, research collaborations, and feedback from the quantum community.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a 
+                href={socialLinks.github} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn-quantum w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2 group/btn shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+              >
+                <Github className="w-5 h-5" />
+                <span>View on GitHub</span>
+                <ChevronRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
+              </a>
+              <Link 
+                href={projectUrls.docs as any}
+                className="btn-ghost w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2"
+              >
+                <Code className="w-5 h-5" />
+                <span>Browse Docs</span>
+              </Link>
+            </div>
+          </div>
+          
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <Atom className="w-32 h-32 text-white" />
+          </div>
+          <div className="absolute bottom-0 left-0 p-4 opacity-10">
+            <Cpu className="w-24 h-24 text-white" />
           </div>
         </div>
       </div>

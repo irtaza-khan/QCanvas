@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Copy, Play, Code, Moon, Sun } from '@/components/Icons';
-import { Menu, X, Share2 } from 'lucide-react';;import toast from 'react-hot-toast'
+import { Copy, Play, Code } from '@/components/Icons';
+import { Menu, X, Share2 } from 'lucide-react';
+import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
 import { sharedApi } from '@/lib/api'
+import Navbar from '@/components/Navbar'
 
 interface Example {
   id: string
@@ -863,16 +865,10 @@ export default function ExamplesPage() {
   const [selectedFramework, setSelectedFramework] = useState<string>('all')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const { theme, toggleTheme, addFile } = useFileStore()
+  const { addFile } = useFileStore()
   const router = useRouter()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [scrollY, setScrollY] = useState(0)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY)
-    }
-
     const fetchCommunityExamples = async () => {
       setIsLoadingCommunity(true)
       try {
@@ -899,10 +895,8 @@ export default function ExamplesPage() {
       }
     }
 
-    window.addEventListener('scroll', handleScroll)
     fetchCommunityExamples()
     
-    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const openInEditor = (example: Example) => {
@@ -988,126 +982,7 @@ export default function ExamplesPage() {
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-transparent to-[#0a0a1a] pointer-events-none" />
       <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] hero-spotlight opacity-30 blur-3xl pointer-events-none" />
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative">
-                <Image
-                  src="/QCanvas-logo-Black.svg"
-                  alt="QCanvas Logo"
-                  width={48}
-                  height={48}
-                  className="object-contain block dark:hidden transition-all duration-300 hover:scale-110 animate-pulse"
-                  priority
-                />
-                <Image
-                  src="/QCanvas-logo-White.svg"
-                  alt="QCanvas Logo"
-                  width={48}
-                  height={48}
-                  className="object-contain hidden dark:block transition-all duration-300 hover:scale-110 animate-pulse"
-                  priority
-                />
-              </div>
-              <span className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent transition-all duration-200">
-                QCanvas
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="relative group px-3 py-2">
-                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Home</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
-              </Link>
-              <Link href="/examples" className="relative group px-3 py-2">
-                <span className="relative z-10 text-quantum-blue-light font-medium transition-colors duration-300 text-base tracking-wide">Examples</span>
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-quantum-blue-light box-shadow-glow"></span>
-              </Link>
-              <Link href="/docs" className="relative group px-3 py-2">
-                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">Documentation</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
-              </Link>
-              <Link href="/about" className="relative group px-3 py-2">
-                <span className="relative z-10 dark:text-white text-gray-800 font-medium group-hover:text-quantum-blue-light transition-colors duration-300 text-base tracking-wide">About</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quantum-blue-light transition-all duration-300 group-hover:w-full box-shadow-glow"></span>
-              </Link>
-
-              {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg bg-white/5 border border-white/10 hover:border-quantum-blue-light transition-colors duration-200"
-                title="Toggle theme"
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5 text-editor-text" /> : <Moon className="w-5 h-5 text-editor-text" />}
-              </button>
-
-              {/* Auth Buttons */}
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/login"
-                  className="dark:text-white text-gray-800 hover:text-quantum-blue-light transition-colors duration-300 font-medium px-4"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/login"
-                  className="btn-quantum text-sm px-4 py-2"
-                >
-                  Get Started
-                </Link>
-              </div>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-white/5 border border-white/10"
-            >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden bg-black/95 backdrop-blur-lg border-t border-white/10">
-              <div className="px-4 py-4 space-y-4">
-                <Link href="/" className="block text-editor-text hover:text-white transition-colors duration-200">
-                  Home
-                </Link>
-                <Link href="/examples" className="block text-white font-medium transition-colors duration-200">
-                  Examples
-                </Link>
-                <Link href="/docs" className="block text-editor-text hover:text-white transition-colors duration-200">
-                  Documentation
-                </Link>
-                <Link href="/about" className="block text-editor-text hover:text-white transition-colors duration-200">
-                  About
-                </Link>
-
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                  <button
-                    onClick={toggleTheme}
-                    className="flex items-center space-x-2 text-editor-text hover:text-white transition-colors duration-200"
-                  >
-                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    <span>Theme</span>
-                  </button>
-                  <div className="flex space-x-3">
-                    <Link href="/login" className="text-editor-text hover:text-white transition-colors duration-200">
-                      Sign In
-                    </Link>
-                    <Link href="/login" className="btn-quantum text-sm px-3 py-1">
-                      Get Started
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 pt-20">

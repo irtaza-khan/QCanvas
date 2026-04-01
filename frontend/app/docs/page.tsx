@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Navbar from '@/components/Navbar'
 import { Moon, Sun, Book, Code, Cpu, BarChart3, Zap, Settings, Play, Star, Atom, Lightbulb, Database, Layers, Terminal, FileText, Cloud, Server, Wrench, Target, Rocket, Clock, TrendingUp, GitBranch, FrameworkConversionIcon, FlagIcon, SparklesIcon, ApiIcon, CirqIcon, PennyLaneIcon, QiskitIcon } from '@/components/Icons';
 import { Menu, X, ChevronRight, ArrowRight, CheckCircle, Shield, Monitor, Sparkles, Info } from 'lucide-react';
-import { useFileStore } from '@/lib/store';
 import { config, getCopyrightText } from '@/lib/config'
 
 interface DocSection {
@@ -21,8 +21,6 @@ interface DocSection {
 export default function DocsPage() {
   const [activeSection, setActiveSection] = useState('overview')
   const [isVisible, setIsVisible] = useState(false)
-  const { theme, toggleTheme } = useFileStore()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const observerRef = useRef<IntersectionObserver | null>(null)
 
@@ -38,7 +36,14 @@ export default function DocsPage() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setActiveSection(entry.target.id)
+            const id = entry.target.id
+            setActiveSection(id)
+            
+            // Auto-scroll sub-nav horizontally when section changes
+            const navItem = document.getElementById(`nav-${id}`)
+            if (navItem) {
+              navItem.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+            }
           }
         })
       },
@@ -63,10 +68,16 @@ export default function DocsPage() {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
+      // Use scrollIntoView which respects scroll-margin-top
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
       setActiveSection(sectionId)
+
+      // Synchronize horizontal sub-nav scroll
+      const navItem = document.getElementById(`nav-${sectionId}`)
+      if (navItem) {
+        navItem.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+      }
     }
-    setIsMenuOpen(false)
   }
 
   const sections: DocSection[] = [
@@ -1252,117 +1263,35 @@ print(f"\\nOne-step result: {result2.counts}")`}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-transparent to-[#0a0a1a] pointer-events-none" />
       <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] hero-spotlight opacity-30 blur-3xl pointer-events-none" />
       {/* Enhanced Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'dark:bg-black/80 bg-white/90 backdrop-blur-lg border-b dark:border-white/10 border-gray-200 shadow-sm' : 'dark:bg-black/60 bg-white/70 backdrop-blur-md border-b dark:border-white/5 border-gray-200'}`}>
+      <Navbar />
+
+      {/* Docs Sub-Navigation */}
+      <div className={`fixed left-0 right-0 z-40 transition-all duration-300 ${scrollY > 50 ? 'top-[73px] dark:bg-[#0a0a1a]/90 bg-white/90 backdrop-blur-md border-b dark:border-white/10 border-gray-200' : 'top-[76px] bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative">
-                <Image
-                  src="/QCanvas-logo-Black.svg"
-                  alt="QCanvas Logo"
-                  width={48}
-                  height={48}
-                  className="object-contain block dark:hidden transition-all duration-300 hover:scale-110 animate-pulse"
-                  priority
-                />
-                <Image
-                  src="/QCanvas-logo-White.svg"
-                  alt="QCanvas Logo"
-                  width={48}
-                  height={48}
-                  className="object-contain hidden dark:block transition-all duration-300 hover:scale-110 animate-pulse"
-                  priority
-                />
-              </div>
-              <span className="text-2xl font-bold quantum-gradient bg-clip-text text-transparent transition-all duration-200">
-                QCanvas
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              {[
-                { id: 'overview', label: 'Overview', active: activeSection === 'overview' },
-                { id: 'getting-started', label: 'Getting Started', active: activeSection === 'getting-started' },
-                { id: 'features', label: 'Features', active: activeSection === 'features' },
-                { id: 'architecture', label: 'Architecture', active: activeSection === 'architecture' },
-                { id: 'api', label: 'API', active: activeSection === 'api' },
-                { id: 'hybrid-execution', label: 'Hybrid API', active: activeSection === 'hybrid-execution' }
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => scrollToSection(item.id)}
-                  className={`transition-colors duration-200 px-3 py-2 text-base font-medium ${item.active
-                    ? 'text-quantum-blue-light'
-                    : 'dark:text-white text-gray-800 hover:text-quantum-blue-light'
-                    }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-
-
-            </div>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-white/5 border border-white/10 hover:border-quantum-blue-light transition-all duration-200 hover:scale-105"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-white/5 border border-white/10 hover:border-quantum-blue-light transition-all duration-200 hover:scale-105"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+          <div className="flex items-center overflow-x-auto py-3 hide-scrollbar text-sm">
+            {[
+              { id: 'overview', label: 'Overview', active: activeSection === 'overview' },
+              { id: 'getting-started', label: 'Getting Started', active: activeSection === 'getting-started' },
+              { id: 'features', label: 'Features', active: activeSection === 'features' },
+              { id: 'architecture', label: 'Architecture', active: activeSection === 'architecture' },
+              { id: 'api', label: 'API', active: activeSection === 'api' },
+              { id: 'hybrid-execution', label: 'Hybrid API', active: activeSection === 'hybrid-execution' }
+            ].map((item) => (
+              <button
+                key={item.id}
+                id={`nav-${item.id}`}
+                onClick={() => scrollToSection(item.id)}
+                className={`flex-shrink-0 transition-colors duration-200 px-4 py-1.5 rounded-full mr-2 ${item.active
+                  ? 'bg-quantum-blue-light/10 text-quantum-blue-light dark:text-quantum-blue-light'
+                  : 'text-gray-600 dark:text-gray-400 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/5 hover:bg-gray-100'
+                  }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
-
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden bg-black/95 backdrop-blur-xl border-t border-white/10">
-              <div className="px-4 py-4 space-y-4">
-                {[
-                  { id: 'overview', label: 'Overview' },
-                  { id: 'getting-started', label: 'Getting Started' },
-                  { id: 'features', label: 'Features' },
-                  { id: 'architecture', label: 'Architecture' },
-                  { id: 'api', label: 'API' },
-                  { id: 'hybrid-execution', label: 'Hybrid API' }
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => scrollToSection(item.id)}
-                    className={`block w-full text-left transition-colors duration-200 ${activeSection === item.id
-                      ? 'text-quantum-blue-light'
-                      : 'text-editor-text hover:text-white'
-                      }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-
-
-
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                  <button
-                    onClick={toggleTheme}
-                    className="flex items-center space-x-2 text-editor-text hover:text-white transition-colors duration-200"
-                  >
-                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    <span>Theme</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-      </nav>
+      </div>
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 pt-20 overflow-hidden">
