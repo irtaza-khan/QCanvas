@@ -391,7 +391,15 @@ export const quantumApi = {
   },
 
   // Execute OpenQASM code with QSim backend
-  async executeQasmWithQSim(qasm_code: string, backend: 'cirq' | 'qiskit' | 'pennylane' = 'cirq', shots = 1024, token?: string): Promise<ApiResponse<any>> {
+  // Execute OpenQASM code with QSim backend
+  async executeQasmWithQSim(
+    qasm_code: string, 
+    backend: 'cirq' | 'qiskit' | 'pennylane' = 'cirq', 
+    shots = 1024, 
+    token?: string, 
+    algorithm_hint?: string,
+    input_framework?: string
+  ): Promise<ApiResponse<any>> {
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
     return apiRequest('/api/simulator/execute-qsim', {
       method: 'POST',
@@ -399,10 +407,13 @@ export const quantumApi = {
         qasm_input: qasm_code,
         backend,
         shots,
+        ...(algorithm_hint ? { algorithm_hint } : {}),
+        ...(input_framework ? { input_framework } : {}),
       }),
       headers,
     })
   },
+
 
   // Get available backends
   async getAvailableBackends(): Promise<ApiResponse<any>> {
@@ -607,10 +618,12 @@ export const sharedApi = {
   },
 
   // Create a new shared snippet
-  async createSharedSnippet(data: any): Promise<ApiResponse<any>> {
+  async createSharedSnippet(data: any, token?: string): Promise<ApiResponse<any>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
     return apiRequest('/api/shared/', {
       method: 'POST',
       body: JSON.stringify(data),
+      headers,
     })
   }
 }

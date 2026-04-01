@@ -69,37 +69,13 @@ export default function AppPage() {
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const loadFiles = async () => {
-      try {
-        const result = await fileApi.getFiles()
-        if (result.success && result.data) {
-          setFiles(result.data)
-        }
-      } catch (error) {
-        console.error('Failed to load files:', error)
-        // Keep using the mock files from store if API fails
-      }
-
-      // Check for pending example to add from home page
-      const pendingExample = sessionStorage.getItem('pending-example')
-      if (pendingExample) {
-        try {
-          const example = JSON.parse(pendingExample)
-          // Use createFile to persist to database instead of just memory
-          await useFileStore.getState().createFile(example.name, example.content)
-          toast.success(`Loaded and saved example: ${example.name}`)
-          sessionStorage.removeItem('pending-example')
-        } catch (error) {
-          console.error('Failed to load pending example:', error)
-        }
-      }
-    }
-
+    const { fetchFiles } = useFileStore.getState()
+    
     // Only load from API if we don't have files yet
     if (files.length === 0) {
-      loadFiles()
+      fetchFiles()
     }
-  }, [setFiles, files.length, isAuthenticated])
+  }, [files.length, isAuthenticated])
 
   // Listen for inter-tab messages to add files from examples page
   useEffect(() => {

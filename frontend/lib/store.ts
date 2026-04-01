@@ -85,6 +85,7 @@ interface FileStore extends EditorState {
   addFile: (name: string, content?: string) => File
   addFileWithoutActivating: (name: string, content?: string) => File
   deleteFile: (fileId: string) => Promise<void>
+  fetchFiles: (projectId?: number) => Promise<void>
 
   setTheme: (theme: 'light' | 'dark') => void
   toggleTheme: () => void
@@ -654,13 +655,71 @@ export const useFileStore = create<FileStore>()(
       fetchProjects: async (token: string) => {
         set({ loading: true })
         try {
-          const res = await projectsApi.getProjects(token)
+          const api = await import('./api').then(m => m.projectsApi)
+          const res = await api.getProjects(token)
           if (res.success && res.data) {
-            set({ projects: res.data }, false, 'fetchProjects')
-            // Don't auto-select project, allow viewing root files
+            // Map files within projects to frontend format
+            const mappedProjects = res.data.map((project: any) => ({
+              ...project,
+              id: project.id.toString(),
+              files: (project.files || []).map((f: any) => ({
+                id: f.id.toString(),
+                name: f.filename,
+                content: f.content,
+                language: getLanguageFromFilename(f.filename),
+                createdAt: f.created_at || new Date().toISOString(),
+                updatedAt: f.updated_at || new Date().toISOString(),
+                size: f.content?.length || 0,
+                projectId: project.id.toString(),
+                isShared: f.is_shared,
+                userId: f.user_id,
+              }))
+            }))
+            set({ projects: mappedProjects }, false, 'fetchProjects')
           }
         } catch (error) {
           console.error("Failed to fetch projects", error)
+        } finally {
+          set({ loading: false })
+        }
+      },
+
+      fetchFiles: async (projectId?: number) => {
+        const token = useAuthStore.getState().token
+        if (!token) return
+
+        set({ loading: true })
+        try {
+          const api = await import('./api').then(m => m.fileApi)
+          const res = await api.getFiles(projectId)
+          if (res.success && res.data) {
+            const mappedFiles = (res.data as any[]).map((f: any) => ({
+              id: f.id.toString(),
+              name: f.filename,
+              content: f.content,
+              language: getLanguageFromFilename(f.filename),
+              createdAt: f.created_at || new Date().toISOString(),
+              updatedAt: f.updated_at || new Date().toISOString(),
+              size: f.content?.length || 0,
+              projectId: f.project_id ? f.project_id.toString() : undefined,
+              isShared: f.is_shared,
+              userId: f.user_id,
+            }))
+            
+            set(state => {
+              // If we are showing root files (projectId is undefined), 
+              // we might want to keep template files if SHOW_TEMPLATE_FILES is true
+              const templates = SHOW_TEMPLATE_FILES ? initialFiles : []
+              const filesToShow = projectId ? mappedFiles : [...templates, ...mappedFiles]
+              
+              return { 
+                files: filesToShow,
+                loading: false
+              }
+            }, false, 'fetchFiles')
+          }
+        } catch (error) {
+          console.error('Failed to fetch files:', error)
         } finally {
           set({ loading: false })
         }

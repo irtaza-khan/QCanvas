@@ -6,7 +6,9 @@ import { Share } from '@/components/Icons';
 import { X, Check, Tag } from 'lucide-react';
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/authStore";
-import { sharedApi } from "@/lib/api";
+import { useFileStore } from "@/lib/store";
+import { useGamificationStore } from "@/lib/gamificationStore";
+import { sharedApi, fileApi } from "@/lib/api";
 
 const COMMON_TAGS = [
   "quantum-circuits", "qubits", "superposition", "entanglement", "measurement",
@@ -23,6 +25,7 @@ const COMMON_TAGS = [
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
+  fileId?: string;
   fileContent: string;
   fileName: string;
 }
@@ -30,6 +33,7 @@ interface ShareModalProps {
 export default function ShareModal({
   isOpen,
   onClose,
+  fileId,
   fileContent,
   fileName,
 }: ShareModalProps) {
@@ -42,17 +46,29 @@ export default function ShareModal({
   const [category, setCategory] = useState("Basic Circuits");
   const [tags, setTags] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isIdManuallyEdited, setIsIdManuallyEdited] = useState(false);
   
   // Tag suggestion state
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
 
+  // Helper to generate a unique slug
+  const generateUniqueId = (baseTitle: string) => {
+    const slug = baseTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    const randomSuffix = Math.random().toString(36).substring(2, 7);
+    return `${slug || 'circuit'}-${randomSuffix}`;
+  };
+
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setId("");
       setTitle(fileName);
+      setId(generateUniqueId(fileName));
+      setIsIdManuallyEdited(false);
       setDescription("");
       setFramework("none");
       setDifficulty("beginner");
@@ -62,6 +78,13 @@ export default function ShareModal({
       setShowSuggestions(false);
     }
   }, [isOpen, fileName]);
+
+  // Update ID when title changes (if not manually edited)
+  useEffect(() => {
+    if (!isIdManuallyEdited && title) {
+      setId(generateUniqueId(title));
+    }
+  }, [title, isIdManuallyEdited]);
 
   const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -113,6 +136,7 @@ export default function ShareModal({
     }
 
     setIsSubmitting(true);
+    const token = useAuthStore.getState().token;
 
     try {
       // Tags is a comma-separated string, but backend expects list of strings
@@ -129,13 +153,44 @@ export default function ShareModal({
         code: fileContent,
         filename: fileName,
         author: user?.full_name || user?.username || 'Anonymous User',
-      });
+      }, token || undefined);
 
       if (response.success) {
-        toast.success("File shared successfully!");
+        // Success! Sharing worked.
+        toast.success("File shared successfully! XP awarded.");
+        
+        // Now update the original file's is_shared status (Best effort)
+        const token = useAuthStore.getState().token;
+        if (fileId && token && !fileId.startsWith('file-')) {
+          fileApi.updateFile(parseInt(fileId), { is_shared: true }, token)
+            .then(() => console.log("Updated file share status in DB"))
+            .catch((e) => console.error("Failed to update file share status in DB", e));
+        }
+        
+        // Update the local store so the UI (sidebar) reflects the change in either case
+        const { files, setFiles } = useFileStore.getState();
+        const updatedFiles = files.map(f => 
+          f.id === fileId ? { ...f, isShared: true } : f
+        );
+        setFiles(updatedFiles);
+        
+        // Refresh gamification stats
+        if (token) {
+          const gamificationStore = useGamificationStore.getState();
+          gamificationStore.fetchStats(token, true);
+          gamificationStore.fetchAchievements(token, true);
+        }
+
         onClose();
       } else {
-        toast.error(response.error || "Failed to share file");
+        // If it already exists, suggest changing the ID
+        if (response.error?.includes("already exists")) {
+          const newId = generateUniqueId(title || fileName);
+          setId(newId);
+          toast.error("That ID was taken. We've suggested a new one, please try sharing again!");
+        } else {
+          toast.error(response.error || "Failed to share file");
+        }
       }
     } catch (error) {
       console.error("Share error:", error);
@@ -199,16 +254,29 @@ export default function ShareModal({
               <label className="text-sm font-medium text-black dark:text-gray-300 ml-1">
                 Unique ID <span className="text-red-400">*</span>
               </label>
-              <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg blur opacity-20 group-focus-within:opacity-75 transition duration-500"></div>
-                <input
-                  type="text"
-                  value={id}
-                  onChange={(e) => setId(e.target.value)}
-                  placeholder="e.g., my-quantum-teleportation-v1"
-                  className="relative w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
-                  required
-                />
+              <div className="relative group flex items-center gap-2">
+                <div className="relative flex-1">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg blur opacity-20 group-focus-within:opacity-75 transition duration-500"></div>
+                  <input
+                    type="text"
+                    value={id}
+                    onChange={(e) => {
+                      setId(e.target.value);
+                      setIsIdManuallyEdited(true);
+                    }}
+                    placeholder="e.g., my-quantum-teleportation"
+                    className="relative w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                    required
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setId(generateUniqueId(title || fileName))}
+                  className="p-3 rounded-lg bg-white/5 border border-white/10 text-blue-400 hover:bg-white/10 hover:text-blue-300 transition-all flex-shrink-0"
+                  title="Regenerate ID"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </button>
               </div>
             </div>
 

@@ -134,7 +134,45 @@ export default function TopBar({
     },
   ];
 
+  // Detect quantum algorithm from Python source code.
+  // Returns a lowercase hint string (e.g. "grover") or null.
+  // Priority: explicit comment tag > library imports > function name heuristics
+  const detectAlgorithmHint = (code: string): string | null => {
+    const lower = code.toLowerCase()
+
+    // 1. Explicit comment tag: # @algorithm: grover  OR  // Algorithm: deutsch_jozsa
+    const tagMatch = lower.match(/#\s*@?algorithm[:\s]+([a-z_-]+)/)
+    if (tagMatch) return tagMatch[1].trim()
+
+    // 2. Library-level imports (most reliable)
+    if (lower.includes('from qiskit.algorithms import grover') || lower.includes('cirq.groversalgorithm') || lower.includes('grover')) {
+      if (lower.includes('grover')) return 'grover'
+    }
+    if (lower.includes('from qiskit.algorithms import shor') || lower.includes('algorithms.shor') || lower.includes('shor')) {
+      if (lower.includes('shor')) return 'shor'
+    }
+    if (lower.includes('from qiskit.algorithms import vqe') || lower.includes('pennylane') && lower.includes('vqecost') || lower.includes('variational_quantum_eigensolver')) {
+      return 'vqe'
+    }
+    if (lower.includes('from qiskit.algorithms import qaoa') || lower.includes('qml.qaoa') || lower.includes('qaoa')) {
+      return 'qaoa'
+    }
+    if (lower.includes('deutschjozsa') || lower.includes('deutsch_jozsa') || lower.includes('deutsch-jozsa') || lower.includes('from qiskit.algorithms import deutschjozsa')) {
+      return 'deutsch'
+    }
+
+    // 3. Function / variable name heuristics in source code
+    if (/def.*grover|grover.*circuit|grover_oracle/i.test(code)) return 'grover'
+    if (/def.*shor|shor.*factor/i.test(code)) return 'shor'
+    if (/def.*vqe|vqe.*circuit|ansatz/i.test(code)) return 'vqe'
+    if (/def.*qaoa|qaoa.*circuit|mixer.*hamiltonian|cost.*hamiltonian/i.test(code)) return 'qaoa'
+    if (/def.*deutsch|deutsch.*oracle/i.test(code)) return 'deutsch'
+
+    return null
+  }
+
   // Helper function to format error messages for user display
+
   const formatErrorMessage = (error: string | undefined | null): string => {
     if (!error) return "Run failed";
 
@@ -479,12 +517,23 @@ export default function TopBar({
         toast.loading("Running simulation with QSim...", { id: "execution" });
       }
 
+      // Detect algorithm from the original Python source (before it was compiled to QASM)
+      const algorithmHint = !isQasmFile && activeFile?.content
+        ? detectAlgorithmHint(activeFile.content) ?? undefined
+        : undefined
+        
+      const inputFramework = !isQasmFile && inputLanguage 
+        ? inputLanguage 
+        : undefined;
+
       // Execute QASM using QSim with selected backend and shots
       const executionResult = await quantumApi.executeQasmWithQSim(
         qasmCode,
         simBackend,
         shots,
-        token || undefined
+        token || undefined,
+        algorithmHint,
+        inputFramework
       );
 
       // Check if the request itself failed (network error, etc.)
@@ -1286,6 +1335,7 @@ export default function TopBar({
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
+        fileId={activeFile?.id}
         fileContent={activeFile?.content || ""}
         fileName={activeFile?.name || ""}
       />
