@@ -7,6 +7,7 @@ import { Moon, Sun } from '@/components/Icons';
 import { Menu, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useFileStore } from '@/lib/store'
+import { useAuthStore } from '@/lib/authStore'
 import { config } from '@/lib/config'
 
 interface NavbarProps {
@@ -17,14 +18,9 @@ interface NavbarProps {
 export default function Navbar({ scrollToFeatures }: NavbarProps) {
   const pathname = usePathname()
   const { theme, toggleTheme } = useFileStore()
+  const { isAuthenticated } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-
-  useEffect(() => {
-    const authStatus = localStorage.getItem('qcanvas-auth')
-    setIsAuthenticated(!!authStatus)
-  }, [])
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY)

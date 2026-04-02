@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import { useFileStore } from '@/lib/store'
 import { sharedApi } from '@/lib/api'
 import Navbar from '@/components/Navbar'
+import { useAuthStore } from '@/lib/authStore'
 
 interface Example {
   id: string
@@ -866,6 +867,7 @@ export default function ExamplesPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const { addFile } = useFileStore()
+  const { isAuthenticated } = useAuthStore()
   const router = useRouter()
 
   useEffect(() => {
@@ -925,7 +927,12 @@ export default function ExamplesPage() {
       }))
       
       // If app tab is not open, navigate to it
-      router.push('/app')
+      if (isAuthenticated) {
+        router.push('/app')
+      } else {
+        toast('Please sign in to try this example in the editor')
+        router.push('/login')
+      }
     }, 500)
 
     // Listen for confirmation (optional, for now just close after sending)

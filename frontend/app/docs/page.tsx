@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 import { Moon, Sun, Book, Code, Cpu, BarChart3, Zap, Settings, Play, Star, Atom, Lightbulb, Database, Layers, Terminal, FileText, Cloud, Server, Wrench, Target, Rocket, Clock, TrendingUp, GitBranch, FrameworkConversionIcon, FlagIcon, SparklesIcon, ApiIcon, CirqIcon, PennyLaneIcon, QiskitIcon } from '@/components/Icons';
 import { Menu, X, ChevronRight, ArrowRight, CheckCircle, Shield, Monitor, Sparkles, Info } from 'lucide-react';
 import { config, getCopyrightText } from '@/lib/config'
+import { useAuthStore } from '@/lib/authStore'
 
 interface DocSection {
   id: string
@@ -22,6 +23,7 @@ export default function DocsPage() {
   const [activeSection, setActiveSection] = useState('overview')
   const [isVisible, setIsVisible] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const { isAuthenticated } = useAuthStore()
   const observerRef = useRef<IntersectionObserver | null>(null)
 
   useEffect(() => {
@@ -1331,7 +1333,7 @@ print(f"\\nOne-step result: {result2.counts}")`}
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Link
-              href="/login"
+              href={isAuthenticated ? "/app" : "/login"}
               className="btn-quantum text-lg px-8 py-4 flex items-center group hover-lift relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>

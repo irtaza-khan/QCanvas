@@ -9,17 +9,14 @@ import { useFileStore } from '@/lib/store';
 import { config, getCopyrightText } from '@/lib/config'
 import Navbar from '@/components/Navbar'
 
+import { useAuthStore } from '@/lib/authStore'
+
 export default function HomePage() {
   const { theme } = useFileStore()
   const [isVisible, setIsVisible] = useState(false)
   const [scrollY, setScrollY] = useState(0)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { isAuthenticated } = useAuthStore()
 
-  // Check authentication status
-  useEffect(() => {
-    const authStatus = localStorage.getItem('qcanvas-auth')
-    setIsAuthenticated(!!authStatus)
-  }, [])
 
   useEffect(() => {
     setIsVisible(true)
@@ -136,7 +133,7 @@ def grovers_search():
   return (
     <div className="min-h-screen bg-[#0a0a1a] relative overflow-x-hidden">
       {/* Navigation */}
-      <Navbar activePath="/" scrollToFeatures={scrollToSection} />
+      <Navbar scrollToFeatures={scrollToSection} />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 pt-20 overflow-hidden">
