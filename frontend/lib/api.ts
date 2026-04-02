@@ -1,4 +1,4 @@
-import { File, ApiResponse, CreateFileRequest, UpdateFileRequest } from '@/types'
+import { File, ApiResponse, CreateFileRequest, ExplorerTree } from '@/types'
 
 // =============================================================================
 // API BASE CONFIGURATION
@@ -252,6 +252,52 @@ export const fileApi = {
   async deleteFile(id: number, token?: string): Promise<ApiResponse<void>> {
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
     return apiRequest<void>(`/api/files/${id}`, {
+      method: 'DELETE',
+      headers,
+    })
+  }
+}
+
+// Folders API
+export interface CreateFolderRequest {
+  name: string
+  project_id?: number
+  parent_id?: number
+}
+
+export interface UpdateFolderRequest {
+  name?: string
+  parent_id?: number
+}
+
+export const foldersApi = {
+  async getExplorerTree(projectId?: number, token?: string): Promise<ApiResponse<ExplorerTree>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    const endpoint = projectId ? `/api/folders/tree?project_id=${projectId}` : '/api/folders/tree'
+    return apiRequest<ExplorerTree>(endpoint, { headers })
+  },
+
+  async createFolder(data: CreateFolderRequest, token?: string): Promise<ApiResponse<any>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    return apiRequest('/api/folders', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers,
+    })
+  },
+
+  async updateFolder(folderId: number, data: UpdateFolderRequest, token?: string): Promise<ApiResponse<any>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    return apiRequest(`/api/folders/${folderId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      headers,
+    })
+  },
+
+  async deleteFolder(folderId: number, token?: string): Promise<ApiResponse<void>> {
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
+    return apiRequest<void>(`/api/folders/${folderId}`, {
       method: 'DELETE',
       headers,
     })

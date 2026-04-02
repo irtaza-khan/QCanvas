@@ -7,8 +7,23 @@ export interface File {
   updatedAt: string;
   size: number;
   projectId?: string;
+  folderId?: string;
   isShared?: boolean;
   userId?: string;
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  projectId?: string;
+  parentId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExplorerTree {
+  folders: Folder[];
+  files: File[];
 }
 
 export interface Project {
@@ -74,6 +89,7 @@ export interface CreateFileRequest {
   content: string;
   is_main?: boolean;
   project_id?: number;
+  folder_id?: number;
   is_shared?: boolean;
 }
 
@@ -82,6 +98,7 @@ export interface UpdateFileRequest {
   content?: string;
   is_main?: boolean;
   project_id?: number;
+  folder_id?: number;
   is_shared?: boolean;
 }
 

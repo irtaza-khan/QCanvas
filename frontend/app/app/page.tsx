@@ -8,9 +8,8 @@ import { InputLanguage } from '@/types'
 type ExecutionMode = 'compile' | 'execute' | 'hybrid'
 import EditorPane from '@/components/EditorPane'
 import ResultsPane from '@/components/ResultsPane'
-import TopBar from '@/components/TopBar'
-import Sidebar from '@/components/Sidebar'
-import SimulationControls from '@/components/SimulationControls'
+import IDELayout from '@/components/ide/IDELayout'
+import RunView from '@/components/ide/RunView'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
@@ -21,6 +20,8 @@ export default function AppPage() {
   const [resultsHeight, setResultsHeight] = useState(320) // Default height
   const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const pendingResultsHeightRef = useRef<number>(320)
+  const rafIdRef = useRef<number | null>(null)
 
   // Simulation settings state
   const [inputLanguage, setInputLanguage] = useState<InputLanguage | "">("");
@@ -152,17 +153,25 @@ export default function AppPage() {
       const minHeight = 100
       const maxHeight = containerRect.height - 200 // Leave space for editor
 
-      setResultsHeight(Math.max(minHeight, Math.min(maxHeight, newHeight)))
+      const clamped = Math.max(minHeight, Math.min(maxHeight, newHeight))
+      pendingResultsHeightRef.current = clamped
+      if (rafIdRef.current != null) return
+      rafIdRef.current = globalThis.window?.requestAnimationFrame(() => {
+        rafIdRef.current = null
+        setResultsHeight(pendingResultsHeightRef.current)
+      }) ?? null
     }
 
     const handleMouseUp = () => {
       setIsDragging(false)
     }
 
+    document.body.classList.add('select-none')
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
 
     return () => {
+      document.body.classList.remove('select-none')
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
@@ -202,18 +211,25 @@ export default function AppPage() {
 
   // Authenticated - show main app
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <TopBar
-        inputLanguage={inputLanguage}
-        setInputLanguage={setInputLanguage}
-        simBackend={simBackend}
-        setSimBackend={setSimBackend}
-        shots={shots}
-        setShots={setShots}
-      />
-      {/* Hide simulation controls in hybrid mode - user specifies in code */}
-      {executionMode !== 'hybrid' && (
-        <SimulationControls
+    <IDELayout
+      sidebarContainerClassName={`${sidebarCollapsed ? 'w-0 md:w-80' : 'w-full md:w-80'} transition-all duration-200 ${
+        isMobile && !sidebarCollapsed ? 'absolute inset-y-0 left-12 z-50 shadow-xl' : ''
+      } overflow-hidden`}
+      sidebarOverlay={
+        isMobile && !sidebarCollapsed ? (
+          <div className="absolute inset-0 bg-black bg-opacity-50 z-40" onClick={toggleSidebar} />
+        ) : undefined
+      }
+      editor={
+        <div
+          ref={containerRef}
+          className="flex-1 overflow-hidden"
+        >
+          <EditorPane />
+        </div>
+      }
+      runView={
+        <RunView
           inputLanguage={inputLanguage}
           setInputLanguage={setInputLanguage}
           simBackend={simBackend}
@@ -221,71 +237,25 @@ export default function AppPage() {
           shots={shots}
           setShots={setShots}
         />
-      )}
-      {/* Show hybrid mode info bar when in hybrid mode */}
-      {executionMode === 'hybrid' && (
-        <div className="min-h-[48px] bg-gradient-to-r from-green-900/30 via-emerald-900/20 to-green-900/30 border-b border-green-500/30 flex items-center justify-center px-6 py-2">
-          <div className="flex items-center space-x-3">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-sm text-green-300 font-medium">Hybrid Mode</span>
-            <span className="text-xs text-green-400/70">
-              Use <code className="bg-green-900/40 px-1.5 py-0.5 rounded text-green-300">qcanvas.compile()</code> and <code className="bg-green-900/40 px-1.5 py-0.5 rounded text-green-300">qsim.run()</code> in your code
-            </span>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Sidebar */}
-        <div className={`${sidebarCollapsed
-            ? 'w-0 md:w-12'
-            : 'w-full md:w-80'
-          } transition-all duration-300 ${isMobile && !sidebarCollapsed
-            ? 'absolute inset-y-0 left-0 z-50 shadow-xl'
-            : ''
-          } overflow-hidden`}>
-          <Sidebar />
-        </div>
-
-        {/* Mobile overlay when sidebar is open */}
-        {isMobile && !sidebarCollapsed && (
+      }
+      bottomDragHandle={
+        resultsCollapsed ? (
+          <></>
+        ) : (
           <div
-            className="absolute inset-0 bg-black bg-opacity-50 z-40"
-            onClick={toggleSidebar}
+            className={`h-1 bg-editor-border hover:bg-quantum-blue-light cursor-row-resize transition-colors ${
+              isDragging ? 'bg-quantum-blue-light' : ''
+            }`}
+            onMouseDown={handleDragStart}
+            title="Drag to resize"
           />
-        )}
-
-        {/* Main content */}
-        <main ref={containerRef} className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <div className="flex flex-col h-full overflow-hidden">
-            {/* Editor Area */}
-            <div
-              className="flex-1 overflow-hidden"
-              style={{ height: resultsCollapsed ? 'calc(100% - 32px)' : `calc(100% - ${resultsHeight}px)` }}
-            >
-              <EditorPane />
-            </div>
-
-            {/* Drag Handle */}
-            {!resultsCollapsed && (
-              <div
-                className={`h-1 bg-editor-border hover:bg-quantum-blue-light cursor-row-resize transition-colors ${isDragging ? 'bg-quantum-blue-light' : ''
-                  }`}
-                onMouseDown={handleDragStart}
-                title="Drag to resize"
-              />
-            )}
-
-            {/* Results Panel */}
-            <div
-              className="overflow-hidden border-t border-editor-border"
-              style={{ height: resultsCollapsed ? '32px' : `${resultsHeight}px` }}
-            >
-              <ResultsPane />
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+        )
+      }
+      bottom={
+        <div className="overflow-hidden border-t border-editor-border" style={{ height: resultsCollapsed ? '32px' : `${resultsHeight}px` }}>
+          <ResultsPane />
+        </div>
+      }
+    />
   )
 }

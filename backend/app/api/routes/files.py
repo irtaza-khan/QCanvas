@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.config.database import get_db
-from app.models.database_models import User, File, Project
+from app.models.database_models import User, File, Project, Folder
 from app.models.schemas import FileCreate, FileResponse, FileUpdate
 from app.api.routes.auth import get_current_user
 from sqlalchemy import or_
@@ -27,9 +27,20 @@ def create_file(
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
 
+    # If folder_id is provided, verify it exists + belongs to user + matches project scope
+    if file.folder_id is not None:
+        folder = db.query(Folder).filter(Folder.id == file.folder_id).first()
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
+        if folder.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to use this folder")
+        if folder.project_id != file.project_id:
+            raise HTTPException(status_code=400, detail="Folder scope mismatch")
+
     new_file = File(
         user_id=current_user.id,
         project_id=file.project_id,
+        folder_id=file.folder_id,
         filename=file.filename,
         content=file.content,
         is_main=file.is_main,
@@ -158,6 +169,19 @@ def update_file(
          if not project:
               raise HTTPException(status_code=404, detail="Target project not found")
          file.project_id = file_update.project_id
+         # When moving between projects, clear folder association (folder scope changes)
+         file.folder_id = None
+
+    if file_update.folder_id is not None:
+         # Assign/move to a folder
+         folder = db.query(Folder).filter(Folder.id == file_update.folder_id).first()
+         if not folder:
+              raise HTTPException(status_code=404, detail="Folder not found")
+         if folder.user_id != current_user.id:
+              raise HTTPException(status_code=403, detail="Not authorized to use this folder")
+         if folder.project_id != file.project_id:
+              raise HTTPException(status_code=400, detail="Folder scope mismatch")
+         file.folder_id = file_update.folder_id
          
     db.commit()
     db.refresh(file)

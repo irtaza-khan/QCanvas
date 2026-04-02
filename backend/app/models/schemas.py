@@ -171,6 +171,7 @@ class FileCreate(BaseModel):
     is_main: bool = False
     is_shared: bool = False
     project_id: Optional[int] = None
+    folder_id: Optional[int] = None
 
 class FileUpdate(BaseModel):
     filename: Optional[str] = None
@@ -178,11 +179,13 @@ class FileUpdate(BaseModel):
     is_main: Optional[bool] = None
     is_shared: Optional[bool] = None
     project_id: Optional[int] = None
+    folder_id: Optional[int] = None
 
 class FileResponse(BaseModel):
     id: int
     user_id: Optional[UUID] = None
     project_id: Optional[int] = None
+    folder_id: Optional[int] = None
     filename: str
     content: str
     is_main: bool
@@ -192,6 +195,35 @@ class FileResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+class FolderCreate(BaseModel):
+    name: str
+    project_id: Optional[int] = None
+    parent_id: Optional[int] = None
+
+
+class FolderUpdate(BaseModel):
+    name: Optional[str] = None
+    parent_id: Optional[int] = None
+
+
+class FolderResponse(BaseModel):
+    id: int
+    user_id: UUID
+    project_id: Optional[int] = None
+    parent_id: Optional[int] = None
+    name: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ExplorerTreeResponse(BaseModel):
+    folders: List[FolderResponse]
+    files: List[FileResponse]
 
 class ProjectCreate(BaseModel):
     name: str

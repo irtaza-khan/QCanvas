@@ -81,7 +81,7 @@ export default function XPToast({ event, onClose }: XPToastProps) {
                                     Level Up! 🎉
                                 </h3>
                                 <p className="text-yellow-200 text-sm mb-2">
-                                    You've reached <span className="font-bold text-yellow-400">Level {event.level}</span>!
+                                    You&apos;ve reached <span className="font-bold text-yellow-400">Level {event.level}</span>!
                                 </p>
                                 <div className="flex items-center gap-2 text-xs text-white/80">
                                     <Zap className="w-3 h-3" />

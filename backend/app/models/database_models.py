@@ -172,8 +172,29 @@ class Project(Base):
 
     # Relationships
     owner = relationship("User", back_populates="projects")
+    folders = relationship("Folder", back_populates="project", cascade="all, delete-orphan")
     files = relationship("File", back_populates="project", cascade="all, delete-orphan")
     jobs = relationship("Job", back_populates="project")
+
+
+class Folder(Base):
+    __tablename__ = "folders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True, index=True)
+    parent_id = Column(Integer, ForeignKey("folders.id"), nullable=True, index=True)
+
+    name = Column(String(255), nullable=False)
+
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    owner = relationship("User")
+    project = relationship("Project", back_populates="folders")
+    parent = relationship("Folder", remote_side=[id], backref="children")
+    files = relationship("File", back_populates="folder", cascade="all, delete-orphan")
 
 
 class File(Base):
@@ -182,6 +203,7 @@ class File(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True) # Nullable for migration, should be filled
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
+    folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True, index=True)
     filename = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
     is_main = Column(Boolean, default=False, nullable=False)
@@ -193,6 +215,7 @@ class File(Base):
     # Relationships
     project = relationship("Project", back_populates="files")
     user = relationship("User", back_populates="files")
+    folder = relationship("Folder", back_populates="files")
 
 
 class JobStatus(str, enum.Enum):

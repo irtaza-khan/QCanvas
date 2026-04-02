@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Folder, Code, FileText, Zap, Star, Clock, Search, Download, Upload, FolderPlus, File as FileIcon, Languages, Globe } from '@/components/Icons';
-import { Plus, MoreHorizontal, Edit2, X, Check, ChevronDown, ChevronRight, Filter, Users, Lock, Trash2, LayoutTemplate } from 'lucide-react';
+import { Folder, Code, FileText, Zap, Star, Search, Download, Upload, FolderPlus, File as FileIcon, Languages, Globe } from '@/components/Icons';
+import { Plus, MoreHorizontal, Edit2, X, Check, ChevronDown, ChevronRight, Filter, Users, Trash2, LayoutTemplate } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFileStore } from '@/lib/store'
 import { File, Project } from '@/types'
@@ -143,7 +143,6 @@ export default function Sidebar() {
     sidebarCollapsed,
     toggleSidebar,
     setActiveFile,
-    addFile,
     deleteFile,
     renameFile,
     fetchProjects,
@@ -159,7 +158,8 @@ export default function Sidebar() {
       fetchProjects(token)
       // Also fetch root files initially if no project is active, or user just logged in
       if (!activeProjectId) {
-        fetchProjectFiles(null, token)
+        // Prefer the explorer tree endpoint (folders + files)
+        useFileStore.getState().fetchExplorerTree(null, token)
       }
     }
   }, [isAuthenticated, token, fetchProjects, fetchProjectFiles, activeProjectId])
@@ -217,7 +217,7 @@ export default function Sidebar() {
 
     try {
       // Pass activeProjectId (null for root) and sharing status
-      await createFile(newFileName, undefined, activeProjectId === null ? undefined : activeProjectId, newFileIsShared)
+      await createFile(newFileName, undefined, activeProjectId ?? undefined, newFileIsShared)
       setNewFileName('')
       setNewFileIsShared(false)
       setShowNewFileInput(false)
@@ -249,7 +249,7 @@ export default function Sidebar() {
 
   const handleProjectClick = (projectId: number | null) => {
     if (!token) return
-    fetchProjectFiles(projectId, token)
+    useFileStore.getState().fetchExplorerTree(projectId, token)
   }
 
   const handleCreateFromTemplate = async (template: FileTemplate) => {
@@ -725,7 +725,7 @@ export default function Sidebar() {
             </div>
 
             <p className="text-editor-text mb-6">
-              Are you sure you want to delete <span className="text-white font-medium">"{deleteConfirm.fileName}"</span>?
+              Are you sure you want to delete <span className="text-white font-medium">&quot;{deleteConfirm.fileName}&quot;</span>?
               This action cannot be undone.
             </p>
 

@@ -609,6 +609,15 @@ export default function TopBar({
     }
   };
 
+  // Allow the new MenuBar/RunView to trigger the same execution logic.
+  useEffect(() => {
+    const onMenuRun = () => {
+      handleRun();
+    };
+    globalThis.window?.addEventListener('menu-run', onMenuRun as EventListener);
+    return () => globalThis.window?.removeEventListener('menu-run', onMenuRun as EventListener);
+  }, [handleRun]);
+
   const handleSave = async () => {
     if (!activeFile) {
       toast.error("No file to save");

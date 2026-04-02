@@ -881,7 +881,7 @@ print(qc)`}
                     <p className="text-sm text-black dark:text-gray-400 mb-2">Parameters:</p>
                     <ul className="text-sm text-editor-text space-y-1 ml-4">
                       <li><code className="text-quantum-blue-light">circuit</code> - Circuit object from Cirq, Qiskit, or PennyLane</li>
-                      <li><code className="text-quantum-blue-light">framework</code> - Optional: "cirq", "qiskit", "pennylane" (auto-detected if not provided)</li>
+                      <li><code className="text-quantum-blue-light">framework</code> - Optional: <code>&quot;cirq&quot;</code>, <code>&quot;qiskit&quot;</code>, <code>&quot;pennylane&quot;</code> (auto-detected if not provided)</li>
                     </ul>
                   </div>
                   <div>
@@ -912,7 +912,7 @@ print(qasm)`}
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xl font-semibold text-white flex items-center">
                     <span className="text-quantum-blue-light mr-2">qsim.run</span>
-                    <span className="text-sm font-normal text-black dark:text-gray-400">(qasm_code, shots=1024, backend="cirq")</span>
+                    <span className="text-sm font-normal text-black dark:text-gray-400">(qasm_code, shots=1024, backend=&quot;cirq&quot;)</span>
                   </h4>
                   <span className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Function</span>
                 </div>
@@ -923,7 +923,7 @@ print(qasm)`}
                     <ul className="text-sm text-editor-text space-y-1 ml-4">
                       <li><code className="text-quantum-blue-light">qasm_code</code> - OpenQASM 3.0 code string</li>
                       <li><code className="text-quantum-blue-light">shots</code> - Number of measurement shots (default: 1024, use 0 for exact statevector)</li>
-                      <li><code className="text-quantum-blue-light">backend</code> - "cirq", "qiskit", or "pennylane" (default: "cirq")</li>
+                      <li><code className="text-quantum-blue-light">backend</code> - <code>&quot;cirq&quot;</code>, <code>&quot;qiskit&quot;</code>, or <code>&quot;pennylane&quot;</code> (default: <code>&quot;cirq&quot;</code>)</li>
                     </ul>
                   </div>
                   <div>
@@ -958,7 +958,7 @@ print(result.probabilities)`}
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xl font-semibold text-white flex items-center">
                     <span className="text-quantum-blue-light mr-2">compile_and_execute</span>
-                    <span className="text-sm font-normal text-black dark:text-gray-400">(circuit, framework=None, shots=1024, backend="cirq")</span>
+                    <span className="text-sm font-normal text-black dark:text-gray-400">(circuit, framework=None, shots=1024, backend=&quot;cirq&quot;)</span>
                   </h4>
                   <span className="text-xs bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full">Convenience</span>
                 </div>
@@ -970,7 +970,7 @@ print(result.probabilities)`}
                       <li><code className="text-quantum-blue-light">circuit</code> - Circuit object from Cirq, Qiskit, or PennyLane</li>
                       <li><code className="text-quantum-blue-light">framework</code> - Optional: auto-detected if not provided</li>
                       <li><code className="text-quantum-blue-light">shots</code> - Number of measurement shots (default: 1024)</li>
-                      <li><code className="text-quantum-blue-light">backend</code> - Simulation backend (default: "cirq")</li>
+                      <li><code className="text-quantum-blue-light">backend</code> - Simulation backend (default: <code>&quot;cirq&quot;</code>)</li>
                     </ul>
                   </div>
                   <div>
@@ -1054,31 +1054,31 @@ print(result.probabilities)`}
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">backend</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Backend used for simulation</td>
-                    <td className="py-3 px-4 text-sm"><code>"cirq"</code></td>
+                    <td className="py-3 px-4 text-sm"><code>&quot;cirq&quot;</code></td>
                   </tr>
                   <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">execution_time</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Total execution time (human-readable)</td>
-                    <td className="py-3 px-4 text-sm"><code>"1.23ms"</code></td>
+                    <td className="py-3 px-4 text-sm"><code>&quot;1.23ms&quot;</code></td>
                   </tr>
                   <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">simulation_time</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Time spent in quantum simulation</td>
-                    <td className="py-3 px-4 text-sm"><code>"0.98ms"</code></td>
+                    <td className="py-3 px-4 text-sm"><code>&quot;0.98ms&quot;</code></td>
                   </tr>
                   <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">memory_usage</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">Memory consumed during simulation</td>
-                    <td className="py-3 px-4 text-sm"><code>"45.2 MB"</code></td>
+                    <td className="py-3 px-4 text-sm"><code>&quot;45.2 MB&quot;</code></td>
                   </tr>
                   <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">cpu_usage</code></td>
                     <td className="py-3 px-4 text-sm"><code>str</code></td>
                     <td className="py-3 px-4">CPU utilization during simulation</td>
-                    <td className="py-3 px-4 text-sm"><code>"12.5%"</code></td>
+                    <td className="py-3 px-4 text-sm"><code>&quot;12.5%&quot;</code></td>
                   </tr>
                   <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-4"><code className="text-quantum-blue-light">fidelity</code></td>

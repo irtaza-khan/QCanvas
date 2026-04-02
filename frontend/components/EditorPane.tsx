@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { File as FileIcon, Save, Code } from '@/components/Icons';
+import { File as FileIcon } from '@/components/Icons';
 import { useFileStore } from '@/lib/store'
 import { debounce } from '@/lib/utils'
 import { getHoverForSymbol, formatHoverMarkdown } from '@/lib/quantumHoverSymbols'
@@ -446,69 +446,39 @@ export default function EditorPane() {
 
   return (
     <div ref={containerRef} className="editor-pane">
-      {/* Editor Header */}
-      <div className="h-12 bg-editor-sidebar border-b border-editor-border flex items-center justify-between px-4">
-        <div className="flex items-center space-x-2">
-          <Code className="w-4 h-4 text-editor-text" />
-          <span className="text-sm font-medium text-white">{activeFile.name}</span>
-          <span className="text-xs text-black dark:text-gray-500 bg-editor-bg px-2 py-1 rounded">
-            {activeFile.language}
-          </span>
-        </div>
-        
-        <div className="flex items-center space-x-2">
+      {/* Compact utility row (on-demand circuit view) */}
+      {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
+        <div className="h-9 bg-editor-sidebar border-b border-editor-border flex items-center justify-end px-2 gap-2">
           <button
-            onClick={handleManualSave}
-            className="flex items-center space-x-1 px-3 py-1 text-xs text-editor-text hover:bg-editor-border rounded-md transition-colors"
-            title="Save (Ctrl+S)"
+            onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
+            className={`px-2 py-1 text-xs rounded border ${
+              showCircuitVisualization
+                ? 'bg-quantum-blue-light/20 border-quantum-blue-light/50 text-quantum-blue-light'
+                : 'bg-editor-bg border-editor-border text-editor-text hover:bg-editor-border'
+            }`}
+            title="Toggle Circuit View"
           >
-            <Save className="w-4 h-4" />
-            <span>Save</span>
+            Circuit
           </button>
 
-          {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
-            <div className="flex items-center space-x-2">
+          {showCircuitVisualization && (
+            <div className="flex items-center bg-editor-bg border border-editor-border rounded p-0.5">
               <button
-                onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
-                className={`px-3 py-1.5 text-xs rounded-md transition-all border ${
-                  showCircuitVisualization
-                    ? 'bg-quantum-blue-light/20 border-quantum-blue-light/50 text-quantum-blue-light shadow-[0_0_10px_rgba(96,165,250,0.15)]'
-                    : 'bg-editor-bg border-editor-border text-editor-text hover:bg-white/5'
-                }`}
+                onClick={() => setIs3DMode(false)}
+                className={`px-2 py-1 text-[11px] rounded ${is3DMode ? 'text-editor-text hover:bg-editor-border' : 'bg-editor-accent text-white'}`}
               >
-                Circuit View
+                2D
               </button>
-              
-              {showCircuitVisualization && (
-                <div className="flex items-center bg-black/40 border border-white/10 rounded-md p-0.5 relative overflow-hidden">
-                  <button
-                    onClick={() => setIs3DMode(false)}
-                    className={`relative z-10 px-3 py-1 text-xs font-medium rounded-sm transition-colors ${
-                      !is3DMode ? 'text-white' : 'text-black dark:text-gray-400 hover:text-gray-200'
-                    }`}
-                  >
-                    2D
-                  </button>
-                  <button
-                    onClick={() => setIs3DMode(true)}
-                    className={`relative z-10 px-3 py-1 text-xs font-medium rounded-sm transition-colors ${
-                      is3DMode ? 'text-white' : 'text-black dark:text-gray-400 hover:text-gray-200'
-                    }`}
-                  >
-                    3D
-                  </button>
-                  {/* Sliding highlight */}
-                  <div 
-                    className={`absolute inset-y-0.5 w-[calc(50%-2px)] rounded-sm bg-quantum-purple shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      is3DMode ? 'translate-x-[calc(100%+4px)] left-0' : 'translate-x-[2px] left-0'
-                    }`}
-                  />
-                </div>
-              )}
+              <button
+                onClick={() => setIs3DMode(true)}
+                className={`px-2 py-1 text-[11px] rounded ${is3DMode ? 'bg-editor-accent text-white' : 'text-editor-text hover:bg-editor-border'}`}
+              >
+                3D
+              </button>
             </div>
           )}
         </div>
-      </div>
+      )}
 
       {/* Find and Replace */}
       <FindReplace

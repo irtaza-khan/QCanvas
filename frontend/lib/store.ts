@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { File, EditorState, SupportedLanguage, FILE_TEMPLATES, CompileOptions } from '@/types'
+import { File, Folder, ExplorerTree, EditorState, FILE_TEMPLATES, CompileOptions } from '@/types'
 import { generateId, getLanguageFromFilename } from './utils'
-import { projectsApi, Project, authApi } from './api'
+import { projectsApi, foldersApi, Project, authApi } from './api'
 import { useAuthStore } from './authStore'
 import toast from 'react-hot-toast'
 
@@ -75,12 +75,22 @@ interface FileStore extends EditorState {
   activeProjectId: number | null
   loading: boolean
 
+  // Explorer tree state (folders + files)
+  folders: Folder[]
+  selectedFolderId: string | null
+
+  // Editor tabs state
+  openFileIds: string[]
+
   // Hybrid execution state
   hybridResult: HybridResult | null
   executionMode: ExecutionMode
 
   // Actions
   setActiveFile: (fileId: string | null) => void
+  openFile: (fileId: string) => void
+  closeFile: (fileId: string) => void
+  closeOtherFiles: (fileId: string) => void
   updateFileContent: (fileId: string, content: string) => void
   addFile: (name: string, content?: string) => File
   addFileWithoutActivating: (name: string, content?: string) => File
@@ -106,6 +116,7 @@ interface FileStore extends EditorState {
   // Async Actions
   fetchProjects: (token: string) => Promise<void>
   fetchProjectFiles: (projectId: number | null, token: string) => Promise<void>
+  fetchExplorerTree: (projectId: number | null, token: string) => Promise<void>
   createProject: (name: string, isPublic: boolean, token: string) => Promise<void>
   saveActiveFile: () => Promise<void>
   createFile: (name: string, content?: string, projectId?: number, isShared?: boolean) => Promise<void>
@@ -320,6 +331,9 @@ export const useFileStore = create<FileStore>()(
       projects: [],
       activeProjectId: null,
       loading: false,
+      folders: [],
+      selectedFolderId: null,
+      openFileIds: [],
       theme: 'dark', // Always default to dark
       explainItMode: true,
       sidebarCollapsed: false,
@@ -339,6 +353,46 @@ export const useFileStore = create<FileStore>()(
       // Actions
       setActiveFile: (fileId) => {
         set({ activeFileId: fileId }, false, 'setActiveFile')
+      },
+
+      openFile: (fileId: string) => {
+        set(
+          (state) => {
+            const openFileIds = state.openFileIds.includes(fileId)
+              ? state.openFileIds
+              : [...state.openFileIds, fileId]
+            return { openFileIds, activeFileId: fileId }
+          },
+          false,
+          'openFile'
+        )
+      },
+
+      closeFile: (fileId: string) => {
+        set(
+          (state) => {
+            const openFileIds = state.openFileIds.filter((id) => id !== fileId)
+            let activeFileId = state.activeFileId
+            if (state.activeFileId === fileId) {
+              activeFileId = openFileIds.at(-1) ?? null
+            }
+            return { openFileIds, activeFileId }
+          },
+          false,
+          'closeFile'
+        )
+      },
+
+      closeOtherFiles: (fileId: string) => {
+        set(
+          (state) => {
+            const openFileIds = state.openFileIds.includes(fileId) ? [fileId] : state.openFileIds
+            const activeFileId = state.openFileIds.includes(fileId) ? fileId : state.activeFileId
+            return { openFileIds, activeFileId }
+          },
+          false,
+          'closeOtherFiles'
+        )
       },
 
       updateFileContent: (fileId, content) => {
@@ -810,6 +864,53 @@ export const useFileStore = create<FileStore>()(
           }
         } catch (error) {
           console.error("Failed to fetch files", error)
+        } finally {
+          set({ loading: false })
+        }
+      },
+
+      fetchExplorerTree: async (projectId: number | null, token: string) => {
+        set({ loading: true })
+        try {
+          const res = await foldersApi.getExplorerTree(projectId || undefined, token)
+          if (res.success && res.data) {
+            const tree = res.data
+
+            const folders: Folder[] = (tree.folders || []).map((f: any) => ({
+              id: f.id.toString(),
+              name: f.name,
+              projectId: f.project_id == null ? undefined : f.project_id.toString(),
+              parentId: f.parent_id == null ? undefined : f.parent_id.toString(),
+              createdAt: f.created_at || new Date().toISOString(),
+              updatedAt: f.updated_at || new Date().toISOString(),
+            }))
+
+            const fetchedFiles: File[] = (tree.files || []).map((f: any) => ({
+              id: f.id.toString(),
+              name: f.filename,
+              content: f.content,
+              language: getLanguageFromFilename(f.filename),
+              createdAt: f.created_at || new Date().toISOString(),
+              updatedAt: f.updated_at || new Date().toISOString(),
+              size: f.content?.length || 0,
+              projectId: f.project_id == null ? undefined : f.project_id.toString(),
+              folderId: f.folder_id == null ? undefined : f.folder_id.toString(),
+              isShared: f.is_shared,
+              userId: f.user_id?.toString?.() ?? undefined,
+            }))
+
+            set((state) => {
+              const templates = SHOW_TEMPLATE_FILES ? initialFiles : []
+              const filesToShow = projectId ? fetchedFiles : [...templates, ...fetchedFiles]
+              return {
+                folders,
+                files: filesToShow,
+                activeProjectId: projectId,
+              }
+            }, false, 'fetchExplorerTree')
+          }
+        } catch (error) {
+          console.error('Failed to fetch explorer tree', error)
         } finally {
           set({ loading: false })
         }
