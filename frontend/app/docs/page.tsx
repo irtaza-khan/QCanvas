@@ -94,7 +94,7 @@ export default function DocsPage() {
         <div className="space-y-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full quantum-gradient mb-6 shadow-2xl">
-              <Atom className="w-10 h-10 text-white" />
+              <Atom className="w-10 h-10 text-white force-white-icon" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               <span className="quantum-gradient bg-clip-text text-transparent">Overview</span>
@@ -107,28 +107,28 @@ export default function DocsPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
               <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
-                <FrameworkConversionIcon className="w-6 h-6 text-white" />
+                <FrameworkConversionIcon className="w-6 h-6 text-white force-white-icon" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Framework Conversion</h3>
               <p className="text-editor-text text-sm">Convert between Qiskit, Cirq, and PennyLane seamlessly</p>
             </div>
             <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
               <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Play className="w-6 h-6 text-white" />
+                <Play className="w-6 h-6 text-white force-white-icon" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Real-time Simulation</h3>
               <p className="text-editor-text text-sm">Execute quantum circuits with multiple backends</p>
             </div>
             <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
               <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="w-6 h-6 text-white" />
+                <BarChart3 className="w-6 h-6 text-white force-white-icon" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Interactive Visualization</h3>
               <p className="text-editor-text text-sm">Visualize quantum states and measurement results</p>
             </div>
             <div className="quantum-glass-dark rounded-xl p-6 text-center hover-lift">
               <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Book className="w-6 h-6 text-white" />
+                <Book className="w-6 h-6 text-white force-white-icon" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Educational Platform</h3>
               <p className="text-editor-text text-sm">Learn quantum computing through guided examples</p>
@@ -165,14 +165,14 @@ export default function DocsPage() {
       id: 'getting-started',
       title: 'Getting Started',
       subtitle: 'Quick start guide',
-      icon: <FlagIcon className="w-5 h-5" />,
+      icon: <FlagIcon className="w-5 h-5 " />,
       badge: 'Beginner',
       category: 'Getting Started',
       content: (
         <div className="space-y-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
-              <FlagIcon className="w-8 h-8 text-white" />
+              <FlagIcon className="w-8 h-8 text-white force-white-icon" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
               <span className="quantum-gradient bg-clip-text text-transparent">Getting Started</span>
@@ -370,7 +370,7 @@ print(qc)`}
             <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                  <FrameworkConversionIcon className="w-6 h-6 text-white" />
+                  <FrameworkConversionIcon className="w-6 h-6 text-white force-white-icon" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-white">Framework Conversion</h3>
@@ -379,7 +379,7 @@ print(qc)`}
               </div>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 " />
                   <span className="text-editor-text text-sm">AST-based parsing and intelligent gate mapping</span>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -400,7 +400,7 @@ print(qc)`}
             <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                  <Play className="w-6 h-6 text-white" />
+                  <Play className="w-6 h-6 text-white force-white-icon" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-white">Quantum Simulation</h3>
@@ -430,7 +430,7 @@ print(qc)`}
             <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                  <BarChart3 className="w-6 h-6 text-white" />
+                  <BarChart3 className="w-6 h-6 text-white force-white-icon" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-white">Visualization</h3>
@@ -460,7 +460,7 @@ print(qc)`}
             <div className="quantum-glass-dark rounded-xl p-6 hover-lift">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center mr-4">
-                  <Book className="w-6 h-6 text-white" />
+                  <Book className="w-6 h-6 text-white force-white-icon" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-white">Educational Tools</h3>
@@ -531,7 +531,7 @@ print(qc)`}
         <div className="space-y-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
-              <Layers className="w-8 h-8 text-white" />
+              <Layers className="w-8 h-8 text-white force-white-icon-2" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
               <span className="quantum-gradient bg-clip-text text-transparent">Architecture</span>
@@ -678,7 +678,7 @@ print(qc)`}
         <div className="space-y-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
-              <ApiIcon className="w-8 h-8 text-white" />
+              <ApiIcon className="w-8 h-8 text-white force-white-icon" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
               <span className="quantum-gradient bg-clip-text text-transparent">API Reference</span>
@@ -848,7 +848,7 @@ print(qc)`}
         <div className="space-y-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full quantum-gradient mb-6 shadow-xl">
-              <Cpu className="w-8 h-8 text-white" />
+              <Cpu className="w-8 h-8 text-white force-white-icon-2" />
             </div>
             <h2 className="text-3xl font-bold mb-4">
               <span className="quantum-gradient bg-clip-text text-transparent">Hybrid Execution API</span>
@@ -1307,13 +1307,13 @@ print(f"\\nOne-step result: {result2.counts}")`}
         {/* Floating elements — fewer, more visible */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-24 left-[8%] animate-float">
-            <Atom className="w-8 h-8 text-indigo-400 opacity-20" />
+            <Atom className="w-8 h-8 text-indigo-400 opacity-20 force-white-icon" />
           </div>
           <div className="absolute top-1/3 right-[8%] animate-float-reverse" style={{ animationDelay: '2s' }}>
-            <Sparkles className="w-6 h-6 text-violet-400 opacity-25" />
+            <Sparkles className="w-6 h-6 text-violet-400 opacity-25 force-white-icon" />
           </div>
           <div className="absolute bottom-1/3 left-[12%] animate-float" style={{ animationDelay: '4s' }}>
-            <Cpu className="w-7 h-7 text-cyan-400 opacity-20" />
+            <Cpu className="w-7 h-7 text-cyan-400 opacity-20 force-white-icon" />
           </div>
           <div className="absolute top-16 right-1/4 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping opacity-40"></div>
           <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping opacity-30" style={{ animationDelay: '1s' }}></div>
@@ -1321,7 +1321,7 @@ print(f"\\nOne-step result: {result2.counts}")`}
 
         <div className={`text-center max-w-6xl mx-auto relative z-10 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full quantum-gradient mb-8 shadow-2xl">
-            <Book className="w-10 h-10 text-white" />
+            <Book className="w-10 h-10 text-white force-white-icon" />
           </div>
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
             <span className="quantum-gradient bg-clip-text text-transparent">Documentation</span>

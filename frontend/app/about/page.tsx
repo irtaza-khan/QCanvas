@@ -65,14 +65,14 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <div className="text-center max-w-6xl mx-auto relative z-10">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl">
-            <AboutUsIcon className="w-12 h-12 text-white" />
+        <div className="text-center max-w-6xl mx-auto relative z-10 animate-fade-in-up">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl animate-scale-in">
+            <AboutUsIcon className="w-12 h-12 text-white force-white-icon" />
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-blur-in">
             About <span className="quantum-gradient bg-clip-text text-transparent">Us</span>
           </h1>
-          <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed stagger-delay-2 opacity-0 animate-fade-in-up">
             Meet the passionate team behind QCanvas, dedicated to advancing quantum computing education 
             and research through innovative simulation tools and framework unification.
           </p>
@@ -82,20 +82,20 @@ export default function AboutPage() {
       {/* Team Section */}
       <div className="px-4 py-16">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Our Teams</h2>
+          <h2 className="text-3xl font-bold text-white text-center mb-12 reveal-on-scroll">Our Teams</h2>
           
           {/* QCanvas Team */}
           <div className="mb-16">
-            <h3 className="text-2xl font-bold text-white text-center mb-8">QCanvas Team</h3>
-            <div className="grid md:grid-cols-3 gap-8">
+            <h3 className="text-2xl font-bold text-white text-center mb-8 reveal-on-scroll stagger-delay-1">QCanvas Team</h3>
+            <div className="grid md:grid-cols-3 gap-8 ">
               {config.qcanvasTeam.map((member, idx) => (
                 <div 
                   key={member.name} 
                   className="reveal-on-scroll quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border border-white/10 text-center hover-lift hover:border-quantum-blue-light transition-all duration-300"
-                  style={{ animationDelay: `${idx * 150}ms` }}
+                  style={{ transitionDelay: `${idx * 150}ms` }}
                 >
-                  <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                    <Users className="w-10 h-10 text-white" />
+                  <div className="w-20 h-20 quantum-gradient rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:scale-110 transition-transform duration-500">
+                    <Users className="w-10 h-10 text-white force-white-icon-2" />
                   </div>
                   <h4 className="text-xl font-semibold text-white mb-1">{member.name}</h4>
                   <p className="text-sm text-editor-text mb-4">Core Developer</p>
@@ -123,16 +123,16 @@ export default function AboutPage() {
 
           {/* QSim Team */}
           <div>
-            <h3 className="text-2xl font-bold text-white text-center mb-8">QSim Team</h3>
+            <h3 className="text-2xl font-bold text-white text-center mb-8 reveal-on-scroll stagger-delay-1">QSim Team</h3>
             <div className="grid md:grid-cols-3 gap-8">
               {config.qsimTeam.map((member, idx) => (
                 <div 
                   key={member.name} 
                   className="reveal-on-scroll quantum-glass-dark rounded-2xl p-8 backdrop-blur-xl border dark:border-white/10 border-gray-200 text-center hover-lift hover:border-purple-500 dark:hover:border-purple-500 hover:border-purple-400 transition-all duration-300"
-                  style={{ animationDelay: `${(idx + 3) * 150}ms` }}
+                  style={{ transitionDelay: `${(idx + 3) * 150}ms` }}
                 >
-                  <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg bg-gradient-to-r from-pink-500 to-rose-500 dark:from-purple-500 dark:to-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.3)]">
-                    <Users className="w-10 h-10 text-white" />
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg bg-gradient-to-r from-pink-500 to-rose-500 dark:from-purple-500 dark:to-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.3)] group-hover:scale-110 transition-transform duration-500">
+                    <Users className="w-10 h-10 text-white force-white-icon-2" />
                   </div>
                   <h4 className="text-xl font-semibold text-white mb-1">{member.name}</h4>
                   <p className="text-sm text-editor-text mb-4">Core Developer</p>

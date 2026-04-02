@@ -142,7 +142,7 @@ body {
 }
 
 /* Kind label: (function), (variable), (keyword), (class) */
-.monaco-editor .monaco-hover .markdown-hover > p:first-of-type {
+.monaco-editor .monaco-hover .markdown-hover>p:first-of-type {
   color: #60a5fa !important;
   font-size: 0.8rem !important;
   font-weight: 600 !important;
@@ -322,7 +322,7 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: left 0.6s ease;
 }
 
@@ -704,7 +704,7 @@ html {
 }
 
 /* Kind label */
-.light .monaco-editor .monaco-hover .markdown-hover > p:first-of-type {
+.light .monaco-editor .monaco-hover .markdown-hover>p:first-of-type {
   color: #2563eb !important;
   font-size: 0.8rem !important;
   font-weight: 600 !important;
@@ -1229,15 +1229,23 @@ section {
 
 /* Shimmer animation */
 @keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 100%;
+  }
 }
 
 /* Glow pulse animation */
 @keyframes glow-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
   }
+
   50% {
     box-shadow: 0 0 30px rgba(99, 102, 241, 0.25), 0 0 60px rgba(139, 92, 246, 0.1);
   }
@@ -1470,20 +1478,20 @@ section {
 
 /* Fix browser autofill styling */
 .light input:-webkit-autofill,
-.light input:-webkit-autofill:hover, 
-.light input:-webkit-autofill:focus, 
+.light input:-webkit-autofill:hover,
+.light input:-webkit-autofill:focus,
 .light input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
-    -webkit-text-fill-color: #000000 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #000000 !important;
 }
 
 .dark input:-webkit-autofill,
-.dark input:-webkit-autofill:hover, 
-.dark input:-webkit-autofill:focus, 
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
 .dark input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
-    -webkit-text-fill-color: #ffffff !important;
-    transition: background-color 5000s ease-in-out 0s;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* ===== Light theme overrides for landing pages (home, docs, examples, about) ===== */
@@ -1636,4 +1644,98 @@ section {
 /* Box shadow glow for active nav underline */
 .light .box-shadow-glow {
   box-shadow: 0 0 8px rgba(59, 130, 246, 0.4), 0 0 4px rgba(59, 130, 246, 0.3) !important;
+}
+
+.light .force-white-icon {
+  color: #ffffff !important;
+  stroke: none;
+  fill: currentColor;
+}
+
+.light .force-white-icon-2 {
+  color: #ffffff !important;
+  stroke: currentColor;
+  fill: none;
+}
+
+.light .adjust-main-heading {
+  color: #6366f1 !important;
+}
+
+/* Animation utilities */
+@keyframes reveal-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blur-in {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes scale-in-center {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out forwards;
+}
+
+.animate-blur-in {
+  animation: blur-in 1.2s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in-center 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.stagger-delay-1 { animation-delay: 0.1s; }
+.stagger-delay-2 { animation-delay: 0.2s; }
+.stagger-delay-3 { animation-delay: 0.3s; }
+.stagger-delay-4 { animation-delay: 0.4s; }
+.stagger-delay-5 { animation-delay: 0.5s; }
+
+.hover-glow:hover {
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
 }

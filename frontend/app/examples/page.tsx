@@ -898,7 +898,6 @@ export default function ExamplesPage() {
     }
 
     fetchCommunityExamples()
-    
   }, [])
 
   const openInEditor = (example: Example) => {
@@ -959,6 +958,29 @@ export default function ExamplesPage() {
     return matchesCategory && matchesFramework && matchesDifficulty && matchesSearch
   })
 
+  // Intersection Observer for scroll animations
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal-show')
+        }
+      })
+    }, { threshold: 0.1 })
+
+    // Use a small timeout to ensure elements are in the DOM
+    const timeoutId = setTimeout(() => {
+      document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+        observer.observe(el)
+      })
+    }, 100)
+
+    return () => {
+      clearTimeout(timeoutId)
+      observer.disconnect()
+    }
+  }, [activeTab, filteredExamples])
+
   const copyToClipboard = (code: string) => {
     navigator.clipboard.writeText(code)
     toast.success('Code copied to clipboard!')
@@ -1000,14 +1022,14 @@ export default function ExamplesPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500 opacity-[0.05] rounded-full blur-[80px]"></div>
         </div>
 
-        <div className="text-center max-w-6xl mx-auto relative z-10">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl">
-            <Code className="w-12 h-12 text-white" />
+        <div className="text-center max-w-6xl mx-auto relative z-10 animate-fade-in-up">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full quantum-gradient mb-6 shadow-2xl animate-scale-in">
+            <Code className="w-12 h-12 text-white force-white-icon" />
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-blur-in">
             Quantum <span className="quantum-gradient bg-clip-text text-transparent">Examples</span>
           </h1>
-          <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-editor-text mb-8 max-w-3xl mx-auto leading-relaxed stagger-delay-2 opacity-0 animate-fade-in-up">
             Explore quantum computing examples across different frameworks. Copy, modify, and run these circuits in QCanvas.
           </p>
         </div>
@@ -1024,19 +1046,19 @@ export default function ExamplesPage() {
                 onClick={() => setActiveTab('official')}
                 className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                   activeTab === 'official'
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg force-white-icon'
                     : 'text-black dark:text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Code className="w-4 h-4" />
+                <Code className="w-4 h-4 force-white-icon" />
                 Official Examples
               </button>
               <button
                 onClick={() => setActiveTab('community')}
                 className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                   activeTab === 'community'
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'text-black dark:text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg force-white-icon'
+                    : 'text-black dark:text-gray-400 hover:text-white hover:bg-white/5 '
                 }`}
               >
                 <Share2 className="w-4 h-4" />
@@ -1110,13 +1132,17 @@ export default function ExamplesPage() {
             </div>
           </div>
         </div>
-      {/* Examples Grid (inside main) */}
+      {/* Examples Grid */}
       <div className="px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredExamples.map(example => (
-              <div key={example.id} className="quantum-glass-dark rounded-2xl backdrop-blur-xl border border-white/10 hover:border-quantum-blue-light transition-all duration-300 overflow-hidden">
-                <div className="p-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredExamples.map((example, idx) => (
+              <div
+                key={example.id}
+                className="reveal-on-scroll quantum-glass-dark rounded-2xl overflow-hidden border border-white/10 hover:border-quantum-blue-light transition-all duration-300 flex flex-col group hover-lift shadow-lg hover:shadow-quantum-blue-light/10"
+                style={{ transitionDelay: `${(idx % 6) * 100}ms` }}
+              >
+  <div className="p-6">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">

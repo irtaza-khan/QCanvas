@@ -170,7 +170,7 @@ def grovers_search():
             {/* Glowing badge */}
             <div className="inline-flex items-center glow-badge bg-indigo-500/10 rounded-full px-6 py-2.5 mb-10 backdrop-blur-sm hover:bg-indigo-500/15 transition-all duration-500 hover:scale-105">
               <Zap className="w-4 h-4 text-indigo-400 mr-2" />
-              <span className="text-sm font-medium text-indigo-300">Next-Generation Quantum Development</span>
+              <span className="text-sm font-medium text-indigo-300 adjust-main-heading">Next-Generation Quantum Development</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-[1.1] tracking-tight">
