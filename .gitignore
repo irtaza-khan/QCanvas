@@ -146,7 +146,7 @@ dist
 # Temporary folders
 tmp/
 temp/
-
+QCanvas-old/
 # Project specific
 *.qasm
 logs/

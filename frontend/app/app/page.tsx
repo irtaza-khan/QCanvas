@@ -12,21 +12,30 @@ import IDELayout from '@/components/ide/IDELayout'
 import RunView from '@/components/ide/RunView'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { useAuthStore } from '@/lib/authStore'
+import { useExecutionActions } from '@/components/ide/useExecutionActions'
 
 export default function AppPage() {
   const router = useRouter()
+  const token = useAuthStore((s) => s.token)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [resultsHeight, setResultsHeight] = useState(320) // Default height
   const [isDragging, setIsDragging] = useState(false)
+  const [isSidebarResizing, setIsSidebarResizing] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(320)
   const containerRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const pendingResultsHeightRef = useRef<number>(320)
   const rafIdRef = useRef<number | null>(null)
+  const pendingSidebarWidthRef = useRef<number>(320)
+  const rafSidebarIdRef = useRef<number | null>(null)
 
   // Simulation settings state
   const [inputLanguage, setInputLanguage] = useState<InputLanguage | "">("");
   const [simBackend, setSimBackend] = useState<'cirq' | 'qiskit' | 'pennylane' | ''>('');
   const [shots, setShots] = useState(1024);
+  const { run, isRunning } = useExecutionActions({ inputLanguage, simBackend, shots })
 
   const {
     setFiles,
@@ -66,17 +75,17 @@ export default function AppPage() {
     }
   }, [])
 
-  // Load files on component mount
+  // Load projects + explorer tree on component mount
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const { fetchFiles } = useFileStore.getState()
+    if (!token) return
+
+    const { fetchProjects, fetchExplorerTree } = useFileStore.getState()
     
-    // Only load from API if we don't have files yet
-    if (files.length === 0) {
-      fetchFiles()
-    }
-  }, [files.length, isAuthenticated])
+    fetchProjects(token)
+    fetchExplorerTree(null, token)
+  }, [isAuthenticated, token])
 
   // Listen for inter-tab messages to add files from examples page
   useEffect(() => {
@@ -146,12 +155,13 @@ export default function AppPage() {
     if (!isDragging) return
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current) return
+      if (!contentRef.current) return
 
-      const containerRect = containerRef.current.getBoundingClientRect()
+      const containerRect = contentRef.current.getBoundingClientRect()
       const newHeight = containerRect.bottom - e.clientY
       const minHeight = 100
-      const maxHeight = containerRect.height - 200 // Leave space for editor
+      const minEditorHeight = 220
+      const maxHeight = Math.max(minHeight, containerRect.height - minEditorHeight)
 
       const clamped = Math.max(minHeight, Math.min(maxHeight, newHeight))
       pendingResultsHeightRef.current = clamped
@@ -166,20 +176,80 @@ export default function AppPage() {
       setIsDragging(false)
     }
 
-    document.body.classList.add('select-none')
-    document.addEventListener('mousemove', handleMouseMove)
+    document.body.classList.add('select-none', 'cursor-row-resize')
+    document.addEventListener('mousemove', handleMouseMove, { passive: true })
     document.addEventListener('mouseup', handleMouseUp)
 
     return () => {
-      document.body.classList.remove('select-none')
+      if (rafIdRef.current != null) {
+        globalThis.window?.cancelAnimationFrame(rafIdRef.current)
+        rafIdRef.current = null
+      }
+      document.body.classList.remove('select-none', 'cursor-row-resize')
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
   }, [isDragging])
 
+  // Keep results height within bounds when viewport/layout changes.
+  useEffect(() => {
+    const clampResultsHeight = () => {
+      if (!contentRef.current) return
+      const containerRect = contentRef.current.getBoundingClientRect()
+      const minHeight = 100
+      const minEditorHeight = 220
+      const maxHeight = Math.max(minHeight, containerRect.height - minEditorHeight)
+      setResultsHeight((prev) => Math.max(minHeight, Math.min(maxHeight, prev)))
+    }
+
+    clampResultsHeight()
+    window.addEventListener('resize', clampResultsHeight)
+    return () => window.removeEventListener('resize', clampResultsHeight)
+  }, [resultsCollapsed])
+
+  // Handle drag resize for sidebar (desktop only)
+  useEffect(() => {
+    if (!isSidebarResizing) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const minWidth = 220
+      const maxWidth = Math.max(minWidth, Math.floor(window.innerWidth * 0.6))
+      const next = Math.max(minWidth, Math.min(maxWidth, e.clientX - 48))
+      pendingSidebarWidthRef.current = next
+      if (rafSidebarIdRef.current != null) return
+      rafSidebarIdRef.current = globalThis.window?.requestAnimationFrame(() => {
+        rafSidebarIdRef.current = null
+        setSidebarWidth(pendingSidebarWidthRef.current)
+      }) ?? null
+    }
+
+    const handleMouseUp = () => {
+      setIsSidebarResizing(false)
+    }
+
+    document.body.classList.add('select-none', 'cursor-col-resize')
+    document.addEventListener('mousemove', handleMouseMove, { passive: true })
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      if (rafSidebarIdRef.current != null) {
+        globalThis.window?.cancelAnimationFrame(rafSidebarIdRef.current)
+        rafSidebarIdRef.current = null
+      }
+      document.body.classList.remove('select-none', 'cursor-col-resize')
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isSidebarResizing])
+
   const handleDragStart = (e: React.MouseEvent) => {
     e.preventDefault()
     setIsDragging(true)
+  }
+
+  const handleSidebarResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsSidebarResizing(true)
   }
 
   // Loading state
@@ -212,50 +282,66 @@ export default function AppPage() {
   // Authenticated - show main app
   return (
     <IDELayout
-      sidebarContainerClassName={`${sidebarCollapsed ? 'w-0 md:w-80' : 'w-full md:w-80'} transition-all duration-200 ${
-        isMobile && !sidebarCollapsed ? 'absolute inset-y-0 left-12 z-50 shadow-xl' : ''
-      } overflow-hidden`}
-      sidebarOverlay={
-        isMobile && !sidebarCollapsed ? (
-          <div className="absolute inset-0 bg-black bg-opacity-50 z-40" onClick={toggleSidebar} />
-        ) : undefined
-      }
-      editor={
-        <div
-          ref={containerRef}
-          className="flex-1 overflow-hidden"
-        >
-          <EditorPane />
-        </div>
-      }
-      runView={
-        <RunView
-          inputLanguage={inputLanguage}
-          setInputLanguage={setInputLanguage}
-          simBackend={simBackend}
-          setSimBackend={setSimBackend}
-          shots={shots}
-          setShots={setShots}
-        />
-      }
-      bottomDragHandle={
-        resultsCollapsed ? (
-          <></>
-        ) : (
+        sidebarContainerClassName={`${sidebarCollapsed ? 'w-0' : 'w-full md:shrink-0'} ${isSidebarResizing ? '' : 'transition-all duration-200'} ${
+          isMobile && !sidebarCollapsed ? 'absolute inset-y-0 left-12 z-50 shadow-xl' : ''
+        } overflow-hidden`}
+        sidebarContainerStyle={!isMobile && !sidebarCollapsed ? { width: `${sidebarWidth}px` } : undefined}
+        sidebarResizeHandle={
+          !isMobile && !sidebarCollapsed ? (
+            <div
+              className={`w-1 ${isSidebarResizing ? 'w-1.5' : 'hover:w-1.5'} ${isSidebarResizing ? '' : 'transition-all'} bg-editor-border hover:bg-quantum-blue-light cursor-col-resize ${
+                isSidebarResizing ? 'bg-quantum-blue-light' : ''
+              }`}
+              onMouseDown={handleSidebarResizeStart}
+              title="Drag to resize explorer"
+            />
+          ) : null
+        }
+        sidebarOverlay={
+          isMobile && !sidebarCollapsed ? (
+            <div className="absolute inset-0 bg-black bg-opacity-50 z-40" onClick={toggleSidebar} />
+          ) : undefined
+        }
+        editor={
           <div
-            className={`h-1 bg-editor-border hover:bg-quantum-blue-light cursor-row-resize transition-colors ${
-              isDragging ? 'bg-quantum-blue-light' : ''
-            }`}
-            onMouseDown={handleDragStart}
-            title="Drag to resize"
+            ref={containerRef}
+            className="flex-1 overflow-hidden"
+          >
+            <EditorPane />
+          </div>
+        }
+        runView={
+          <RunView
+            inputLanguage={inputLanguage}
+            setInputLanguage={setInputLanguage}
+            simBackend={simBackend}
+            setSimBackend={setSimBackend}
+            shots={shots}
+            setShots={setShots}
+            onRun={run}
+            isRunning={isRunning}
           />
-        )
-      }
-      bottom={
-        <div className="overflow-hidden border-t border-editor-border" style={{ height: resultsCollapsed ? '32px' : `${resultsHeight}px` }}>
-          <ResultsPane />
-        </div>
-      }
-    />
+        }
+        bottomDragHandle={
+          resultsCollapsed ? (
+            <></>
+          ) : (
+            <div
+              className={`h-1 bg-editor-border hover:bg-quantum-blue-light cursor-row-resize transition-colors ${
+                isDragging ? 'bg-quantum-blue-light' : ''
+              }`}
+              onMouseDown={handleDragStart}
+              title="Drag to resize"
+            />
+          )
+        }
+        bottom={
+          <div className="overflow-hidden border-t border-editor-border" style={{ height: resultsCollapsed ? '32px' : `${resultsHeight}px` }}>
+            <ResultsPane />
+          </div>
+        }
+        onRun={run}
+        contentRef={contentRef}
+      />
   )
 }

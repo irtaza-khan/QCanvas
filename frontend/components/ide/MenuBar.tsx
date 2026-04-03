@@ -20,10 +20,10 @@ interface MenuItem {
   onSelect: () => void
 }
 
-export default function MenuBar() {
-  const { toggleSidebar, toggleResults, theme, toggleTheme, setExecutionMode, executionMode } = useFileStore()
+export default function MenuBar({ onRun }: Readonly<{ onRun: () => void | Promise<void> }>) {
+  const { toggleSidebar, toggleResults, theme, toggleTheme, setExecutionMode, executionMode, activeProjectId } = useFileStore()
   const activeFile = useFileStore((s) => s.getActiveFile())
-  const { isAuthenticated, clearAuth } = useAuthStore()
+  const { isAuthenticated, clearAuth, token } = useAuthStore()
   const router = useRouter()
 
   const [openMenu, setOpenMenu] = useState<MenuId | null>(null)
@@ -67,8 +67,15 @@ export default function MenuBar() {
           label: 'New File',
           shortcut: 'Ctrl/Cmd+N',
           onSelect: () => {
-            // Keep the existing shortcut logic from TopBar via keybindings; here we just create a default
-            useFileStore.getState().addFile('new.py', '')
+            const entered = globalThis.window?.prompt('Enter new file name', 'new.py')
+            const fileName = entered?.trim()
+            if (!fileName) return
+
+            if (token) {
+              useFileStore.getState().createFile(fileName, '', activeProjectId ?? undefined, false)
+            } else {
+              useFileStore.getState().addFile(fileName, '')
+            }
           },
         },
         {
@@ -150,7 +157,7 @@ export default function MenuBar() {
           label: 'Run',
           shortcut: 'Ctrl/Cmd+Shift+R',
           disabled: !activeFile,
-          onSelect: () => globalThis.window?.dispatchEvent(new CustomEvent('menu-run')),
+          onSelect: () => onRun(),
         },
       ],
       terminal: [
@@ -175,7 +182,7 @@ export default function MenuBar() {
         },
       ],
     }),
-    [activeFile, executionMode, handleExport, setExecutionMode, theme, toggleResults, toggleSidebar, toggleTheme],
+    [activeFile, executionMode, handleExport, onRun, setExecutionMode, theme, toggleResults, toggleSidebar, toggleTheme],
   )
 
   const menuLabels: Array<{ id: MenuId; label: string }> = [

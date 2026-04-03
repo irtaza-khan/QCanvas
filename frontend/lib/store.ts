@@ -117,9 +117,12 @@ interface FileStore extends EditorState {
   fetchProjects: (token: string) => Promise<void>
   fetchProjectFiles: (projectId: number | null, token: string) => Promise<void>
   fetchExplorerTree: (projectId: number | null, token: string) => Promise<void>
+  createFolder: (name: string, projectId?: number, parentFolderId?: string) => Promise<void>
+  renameFolder: (folderId: string, newName: string) => Promise<void>
+  deleteFolder: (folderId: string) => Promise<void>
   createProject: (name: string, isPublic: boolean, token: string) => Promise<void>
   saveActiveFile: () => Promise<void>
-  createFile: (name: string, content?: string, projectId?: number, isShared?: boolean) => Promise<void>
+  createFile: (name: string, content?: string, projectId?: number, isShared?: boolean, folderId?: string) => Promise<void>
   renameFile: (fileId: string, newName: string) => Promise<void>
 }
 
@@ -790,9 +793,8 @@ export const useFileStore = create<FileStore>()(
               activeProjectId: newProject.id,
               activeFileId: null
             }), false, 'createProject')
-            // After creating project, we might want to fetch its files (empty) + root files?
-            // Or just let the UI trigger fetch
-            get().fetchProjectFiles(newProject.id, token)
+            // Refresh explorer scope for the created project so folders/files stay in sync.
+            get().fetchExplorerTree(newProject.id, token)
           }
         } catch (error) {
           console.error("Failed to create project", error)
@@ -916,6 +918,107 @@ export const useFileStore = create<FileStore>()(
         }
       },
 
+      createFolder: async (name: string, projectId?: number, parentFolderId?: string) => {
+        const token = useAuthStore.getState().token
+        if (!token) {
+          toast.error('Please log in to create a folder')
+          return
+        }
+
+        const folderName = name.trim()
+        if (!folderName) return
+
+        const toastId = toast.loading('Creating folder...')
+        try {
+          const res = await foldersApi.createFolder({
+            name: folderName,
+            project_id: projectId,
+            parent_id: parentFolderId ? parseInt(parentFolderId) : undefined,
+          }, token)
+
+          if (res.success && res.data) {
+            const f: any = res.data
+            const newFolder: Folder = {
+              id: f.id.toString(),
+              name: f.name,
+              projectId: f.project_id == null ? undefined : f.project_id.toString(),
+              parentId: f.parent_id == null ? undefined : f.parent_id.toString(),
+              createdAt: f.created_at || new Date().toISOString(),
+              updatedAt: f.updated_at || new Date().toISOString(),
+            }
+
+            set((state) => ({
+              folders: [...state.folders, newFolder],
+            }), false, 'createFolder')
+
+            toast.success(`Created folder ${folderName}`, { id: toastId })
+          } else {
+            const errorText = typeof res.error === 'object' ? JSON.stringify(res.error) : res.error
+            toast.error(`Failed to create folder: ${errorText}`, { id: toastId })
+          }
+        } catch (error) {
+          console.error('Create folder failed', error)
+          toast.error('Failed to create folder', { id: toastId })
+        }
+      },
+
+      renameFolder: async (folderId: string, newName: string) => {
+        const token = useAuthStore.getState().token
+        if (!token) {
+          toast.error('Please log in to rename a folder')
+          return
+        }
+
+        const folderName = newName.trim()
+        if (!folderName) return
+
+        const toastId = toast.loading('Renaming folder...')
+        try {
+          const res = await foldersApi.updateFolder(parseInt(folderId), { name: folderName }, token)
+          if (res.success && res.data) {
+            set((state) => ({
+              folders: state.folders.map((f) =>
+                f.id === folderId
+                  ? { ...f, name: folderName, updatedAt: new Date().toISOString() }
+                  : f
+              ),
+            }), false, 'renameFolder')
+            toast.success('Folder renamed', { id: toastId })
+          } else {
+            const errorText = typeof res.error === 'object' ? JSON.stringify(res.error) : res.error
+            toast.error(`Failed to rename folder: ${errorText}`, { id: toastId })
+          }
+        } catch (error) {
+          console.error('Rename folder failed', error)
+          toast.error('Failed to rename folder', { id: toastId })
+        }
+      },
+
+      deleteFolder: async (folderId: string) => {
+        const token = useAuthStore.getState().token
+        if (!token) {
+          toast.error('Please log in to delete a folder')
+          return
+        }
+
+        const toastId = toast.loading('Deleting folder...')
+        try {
+          const res = await foldersApi.deleteFolder(parseInt(folderId), token)
+          if (res.success) {
+            set((state) => ({
+              folders: state.folders.filter((f) => f.id !== folderId),
+            }), false, 'deleteFolder')
+            toast.success('Folder deleted', { id: toastId })
+          } else {
+            const errorText = typeof res.error === 'object' ? JSON.stringify(res.error) : res.error
+            toast.error(`Failed to delete folder: ${errorText}`, { id: toastId })
+          }
+        } catch (error) {
+          console.error('Delete folder failed', error)
+          toast.error('Failed to delete folder', { id: toastId })
+        }
+      },
+
       saveActiveFile: async () => {
         const state = get()
         const activeFile = state.getActiveFile()
@@ -983,7 +1086,7 @@ export const useFileStore = create<FileStore>()(
         }
       },
 
-      createFile: async (name: string, content?: string, projectId?: number, isShared: boolean = false) => {
+      createFile: async (name: string, content?: string, projectId?: number, isShared: boolean = false, folderId?: string) => {
         const state = get()
         const token = useAuthStore.getState().token
 
@@ -1005,6 +1108,7 @@ export const useFileStore = create<FileStore>()(
             content: defaultContent,
             is_main: false,
             project_id: projectId,
+            folder_id: folderId ? parseInt(folderId) : undefined,
             is_shared: isShared
           }, token)
 
@@ -1019,6 +1123,7 @@ export const useFileStore = create<FileStore>()(
               updatedAt: f.updated_at || new Date().toISOString(),
               size: f.content.length,
               projectId: f.project_id?.toString(),
+              folderId: f.folder_id?.toString(),
               isShared: f.is_shared,
               userId: f.user_id?.toString()
             }

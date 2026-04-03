@@ -11,6 +11,8 @@ export default function RunView({
   setSimBackend,
   shots,
   setShots,
+  onRun,
+  isRunning,
 }: Readonly<{
   inputLanguage: InputLanguage | ''
   setInputLanguage: (language: InputLanguage | '') => void
@@ -18,6 +20,8 @@ export default function RunView({
   setSimBackend: (backend: 'cirq' | 'qiskit' | 'pennylane' | '') => void
   shots: number
   setShots: (shots: number) => void
+  onRun: () => void | Promise<void>
+  isRunning: boolean
 }>) {
   const { executionMode, setExecutionMode } = useFileStore()
   const activeFile = useFileStore((s) => s.getActiveFile())
@@ -49,9 +53,9 @@ export default function RunView({
 
         <button
           type="button"
-          disabled={!activeFile}
+          disabled={!activeFile || isRunning}
           className="w-full px-3 py-2 rounded text-sm font-semibold disabled:opacity-50 btn-quantum"
-          onClick={() => globalThis.window?.dispatchEvent(new CustomEvent('menu-run'))}
+          onClick={() => onRun()}
         >
           Run
         </button>
