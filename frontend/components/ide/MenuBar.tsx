@@ -235,7 +235,9 @@ export default function MenuBar({
     { id: "help", label: "Help" },
   ];
 
-  const getTemplateMeta = (template: (typeof FILE_TEMPLATES_PRESETS)[number]) => {
+  const getTemplateMeta = (
+    template: (typeof FILE_TEMPLATES_PRESETS)[number],
+  ) => {
     const filename = template.filename.toLowerCase();
     const name = template.name.toLowerCase();
 
@@ -437,7 +439,9 @@ export default function MenuBar({
                       {getTemplateMeta(t).icon}
                       <h4 className="font-medium text-white">{t.name}</h4>
                     </div>
-                    <p className="text-sm text-editor-text mb-3">{t.description}</p>
+                    <p className="text-sm text-editor-text mb-3">
+                      {t.description}
+                    </p>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-black dark:text-gray-400">
                         {getTemplateMeta(t).language}
