@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { Play, ChevronDown } from 'lucide-react'
 import { File as FileIcon } from '@/components/Icons';
 import { useFileStore } from '@/lib/store'
 import { debounce } from '@/lib/utils'
@@ -9,6 +10,20 @@ import { getHoverForSymbol, formatHoverMarkdown } from '@/lib/quantumHoverSymbol
 import { parseCircuit, calculateQubitCount, parseCircuitWithCountAsync, ParsedGate } from '@/lib/circuitParser'
 import FindReplace from './FindReplace'
 import CircuitVisualization from './CircuitVisualization'
+import { InputLanguage } from '@/types'
+
+type SimulationBackend = 'cirq' | 'qiskit' | 'pennylane' | ''
+
+type EditorPaneProps = {
+  onRun: () => void | Promise<void>
+  isRunning: boolean
+  inputLanguage: InputLanguage | ''
+  setInputLanguage: (language: InputLanguage | '') => void
+  simBackend: SimulationBackend
+  setSimBackend: (backend: SimulationBackend) => void
+  shots: number
+  setShots: (shots: number) => void
+}
 
 // Dynamically import 3D Visualization to avoid SSR issues
 const CircuitVisualization3D = dynamic(() => import('./CircuitVisualization3D'), {
@@ -33,18 +48,31 @@ const Editor = dynamic(() => import('@monaco-editor/react').then(mod => mod.Edit
   ),
 })
 
-export default function EditorPane() {
-  const { getActiveFile, updateFileContent, saveActiveFile } = useFileStore()
+export default function EditorPane({
+  onRun,
+  isRunning,
+  inputLanguage,
+  setInputLanguage,
+  simBackend,
+  setSimBackend,
+  shots,
+  setShots,
+}: EditorPaneProps) {
+  const { getActiveFile, updateFileContent, saveActiveFile, theme } = useFileStore()
+  const executionMode = useFileStore((s) => s.executionMode)
+  const setExecutionMode = useFileStore((s) => s.setExecutionMode)
   const editorRef = useRef<any>(null)
   const monacoRef = useRef<any>(null)
   const hoverProviderRef = useRef<any>(null)
   const completionProviderRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const runMenuRef = useRef<HTMLDivElement>(null)
   const activeFile = getActiveFile()
   const [showFindReplace, setShowFindReplace] = useState(false)
   const [findReplaceMode, setFindReplaceMode] = useState<'find' | 'replace'>('find')
   const [showCircuitVisualization, setShowCircuitVisualization] = useState(false)
   const [is3DMode, setIs3DMode] = useState(false)
+  const [showRunMenu, setShowRunMenu] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [circuitHeight, setCircuitHeight] = useState(200)
   const [isDraggingCircuit, setIsDraggingCircuit] = useState(false)
@@ -58,6 +86,20 @@ export default function EditorPane() {
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (!showRunMenu) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (!runMenuRef.current?.contains(target)) {
+        setShowRunMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showRunMenu])
   
   // Async circuit parsing with debouncing
   // Uses backend AST parsing when available, falls back to regex
@@ -248,11 +290,8 @@ export default function EditorPane() {
       },
     })
 
-    // Set theme based on current theme (only in browser)
-    if (typeof document !== 'undefined') {
-      const currentTheme = document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark'
-      monacoInstance.editor.setTheme(currentTheme)
-    }
+    // Use store theme so editor follows app theme immediately.
+    monacoInstance.editor.setTheme(theme === 'light' ? 'quantum-light' : 'quantum-dark')
 
     // Add keyboard shortcuts
     editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS, () => {
@@ -370,6 +409,11 @@ export default function EditorPane() {
     }
   }
 
+  useEffect(() => {
+    if (!monacoRef.current) return
+    monacoRef.current.editor.setTheme(theme === 'light' ? 'quantum-light' : 'quantum-dark')
+  }, [theme])
+
   // Handle keyboard shortcuts globally (only on client)
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return
@@ -446,39 +490,149 @@ export default function EditorPane() {
 
   return (
     <div ref={containerRef} className="editor-pane">
-      {/* Compact utility row (on-demand circuit view) */}
-      {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
-        <div className="h-9 bg-editor-sidebar border-b border-editor-border flex items-center justify-end px-2 gap-2">
-          <button
-            onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
-            className={`px-2 py-1 text-xs rounded border ${
-              showCircuitVisualization
-                ? 'bg-quantum-blue-light/20 border-quantum-blue-light/50 text-quantum-blue-light'
-                : 'bg-editor-bg border-editor-border text-editor-text hover:bg-editor-border'
-            }`}
-            title="Toggle Circuit View"
-          >
-            Circuit
-          </button>
+      {/* Top utility row with VS Code-style run controls on the right */}
+      <div className="relative z-40 overflow-visible h-10 bg-gradient-to-r from-editor-sidebar via-editor-sidebar to-editor-bg/90 border-b border-editor-border/80 flex items-center justify-between px-2.5 gap-2 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          {(activeFile.language === 'python' || activeFile.language === 'qasm') && (
+            <>
+              <button
+                onClick={() => setShowCircuitVisualization(!showCircuitVisualization)}
+                className={`px-2.5 py-1 text-xs rounded-md border transition-all duration-200 ${
+                  showCircuitVisualization
+                    ? 'bg-quantum-blue-light/20 border-quantum-blue-light/50 text-quantum-blue-light shadow-[0_0_0_1px_rgba(59,130,246,0.2)]'
+                    : 'bg-editor-bg/90 border-editor-border text-editor-text hover:bg-editor-border/70 hover:border-editor-border/90'
+                }`}
+                title="Toggle Circuit View"
+              >
+                Circuit
+              </button>
 
-          {showCircuitVisualization && (
-            <div className="flex items-center bg-editor-bg border border-editor-border rounded p-0.5">
-              <button
-                onClick={() => setIs3DMode(false)}
-                className={`px-2 py-1 text-[11px] rounded ${is3DMode ? 'text-editor-text hover:bg-editor-border' : 'bg-editor-accent text-white'}`}
-              >
-                2D
-              </button>
-              <button
-                onClick={() => setIs3DMode(true)}
-                className={`px-2 py-1 text-[11px] rounded ${is3DMode ? 'bg-editor-accent text-white' : 'text-editor-text hover:bg-editor-border'}`}
-              >
-                3D
-              </button>
+              {showCircuitVisualization && (
+                <div className="flex items-center bg-editor-bg/95 border border-editor-border rounded-md p-0.5 shadow-sm">
+                  <button
+                    onClick={() => setIs3DMode(false)}
+                    className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? 'text-editor-text hover:bg-editor-border/70' : 'bg-editor-accent text-white shadow-sm'}`}
+                  >
+                    2D
+                  </button>
+                  <button
+                    onClick={() => setIs3DMode(true)}
+                    className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? 'bg-editor-accent text-white shadow-sm' : 'text-editor-text hover:bg-editor-border/70'}`}
+                  >
+                    3D
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="relative z-50" ref={runMenuRef}>
+          <div className="flex items-stretch rounded-lg border border-editor-border/80 overflow-hidden bg-editor-bg/85 shadow-[0_4px_16px_rgba(0,0,0,0.22)]">
+            <button
+              type="button"
+              onClick={() => onRun()}
+              disabled={!activeFile || isRunning}
+              className="px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-quantum-blue-light/20 to-quantum-blue-light/10 text-editor-text hover:from-quantum-blue-light/30 hover:to-quantum-blue-light/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all duration-200"
+              title={executionMode === 'expert' ? 'Run (Expert mode)' : 'Run (Basic mode)'}
+            >
+              <Play className="w-3.5 h-3.5 text-quantum-blue-light" />
+              <span>{executionMode === 'expert' ? 'Run Expert' : 'Run'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowRunMenu((prev) => !prev)}
+              className="px-2 py-1.5 bg-editor-bg/95 text-editor-text hover:bg-editor-border/70 border-l border-editor-border/80 transition-colors"
+              aria-label="Run options"
+              title="Run options"
+            >
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showRunMenu ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+
+          {showRunMenu && (
+            <div className="absolute right-0 top-11 z-[120] w-80 rounded-xl border border-editor-border/80 bg-gradient-to-b from-editor-sidebar to-editor-bg/95 shadow-[0_20px_45px_rgba(0,0,0,0.45)] p-3.5 space-y-3 backdrop-blur-md">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-[11px] uppercase tracking-wide text-black dark:text-gray-400">Execution Mode</div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-editor-bg border border-editor-border text-black dark:text-gray-400 capitalize">{executionMode}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['basic', 'expert'] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setExecutionMode(m)}
+                      className={`px-2.5 py-2 text-xs rounded-md border capitalize transition-all duration-200 ${
+                        executionMode === m
+                          ? 'bg-editor-accent border-editor-accent text-white shadow-[0_0_18px_rgba(59,130,246,0.25)]'
+                          : 'bg-editor-bg/90 border-editor-border text-editor-text hover:bg-editor-border/70'
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {executionMode === 'basic' ? (
+                <>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wide text-black dark:text-gray-400 block mb-1">Input Framework</label>
+                    <select
+                      value={inputLanguage}
+                      onChange={(e) => setInputLanguage(e.target.value as InputLanguage | '')}
+                      className="w-full bg-editor-bg/95 border border-editor-border rounded-md px-2.5 py-2 text-xs text-editor-text focus:outline-none focus:ring-1 focus:ring-quantum-blue-light/60"
+                    >
+                      <option value="">Auto Detect</option>
+                      <option value="qasm">OpenQASM</option>
+                      <option value="qiskit">Qiskit</option>
+                      <option value="cirq">Cirq</option>
+                      <option value="pennylane">PennyLane</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wide text-black dark:text-gray-400 block mb-1">Output Backend</label>
+                    <select
+                      value={simBackend}
+                      onChange={(e) => setSimBackend(e.target.value as SimulationBackend)}
+                      className="w-full bg-editor-bg/95 border border-editor-border rounded-md px-2.5 py-2 text-xs text-editor-text focus:outline-none focus:ring-1 focus:ring-quantum-blue-light/60"
+                    >
+                      <option value="">Auto Select</option>
+                      <option value="qiskit">Qiskit Aer</option>
+                      <option value="cirq">Cirq Simulator</option>
+                      <option value="pennylane">PennyLane</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wide text-black dark:text-gray-400 block mb-1">Shots</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={100000}
+                      step={1}
+                      value={shots}
+                      onChange={(e) => {
+                        const parsed = Number.parseInt(e.target.value, 10)
+                        if (!Number.isNaN(parsed)) {
+                          setShots(Math.max(1, Math.min(100000, parsed)))
+                        }
+                      }}
+                      className="w-full bg-editor-bg/95 border border-editor-border rounded-md px-2.5 py-2 text-xs text-editor-text focus:outline-none focus:ring-1 focus:ring-quantum-blue-light/60"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="text-xs text-black dark:text-gray-400 bg-editor-bg/95 border border-editor-border rounded-md p-2.5 leading-relaxed">
+                  Expert mode runs hybrid Python workflows. Basic simulation settings are not used in this mode.
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Find and Replace */}
       <FindReplace
@@ -547,7 +701,7 @@ export default function EditorPane() {
             onChange={handleEditorChange}
             onMount={handleEditorDidMount}
             options={{
-              theme: typeof document !== 'undefined' && document.documentElement.classList.contains('light') ? 'quantum-light' : 'quantum-dark',
+              theme: theme === 'light' ? 'quantum-light' : 'quantum-dark',
             fixedOverflowWidgets: true,
             fontSize: 14,
             fontFamily: 'JetBrains Mono, Fira Code, Monaco, Consolas, monospace',

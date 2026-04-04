@@ -4,8 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useFileStore } from '@/lib/store'
 import { fileApi } from '@/lib/api'
 import { InputLanguage } from '@/types'
+import { detectFramework } from '@/lib/utils'
 
-type ExecutionMode = 'compile' | 'execute' | 'hybrid'
 import EditorPane from '@/components/EditorPane'
 import ResultsPane from '@/components/ResultsPane'
 import IDELayout from '@/components/ide/IDELayout'
@@ -38,13 +38,12 @@ export default function AppPage() {
   const { run, isRunning } = useExecutionActions({ inputLanguage, simBackend, shots })
 
   const {
-    setFiles,
-    files,
     sidebarCollapsed,
     toggleSidebar,
     resultsCollapsed,
     executionMode
   } = useFileStore()
+  const activeFile = useFileStore((s) => s.getActiveFile())
 
   // Check for mobile screen size
   useEffect(() => {
@@ -86,6 +85,30 @@ export default function AppPage() {
     fetchProjects(token)
     fetchExplorerTree(null, token)
   }, [isAuthenticated, token])
+
+  // In Basic mode, auto-fill framework/backend from the active code.
+  useEffect(() => {
+    if (executionMode !== 'basic') return
+    if (!activeFile) return
+
+    const detected = detectFramework(activeFile.content, activeFile.name)
+    if (!detected) return
+
+    if (inputLanguage !== detected) {
+      setInputLanguage(detected)
+    }
+
+    const backendMatch: Record<string, 'cirq' | 'qiskit' | 'pennylane'> = {
+      cirq: 'cirq',
+      qiskit: 'qiskit',
+      pennylane: 'pennylane',
+    }
+
+    const nextBackend = backendMatch[detected]
+    if (nextBackend && simBackend !== nextBackend) {
+      setSimBackend(nextBackend)
+    }
+  }, [activeFile?.id, executionMode])
 
   // Listen for inter-tab messages to add files from examples page
   useEffect(() => {
@@ -307,7 +330,16 @@ export default function AppPage() {
             ref={containerRef}
             className="flex-1 overflow-hidden"
           >
-            <EditorPane />
+            <EditorPane
+              onRun={run}
+              isRunning={isRunning}
+              inputLanguage={inputLanguage}
+              setInputLanguage={setInputLanguage}
+              simBackend={simBackend}
+              setSimBackend={setSimBackend}
+              shots={shots}
+              setShots={setShots}
+            />
           </div>
         }
         runView={

@@ -34,8 +34,8 @@ export default function RunView({
 
       <div className="p-3 space-y-3 overflow-y-auto">
         <div className="text-xs text-black dark:text-gray-400">Execution mode</div>
-        <div className="grid grid-cols-3 gap-2">
-          {(['compile', 'execute', 'hybrid'] as const).map((m) => (
+        <div className="grid grid-cols-2 gap-2">
+          {(['basic', 'expert'] as const).map((m) => (
             <button
               key={m}
               type="button"
@@ -57,10 +57,10 @@ export default function RunView({
           className="w-full px-3 py-2 rounded text-sm font-semibold disabled:opacity-50 btn-quantum"
           onClick={() => onRun()}
         >
-          Run
+          {executionMode === 'expert' ? 'Run Hybrid' : 'Run'}
         </button>
 
-        {executionMode !== 'hybrid' && (
+        {executionMode === 'basic' && (
           <div className="pt-3 border-t border-editor-border">
             <SimulationControls
               inputLanguage={inputLanguage}

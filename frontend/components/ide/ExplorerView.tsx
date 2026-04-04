@@ -4,11 +4,40 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, ChevronDown, File as FileIcon, Folder as FolderIcon, FolderPlus, Plus, Trash2, Check, X, Edit2 } from 'lucide-react'
 import { useFileStore } from '@/lib/store'
 import { useAuthStore } from '@/lib/authStore'
+import { Code, FileText } from '@/components/Icons'
 import { Folder, File } from '@/types'
 
 type TreeNode =
   | { kind: 'folder'; folder: Folder; children: TreeNode[]; depth: number }
   | { kind: 'file'; file: File; depth: number }
+
+function getFileAccentClasses(fileName: string): { icon: string; dot: string } {
+  const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
+
+  if (ext === 'py') return { icon: 'text-yellow-300', dot: 'bg-yellow-400' }
+  if (ext === 'qasm') return { icon: 'text-cyan-300', dot: 'bg-cyan-400' }
+  if (ext === 'md') return { icon: 'text-sky-300', dot: 'bg-sky-400' }
+  if (ext === 'json') return { icon: 'text-emerald-300', dot: 'bg-emerald-400' }
+  if (ext === 'ts' || ext === 'tsx') return { icon: 'text-blue-300', dot: 'bg-blue-400' }
+  if (ext === 'js' || ext === 'jsx') return { icon: 'text-amber-300', dot: 'bg-amber-400' }
+
+  return { icon: 'text-editor-text', dot: 'bg-editor-text' }
+}
+
+function getFileTypeIcon(file: File, isActive: boolean, accentClass: string) {
+  const iconClass = `w-4 h-4 ${isActive ? 'text-white' : accentClass}`
+  const language = file.language?.toLowerCase()
+
+  if (language === 'python' || file.name.endsWith('.py')) return <Code className={iconClass} />
+  if (language === 'qasm' || file.name.endsWith('.qasm')) return <FileIcon className={iconClass} />
+  if (language === 'javascript' || language === 'typescript' || file.name.endsWith('.js') || file.name.endsWith('.jsx') || file.name.endsWith('.ts') || file.name.endsWith('.tsx')) {
+    return <Code className={iconClass} />
+  }
+  if (language === 'json' || file.name.endsWith('.json')) return <FileText className={iconClass} />
+  if (file.name.endsWith('.md')) return <FileText className={iconClass} />
+
+  return <FileIcon className={iconClass} />
+}
 
 function buildTree(folders: Folder[], files: File[]): TreeNode[] {
   const byParent = new Map<string | null, Folder[]>()
@@ -94,6 +123,10 @@ export default function ExplorerView() {
   >(null)
 
   const tree = useMemo(() => buildTree(folders, files), [folders, files])
+  const explorerStats = useMemo(() => ({
+    files: files.length,
+    folders: folders.length,
+  }), [files.length, folders.length])
 
   const toggleFolder = (folderId: string) => {
     setExpanded((p) => ({ ...p, [folderId]: !(p[folderId] ?? true) }))
@@ -145,7 +178,7 @@ export default function ExplorerView() {
     if (!fileName) return
 
     try {
-      await createFile(fileName, '', activeProjectId ?? undefined, false, selectedFolderId ?? undefined)
+      await createFile(fileName, undefined, activeProjectId ?? undefined, false, selectedFolderId ?? undefined)
       setShowNewFileInput(false)
       setNewFileName('new.py')
     } catch {
@@ -254,7 +287,7 @@ export default function ExplorerView() {
         <div key={`folder-${node.folder.id}-${idx}`}>
           <div className="group relative" style={{ paddingLeft: pad }} data-explorer-node="true">
             {editingFolderId === node.folder.id ? (
-              <div className="w-full flex items-center gap-2 py-1.5 pr-2 text-sm rounded bg-editor-border/40">
+              <div className="w-full flex items-center gap-2 py-1.5 pr-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
                 <FolderIcon className="w-4 h-4 text-quantum-blue-light" />
                 <input
                   value={editingFolderName}
@@ -287,7 +320,7 @@ export default function ExplorerView() {
               <>
                 <button
                   type="button"
-                  className={`w-full flex items-center gap-2 py-1.5 pr-12 text-sm hover:bg-editor-border/50 rounded ${selectedFolderId === node.folder.id ? 'bg-editor-border/40 text-white' : 'text-editor-text'}`}
+                  className={`w-full flex items-center gap-2 py-1.5 pr-12 text-sm rounded-md border transition-all duration-150 ${selectedFolderId === node.folder.id ? 'bg-editor-border/45 border-editor-border/90 text-white shadow-sm' : 'bg-transparent border-transparent text-editor-text hover:bg-editor-border/40 hover:border-editor-border/60'}`}
                   onClick={() => {
                     setSelectedFolderId(node.folder.id)
                     toggleFolder(node.folder.id)
@@ -314,7 +347,7 @@ export default function ExplorerView() {
                 <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                   <button
                     type="button"
-                    className="p-1 rounded hover:bg-editor-border/70 text-editor-text"
+                    className="p-1 rounded-md hover:bg-editor-border/70 text-editor-text"
                     title="New file in folder"
                     onClick={(e) => {
                       e.stopPropagation()
@@ -325,7 +358,7 @@ export default function ExplorerView() {
                   </button>
                   <button
                     type="button"
-                    className="p-1 rounded hover:bg-editor-border/70 text-editor-text"
+                    className="p-1 rounded-md hover:bg-editor-border/70 text-editor-text"
                     title="Rename folder"
                     onClick={(e) => {
                       e.stopPropagation()
@@ -336,7 +369,7 @@ export default function ExplorerView() {
                   </button>
                   <button
                     type="button"
-                    className="p-1 rounded hover:bg-editor-border/70 text-editor-text"
+                    className="p-1 rounded-md hover:bg-editor-border/70 text-editor-text"
                     title="Delete folder"
                     onClick={(e) => {
                       e.stopPropagation()
@@ -354,6 +387,8 @@ export default function ExplorerView() {
       )
     }
 
+    const accent = getFileAccentClasses(node.file.name)
+
     return (
       <div
         key={`file-${node.file.id}-${idx}`}
@@ -362,8 +397,8 @@ export default function ExplorerView() {
         data-explorer-node="true"
       >
         {editingFileId === node.file.id ? (
-          <div className="w-full flex items-center gap-2 py-1.5 pr-2 text-sm rounded bg-editor-border/40">
-            <FileIcon className="w-4 h-4 text-editor-text" />
+          <div className="w-full flex items-center gap-2 py-1.5 pr-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
+            {getFileTypeIcon(node.file, false, accent.icon)}
             <input
               value={editingFileName}
               onChange={(e) => setEditingFileName(e.target.value)}
@@ -395,8 +430,8 @@ export default function ExplorerView() {
           <>
             <button
               type="button"
-              className={`w-full flex items-center gap-2 py-1.5 pr-8 text-sm rounded ${
-                activeFileId === node.file.id ? 'bg-editor-accent text-white' : 'text-editor-text hover:bg-editor-border/50'
+              className={`w-full flex items-center gap-2 py-1.5 pr-8 text-sm rounded-md border transition-all duration-150 ${
+                activeFileId === node.file.id ? 'bg-editor-accent border-editor-accent text-white shadow-sm' : 'text-editor-text border-transparent hover:bg-editor-border/40 hover:border-editor-border/60'
               }`}
               onClick={() => openFile(node.file.id)}
               onDoubleClick={() => startRenameFile(node.file.id, node.file.name)}
@@ -412,14 +447,14 @@ export default function ExplorerView() {
               }}
               title="Double click or right-click to rename"
             >
-              <FileIcon className="w-4 h-4" />
+              {getFileTypeIcon(node.file, activeFileId === node.file.id, accent.icon)}
               <span className="truncate">{node.file.name}</span>
             </button>
 
             <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
               <button
                 type="button"
-                className="p-1 rounded hover:bg-editor-border/70 text-editor-text"
+                className="p-1 rounded-md hover:bg-editor-border/70 text-editor-text"
                 title="Rename file"
                 onClick={(e) => {
                   e.stopPropagation()
@@ -430,7 +465,7 @@ export default function ExplorerView() {
               </button>
               <button
                 type="button"
-                className="p-1 rounded hover:bg-editor-border/70 text-editor-text"
+                className="p-1 rounded-md hover:bg-editor-border/70 text-editor-text"
                 title="Delete file"
                 onClick={(e) => {
                   e.stopPropagation()
@@ -447,12 +482,18 @@ export default function ExplorerView() {
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="h-10 px-3 flex items-center justify-between border-b border-editor-border gap-2">
-        <div className="text-xs font-semibold tracking-wider text-black dark:text-gray-400 uppercase">Explorer</div>
-        <div className="flex items-center gap-1 min-w-0">
+    <div className="h-full flex flex-col overflow-hidden bg-gradient-to-b from-editor-sidebar to-editor-bg/95">
+      <div className="px-3 py-2.5 border-b border-editor-border/80 bg-editor-sidebar/80 backdrop-blur-sm">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold tracking-[0.14em] text-black dark:text-gray-400 uppercase">Explorer</div>
+            <div className="text-[10px] text-black dark:text-gray-500 mt-0.5">
+              {explorerStats.files} files, {explorerStats.folders} folders
+            </div>
+          </div>
+          <div className="flex items-center gap-1 min-w-0">
           <select
-            className="max-w-[150px] bg-editor-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text"
+            className="max-w-[150px] bg-editor-bg/95 border border-editor-border rounded-md px-2 py-1 text-xs text-editor-text shadow-sm"
             value={activeProjectId?.toString() ?? ''}
             onChange={(e) => handleProjectChange(e.target.value)}
             title="Switch project"
@@ -464,7 +505,7 @@ export default function ExplorerView() {
           </select>
           <button
             type="button"
-            className="p-1 rounded hover:bg-editor-border/50 text-editor-text"
+            className="p-1.5 rounded-md border border-transparent hover:bg-editor-border/50 hover:border-editor-border/70 text-editor-text transition-colors"
             title="New Project"
             onClick={startCreateProject}
           >
@@ -472,7 +513,7 @@ export default function ExplorerView() {
           </button>
           <button
             type="button"
-            className="p-1 rounded hover:bg-editor-border/50 text-editor-text"
+            className="p-1.5 rounded-md border border-transparent hover:bg-editor-border/50 hover:border-editor-border/70 text-editor-text transition-colors"
             title="New Folder"
             onClick={() => startCreateFolder()}
           >
@@ -480,17 +521,18 @@ export default function ExplorerView() {
           </button>
           <button
             type="button"
-            className="p-1 rounded hover:bg-editor-border/50 text-editor-text"
+            className="p-1.5 rounded-md border border-transparent hover:bg-editor-border/50 hover:border-editor-border/70 text-editor-text transition-colors"
             title={selectedFolderId ? 'New File in Selected Folder' : 'New File'}
             onClick={() => startCreateFile()}
           >
             <Plus className="w-4 h-4" />
           </button>
+          </div>
         </div>
       </div>
 
       <div
-        className="flex-1 overflow-y-auto p-2 space-y-1"
+        className="flex-1 overflow-y-auto p-2.5 space-y-1.5"
         onClick={(e) => {
           const target = e.target as HTMLElement
           if (!target.closest('[data-explorer-node="true"]')) {
@@ -499,7 +541,7 @@ export default function ExplorerView() {
         }}
       >
         {showNewProjectInput && (
-          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded bg-editor-border/40">
+          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
             <FolderIcon className="w-4 h-4 text-editor-text" />
             <input
               value={newProjectName}
@@ -532,7 +574,7 @@ export default function ExplorerView() {
         )}
 
         {showNewFolderInput && (
-          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded bg-editor-border/40">
+          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
             <FolderIcon className="w-4 h-4 text-quantum-blue-light" />
             <input
               value={newFolderName}
@@ -564,7 +606,7 @@ export default function ExplorerView() {
         )}
 
         {showNewFileInput && (
-          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded bg-editor-border/40">
+          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
             <FileIcon className="w-4 h-4 text-editor-text" />
             <input
               value={newFileName}
@@ -600,7 +642,7 @@ export default function ExplorerView() {
 
       {contextMenu && (
         <div
-          className="fixed z-[120] min-w-[170px] bg-editor-sidebar border border-editor-border rounded shadow-xl p-1"
+          className="fixed z-[120] min-w-[180px] bg-gradient-to-b from-editor-sidebar to-editor-bg/95 border border-editor-border/90 rounded-lg shadow-[0_10px_28px_rgba(0,0,0,0.45)] p-1.5 backdrop-blur-sm"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -608,28 +650,28 @@ export default function ExplorerView() {
             <>
               <button
                 type="button"
-                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded"
+                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded-md"
                 onClick={() => startCreateFile(contextMenu.id)}
               >
                 New File
               </button>
               <button
                 type="button"
-                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded"
+                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded-md"
                 onClick={() => startCreateFolder(contextMenu.id)}
               >
                 New Folder
               </button>
               <button
                 type="button"
-                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded"
+                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded-md"
                 onClick={() => startRenameFolder(contextMenu.id, contextMenu.name)}
               >
                 Rename
               </button>
               <button
                 type="button"
-                className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/20 rounded"
+                className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/20 rounded-md"
                 onClick={() => {
                   void deleteFolder(contextMenu.id)
                   setContextMenu(null)
@@ -642,21 +684,21 @@ export default function ExplorerView() {
             <>
               <button
                 type="button"
-                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded"
+                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded-md"
                 onClick={() => openFile(contextMenu.id)}
               >
                 Open
               </button>
               <button
                 type="button"
-                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded"
+                className="w-full text-left px-3 py-1.5 text-xs text-editor-text hover:bg-editor-border/70 rounded-md"
                 onClick={() => startRenameFile(contextMenu.id, contextMenu.name)}
               >
                 Rename
               </button>
               <button
                 type="button"
-                className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/20 rounded"
+                className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/20 rounded-md"
                 onClick={() => {
                   void deleteFile(contextMenu.id)
                   setContextMenu(null)

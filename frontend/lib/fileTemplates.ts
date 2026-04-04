@@ -119,5 +119,177 @@ def qml_xor_classifier():
     qml.measure(wires=1)
 `,
   },
+  {
+    name: 'Bell State (Qiskit)',
+    description: 'Prepare a Bell pair and measure correlated outcomes.',
+    filename: 'bell_state_qiskit.py',
+    content: `from qiskit import QuantumCircuit
+
+qc = QuantumCircuit(2, 2)
+
+# Create Bell state: (|00> + |11>)/sqrt(2)
+qc.h(0)
+qc.cx(0, 1)
+
+# Measure
+qc.measure(0, 0)
+qc.measure(1, 1)
+`,
+  },
+  {
+    name: 'Bell State (Cirq)',
+    description: 'Build and measure a Bell circuit in Cirq.',
+    filename: 'bell_state_cirq.py',
+    content: `import cirq
+
+q0, q1 = cirq.LineQubit.range(2)
+
+circuit = cirq.Circuit()
+circuit.append(cirq.H(q0))
+circuit.append(cirq.CNOT(q0, q1))
+circuit.append(cirq.measure(q0, key='q0'))
+circuit.append(cirq.measure(q1, key='q1'))
+`,
+  },
+  {
+    name: 'Bell State (PennyLane)',
+    description: 'Create Bell correlations using PennyLane.',
+    filename: 'bell_state_pennylane.py',
+    content: `import pennylane as qml
+
+dev = qml.device('default.qubit', wires=2)
+
+@qml.qnode(dev)
+def bell_state():
+    qml.Hadamard(wires=0)
+    qml.CNOT(wires=[0, 1])
+    qml.measure(wires=0)
+    qml.measure(wires=1)
+`,
+  },
+  {
+    name: 'Deutsch-Jozsa (Qiskit)',
+    description: 'Determine whether an oracle is constant or balanced in one query.',
+    filename: 'deutsch_jozsa_qiskit.py',
+    content: `from qiskit import QuantumCircuit
+
+n = 3
+qc = QuantumCircuit(n + 1, n)
+
+# Initialize ancilla in |1>
+qc.x(n)
+
+# Superposition
+for i in range(n + 1):
+    qc.h(i)
+
+# Example balanced oracle
+for i in range(n):
+    qc.cx(i, n)
+
+# Interference
+for i in range(n):
+    qc.h(i)
+
+# Measure query qubits
+for i in range(n):
+    qc.measure(i, i)
+`,
+  },
+  {
+    name: 'Grover Search (Qiskit)',
+    description: 'Small 2-qubit Grover iteration for marked state search.',
+    filename: 'grover_search_qiskit.py',
+    content: `from qiskit import QuantumCircuit
+
+qc = QuantumCircuit(2, 2)
+
+# Uniform superposition
+qc.h(0)
+qc.h(1)
+
+# Oracle marks |11>
+qc.cz(0, 1)
+
+# Diffuser
+qc.h(0)
+qc.h(1)
+qc.x(0)
+qc.x(1)
+qc.cz(0, 1)
+qc.x(0)
+qc.x(1)
+qc.h(0)
+qc.h(1)
+
+qc.measure(0, 0)
+qc.measure(1, 1)
+`,
+  },
+  {
+    name: 'Quantum Fourier Transform (Qiskit)',
+    description: '3-qubit QFT example using controlled phase rotations.',
+    filename: 'qft_qiskit.py',
+    content: `from qiskit import QuantumCircuit
+import numpy as np
+
+qc = QuantumCircuit(3, 3)
+
+# Put input in a simple basis/superposition
+qc.x(0)
+
+# QFT on 3 qubits
+qc.h(2)
+qc.cp(np.pi / 2, 1, 2)
+qc.cp(np.pi / 4, 0, 2)
+
+qc.h(1)
+qc.cp(np.pi / 2, 0, 1)
+
+qc.h(0)
+
+# Reverse qubit order
+qc.swap(0, 2)
+
+qc.measure(0, 0)
+qc.measure(1, 1)
+qc.measure(2, 2)
+`,
+  },
+  {
+    name: 'Variational Circuit (PennyLane)',
+    description: 'Simple parameterized ansatz for VQE-style experiments.',
+    filename: 'variational_ansatz_pennylane.py',
+    content: `import pennylane as qml
+import numpy as np
+
+dev = qml.device('default.qubit', wires=2)
+
+params = np.array([0.3, -0.7, 0.2, 1.1])
+
+@qml.qnode(dev)
+def variational_circuit(theta):
+    qml.RY(theta[0], wires=0)
+    qml.RY(theta[1], wires=1)
+    qml.CNOT(wires=[0, 1])
+    qml.RZ(theta[2], wires=0)
+    qml.RZ(theta[3], wires=1)
+    return qml.expval(qml.PauliZ(0))
+`,
+  },
+  {
+    name: 'Quantum Random Bit (PennyLane)',
+    description: 'Generate one random quantum bit via superposition and measurement.',
+    filename: 'qrng_bit_pennylane.py',
+    content: `import pennylane as qml
+
+dev = qml.device('default.qubit', wires=1, shots=1)
+
+@qml.qnode(dev)
+def random_bit():
+    qml.Hadamard(wires=0)
+    return qml.sample(qml.PauliZ(0))
+`,
+  },
 ]
 

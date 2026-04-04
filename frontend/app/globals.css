@@ -566,6 +566,15 @@ html {
   border-color: #e2e8f0 !important;
 }
 
+.light .sidebar {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light .monaco-editor .margin {
+  background-color: #f8fafc !important;
+}
+
 /* Light theme for forms */
 .light input {
   background-color: #ffffff !important;

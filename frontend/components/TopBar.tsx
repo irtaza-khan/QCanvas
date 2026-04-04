@@ -16,7 +16,7 @@ import { detectFramework } from "@/lib/utils";
 import ProfileDropdown from "./ProfileDropdown";
 import ShareModal from "./ShareModal";
 
-type ExecutionMode = 'compile' | 'execute' | 'hybrid';
+type ExecutionMode = 'basic' | 'expert';
 
 interface TopBarProps {
   inputLanguage?: InputLanguage | ""
@@ -259,11 +259,11 @@ export default function TopBar({
     useFileStore.getState().setHybridResult(null);
     useFileStore.getState().setCompiledQasm(null);
 
-    // Check if file is already QASM - hybrid mode doesn't make sense for QASM
+    // Check if file is already QASM - expert mode doesn't make sense for QASM
     const isQasmFile = activeFile.name.endsWith(".qasm") ||
       activeFile.content.trim().startsWith("OPENQASM");
     if (isQasmFile) {
-      toast.error("Hybrid mode is for Python code with qcanvas/qsim APIs. Switch to 'Execute' mode for QASM files.", {
+      toast.error("Expert mode is for Python code with qcanvas/qsim APIs. Switch to 'Basic' mode for QASM files.", {
         duration: 5000
       });
       return;
@@ -276,7 +276,7 @@ export default function TopBar({
 
     if (!hasQcanvasImport && !hasQsimImport) {
       // Just log to console instead of showing error toast
-      console.log("No qcanvas/qsim imports found in hybrid mode");
+      console.log("No qcanvas/qsim imports found in expert mode");
     }
 
     setIsRunning(true);
@@ -395,8 +395,8 @@ export default function TopBar({
   };
 
   const handleRun = async () => {
-    // If in hybrid mode, use hybrid execution
-    if (executionMode === 'hybrid') {
+    // Expert mode maps to hybrid execution.
+    if (executionMode === 'expert') {
       return handleRunHybrid();
     }
 
@@ -414,18 +414,6 @@ export default function TopBar({
     const isQasmFile =
       activeFile.name.endsWith(".qasm") ||
       activeFile.content.trim().startsWith("OPENQASM");
-
-    // If in compile mode, just convert to QASM
-    if (executionMode === 'compile') {
-      // If already QASM, just show it
-      if (isQasmFile) {
-        setCompiledQasm(activeFile.content);
-        toast.success("File is already OpenQASM format");
-        window.dispatchEvent(new CustomEvent("show-qasm"));
-        return;
-      }
-      return handleConvertToQASM();
-    }
 
     // Validate input framework selection (required for non-QASM files)
     if (!isQasmFile && !inputLanguage) {
@@ -866,7 +854,7 @@ export default function TopBar({
           counter++;
         }
 
-        const newFile = addFile(fileName, ''); // Create blank file
+        const newFile = addFile(fileName, undefined);
         toast.success(`Created new file: ${fileName}`);
         return;
       }
@@ -979,50 +967,38 @@ export default function TopBar({
             {/* Execution Mode Toggle */}
             <div className="hidden md:flex items-center space-x-1 bg-editor-bg rounded-lg p-0.5 border border-editor-border">
               <button
-                onClick={() => setExecutionMode('compile')}
-                className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'compile'
+                onClick={() => setExecutionMode('basic')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'basic'
                   ? 'bg-quantum-blue-light text-white'
                   : 'text-editor-text hover:bg-editor-border'
                   }`}
-                title="Compile Only - Generate QASM without execution"
+                title="Basic Mode - Auto convert and execute"
               >
-                Compile
+                Basic
               </button>
               <button
-                onClick={() => setExecutionMode('execute')}
-                className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'execute'
-                  ? 'bg-quantum-blue-light text-white'
-                  : 'text-editor-text hover:bg-editor-border'
-                  }`}
-                title="Full Execute - Compile and run simulation"
-              >
-                Execute
-              </button>
-              <button
-                onClick={() => setExecutionMode('hybrid')}
-                className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'hybrid'
+                onClick={() => setExecutionMode('expert')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${executionMode === 'expert'
                   ? 'bg-green-500 text-white'
                   : 'text-editor-text hover:bg-editor-border'
                   }`}
-                title="Hybrid Mode - Run Python code with qcanvas/qsim APIs"
+                title="Expert Mode - Hybrid Python run"
               >
-                Hybrid
+                Expert
               </button>
             </div>
 
             <button
               onClick={handleRun}
               disabled={isRunning || !activeFile}
-              className={`flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-3 md:px-4 py-1.5 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ${executionMode === 'hybrid'
+              className={`flex items-center space-x-1 md:space-x-2 disabled:opacity-50 px-3 md:px-4 py-1.5 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ${executionMode === 'expert'
                 ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
                 : 'btn-quantum'
                 }`}
               title={
-                executionMode === 'hybrid'
+                executionMode === 'expert'
                   ? "Run Hybrid Python Code (Ctrl/Cmd+Shift+R)"
-                  : executionMode === 'compile'
-                    ? "Compile to QASM (Ctrl/Cmd+Shift+R)"
-                    : "Run Circuit (Ctrl/Cmd+Shift+R)"
+                  : "Run Circuit (Ctrl/Cmd+Shift+R)"
               }
             >
               {isRunning ? (
@@ -1034,7 +1010,7 @@ export default function TopBar({
                 <>
                   <Play className="w-4 h-4" />
                   <span className="hidden sm:inline font-semibold">
-                    {executionMode === 'hybrid' ? 'Run Hybrid' : executionMode === 'compile' ? 'Compile' : 'Run'}
+                    {executionMode === 'expert' ? 'Run Hybrid' : 'Run'}
                   </span>
                 </>
               )}

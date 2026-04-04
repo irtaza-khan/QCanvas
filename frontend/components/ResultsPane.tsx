@@ -640,7 +640,7 @@ export default function ResultsPane() {
                         {/* Show helpful hints based on error type */}
                         {hybridResult.error_type === 'SecurityViolationError' && (
                           <div className="mt-2 text-xs text-yellow-400 bg-yellow-900/20 p-2 rounded">
-                            <strong>Security Note:</strong> Certain imports and operations are blocked in hybrid mode for safety.
+                            <strong>Security Note:</strong> Certain imports and operations are blocked in expert mode for safety.
                             Blocked: os, sys, subprocess, socket, file operations, network access.
                           </div>
                         )}
@@ -799,11 +799,11 @@ export default function ResultsPane() {
                 <div className="text-center py-8 text-black dark:text-gray-500">
                   <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50 text-yellow-400" />
                   <p className="text-sm">
-                    {executionMode === 'hybrid'
+                    {executionMode === 'expert'
                       ? 'No hybrid execution results yet.'
                       : 'No execution results available. Run the circuit to see output.'}
                   </p>
-                  {executionMode === 'hybrid' && (
+                  {executionMode === 'expert' && (
                     <div className="mt-4 text-left max-w-md mx-auto bg-editor-bg p-4 rounded-lg border border-editor-border">
                       <p className="text-xs text-black dark:text-gray-400 mb-3">Example hybrid code:</p>
                       <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap">

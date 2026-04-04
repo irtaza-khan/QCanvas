@@ -63,7 +63,7 @@ interface HybridResult {
 }
 
 // Execution mode type
-type ExecutionMode = 'compile' | 'execute' | 'hybrid'
+type ExecutionMode = 'basic' | 'expert'
 
 interface FileStore extends EditorState {
   // Additional state for conversion stats and simulation results
@@ -130,6 +130,24 @@ interface FileStore extends EditorState {
 // DEVELOPER TOGGLE: Set to true to show built-in template files in the sidebar
 // =============================================================================
 const SHOW_TEMPLATE_FILES = false
+
+const BASIC_QISKIT_BELL_TEMPLATE = `from qiskit import QuantumCircuit
+
+# Bell state circuit
+qc = QuantumCircuit(2, 2)
+qc.h(0)
+qc.cx(0, 1)
+qc.measure([0, 1], [0, 1])
+
+print(qc)
+`
+
+const getDefaultNewFileContent = (name: string, content?: string) => {
+  if (content !== undefined) return content
+  const language = getLanguageFromFilename(name)
+  if (language === 'python') return BASIC_QISKIT_BELL_TEMPLATE
+  return FILE_TEMPLATES[language] ?? ''
+}
 
 // Initial files - quantum algorithm examples from different frameworks
 const initialFiles: File[] = [
@@ -345,7 +363,7 @@ export const useFileStore = create<FileStore>()(
       conversionStats: null,
       simulationResults: null,
       hybridResult: null,
-      executionMode: 'execute' as ExecutionMode,
+      executionMode: 'basic' as ExecutionMode,
       compileOptions: {
         inputLanguage: 'qasm',
         resultFormat: 'json',
@@ -419,7 +437,7 @@ export const useFileStore = create<FileStore>()(
 
       addFile: (name, content) => {
         const language = getLanguageFromFilename(name)
-        const defaultContent = content ?? FILE_TEMPLATES[language] ?? ''
+        const defaultContent = getDefaultNewFileContent(name, content)
 
         const newFile: File = {
           id: generateId(),
@@ -446,7 +464,7 @@ export const useFileStore = create<FileStore>()(
       // Create a new file but keep the current active file unchanged
       addFileWithoutActivating: (name, content) => {
         const language = getLanguageFromFilename(name)
-        const defaultContent = content ?? FILE_TEMPLATES[language] ?? ''
+        const defaultContent = getDefaultNewFileContent(name, content)
 
         const newFile: File = {
           id: generateId(),
@@ -1098,7 +1116,7 @@ export const useFileStore = create<FileStore>()(
         }
 
         const language = getLanguageFromFilename(name)
-        const defaultContent = content ?? FILE_TEMPLATES[language] ?? ''
+        const defaultContent = getDefaultNewFileContent(name, content)
         const toastId = toast.loading('Creating file...')
 
         try {

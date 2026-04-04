@@ -118,7 +118,7 @@ export function useExecutionActions({
 
     const isQasmFile = activeFile.name.endsWith('.qasm') || activeFile.content.trim().startsWith('OPENQASM')
     if (isQasmFile) {
-      toast.error("Hybrid mode is for Python code with qcanvas/qsim APIs. Switch to 'Execute' mode for QASM files.", {
+      toast.error("Expert mode is for Python code with qcanvas/qsim APIs. Switch to 'Basic' mode for QASM files.", {
         duration: 5000,
       })
       return
@@ -196,7 +196,7 @@ export function useExecutionActions({
   }
 
   const run = async () => {
-    if (executionMode === 'hybrid') {
+    if (executionMode === 'expert') {
       return runHybrid()
     }
 
@@ -210,57 +210,6 @@ export function useExecutionActions({
     setCompiledQasm(null)
 
     const isQasmFile = activeFile.name.endsWith('.qasm') || activeFile.content.trim().startsWith('OPENQASM')
-
-    if (executionMode === 'compile') {
-      if (isQasmFile) {
-        setCompiledQasm(activeFile.content)
-        toast.success('File is already OpenQASM format')
-        window.dispatchEvent(new CustomEvent('show-qasm'))
-        return
-      }
-
-      if (!inputLanguage) {
-        toast.error('Please select an input framework')
-        return
-      }
-
-      setIsRunning(true)
-      try {
-        toast.loading(`Converting ${inputLanguage} to OpenQASM...`, { id: 'execution' })
-        const conversionResult = await quantumApi.convertToQasm(activeFile.content, inputLanguage, 'classic', token || undefined)
-
-        if (!conversionResult.success || !conversionResult.data?.success) {
-          const rawError = conversionResult.data?.error || conversionResult.error || 'Compilation failed'
-          setSimulationResults(null)
-          toast.error(`Compilation failed: ${formatErrorMessage(rawError)}`, { id: 'execution' })
-          window.dispatchEvent(new CustomEvent('circuit-compile', { detail: { success: false, error: formatErrorMessage(rawError) } }))
-          return
-        }
-
-        setCompiledQasm(conversionResult.data.qasm_code)
-        setConversionStats({
-          qubits: conversionResult.data.qubits,
-          gates: conversionResult.data.gates,
-          depth: conversionResult.data.depth,
-          conversion_time: conversionResult.data.conversion_time,
-          framework: inputLanguage,
-          qasm_version: '3.0',
-          success: true,
-        })
-
-        window.dispatchEvent(new CustomEvent('circuit-compile', { detail: { success: true, stats: conversionResult.data } }))
-        toast.success('Compilation successful', { id: 'execution' })
-      } catch (error) {
-        const errorMsg = formatErrorMessage(error instanceof Error ? error.message : String(error))
-        setSimulationResults(null)
-        toast.error(`Compilation failed: ${errorMsg}`, { id: 'execution' })
-        window.dispatchEvent(new CustomEvent('circuit-compile', { detail: { success: false, error: errorMsg } }))
-      } finally {
-        setIsRunning(false)
-      }
-
-      return
-    }
 
     if (!isQasmFile && !inputLanguage) {
       toast.error('Please select an input framework for your code')
