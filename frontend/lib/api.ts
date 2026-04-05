@@ -83,7 +83,7 @@ const DISABLE_REMOTE_FALLBACK =
 
 let cachedApiBase: string | null = null
 
-async function getApiBase(): Promise<string> {
+export async function getApiBase(): Promise<string> {
   if (cachedApiBase) return cachedApiBase
 
   // 1. Browser-side detection (Foolproof against bad ENV variables)

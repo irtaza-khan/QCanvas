@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useFileStore } from "@/lib/store";
 import { fileApi } from "@/lib/api";
 import { InputLanguage } from "@/types";
@@ -10,6 +10,8 @@ import EditorPane from "@/components/EditorPane";
 import ResultsPane from "@/components/ResultsPane";
 import IDELayout from "@/components/ide/IDELayout";
 import RunView from "@/components/ide/RunView";
+import CirqAssistantSidebar from "@/components/ide/CirqAssistantSidebar";
+import type { ActivityView } from "@/components/ide/ActivityBar";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/authStore";
@@ -46,6 +48,31 @@ export default function AppPage() {
   const { sidebarCollapsed, toggleSidebar, resultsCollapsed, executionMode } =
     useFileStore();
   const activeFile = useFileStore((s) => s.getActiveFile());
+
+  const [sidebarActivity, setSidebarActivity] =
+    useState<ActivityView>("explorer");
+  const [cirqPrefill, setCirqPrefill] = useState<{
+    nonce: number;
+    text: string;
+  } | null>(null);
+
+  const handleSidebarActivityChange = useCallback((v: ActivityView) => {
+    if (v === "cirqAssistant" && useFileStore.getState().sidebarCollapsed) {
+      useFileStore.getState().toggleSidebar();
+    }
+    setSidebarActivity(v);
+  }, []);
+
+  const handleAskAiAboutCircuit = useCallback(() => {
+    const f = useFileStore.getState().getActiveFile();
+    if (!f?.content?.trim()) {
+      toast.error("Open a file with code first");
+      return;
+    }
+    const text = `I have this quantum circuit open in QCanvas:\n\n${f.content}\n\nCan you explain what it does and suggest any optimizations?`;
+    setCirqPrefill({ nonce: Date.now(), text });
+    handleSidebarActivityChange("cirqAssistant");
+  }, [handleSidebarActivityChange]);
 
   // Check for mobile screen size
   useEffect(() => {
@@ -332,6 +359,16 @@ export default function AppPage() {
   // Authenticated - show main app
   return (
     <IDELayout
+      sidebarActivity={sidebarActivity}
+      onSidebarActivityChange={handleSidebarActivityChange}
+      onAskAiAboutCircuit={handleAskAiAboutCircuit}
+      cirqAssistantView={
+        <CirqAssistantSidebar
+          prefillPayload={cirqPrefill}
+          onPrefillConsumed={() => setCirqPrefill(null)}
+          onSetInputLanguage={setInputLanguage}
+        />
+      }
       sidebarContainerClassName={`${sidebarCollapsed ? "w-0" : "w-full md:shrink-0"} ${isSidebarResizing ? "" : "transition-all duration-200"} ${
         isMobile && !sidebarCollapsed
           ? "absolute inset-y-0 left-12 z-50 shadow-xl"

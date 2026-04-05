@@ -1,8 +1,8 @@
 'use client'
 
-import { Search, Folder as FolderIcon, Play } from 'lucide-react'
+import { Search, Folder as FolderIcon, Play, Sparkles } from 'lucide-react'
 
-export type ActivityView = 'explorer' | 'search' | 'run'
+export type ActivityView = 'explorer' | 'search' | 'run' | 'cirqAssistant'
 
 export default function ActivityBar({
   active,
@@ -15,6 +15,7 @@ export default function ActivityBar({
     { id: 'explorer', label: 'Explorer', Icon: FolderIcon },
     { id: 'search', label: 'Search', Icon: Search },
     { id: 'run', label: 'Run', Icon: Play },
+    { id: 'cirqAssistant', label: 'Cirq AI', Icon: Sparkles },
   ]
 
   return (

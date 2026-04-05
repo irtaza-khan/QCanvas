@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useFileStore } from "@/lib/store";
 import MenuBar from "./MenuBar";
 import ActivityBar, { ActivityView } from "./ActivityBar";
@@ -17,7 +17,11 @@ export default function IDELayout({
   sidebarContainerStyle,
   sidebarResizeHandle,
   runView,
+  cirqAssistantView,
   onRun,
+  onAskAiAboutCircuit,
+  sidebarActivity,
+  onSidebarActivityChange,
   contentRef,
 }: Readonly<{
   editor: React.ReactNode;
@@ -28,31 +32,35 @@ export default function IDELayout({
   sidebarContainerStyle?: React.CSSProperties;
   sidebarResizeHandle?: React.ReactNode;
   runView?: React.ReactNode;
+  cirqAssistantView?: React.ReactNode;
   onRun: () => void | Promise<void>;
+  onAskAiAboutCircuit?: () => void;
+  sidebarActivity: ActivityView;
+  onSidebarActivityChange: (v: ActivityView) => void;
   contentRef?: React.RefObject<HTMLDivElement>;
 }>) {
   const sidebarCollapsed = useFileStore((s) => s.sidebarCollapsed);
-  const [activeView, setActiveView] = useState<ActivityView>("explorer");
 
   useEffect(() => {
-    if (sidebarCollapsed) setActiveView("explorer");
-  }, [sidebarCollapsed]);
+    if (sidebarCollapsed) onSidebarActivityChange("explorer");
+  }, [sidebarCollapsed, onSidebarActivityChange]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <MenuBar onRun={onRun} />
+      <MenuBar onRun={onRun} onAskAiAboutCircuit={onAskAiAboutCircuit} />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Activity bar */}
-        <ActivityBar active={activeView} onChange={setActiveView} />
+        <ActivityBar active={sidebarActivity} onChange={onSidebarActivityChange} />
 
         {/* Sidebar panel */}
         <div className={sidebarContainerClassName} style={sidebarContainerStyle}>
           {!sidebarCollapsed && (
             <div className="h-full bg-editor-sidebar border-r border-editor-border overflow-hidden">
-              {activeView === "explorer" && <ExplorerView />}
-              {activeView === "search" && <SearchView />}
-              {activeView === "run" && (runView ?? null)}
+              {sidebarActivity === "explorer" && <ExplorerView />}
+              {sidebarActivity === "search" && <SearchView />}
+              {sidebarActivity === "run" && (runView ?? null)}
+              {sidebarActivity === "cirqAssistant" && (cirqAssistantView ?? null)}
             </div>
           )}
         </div>

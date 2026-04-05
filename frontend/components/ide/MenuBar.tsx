@@ -30,7 +30,11 @@ interface MenuItem {
 
 export default function MenuBar({
   onRun,
-}: Readonly<{ onRun: () => void | Promise<void> }>) {
+  onAskAiAboutCircuit,
+}: Readonly<{
+  onRun: () => void | Promise<void>;
+  onAskAiAboutCircuit?: () => void;
+}>) {
   const {
     toggleSidebar,
     toggleResults,
@@ -207,6 +211,11 @@ export default function MenuBar({
           onSelect: () => globalThis.window?.open("/docs", "_blank"),
         },
         {
+          label: "Ask AI about this circuit",
+          disabled: !activeFile || !onAskAiAboutCircuit,
+          onSelect: () => onAskAiAboutCircuit?.(),
+        },
+        {
           label: "Add New Language…",
           onSelect: () => setShowAddLanguage(true),
         },
@@ -216,6 +225,7 @@ export default function MenuBar({
       activeFile,
       executionMode,
       handleExport,
+      onAskAiAboutCircuit,
       onRun,
       setExecutionMode,
       theme,
