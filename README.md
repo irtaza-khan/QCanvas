@@ -66,8 +66,147 @@ QCanvas/
 
 - Python 3.9+
 - Node.js 18+ (for Next.js)
-- Docker & Docker Compose (for PostgreSQL, Redis, SonarQube)
+- Docker Engine with **Compose V2** (`docker compose` CLI)
 - Git
+
+## Docker and Docker Compose
+
+The repo includes [`docker-compose.yml`](docker-compose.yml) for **PostgreSQL**, **Redis**, **QCanvas FastAPI backend**, **Cirq-RAG-Code-Assistant** (Cirq AI / Bedrock), and optionally **SonarQube** (metrics profile).
+
+The **Next.js frontend is not in Compose**; run it locally with `npm run dev` in `frontend/` (see below).
+
+### Service overview
+
+| Service | Container name | Host port | Notes |
+|--------|----------------|-----------|--------|
+| PostgreSQL | `qcanvas_postgres` | **5433** → 5432 | Database for QCanvas |
+| Redis | `qcanvas_redis` | **6379** | Caching |
+| Cirq AI | `qcanvas_cirq_agent` | **8001** → 8000 | Bedrock/RAG; internal URL `http://cirq_agent:8000` |
+| QCanvas API | `qcanvas_backend` | **8000** | Sets `CIRQ_AGENT_URL=http://cirq_agent:8000` |
+| SonarQube | `qcanvas_sonarqube` | **9000** | Only with `--profile metrics` |
+
+Each container can use port **8000 internally** without conflict; they are isolated. Only **host** ports must be unique (**8000** vs **8001**).
+
+### Environment file (project root)
+
+Create a **`.env`** in the repository root (Compose loads it automatically). Minimum for the database:
+
+```env
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=qcanvas_db
+```
+
+For **Cirq AI** inside Docker, add the same variables you use for Bedrock (see [`Cirq-RAG-Code-Assistant/.env.example`](Cirq-RAG-Code-Assistant/.env.example)):
+
+```env
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=us-east-1
+BEDROCK_INFERENCE_PROFILE_ARN_DESIGNER=...
+BEDROCK_INFERENCE_PROFILE_ARN_OPTIMIZER=...
+BEDROCK_INFERENCE_PROFILE_ARN_VALIDATOR=...
+BEDROCK_INFERENCE_PROFILE_ARN_EDUCATIONAL=...
+```
+
+Put AWS keys in **`Cirq-RAG-Code-Assistant/.env`** when using Docker: that file is bind-mounted into the `cirq_agent` container as `/app/.env`. The Compose file does **not** set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` to empty defaults anymore—empty values used to block `python-dotenv` from applying the mounted file.
+
+### Commands (run from the repo root)
+
+**Build images and start the default stack** (postgres, redis, cirq_agent, backend):
+
+```bash
+docker compose up -d --build
+```
+
+**Start or restart without rebuilding images:**
+
+```bash
+docker compose up -d
+```
+
+**Include SonarQube** (metrics profile):
+
+```bash
+docker compose --profile metrics up -d --build
+```
+
+**Rebuild only specific services** (e.g. after changing a `Dockerfile`):
+
+```bash
+docker compose build cirq_agent backend
+docker compose up -d
+```
+
+**Force a clean rebuild** (slower; use when dependencies change):
+
+```bash
+docker compose build --no-cache cirq_agent backend
+docker compose up -d
+```
+
+**View running services:**
+
+```bash
+docker compose ps
+```
+
+**Follow logs** (all services or one):
+
+```bash
+docker compose logs -f
+docker compose logs -f backend
+docker compose logs -f cirq_agent
+```
+
+**Stop containers** (keeps named volumes such as database data):
+
+```bash
+docker compose stop
+```
+
+**Stop and remove containers** (keeps volumes unless you add `-v`):
+
+```bash
+docker compose down
+```
+
+**Stop and remove containers and volumes** (⚠️ deletes Postgres/Redis/SonarQube data):
+
+```bash
+docker compose down -v
+```
+
+**Run a one-off command in the backend container** (example: open a shell):
+
+```bash
+docker compose exec backend bash
+```
+
+### After Docker is up
+
+- **API:** http://localhost:8000 — docs: http://localhost:8000/docs  
+- **Health:** http://localhost:8000/api/health  
+- **Cirq AI (direct):** http://localhost:8001/docs  
+
+Run **database migrations** against the Dockerized Postgres (from host, with venv and `PYTHONPATH` set, or `exec` into `backend`):
+
+```bash
+# Example from host (Windows PowerShell); adjust path and venv
+$env:PYTHONPATH = "D:\path\to\QCanvas\backend"
+$env:DATABASE_URL = "postgresql://postgres:postgres@127.0.0.1:5433/qcanvas_db"
+python -m alembic -c backend/alembic.ini upgrade head
+```
+
+Then start the **frontend**:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:3000
 
 ### Windows Setup (Recommended for Development)
 
@@ -88,28 +227,18 @@ python -m venv qcanvas_env
 pip install -r requirements.txt
 ```
 
-#### 4. Start Docker Services (PostgreSQL, Redis, SonarQube)
-```bash
-docker-compose up -d
-```
+#### 4. Start Docker Services
 
-Verify services are running:
-```bash
-docker-compose ps
-```
-
-You should see:
-- **qcanvas_postgres** (port 5433)
-- **qcanvas_redis** (port 6379)
-- **qcanvas_sonarqube** (port 9000)
+Use **Docker Compose** as described in [Docker and Docker Compose](#docker-and-docker-compose) (e.g. `docker compose up -d --build`). For SonarQube, add `--profile metrics`.
 
 #### 5. Set Up Database Schema
-```bash
-# Set Python path
-$env:PYTHONPATH="d:\path\to\QCanvas\backend"
+```powershell
+# From repo root; set path to your clone
+$env:PYTHONPATH = "D:\path\to\QCanvas\backend"
+# If Postgres is the Docker Compose service (mapped to host 5433):
+$env:DATABASE_URL = "postgresql://postgres:postgres@127.0.0.1:5433/qcanvas_db"
 
-# Run database migrations
-python -m alembic upgrade head
+python -m alembic -c backend/alembic.ini upgrade head
 ```
 
 #### 6. Create Admin User (Optional)
@@ -134,7 +263,10 @@ python backend/verify_database.py
 📚 **For detailed information about database architecture, security (CIA principles), and troubleshooting, see [docs/db_setup.md](docs/db_setup.md)**
 
 #### 9. Start Backend Server
-```bash
+
+If you already use **Docker Compose** for the API, **skip this step** (backend is on http://localhost:8000).
+
+```powershell
 $env:PYTHONPATH="d:\path\to\QCanvas\backend"
 python backend/start.py
 ```
@@ -142,6 +274,8 @@ python backend/start.py
 Backend will run on `http://localhost:8000`
 - API Docs: `http://localhost:8000/docs`
 - Health Check: `http://localhost:8000/api/health`
+
+**Cirq AI assistant (optional):** The IDE can proxy to [Cirq-RAG-Code-Assistant](Cirq-RAG-Code-Assistant/QCANVAS_INTEGRATION_GUIDE.md). Run the Cirq service on **port 8001** (QCanvas already uses **8000**). Set `CIRQ_AGENT_URL` in the QCanvas backend environment (defaults to `http://127.0.0.1:8001`). The frontend calls `{QCanvas API}/api/cirq-agent/api/v1/...`. For local UI-only testing without the QCanvas API proxy, set `NEXT_PUBLIC_CIRQ_USE_NEXT_REWRITE=true` and optionally `CIRQ_REWRITE_TARGET` (Next.js rewrites `/cirq-api/*` to the Cirq server).
 
 #### 10. Start Frontend (New Terminal)
 ```bash
@@ -244,7 +378,8 @@ Execute OpenQASM 3.0 code using the QSim engine with various backends.
 - `SECRET_KEY`: Application secret key
 - `DEBUG`: Enable debug mode (True/False)
 - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
-- `NEXT_PUBLIC_API_URL`: Frontend API endpoint for Next.js
+- `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_API_BASE`: Frontend API endpoint for Next.js
+- `CIRQ_AGENT_URL`: QCanvas backend proxy target for Cirq AI (Compose sets `http://cirq_agent:8000` inside Docker; locally often `http://127.0.0.1:8001`)
 
 ## 🧪 Testing
 
