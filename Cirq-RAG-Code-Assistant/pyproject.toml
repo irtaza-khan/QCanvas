@@ -1,0 +1,320 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cirq-rag-code-assistant"
+version = "0.1.0"
+description = "A research-grade system for generating and explaining Cirq quantum computing code using RAG and multi-agent architecture"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Umer Farooq", email = "umerfarooqcs0891@gmail.com"},
+    {name = "Hussain Waseem Syed", email = "i220893@nu.edu.pk"},
+    {name = "Muhammad Irtaza Khan", email = "i220911@nu.edu.pk"}
+]
+maintainers = [
+    {name = "Umer Farooq", email = "umerfarooqcs0891@gmail.com"},
+    {name = "Hussain Waseem Syed", email = "i220893@nu.edu.pk"},
+    {name = "Muhammad Irtaza Khan", email = "i220911@nu.edu.pk"}
+]
+keywords = [
+    "quantum computing",
+    "cirq",
+    "rag",
+    "multi-agent",
+    "code generation",
+    "educational ai",
+    "pytorch",
+    "gpu optimization",
+    "cuda"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Education",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: GPU",
+]
+requires-python = ">=3.11"
+dependencies = [
+    # Core dependencies
+    "cirq>=1.3.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "pandas>=2.0.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    
+    # Machine Learning & AI
+    "torch>=2.1.0",
+    "torchvision>=0.16.0",
+    "transformers>=4.30.0",
+    "sentence-transformers>=2.2.0",
+    "openai>=1.0.0",
+    "langchain>=0.1.0",
+    "langchain-community>=0.0.10",
+    
+    # Vector databases and search
+    "faiss-cpu>=1.7.4",
+    "chromadb>=0.4.0",
+    
+    # NLP and text processing
+    "spacy>=3.6.0",
+    "nltk>=3.8.0",
+    "textblob>=0.17.0",
+    
+    # Data processing
+    "sqlalchemy>=2.0.0",
+    "sqlite3",
+    "pyyaml>=6.0",
+    "toml>=0.10.0",
+    "python-dotenv>=1.0.0",
+    
+    # Async and concurrency
+    "asyncio",
+    "aiofiles>=23.0.0",
+    "httpx>=0.24.0",
+    
+    # CLI and utilities
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "tqdm>=4.65.0",
+    "colorama>=0.4.6",
+    
+    # Configuration and validation
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    
+    # Logging and monitoring
+    "loguru>=0.7.0",
+    "structlog>=23.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "pytest-xdist>=3.3.0",
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.3.0",
+    "bandit>=1.7.5",
+    "safety>=2.3.0",
+    "jupyter>=1.0.0",
+    "ipython>=8.14.0",
+    "memory-profiler>=0.60.0",
+    "line-profiler>=4.1.0",
+]
+
+gpu = [
+    # PyTorch with CUDA support (install separately based on CUDA version)
+    # For CUDA 11.8: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+    # For CUDA 12.1: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+    # cupy-cuda12x>=12.0.0  # Optional: For GPU array operations
+]
+
+quantum = [
+    "qiskit>=0.45.0",
+    "pennylane>=0.34.0",
+    "qutip>=4.7.0",
+]
+
+qcanvas = [
+    "qiskit>=0.45.0",
+    "pennylane>=0.34.0",
+    "qutip>=4.7.0",
+    "fastapi>=0.104.0",
+    "websockets>=11.0.3",
+]
+
+all = [
+    "cirq-rag-code-assistant[dev,gpu,quantum,qcanvas]",
+]
+
+[project.urls]
+Homepage = "https://github.com/umerfarooq/cirq-rag-code-assistant"
+Repository = "https://github.com/umerfarooq/cirq-rag-code-assistant.git"
+Issues = "https://github.com/umerfarooq/cirq-rag-code-assistant/issues"
+Documentation = "https://github.com/umerfarooq/cirq-rag-code-assistant#readme"
+
+[project.scripts]
+cirq-rag = "cirq_rag_code_assistant.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+# Black configuration
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# isort configuration
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+src_paths = ["src", "tests"]
+
+# MyPy configuration
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "cirq.*",
+    "torch.*",
+    "torchvision.*",
+    "transformers.*",
+    "sentence_transformers.*",
+    "faiss.*",
+    "chromadb.*",
+    "spacy.*",
+    "nltk.*",
+    "textblob.*",
+    "sqlalchemy.*",
+    "langchain.*",
+    "openai.*",
+    "rich.*",
+    "click.*",
+    "loguru.*",
+    "structlog.*",
+    "pydantic.*",
+    "pydantic_settings.*",
+    "httpx.*",
+    "aiofiles.*",
+    "pyyaml.*",
+    "toml.*",
+    "python_dotenv.*",
+    "colorama.*",
+    "tqdm.*",
+    "matplotlib.*",
+    "seaborn.*",
+    "pandas.*",
+    "scipy.*",
+    "numpy.*",
+    "jupyter.*",
+    "ipython.*",
+    "memory_profiler.*",
+    "line_profiler.*",
+    "bandit.*",
+    "safety.*",
+    "pre_commit.*",
+    "pytest.*",
+    "pytest_asyncio.*",
+    "pytest_cov.*",
+    "pytest_mock.*",
+    "pytest_xdist.*",
+    "black.*",
+    "isort.*",
+    "flake8.*",
+    "mypy.*",
+    "qiskit.*",
+    "pennylane.*",
+    "qutip.*",
+    "fastapi.*",
+    "websockets.*",
+    "cupy.*",
+    "sentence_transformers.*",
+]
+ignore_missing_imports = true
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "gpu: marks tests that require GPU",
+    "quantum: marks tests that require quantum simulators",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/env/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+# Bandit configuration
+[tool.bandit]
+exclude_dirs = ["tests", "venv", "env"]
+skips = ["B101", "B601"]
+
+# Safety configuration
+[tool.safety]
+output = "json"

@@ -1,0 +1,59 @@
+{
+  "timestamp": "2025-12-07T16:48:27.444357",
+  "metrics": {
+    "code_quality": {
+      "total_samples": 1,
+      "avg_code_length": 73.0,
+      "syntax_valid_rate": 1.0,
+      "compilation_success_rate": 1.0
+    },
+    "agent_performance": {
+      "total_agents": 4,
+      "avg_success_rate": 0.975
+    }
+  },
+  "benchmark_results": {
+    "total_tests": 4,
+    "passed": 2,
+    "failed": 2,
+    "test_results": [
+      {
+        "test_id": 1,
+        "query": "Create a 2-qubit Bell state circuit",
+        "algorithm": "teleportation",
+        "success": true,
+        "validation_passed": true,
+        "errors": []
+      },
+      {
+        "test_id": 2,
+        "query": "Implement a 3-qubit Grover search algorithm",
+        "algorithm": "grover",
+        "success": true,
+        "validation_passed": true,
+        "errors": []
+      },
+      {
+        "test_id": 3,
+        "query": "Create a simple VQE circuit for 2 qubits",
+        "algorithm": "vqe",
+        "success": true,
+        "validation_passed": false,
+        "errors": [
+          "Optimization iteration 1 failed: Failed to compile code: []"
+        ]
+      },
+      {
+        "test_id": 4,
+        "query": "Implement a 2-qubit QAOA circuit",
+        "algorithm": "qaoa",
+        "success": true,
+        "validation_passed": false,
+        "errors": [
+          "Optimization iteration 1 failed: Failed to compile code: [{'type': 'execution_error', 'message': \"No module named 'cirq.contrib.qaoa'\", 'traceback': 'Traceback (most recent call last):\\n  File \"D:\\\\University\\\\Uni\\\\Semester 7\\\\Generative AI\\\\Project\\\\Cirq-RAG-Code-Assistant\\\\src\\\\tools\\\\compiler.py\", line 216, in _execute_code\\n    exec(code, namespace)\\n    ~~~~^^^^^^^^^^^^^^^^^\\n  File \"<string>\", line 2, in <module>\\nModuleNotFoundError: No module named \\'cirq.contrib.qaoa\\'\\n'}]"
+        ]
+      }
+    ],
+    "pass_rate": 0.5
+  }
+}

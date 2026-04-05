@@ -1,0 +1,172 @@
+{
+  "app": {
+    "name": "Cirq-RAG-Code-Assistant",
+    "version": "0.1.0",
+    "debug": false,
+    "environment": "development"
+  },
+  "aws": {
+    "embeddings": {
+      "model_id": "amazon.nova-2-multimodal-embeddings-v1:0",
+      "embedding_dimension": 1024,
+      "request_delay_seconds": 5.0
+    }
+  },
+  "models": {
+    "embedding": {
+      "provider": "aws",
+      "model_name": "amazon.nova-2-multimodal-embeddings-v1:0",
+      "embedding_dimension": 1024,
+      "device": "cpu",
+      "batch_size": 16,
+      "cache_folder": ".cache/embeddings"
+    },
+    "fine_tuning": {
+      "use_fine_tuned_model": false,
+      "fine_tuned_model_path": null,
+      "fine_tuning_dataset_path": null
+    }
+  },
+  "rag": {
+    "knowledge_base": {
+      "path": "data/knowledge_base",
+      "size_target": 2500
+    },
+    "vector_store": {
+      "type": "faiss",
+      "index_path": "data/models/vector_index",
+      "use_gpu": false
+    },
+    "retrieval": {
+      "top_k_results": 5,
+      "similarity_threshold": 0.7,
+      "chunk_size": 512,
+      "chunk_overlap": 50
+    }
+  },
+  "agents": {
+    "general": {
+      "max_retries": 3,
+      "timeout_seconds": 300,
+      "parallel_execution": true
+    },
+    "designer": {
+      "enabled": true,
+      "use_rag": true,
+      "model": {
+        "provider": "aws",
+        "model": "anthropic.claude-sonnet-4-6",
+        "inference_profile_arn": null
+      }
+    },
+    "optimizer": {
+      "enabled": true,
+      "level": "balanced",
+      "use_rl": false,
+      "rl_reward_weights": {
+        "circuit_depth": -0.3,
+        "two_qubit_gates": -0.3,
+        "fidelity": 0.4
+      },
+      "rl_iterations": 10,
+      "model": {
+        "provider": "aws",
+        "model": "anthropic.claude-opus-4-6-v1",
+        "inference_profile_arn": null,
+        "temperature": 0.2,
+        "max_tokens": 2000
+      }
+    },
+    "validator": {
+      "enabled": true,
+      "mode": "local",
+      "validation_level": "comprehensive",
+      "llm_enabled": true,
+      "default_shots": 1024,
+      "default_backend": "cirq",
+      "model": {
+        "provider": "aws",
+        "model": "anthropic.claude-sonnet-4-6",
+        "inference_profile_arn": null
+      }
+    },
+    "qcanvas": {
+      "backend_url": "http://localhost:8000",
+      "timeout_seconds": 30
+    },
+    "educational": {
+      "enabled": true,
+      "model": {
+        "provider": "aws",
+        "model": "anthropic.claude-haiku-4-5-20251001-v1:0",
+        "inference_profile_arn": null
+      }
+    }
+  },
+  "tools": {
+    "compiler": {
+      "validate_syntax": true,
+      "check_imports": true
+    },
+    "simulator": {
+      "type": "simulator",
+      "repetitions": 1000,
+      "use_noise": false
+    },
+    "analyzer": {
+      "calculate_connectivity": true,
+      "detect_optimizations": true
+    }
+  },
+  "paths": {
+    "data_dir": "data",
+    "datasets_dir": "data/datasets",
+    "knowledge_base_dir": "data/knowledge_base",
+    "models_dir": "data/models",
+    "outputs_dir": "outputs",
+    "logs_dir": "outputs/logs",
+    "reports_dir": "outputs/reports",
+    "artifacts_dir": "outputs/artifacts",
+    "cache_dir": ".cache",
+    "embedding_cache_dir": ".cache/embeddings"
+  },
+  "pytorch": {
+    "cuda_visible_devices": "0",
+    "torch_device": "auto",
+    "torch_deterministic": false,
+    "torch_benchmark": true,
+    "torch_memory_fraction": 0.8
+  },
+  "evaluation": {
+    "target_syntax_accuracy": 0.90,
+    "evaluation_batch_size": 32,
+    "benchmark_dataset_path": "data/datasets/benchmark",
+    "benchmark_algorithms": [
+      "vqe",
+      "qaoa",
+      "grover",
+      "teleportation",
+      "qft"
+    ],
+    "enable_ablations": true,
+    "ablation_variants": [
+      "no_rag",
+      "rag",
+      "single_agent",
+      "multi_agent_no_rl",
+      "base_llm",
+      "fine_tuned_llm",
+      "heuristic_optimization",
+      "rl_optimization"
+    ]
+  },
+  "logging": {
+    "log_level": "INFO",
+    "log_file": "outputs/logs/cirq_rag.log",
+    "log_format": "text",
+    "enable_console_logging": true,
+    "enable_file_logging": true,
+    "max_log_file_size": "10MB",
+    "log_backup_count": 5
+  }
+}

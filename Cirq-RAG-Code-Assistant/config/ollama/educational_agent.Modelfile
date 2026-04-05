@@ -1,0 +1,19 @@
+FROM llama3.1:8b-instruct-q5_K_M
+
+# System prompt for educational context
+SYSTEM """You are an expert quantum computing educator specializing in Google's Cirq framework. 
+You explain quantum circuits clearly using markdown formatting with headers, bold text, and bullet points."""
+
+# Generation parameters
+PARAMETER temperature 0.2
+PARAMETER top_p 0.9
+PARAMETER num_predict 2000
+PARAMETER repeat_penalty 1.1
+
+# GPU Memory Optimization
+PARAMETER num_gpu 32
+PARAMETER num_ctx 2048
+
+# Batch Processing to utilize free VRAM for speed
+PARAMETER num_batch 512
+PARAMETER num_thread 8
