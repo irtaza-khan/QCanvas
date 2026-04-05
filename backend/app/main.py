@@ -14,7 +14,7 @@ current_file = os.path.abspath(__file__)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
 sys.path.insert(0, project_root)
 
-from app.api.routes import converter, health, simulator, hybrid, auth, projects, files, gamification, shared, folders
+from app.api.routes import converter, health, simulator, hybrid, auth, projects, files, gamification, shared, folders, cirq_agent_proxy
 from app.services.conversion_service import ConversionService
 from app.services.simulation_service import SimulationService
 
@@ -78,6 +78,7 @@ app.include_router(files.router)
 app.include_router(folders.router)
 app.include_router(gamification.router)
 app.include_router(shared.router)
+app.include_router(cirq_agent_proxy.router)
 
 # Root endpoint
 @app.get("/")

@@ -32,6 +32,9 @@ class Settings(BaseSettings):
         "https://www.qcanvas.codes"
     ]
 
+    # Cirq-RAG-Code-Assistant (proxied at /api/cirq-agent/*). Use port 8001 locally to avoid clashing with QCanvas on 8000.
+    CIRQ_AGENT_URL: str = "http://127.0.0.1:8001"
+
     def model_post_init(self, __context):
         if self.DATABASE_URL is None:
             self.DATABASE_URL = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
