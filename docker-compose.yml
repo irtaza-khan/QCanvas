@@ -35,6 +35,40 @@ services:
       timeout: 5s
       retries: 5
 
+  # Cirq-RAG-Code-Assistant (QCanvas IDE "Cirq AI"). Set AWS_* and BEDROCK_* in project root .env (see Cirq-RAG-Code-Assistant/.env.example).
+  cirq_agent:
+    build:
+      context: ./Cirq-RAG-Code-Assistant
+      dockerfile: Dockerfile
+    container_name: qcanvas_cirq_agent
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONPATH=/app
+      # Do not pass AWS_ACCESS_KEY_ID / AWS_SECRET with ${VAR:-} here: unset host vars become
+      # empty strings in the container and block python-dotenv from reading the mounted .env.
+      # Put keys in Cirq-RAG-Code-Assistant/.env or pass real values explicitly below if needed.
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - BEDROCK_INFERENCE_PROFILE_ARN_DESIGNER=${BEDROCK_INFERENCE_PROFILE_ARN_DESIGNER:-}
+      - BEDROCK_INFERENCE_PROFILE_ARN_OPTIMIZER=${BEDROCK_INFERENCE_PROFILE_ARN_OPTIMIZER:-}
+      - BEDROCK_INFERENCE_PROFILE_ARN_VALIDATOR=${BEDROCK_INFERENCE_PROFILE_ARN_VALIDATOR:-}
+      - BEDROCK_INFERENCE_PROFILE_ARN_EDUCATIONAL=${BEDROCK_INFERENCE_PROFILE_ARN_EDUCATIONAL:-}
+    volumes:
+      - ./Cirq-RAG-Code-Assistant:/app
+    command: [ "uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/docs', timeout=5).read(1)\"",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+    networks:
+      - qcanvas_network
+
   backend:
     build:
       context: .
@@ -54,6 +88,8 @@ services:
       - REDIS_PORT=6379
       - REDIS_DB=${REDIS_DB:-0}
       - PYTHONPATH=/app
+      # Proxy to Cirq service on the Compose network (internal port 8000)
+      - CIRQ_AGENT_URL=http://cirq_agent:8000
     volumes:
       # Dev hot-reload (no rebuild needed for code changes)
       - ./backend:/app/backend
@@ -64,6 +100,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      cirq_agent:
+        condition: service_started
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     healthcheck:
       test:
