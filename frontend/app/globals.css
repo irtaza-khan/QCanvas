@@ -24,7 +24,17 @@
     --input: 240 5.9% 90%;
     --ring: 240 5.9% 10%;
     --radius: 0.5rem;
-    --editor-text: #050505;
+    --editor-text: #1f2937;
+    --editor-surface: #f7f9fc;
+    --editor-surface-low: #eef2f8;
+    --editor-surface-lowest: #e6ebf2;
+    --editor-surface-high: #ffffff;
+    --editor-surface-highest: #ffffff;
+    --editor-outline: rgba(65, 71, 85, 0.2);
+    --editor-accent: #2563eb;
+    --framework-qiskit: #2563eb;
+    --framework-cirq: #0f9ea8;
+    --framework-pennylane: #b832a6;
   }
 
   .dark {
@@ -47,7 +57,17 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
-    --editor-text: #d4d4d4;
+    --editor-text: #e5e2e1;
+    --editor-surface: #131313;
+    --editor-surface-low: #1b1b1c;
+    --editor-surface-lowest: #0e0e0e;
+    --editor-surface-high: #2a2a2a;
+    --editor-surface-highest: #353535;
+    --editor-outline: rgba(139, 144, 160, 0.18);
+    --editor-accent: #3291ff;
+    --framework-qiskit: #a7c8ff;
+    --framework-cirq: #46eaed;
+    --framework-pennylane: #ffabf3;
   }
 }
 
@@ -58,11 +78,11 @@
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #1e1e1e;
+  background-color: var(--editor-surface-lowest);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #3e3e42;
+  background-color: color-mix(in srgb, var(--editor-surface-highest) 80%, transparent);
   border-radius: 4px;
 }
 
@@ -117,16 +137,17 @@ body {
 }
 
 .monaco-editor .margin {
-  background-color: #252526;
+  background-color: var(--editor-surface-low);
 }
 
 /* Quantum Explain It: hover tooltip styling (dark) */
 .monaco-editor .monaco-hover {
   z-index: 10000 !important;
-  background-color: #1e1e1e !important;
-  border: 1px solid #60a5fa !important;
+  background-color: color-mix(in srgb, var(--editor-surface-highest) 84%, transparent) !important;
+  border: 1px solid var(--editor-outline) !important;
   border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(96, 165, 250, 0.15);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
 }
 
 /* The overflowingContentWidgets container needs high z-index too */
@@ -135,8 +156,8 @@ body {
 }
 
 .monaco-editor .monaco-hover .monaco-hover-content {
-  background-color: #1e1e1e !important;
-  color: #e2e8f0 !important;
+  background-color: transparent !important;
+  color: var(--editor-text) !important;
   padding: 10px 14px !important;
   max-width: 520px;
 }
@@ -284,15 +305,14 @@ body {
 
 /* Results panel */
 .results-panel {
-  background-color: #1e1e1e;
-  border-top: 1px solid #3e3e42;
+  background-color: var(--editor-surface-lowest);
 }
 
 .results-content {
   padding: 1rem;
   font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', monospace;
   font-size: 0.875rem;
-  color: #d4d4d4;
+  color: var(--editor-text);
 }
 
 /* Toast customization */

@@ -84,14 +84,22 @@ const config: Config = {
           }
         },
         editor: {
-          bg: '#1e1e1e',
-          sidebar: '#252526',
-          border: '#3e3e42',
+          bg: '#131313',
+          sidebar: '#1b1b1c',
+          border: 'rgba(139, 144, 160, 0.18)',
           text: 'var(--editor-text)',
-          accent: '#007acc',
-          'bg-light': '#2d2d30',
-          'border-light': '#4e4e52'
-        }
+          accent: '#3291ff',
+          panelLowest: '#0e0e0e',
+          panelHigh: '#2a2a2a',
+          panelHighest: '#353535',
+          'bg-light': '#f7f9fc',
+          'border-light': 'rgba(65, 71, 85, 0.22)'
+        },
+        framework: {
+          qiskit: '#a7c8ff',
+          cirq: '#46eaed',
+          pennylane: '#ffabf3',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

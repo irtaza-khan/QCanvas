@@ -280,7 +280,7 @@ export default function MenuBar({
     <>
       <div
         ref={barRef}
-        className="h-12 bg-editor-sidebar border-b border-editor-border flex items-center px-3 select-none"
+        className="h-12 bg-editor-sidebar flex items-center px-3 select-none"
       >
         <Link href="/" className="flex items-center gap-2 pr-3">
           <div className="flex items-center justify-center w-6 h-6">
@@ -311,7 +311,7 @@ export default function MenuBar({
             <div key={m.id} className="relative">
               <button
                 type="button"
-                className={`px-2 py-1 text-xs rounded ${openMenu === m.id ? "bg-editor-border text-white" : "text-editor-text hover:bg-editor-border hover:text-white"}`}
+                className={`px-2 py-1 text-xs rounded-md transition-colors ${openMenu === m.id ? "bg-editor-panelHigh text-white" : "text-editor-text hover:bg-editor-panelHigh/85 hover:text-white"}`}
                 onClick={() =>
                   setOpenMenu((cur) => (cur === m.id ? null : m.id))
                 }
@@ -323,7 +323,7 @@ export default function MenuBar({
               </button>
 
               {openMenu === m.id && (
-                <div className="absolute left-0 top-full mt-1 w-56 bg-editor-sidebar border border-editor-border rounded-md shadow-xl z-50 overflow-hidden">
+                <div className="absolute left-0 top-full mt-1.5 w-56 bg-editor-panelHighest/85 backdrop-blur-xl border border-editor-border rounded-md shadow-[0_24px_48px_rgba(0,0,0,0.5)] z-50 overflow-hidden">
                   {menus[m.id].map((item, idx) => (
                     <button
                       key={`${m.id}-${idx}`}
@@ -332,7 +332,7 @@ export default function MenuBar({
                       className={`w-full flex items-center justify-between px-3 py-2 text-xs text-left ${
                         item.disabled
                           ? "opacity-50 cursor-not-allowed text-editor-text"
-                          : "text-editor-text hover:bg-editor-border hover:text-white"
+                          : "text-editor-text hover:bg-editor-panelHigh hover:text-white"
                       }`}
                       onClick={() => {
                         item.onSelect();
@@ -356,7 +356,7 @@ export default function MenuBar({
         <div className="ml-auto flex items-center gap-2">
           <button
             type="button"
-            className="text-xs text-editor-text hover:text-white px-2 py-1 rounded hover:bg-editor-border hidden sm:inline-flex"
+            className="text-xs text-editor-text hover:text-white px-2 py-1 rounded-md hover:bg-editor-panelHigh hidden sm:inline-flex"
             onClick={() => setShowTemplatesPicker(true)}
           >
             Templates
@@ -369,7 +369,7 @@ export default function MenuBar({
           ) : (
             <Link
               href="/login"
-              className="text-xs text-editor-text hover:text-white px-2 py-1 rounded hover:bg-editor-border"
+              className="text-xs text-editor-text hover:text-white px-2 py-1 rounded-md hover:bg-editor-panelHigh"
             >
               Login
             </Link>
@@ -398,7 +398,7 @@ export default function MenuBar({
             aria-label="Close templates picker"
           />
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div className="quantum-glass-dark rounded-2xl p-6 max-w-3xl w-full border border-white/10 shadow-2xl max-h-[80vh] overflow-hidden">
+            <div className="quantum-glass-dark rounded-2xl p-6 max-w-3xl w-full border border-editor-border shadow-[0_24px_48px_rgba(0,0,0,0.5)] max-h-[80vh] overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-white">File Templates</h3>
                 <button
@@ -411,7 +411,7 @@ export default function MenuBar({
                 </button>
               </div>
 
-              <div className="mb-4 flex items-center justify-between rounded-lg border border-editor-border bg-editor-bg/50 px-3 py-2">
+              <div className="mb-4 flex items-center justify-between rounded-lg border border-editor-border bg-editor-panelLowest px-3 py-2">
                 <p className="text-xs text-editor-text">
                   Start quickly with ready-made templates.
                 </p>
@@ -431,7 +431,7 @@ export default function MenuBar({
                 {FILE_TEMPLATES_PRESETS.map((t) => (
                   <div
                     key={t.filename}
-                    className="quantum-glass-dark rounded-lg p-4 border border-white/10 hover:border-quantum-blue-light transition-all duration-200 cursor-pointer"
+                    className="quantum-glass-dark rounded-lg p-4 border border-editor-border hover:border-framework-qiskit/60 transition-all duration-200 cursor-pointer"
                     onClick={async () => {
                       setOpenMenu(null);
                       await useFileStore
@@ -495,7 +495,7 @@ export default function MenuBar({
             aria-label="Close keyboard shortcuts"
           />
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full border border-white/10 shadow-2xl">
+            <div className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full border border-editor-border shadow-[0_24px_48px_rgba(0,0,0,0.5)]">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-white">
                   Keyboard Shortcuts

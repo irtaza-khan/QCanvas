@@ -282,7 +282,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
   if (!isVisible) return null
 
   return (
-    <div className="find-replace-container bg-editor-sidebar border-b border-editor-border shadow-lg">
+    <div className="find-replace-container bg-editor-panelHigh/95 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
       <div className="p-3 space-y-3">
         {/* Find Row */}
         <div className="flex items-center space-x-2">
@@ -296,7 +296,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
                 onChange={(e) => setFindText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Find"
-                className="w-full px-3 py-1.5 bg-editor-bg border border-editor-border rounded text-white placeholder-gray-400 text-sm focus-quantum"
+                className="w-full px-3 py-1.5 bg-editor-panelLowest border border-editor-border rounded text-white placeholder-gray-400 text-sm focus-quantum"
               />
               {totalMatches > 0 && (
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-black dark:text-gray-400">
@@ -331,7 +331,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
             <button
               onClick={() => setMatchCase(!matchCase)}
               className={`p-1 rounded text-xs font-mono ${
-                matchCase ? 'bg-quantum-blue-light text-white' : 'hover:bg-quantum-blue-light/20'
+                matchCase ? 'bg-editor-accent text-white' : 'hover:bg-editor-panelHigh/80'
               }`}
               title="Match Case"
             >
@@ -340,7 +340,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
             <button
               onClick={() => setWholeWord(!wholeWord)}
               className={`p-1 rounded text-xs ${
-                wholeWord ? 'bg-quantum-blue-light text-white' : 'hover:bg-quantum-blue-light/20'
+                wholeWord ? 'bg-editor-accent text-white' : 'hover:bg-editor-panelHigh/80'
               }`}
               title="Match Whole Word"
             >
@@ -349,7 +349,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
             <button
               onClick={() => setUseRegex(!useRegex)}
               className={`p-1 rounded text-xs ${
-                useRegex ? 'bg-quantum-blue-light text-white' : 'hover:bg-quantum-blue-light/20'
+                useRegex ? 'bg-editor-accent text-white' : 'hover:bg-editor-panelHigh/80'
               }`}
               title="Use Regular Expression"
             >
@@ -360,7 +360,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
           {/* Toggle Replace */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-quantum-blue-light/20 rounded"
+            className="p-1 hover:bg-editor-panelHigh/80 rounded"
             title="Toggle Replace"
           >
             <Replace className="w-4 h-4" />
@@ -369,7 +369,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
           {/* Close */}
           <button
             onClick={onClose}
-            className="p-1 hover:bg-quantum-blue-light/20 rounded"
+            className="p-1 hover:bg-editor-panelHigh/80 rounded"
             title="Close (Escape)"
           >
             <X className="w-4 h-4" />
@@ -388,7 +388,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
                 onChange={(e) => setReplaceText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Replace"
-                className="flex-1 px-3 py-1.5 bg-editor-bg border border-editor-border rounded text-white placeholder-gray-400 text-sm focus-quantum"
+                className="flex-1 px-3 py-1.5 bg-editor-panelLowest border border-editor-border rounded text-white placeholder-gray-400 text-sm focus-quantum"
               />
             </div>
 
@@ -397,7 +397,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
               <button
                 onClick={replaceOne}
                 disabled={totalMatches === 0}
-                className="px-3 py-1 text-xs bg-editor-bg border border-editor-border rounded hover:bg-editor-border disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-xs bg-editor-panelLowest border border-editor-border rounded hover:bg-editor-panelHigh disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Replace"
               >
                 Replace
@@ -405,7 +405,7 @@ export default function FindReplace({ isVisible, onClose, mode, editorRef }: Fin
               <button
                 onClick={replaceAll}
                 disabled={totalMatches === 0}
-                className="px-3 py-1 text-xs bg-editor-bg border border-editor-border rounded hover:bg-editor-border disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-xs bg-editor-panelLowest border border-editor-border rounded hover:bg-editor-panelHigh disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Replace All"
               >
                 All

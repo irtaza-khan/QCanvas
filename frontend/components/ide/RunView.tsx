@@ -28,7 +28,7 @@ export default function RunView({
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="h-10 px-3 flex items-center border-b border-editor-border">
+      <div className="h-10 px-3 flex items-center bg-editor-sidebar/80">
         <div className="text-xs font-semibold tracking-wider text-black dark:text-gray-400 uppercase">Run</div>
       </div>
 
@@ -43,7 +43,7 @@ export default function RunView({
               className={`px-2 py-2 text-xs rounded border ${
                 executionMode === m
                   ? 'bg-editor-accent border-editor-accent text-white'
-                  : 'bg-editor-bg border-editor-border text-editor-text hover:bg-editor-border'
+                  : 'bg-editor-panelLowest border-editor-border text-editor-text hover:bg-editor-panelHigh'
               }`}
             >
               {m}
@@ -61,7 +61,7 @@ export default function RunView({
         </button>
 
         {executionMode === 'basic' && (
-          <div className="pt-3 border-t border-editor-border">
+          <div className="pt-3">
             <SimulationControls
               inputLanguage={inputLanguage}
               setInputLanguage={setInputLanguage}

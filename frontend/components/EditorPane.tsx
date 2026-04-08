@@ -71,7 +71,7 @@ export default function EditorPane({
   setSimBackend,
   shots,
   setShots,
-}: EditorPaneProps) {
+}: Readonly<EditorPaneProps>) {
   const { getActiveFile, updateFileContent, saveActiveFile, theme } =
     useFileStore();
   const executionMode = useFileStore((s) => s.executionMode);
@@ -80,6 +80,12 @@ export default function EditorPane({
   const monacoRef = useRef<any>(null);
   const hoverProviderRef = useRef<any>(null);
   const completionProviderRef = useRef<any>(null);
+  const hoverProviderPythonqRef = useRef<any>(null);
+  const completionProviderPythonqRef = useRef<any>(null);
+  const qasmTokensProviderRef = useRef<any>(null);
+  const qasmConfigProviderRef = useRef<any>(null);
+  const pythonqTokensProviderRef = useRef<any>(null);
+  const pythonqConfigProviderRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const runMenuRef = useRef<HTMLDivElement>(null);
   const activeFile = getActiveFile();
@@ -248,9 +254,33 @@ export default function EditorPane({
       hoverProviderRef.current.dispose();
       hoverProviderRef.current = null;
     }
+    if (hoverProviderPythonqRef.current) {
+      hoverProviderPythonqRef.current.dispose();
+      hoverProviderPythonqRef.current = null;
+    }
     if (completionProviderRef.current) {
       completionProviderRef.current.dispose();
       completionProviderRef.current = null;
+    }
+    if (completionProviderPythonqRef.current) {
+      completionProviderPythonqRef.current.dispose();
+      completionProviderPythonqRef.current = null;
+    }
+    if (qasmTokensProviderRef.current) {
+      qasmTokensProviderRef.current.dispose();
+      qasmTokensProviderRef.current = null;
+    }
+    if (qasmConfigProviderRef.current) {
+      qasmConfigProviderRef.current.dispose();
+      qasmConfigProviderRef.current = null;
+    }
+    if (pythonqTokensProviderRef.current) {
+      pythonqTokensProviderRef.current.dispose();
+      pythonqTokensProviderRef.current = null;
+    }
+    if (pythonqConfigProviderRef.current) {
+      pythonqConfigProviderRef.current.dispose();
+      pythonqConfigProviderRef.current = null;
     }
 
     // Ensure Ctrl+A selects all text as a single continuous selection
@@ -288,21 +318,37 @@ export default function EditorPane({
       base: "vs-dark",
       inherit: true,
       rules: [
-        { token: "comment", foreground: "6A9955" },
-        { token: "keyword", foreground: "569CD6" },
-        { token: "string", foreground: "CE9178" },
-        { token: "number", foreground: "B5CEA8" },
-        { token: "operator", foreground: "D4D4D4" },
-        { token: "identifier", foreground: "9CDCFE" },
+        { token: "", foreground: "E5E2E1" },
+        { token: "comment", foreground: "8B90A0", fontStyle: "italic" },
+        { token: "keyword", foreground: "A7C8FF" },
+        { token: "keyword.control", foreground: "A7C8FF" },
+        { token: "keyword.operator", foreground: "E5E2E1" },
+        { token: "string", foreground: "46EAED" },
+        { token: "string.escape", foreground: "46EAED" },
+        { token: "number", foreground: "FFABF3" },
+        { token: "type", foreground: "A7C8FF" },
+        { token: "type.identifier", foreground: "A7C8FF" },
+        { token: "function", foreground: "46EAED" },
+        { token: "identifier", foreground: "E5E2E1" },
+        { token: "delimiter", foreground: "8B90A0" },
       ],
       colors: {
-        "editor.background": "#1e1e1e",
-        "editor.foreground": "#d4d4d4",
-        "editor.lineHighlightBackground": "#2a2d2e",
-        "editor.selectionBackground": "#264f78",
-        "editor.inactiveSelectionBackground": "#3a3d41",
-        "editorCursor.foreground": "#aeafad",
-        "editorWhitespace.foreground": "#3e3e42",
+        "editor.background": "#131313",
+        "editor.foreground": "#e5e2e1",
+        "editor.lineHighlightBackground": "#1b1b1c",
+        "editor.selectionBackground": "#2f4d74",
+        "editor.inactiveSelectionBackground": "#2a2a2a",
+        "editorCursor.foreground": "#a7c8ff",
+        "editorWhitespace.foreground": "#414755",
+        "editorGutter.background": "#0e0e0e",
+        "editorLineNumber.foreground": "#8b90a0",
+        "editorLineNumber.activeForeground": "#e5e2e1",
+        "editorBracketHighlight.foreground1": "#a7c8ff",
+        "editorBracketHighlight.foreground2": "#46eaed",
+        "editorBracketHighlight.foreground3": "#ffabf3",
+        "editorBracketHighlight.foreground4": "#a7c8ff",
+        "editorBracketHighlight.foreground5": "#46eaed",
+        "editorBracketHighlight.foreground6": "#ffabf3",
       },
     });
 
@@ -310,21 +356,37 @@ export default function EditorPane({
       base: "vs",
       inherit: true,
       rules: [
-        { token: "comment", foreground: "6B7280" },
-        { token: "keyword", foreground: "7C3AED" },
-        { token: "string", foreground: "059669" },
-        { token: "number", foreground: "DC2626" },
-        { token: "operator", foreground: "1F2937" },
+        { token: "", foreground: "1F2937" },
+        { token: "comment", foreground: "64748B", fontStyle: "italic" },
+        { token: "keyword", foreground: "2563EB" },
+        { token: "keyword.control", foreground: "2563EB" },
+        { token: "keyword.operator", foreground: "1F2937" },
+        { token: "string", foreground: "0F9EA8" },
+        { token: "string.escape", foreground: "0F9EA8" },
+        { token: "number", foreground: "B832A6" },
+        { token: "type", foreground: "2563EB" },
+        { token: "type.identifier", foreground: "2563EB" },
+        { token: "function", foreground: "0F9EA8" },
         { token: "identifier", foreground: "1F2937" },
+        { token: "delimiter", foreground: "64748B" },
       ],
       colors: {
-        "editor.background": "#ffffff",
+        "editor.background": "#f7f9fc",
         "editor.foreground": "#1f2937",
-        "editor.lineHighlightBackground": "#f8fafc",
-        "editor.selectionBackground": "#dbeafe",
-        "editor.inactiveSelectionBackground": "#f1f5f9",
-        "editorCursor.foreground": "#1f2937",
-        "editorWhitespace.foreground": "#e5e7eb",
+        "editor.lineHighlightBackground": "#eef2f8",
+        "editor.selectionBackground": "#d9e8ff",
+        "editor.inactiveSelectionBackground": "#e6ebf2",
+        "editorCursor.foreground": "#2563eb",
+        "editorWhitespace.foreground": "#cbd5e1",
+        "editorGutter.background": "#eef2f8",
+        "editorLineNumber.foreground": "#64748b",
+        "editorLineNumber.activeForeground": "#1f2937",
+        "editorBracketHighlight.foreground1": "#2563eb",
+        "editorBracketHighlight.foreground2": "#0f9ea8",
+        "editorBracketHighlight.foreground3": "#b832a6",
+        "editorBracketHighlight.foreground4": "#2563eb",
+        "editorBracketHighlight.foreground5": "#0f9ea8",
+        "editorBracketHighlight.foreground6": "#b832a6",
       },
     });
 
@@ -332,6 +394,438 @@ export default function EditorPane({
     monacoInstance.editor.setTheme(
       theme === "light" ? "quantum-light" : "quantum-dark",
     );
+
+    // Register OpenQASM language + tokenizer (Monarch)
+    // Monaco has no built-in QASM, so we provide minimal tokenization.
+    const ensureQasmLanguage = () => {
+      const existing = monacoInstance.languages
+        .getLanguages()
+        ?.some((l: any) => l.id === "qasm");
+
+      if (!existing) {
+        monacoInstance.languages.register({
+          id: "qasm",
+          extensions: [".qasm", ".qasm3"],
+          aliases: ["OpenQASM", "QASM", "qasm"],
+          mimetypes: ["text/x-qasm"],
+        });
+      }
+
+      qasmConfigProviderRef.current =
+        monacoInstance.languages.setLanguageConfiguration("qasm", {
+          comments: {
+            lineComment: "//",
+            blockComment: ["/*", "*/"],
+          },
+          brackets: [
+            ["{", "}"],
+            ["[", "]"],
+            ["(", ")"],
+          ],
+          autoClosingPairs: [
+            { open: "{", close: "}" },
+            { open: "[", close: "]" },
+            { open: "(", close: ")" },
+            { open: '"', close: '"' },
+          ],
+          surroundingPairs: [
+            { open: "{", close: "}" },
+            { open: "[", close: "]" },
+            { open: "(", close: ")" },
+            { open: '"', close: '"' },
+          ],
+        });
+
+      const keywords = [
+        "OPENQASM",
+        "include",
+        "def",
+        "gate",
+        "cal",
+        "extern",
+        "const",
+        "input",
+        "output",
+        "return",
+        "if",
+        "else",
+        "for",
+        "while",
+        "break",
+        "continue",
+        "end",
+        "barrier",
+        "measure",
+        "reset",
+        "let",
+      ];
+
+      const types = [
+        "qubit",
+        "bit",
+        "int",
+        "uint",
+        "float",
+        "angle",
+        "bool",
+        "complex",
+        "duration",
+        "stretch",
+        "array",
+      ];
+
+      // Common built-in functions/macros (non-exhaustive)
+      const builtins = [
+        "sin",
+        "cos",
+        "tan",
+        "asin",
+        "acos",
+        "atan",
+        "atan2",
+        "exp",
+        "ln",
+        "sqrt",
+        "pow",
+        "mod",
+        "abs",
+        "min",
+        "max",
+        "popcount",
+      ];
+
+      qasmTokensProviderRef.current =
+        monacoInstance.languages.setMonarchTokensProvider("qasm", {
+          keywords,
+          types,
+          builtins,
+          tokenizer: {
+            root: [
+              // Whitespace
+              { include: "@whitespace" },
+
+              // Directives / version
+              [/(OPENQASM)(\s+)(\d+(\.\d+)?)(\s*;)/, ["keyword", "", "number", "number", "delimiter"]],
+
+              // Identifiers and keywords
+              [
+                /[a-zA-Z_]\w*/,
+                {
+                  cases: {
+                    "@keywords": "keyword",
+                    "@types": "type",
+                    "@builtins": "function",
+                    "@default": "identifier",
+                  },
+                },
+              ],
+
+              // Numbers
+              [/\d+(_\d+)*(\.\d+(_\d+)*)?([eE][+-]?\d+)?/, "number"],
+
+              // Strings
+              [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
+
+              // Operators & delimiters
+              [/[-+*/%]=?/, "operator"],
+              [/==|!=|<=|>=|<|>|&&|\|\||!/, "operator"],
+              [/[[\]{}()]/, "@brackets"],
+              [/[,.;:]/, "delimiter"],
+
+              // Annotations (e.g., @foo)
+              [/@[a-zA-Z_]\w*/, "annotation"],
+            ],
+
+            whitespace: [
+              [/[ \t\r\n]+/, ""],
+              [/\/\*/, "comment", "@comment"],
+              [/\/\/.*$/, "comment"],
+            ],
+
+            comment: [
+              [/[^/*]+/, "comment"],
+              [/\*\//, "comment", "@pop"],
+              [/[/*]/, "comment"],
+            ],
+
+            string: [
+              [/[^\\"]+/, "string"],
+              [/\\./, "string.escape"],
+              [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }],
+            ],
+          },
+        });
+    };
+
+    ensureQasmLanguage();
+
+    // Register Python+Quantum language mode (Monarch)
+    // Keeps normal Python highlighting strong and also highlights quantum gates/classes.
+    const ensurePythonQuantumLanguage = () => {
+      const existing = monacoInstance.languages
+        .getLanguages()
+        ?.some((l: any) => l.id === "pythonq");
+
+      if (!existing) {
+        monacoInstance.languages.register({
+          id: "pythonq",
+          extensions: [".py"],
+          aliases: ["Python (Quantum)", "pythonq"],
+          mimetypes: ["text/x-python"],
+        });
+      }
+
+      pythonqConfigProviderRef.current =
+        monacoInstance.languages.setLanguageConfiguration("pythonq", {
+          comments: { lineComment: "#" },
+          brackets: [
+            ["{", "}"],
+            ["[", "]"],
+            ["(", ")"],
+          ],
+          autoClosingPairs: [
+            { open: "{", close: "}" },
+            { open: "[", close: "]" },
+            { open: "(", close: ")" },
+            { open: '"', close: '"' },
+            { open: "'", close: "'" },
+          ],
+          surroundingPairs: [
+            { open: "{", close: "}" },
+            { open: "[", close: "]" },
+            { open: "(", close: ")" },
+            { open: '"', close: '"' },
+            { open: "'", close: "'" },
+          ],
+        });
+
+      const pyKeywords = [
+        "False",
+        "None",
+        "True",
+        "and",
+        "as",
+        "assert",
+        "async",
+        "await",
+        "break",
+        "class",
+        "continue",
+        "def",
+        "del",
+        "elif",
+        "else",
+        "except",
+        "finally",
+        "for",
+        "from",
+        "global",
+        "if",
+        "import",
+        "in",
+        "is",
+        "lambda",
+        "nonlocal",
+        "not",
+        "or",
+        "pass",
+        "raise",
+        "return",
+        "try",
+        "while",
+        "with",
+        "yield",
+        "match",
+        "case",
+      ];
+
+      const builtins = [
+        "print",
+        "len",
+        "range",
+        "list",
+        "dict",
+        "set",
+        "tuple",
+        "int",
+        "float",
+        "str",
+        "bool",
+        "sum",
+        "min",
+        "max",
+        "enumerate",
+        "zip",
+        "map",
+        "filter",
+        "any",
+        "all",
+        "isinstance",
+      ];
+
+      const quantumGateMethods = [
+        "h",
+        "x",
+        "y",
+        "z",
+        "s",
+        "sdg",
+        "t",
+        "tdg",
+        "rx",
+        "ry",
+        "rz",
+        "u",
+        "u1",
+        "u2",
+        "u3",
+        "cx",
+        "cnot",
+        "cz",
+        "cy",
+        "ch",
+        "cp",
+        "crx",
+        "cry",
+        "crz",
+        "swap",
+        "cswap",
+        "ccx",
+        "toffoli",
+        "ccz",
+        "barrier",
+        "measure",
+        "measure_all",
+        "reset",
+      ];
+
+      const quantumGateClasses = [
+        "H",
+        "X",
+        "Y",
+        "Z",
+        "S",
+        "T",
+        "CNOT",
+        "CX",
+        "CZ",
+        "CY",
+        "CH",
+        "SWAP",
+        "CSWAP",
+        "CCX",
+        "CCZ",
+        "RX",
+        "RY",
+        "RZ",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CP",
+        "Hadamard",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Rot",
+        "PhaseShift",
+      ];
+
+      pythonqTokensProviderRef.current =
+        monacoInstance.languages.setMonarchTokensProvider("pythonq", {
+          keywords: pyKeywords,
+          builtins,
+          quantumGateMethods,
+          quantumGateClasses,
+          tokenizer: {
+            root: [
+              { include: "@whitespace" },
+
+              [/#.*$/, "comment"],
+
+              [/'''/, "string.quote", "@stringS3"],
+              [/"""/, "string.quote", "@stringD3"],
+              [/'/, "string.quote", "@stringS"],
+              [/"/, "string.quote", "@stringD"],
+
+              [/\d+(_\d+)*(\.\d+(_\d+)*)?([eE][+-]?\d+)?/, "number"],
+
+              [/@[a-zA-Z_]\w*/, "annotation"],
+
+              // `.h(`, `.cx(`, `.measure_all(` ...
+              [
+                /(\.)([a-zA-Z_]\w*)(\s*)(\()/,
+                {
+                  cases: {
+                    "$2@quantumGateMethods": [
+                      "delimiter",
+                      "function",
+                      "",
+                      "delimiter.parenthesis",
+                    ],
+                    "@default": [
+                      "delimiter",
+                      "identifier",
+                      "",
+                      "delimiter.parenthesis",
+                    ],
+                  },
+                },
+              ],
+
+              // Gate classes like `CNOT`, `RX`, etc.
+              [
+                /\b([A-Z][A-Za-z0-9_]*)\b/,
+                {
+                  cases: {
+                    "@quantumGateClasses": "function",
+                    "@default": "type.identifier",
+                  },
+                },
+              ],
+
+              [
+                /[a-zA-Z_]\w*/,
+                {
+                  cases: {
+                    "@keywords": "keyword",
+                    "@builtins": "function",
+                    "@default": "identifier",
+                  },
+                },
+              ],
+
+              [/==|!=|<=|>=|<|>|:=|=|\+|\-|\*|\/|%|\*\*|\||&|\^|~|<<|>>/, "operator"],
+              [/[,.;:]/, "delimiter"],
+              [/[[\]{}()]/, "@brackets"],
+            ],
+
+            whitespace: [[/[ \t\r\n]+/, ""]],
+
+            stringS: [
+              [/[^\\']+/, "string"],
+              [/\\./, "string.escape"],
+              [/'/, "string.quote", "@pop"],
+            ],
+            stringD: [
+              [/[^\\"]+/, "string"],
+              [/\\./, "string.escape"],
+              [/"/, "string.quote", "@pop"],
+            ],
+            stringS3: [
+              [/[^']+/, "string"],
+              [/'''/, "string.quote", "@pop"],
+              [/'/, "string"],
+            ],
+            stringD3: [
+              [/[^"]+/, "string"],
+              [/"""/, "string.quote", "@pop"],
+              [/"/, "string"],
+            ],
+          },
+        });
+    };
+
+    ensurePythonQuantumLanguage();
 
     // Add keyboard shortcuts
     editor.addCommand(
@@ -359,9 +853,9 @@ export default function EditorPane({
       },
     );
 
-    // Add quantum-specific snippets for Python/Qiskit
-    completionProviderRef.current =
-      monacoInstance.languages.registerCompletionItemProvider("python", {
+    // Add quantum-specific snippets for Python/Qiskit (register for both python + pythonq)
+    const registerQuantumSnippets = (langId: string) =>
+      monacoInstance.languages.registerCompletionItemProvider(langId, {
         provideCompletionItems: () => {
           return {
             suggestions: [
@@ -421,10 +915,13 @@ export default function EditorPane({
         },
       });
 
+    // Keep existing ref semantics; register pythonq alongside.
+    completionProviderRef.current = registerQuantumSnippets("python");
+    completionProviderPythonqRef.current = registerQuantumSnippets("pythonq");
+
     // Quantum Explain It: hover tooltips for framework symbols (when explainItMode is on)
-    hoverProviderRef.current = monacoInstance.languages.registerHoverProvider(
-      "python",
-      {
+    const registerQuantumHover = (langId: string) =>
+      monacoInstance.languages.registerHoverProvider(langId, {
         provideHover: (model: any, position: any) => {
           if (!useFileStore.getState().explainItMode) return null;
           const wordAt = model.getWordAtPosition(position);
@@ -452,8 +949,10 @@ export default function EditorPane({
             range,
           };
         },
-      },
-    );
+      });
+
+    hoverProviderRef.current = registerQuantumHover("python");
+    hoverProviderPythonqRef.current = registerQuantumHover("pythonq");
   };
 
   const handleEditorChange = (value: string | undefined) => {
@@ -513,7 +1012,7 @@ export default function EditorPane({
   const getMonacoLanguage = (language: string) => {
     switch (language) {
       case "python":
-        return "python";
+        return "pythonq";
       case "javascript":
         return "javascript";
       case "typescript":
@@ -521,7 +1020,7 @@ export default function EditorPane({
       case "json":
         return "json";
       case "qasm":
-        return "plaintext"; // Monaco doesn't have QASM support, use plaintext
+        return "qasm";
       default:
         return "plaintext";
     }
@@ -782,11 +1281,11 @@ export default function EditorPane({
             height="100%"
             path={activeFile.id}
             language={getMonacoLanguage(activeFile.language)}
+            theme={theme === "light" ? "quantum-light" : "quantum-dark"}
             value={activeFile.content}
             onChange={handleEditorChange}
             onMount={handleEditorDidMount}
             options={{
-              theme: theme === "light" ? "quantum-light" : "quantum-dark",
               fixedOverflowWidgets: true,
               fontSize: 14,
               fontFamily:

@@ -25,15 +25,17 @@ type TreeNode =
 function getFileAccentClasses(fileName: string): { icon: string; dot: string } {
   const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
 
-  if (ext === "py") return { icon: "text-yellow-300", dot: "bg-yellow-400" };
-  if (ext === "qasm") return { icon: "text-cyan-300", dot: "bg-cyan-400" };
+  if (ext === "py")
+    return { icon: "text-framework-qiskit", dot: "bg-framework-qiskit" };
+  if (ext === "qasm")
+    return { icon: "text-framework-cirq", dot: "bg-framework-cirq" };
   if (ext === "md") return { icon: "text-sky-300", dot: "bg-sky-400" };
   if (ext === "json")
     return { icon: "text-emerald-300", dot: "bg-emerald-400" };
   if (ext === "ts" || ext === "tsx")
-    return { icon: "text-blue-300", dot: "bg-blue-400" };
+    return { icon: "text-framework-qiskit", dot: "bg-framework-qiskit" };
   if (ext === "js" || ext === "jsx")
-    return { icon: "text-amber-300", dot: "bg-amber-400" };
+    return { icon: "text-framework-pennylane", dot: "bg-framework-pennylane" };
 
   return { icon: "text-editor-text", dot: "bg-editor-text" };
 }
@@ -542,8 +544,8 @@ export default function ExplorerView() {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-gradient-to-b from-editor-sidebar to-editor-bg/95">
-      <div className="px-3 py-2.5 border-b border-editor-border/80 bg-editor-sidebar/80 backdrop-blur-sm">
+    <div className="h-full flex flex-col overflow-hidden bg-editor-sidebar">
+      <div className="px-3 py-2.5 bg-editor-sidebar/90 backdrop-blur-sm">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="text-[11px] font-semibold tracking-[0.14em] text-black dark:text-gray-400 uppercase">
@@ -555,7 +557,7 @@ export default function ExplorerView() {
           </div>
           <div className="flex items-center gap-1 min-w-0">
             <select
-              className="max-w-[150px] bg-editor-bg/95 border border-editor-border rounded-md px-2 py-1 text-xs text-editor-text shadow-sm"
+              className="max-w-[150px] bg-editor-panelLowest border border-editor-border rounded-md px-2 py-1 text-xs text-editor-text shadow-sm"
               value={activeProjectId?.toString() ?? ""}
               onChange={(e) => handleProjectChange(e.target.value)}
               title="Switch project"
@@ -569,7 +571,7 @@ export default function ExplorerView() {
             </select>
             <button
               type="button"
-              className="p-1.5 rounded-md border border-transparent hover:bg-editor-border/50 hover:border-editor-border/70 text-editor-text transition-colors"
+              className="p-1.5 rounded-md border border-transparent hover:bg-editor-panelHigh/70 hover:border-editor-border text-editor-text transition-colors"
               title="New Project"
               onClick={startCreateProject}
             >
@@ -577,7 +579,7 @@ export default function ExplorerView() {
             </button>
             <button
               type="button"
-              className="p-1.5 rounded-md border border-transparent hover:bg-editor-border/50 hover:border-editor-border/70 text-editor-text transition-colors"
+              className="p-1.5 rounded-md border border-transparent hover:bg-editor-panelHigh/70 hover:border-editor-border text-editor-text transition-colors"
               title="New Folder"
               onClick={() => startCreateFolder()}
             >
@@ -585,7 +587,7 @@ export default function ExplorerView() {
             </button>
             <button
               type="button"
-              className="p-1.5 rounded-md border border-transparent hover:bg-editor-border/50 hover:border-editor-border/70 text-editor-text transition-colors"
+              className="p-1.5 rounded-md border border-transparent hover:bg-editor-panelHigh/70 hover:border-editor-border text-editor-text transition-colors"
               title={
                 selectedFolderId ? "New File in Selected Folder" : "New File"
               }
@@ -708,7 +710,7 @@ export default function ExplorerView() {
 
       {contextMenu && (
         <div
-          className="fixed z-[120] min-w-[180px] bg-gradient-to-b from-editor-sidebar to-editor-bg/95 border border-editor-border/90 rounded-lg shadow-[0_10px_28px_rgba(0,0,0,0.45)] p-1.5 backdrop-blur-sm"
+          className="fixed z-[120] min-w-[180px] bg-editor-panelHighest/90 border border-editor-border rounded-lg shadow-[0_24px_48px_rgba(0,0,0,0.5)] p-1.5 backdrop-blur-xl"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >

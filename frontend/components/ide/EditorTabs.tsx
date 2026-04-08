@@ -19,13 +19,15 @@ export default function EditorTabs() {
   if (openFiles.length === 0) return null
 
   return (
-    <div className="h-9 bg-editor-sidebar border-b border-editor-border flex items-center overflow-x-auto">
+    <div className="h-9 bg-editor-sidebar flex items-end overflow-x-auto px-1.5 gap-0.5">
       {openFiles.map((f: any) => (
         <button
           key={f.id}
           type="button"
-          className={`flex items-center gap-2 px-3 h-full border-r border-editor-border ${
-            activeFileId === f.id ? 'bg-editor-bg text-white' : 'text-editor-text hover:bg-editor-border/50'
+          className={`flex items-center gap-2 px-3 h-8 rounded-t-md transition-colors ${
+            activeFileId === f.id
+              ? 'bg-editor-bg text-white'
+              : 'bg-editor-sidebar text-editor-text hover:bg-editor-panelHigh/70'
           }`}
           onClick={() => openFile(f.id)}
           role="tab"
@@ -34,7 +36,7 @@ export default function EditorTabs() {
           <span className="text-xs whitespace-nowrap">{f.name}</span>
           <button
             type="button"
-            className="p-1 rounded hover:bg-editor-border/70"
+            className="p-1 rounded hover:bg-editor-panelHigh"
             onClick={(e) => {
               e.stopPropagation()
               closeFile(f.id)

@@ -470,7 +470,7 @@ export default function ResultsPane() {
 
   if (resultsCollapsed) {
     return (
-      <div className="h-8 bg-editor-sidebar border-t border-editor-border flex items-center justify-between px-4">
+      <div className="h-8 bg-editor-panelLowest flex items-center justify-between px-4">
         <div className="flex items-center space-x-2">
           <ResultIcon className="w-4 h-4 text-editor-text" />
           <span className="text-sm text-editor-text">Results</span>
@@ -487,9 +487,9 @@ export default function ResultsPane() {
   }
 
   return (
-    <div className="h-full results-panel flex flex-col">
+    <div className="h-full results-panel flex flex-col bg-editor-panelLowest">
       {/* Results Header */}
-      <div className="h-12 bg-editor-sidebar border-b border-editor-border flex items-center justify-between px-4 flex-shrink-0">
+      <div className="h-12 bg-editor-sidebar/90 flex items-center justify-between px-4 flex-shrink-0">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <ResultIcon className="w-4 h-4 text-editor-text" />
@@ -511,7 +511,7 @@ export default function ResultsPane() {
                 onClick={() => setActiveTab(id as any)}
                 className={`px-3 py-1 text-xs rounded-md transition-colors flex items-center ${activeTab === id
                   ? 'bg-editor-accent text-white'
-                  : 'text-editor-text hover:bg-editor-border'
+                  : 'text-editor-text hover:bg-editor-panelHigh'
                   }`}
               >
                 <Icon className="w-3 h-3 mr-1" />
@@ -575,7 +575,7 @@ export default function ResultsPane() {
             ) : (
               <div className="space-y-1">
                 {logs.map((log) => (
-                  <div key={log.id} className="flex items-start space-x-3 py-1 hover:bg-editor-border hover:bg-opacity-50 rounded px-2">
+                  <div key={log.id} className="flex items-start space-x-3 py-1 hover:bg-editor-panelHigh/70 rounded px-2">
                     <span className="text-xs text-black dark:text-gray-500 mt-0.5 min-w-[60px]">
                       {formatTimestamp(log.timestamp)}
                     </span>
@@ -587,7 +587,7 @@ export default function ResultsPane() {
                     </span>
                     <button
                       onClick={() => copyToClipboard(log.message)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-editor-border rounded"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-editor-panelHigh rounded"
                       title="Copy"
                     >
                       <Copy className="w-3 h-3" />
@@ -702,7 +702,7 @@ export default function ResultsPane() {
                       </h4>
                       <div className="space-y-3">
                         {hybridResult.simulation_results.map((result, idx) => (
-                          <div key={idx} className="bg-editor-bg border border-editor-border rounded-lg p-3">
+                          <div key={idx} className="bg-editor-panelLowest border border-editor-border rounded-lg p-3">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-xs font-medium text-black dark:text-gray-400">
                                 Simulation #{idx + 1}
@@ -743,7 +743,7 @@ export default function ResultsPane() {
                         <FileCode2 className="w-4 h-4 mr-2 text-purple-400" />
                         Generated QASM
                       </h4>
-                      <div className="bg-editor-bg border border-editor-border rounded-lg p-3">
+                      <div className="bg-editor-panelLowest border border-editor-border rounded-lg p-3">
                         <pre className="text-sm text-editor-text whitespace-pre-wrap">
                           {hybridResult.qasm_generated}
                         </pre>
@@ -804,7 +804,7 @@ export default function ResultsPane() {
                       : 'No execution results available. Run the circuit to see output.'}
                   </p>
                   {executionMode === 'expert' && (
-                    <div className="mt-4 text-left max-w-md mx-auto bg-editor-bg p-4 rounded-lg border border-editor-border">
+                    <div className="mt-4 text-left max-w-md mx-auto bg-editor-panelLowest p-4 rounded-lg border border-editor-border">
                       <p className="text-xs text-black dark:text-gray-400 mb-3">Example hybrid code:</p>
                       <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap">
                         {`import cirq
@@ -938,13 +938,13 @@ print(result.counts)`}
                     // Don't pass nQubits - let the function infer from actual state strings
                     const sortedStates = getAllStatesWithCounts(probsAsCounts, 0, shots)
                     return (
-                      <div className="mt-4 pt-4 border-t border-editor-border">
+                      <div className="mt-4 pt-4 border-t border-editor-border/50">
                         <h5 className="text-xs font-medium text-black dark:text-gray-400 mb-2">State Probabilities</h5>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                           {sortedStates.map(([state]) => {
                             const prob = simulationResults.probs![state] || 0
                             return (
-                              <div key={state} className="bg-editor-bg border border-editor-border rounded px-2 py-1">
+                              <div key={state} className="bg-editor-panelLowest border border-editor-border rounded px-2 py-1">
                                 <span className="text-black dark:text-gray-400">|{state}⟩:</span>
                                 <span className="text-white ml-1 font-mono">{(prob * 100).toFixed(2)}%</span>
                               </div>
@@ -973,7 +973,7 @@ print(result.counts)`}
                 <p className="text-sm">No compiled OpenQASM yet. Select &quot;Compile&quot; mode and run to generate QASM.</p>
               </div>
             ) : (
-              <div className="bg-editor-bg border border-editor-border rounded p-3">
+              <div className="bg-editor-panelLowest border border-editor-border rounded p-3">
                 <pre className="text-sm text-editor-text whitespace-pre-wrap">{compiledQasm}</pre>
               </div>
             )}
