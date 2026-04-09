@@ -124,6 +124,7 @@ interface FileStore extends EditorState {
   saveActiveFile: () => Promise<void>
   createFile: (name: string, content?: string, projectId?: number, isShared?: boolean, folderId?: string) => Promise<void>
   renameFile: (fileId: string, newName: string) => Promise<void>
+  moveFileToFolder: (fileId: string, folderId: string | null) => Promise<void>
 }
 
 // =============================================================================
@@ -147,6 +148,70 @@ const getDefaultNewFileContent = (name: string, content?: string) => {
   const language = getLanguageFromFilename(name)
   if (language === 'python') return BASIC_QISKIT_BELL_TEMPLATE
   return FILE_TEMPLATES[language] ?? ''
+}
+
+const splitFilename = (name: string) => {
+  const trimmed = name.trim()
+  const dot = trimmed.lastIndexOf('.')
+  if (dot <= 0 || dot === trimmed.length - 1) {
+    return { base: trimmed, ext: '' }
+  }
+  return { base: trimmed.slice(0, dot), ext: trimmed.slice(dot) }
+}
+
+const makeUniqueFilename = (desiredName: string, existingNames: string[]) => {
+  const existing = new Set(existingNames.map((n) => n.trim().toLowerCase()))
+  const desiredTrimmed = desiredName.trim()
+  if (!desiredTrimmed) return desiredName
+
+  if (!existing.has(desiredTrimmed.toLowerCase())) return desiredTrimmed
+
+  const { base, ext } = splitFilename(desiredTrimmed)
+  let i = 1
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const candidate = `${base} (${i})${ext}`
+    if (!existing.has(candidate.toLowerCase())) return candidate
+    i += 1
+  }
+}
+
+const makeUniqueFolderName = (desiredName: string, existingNames: string[]) => {
+  const existing = new Set(existingNames.map((n) => n.trim().toLowerCase()))
+  const desiredTrimmed = desiredName.trim()
+  if (!desiredTrimmed) return desiredName
+
+  if (!existing.has(desiredTrimmed.toLowerCase())) return desiredTrimmed
+
+  let i = 1
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const candidate = `${desiredTrimmed} (${i})`
+    if (!existing.has(candidate.toLowerCase())) return candidate
+    i += 1
+  }
+}
+
+const collectDescendantFolderIds = (folders: Folder[], rootFolderId: string) => {
+  const childrenByParent = new Map<string, string[]>()
+  for (const f of folders) {
+    const parent = f.parentId
+    if (!parent) continue
+    const list = childrenByParent.get(parent) ?? []
+    list.push(f.id)
+    childrenByParent.set(parent, list)
+  }
+
+  const result = new Set<string>()
+  const stack = [rootFolderId]
+  while (stack.length > 0) {
+    const cur = stack.pop() as string
+    if (result.has(cur)) continue
+    result.add(cur)
+    const kids = childrenByParent.get(cur) ?? []
+    for (const k of kids) stack.push(k)
+  }
+  return result
 }
 
 // Initial files - quantum algorithm examples from different frameworks
@@ -436,12 +501,13 @@ export const useFileStore = create<FileStore>()(
       },
 
       addFile: (name, content) => {
-        const language = getLanguageFromFilename(name)
-        const defaultContent = getDefaultNewFileContent(name, content)
+        const uniqueName = makeUniqueFilename(name, get().files.map((f) => f.name))
+        const language = getLanguageFromFilename(uniqueName)
+        const defaultContent = getDefaultNewFileContent(uniqueName, content)
 
         const newFile: File = {
           id: generateId(),
-          name,
+          name: uniqueName,
           content: defaultContent,
           language,
           createdAt: new Date().toISOString(),
@@ -463,12 +529,13 @@ export const useFileStore = create<FileStore>()(
 
       // Create a new file but keep the current active file unchanged
       addFileWithoutActivating: (name, content) => {
-        const language = getLanguageFromFilename(name)
-        const defaultContent = getDefaultNewFileContent(name, content)
+        const uniqueName = makeUniqueFilename(name, get().files.map((f) => f.name))
+        const language = getLanguageFromFilename(uniqueName)
+        const defaultContent = getDefaultNewFileContent(uniqueName, content)
 
         const newFile: File = {
           id: generateId(),
-          name,
+          name: uniqueName,
           content: defaultContent,
           language,
           createdAt: new Date().toISOString(),
@@ -495,7 +562,7 @@ export const useFileStore = create<FileStore>()(
           try {
             // Import dynamically to avoid circular dependency if any (though api.ts is already imported)
             const api = await import('./api').then(m => m.fileApi)
-            await api.deleteFile(parseInt(fileId), token)
+            await api.deleteFile(Number.parseInt(fileId, 10), token)
           } catch (error) {
             console.error("Failed to delete remote file", error)
             // Propagate error to caller (Sidebar) so it can show error toast
@@ -526,6 +593,10 @@ export const useFileStore = create<FileStore>()(
       renameFile: async (fileId: string, newName: string) => {
         const state = get()
         const token = useAuthStore.getState().token
+        const existingOtherNames = state.files
+          .filter((f) => f.id !== fileId)
+          .map((f) => f.name)
+        const uniqueName = makeUniqueFilename(newName, existingOtherNames)
 
         // Optimistic update
         set(
@@ -534,8 +605,8 @@ export const useFileStore = create<FileStore>()(
               file.id === fileId
                 ? {
                   ...file,
-                  name: newName,
-                  language: getLanguageFromFilename(newName),
+                  name: uniqueName,
+                  language: getLanguageFromFilename(uniqueName),
                   updatedAt: new Date().toISOString(),
                 }
                 : file
@@ -559,7 +630,7 @@ export const useFileStore = create<FileStore>()(
             // Let's use fileApi.updateFile as it's cleaner.
 
             const api = await import('./api').then(m => m.fileApi)
-            await api.updateFile(parseInt(fileId), { filename: newName }, token)
+            await api.updateFile(Number.parseInt(fileId, 10), { filename: uniqueName }, token)
           } catch (error) {
             console.error("Failed to rename file remotely", error)
             toast.error("Failed to save rename")
@@ -943,15 +1014,27 @@ export const useFileStore = create<FileStore>()(
           return
         }
 
+        const state = get()
         const folderName = name.trim()
         if (!folderName) return
+
+        const siblingFolderNames = state.folders
+          .filter((f) => {
+            const sameProject =
+              (f.projectId ?? undefined) === (projectId?.toString() ?? undefined)
+            const sameParent =
+              (f.parentId ?? undefined) === (parentFolderId ?? undefined)
+            return sameProject && sameParent
+          })
+          .map((f) => f.name)
+        const uniqueFolderName = makeUniqueFolderName(folderName, siblingFolderNames)
 
         const toastId = toast.loading('Creating folder...')
         try {
           const res = await foldersApi.createFolder({
-            name: folderName,
+            name: uniqueFolderName,
             project_id: projectId,
-            parent_id: parentFolderId ? parseInt(parentFolderId) : undefined,
+            parent_id: parentFolderId ? Number.parseInt(parentFolderId, 10) : undefined,
           }, token)
 
           if (res.success && res.data) {
@@ -969,7 +1052,7 @@ export const useFileStore = create<FileStore>()(
               folders: [...state.folders, newFolder],
             }), false, 'createFolder')
 
-            toast.success(`Created folder ${folderName}`, { id: toastId })
+            toast.success(`Created folder ${uniqueFolderName}`, { id: toastId })
           } else {
             const errorText = typeof res.error === 'object' ? JSON.stringify(res.error) : res.error
             toast.error(`Failed to create folder: ${errorText}`, { id: toastId })
@@ -987,17 +1070,33 @@ export const useFileStore = create<FileStore>()(
           return
         }
 
+        const state = get()
         const folderName = newName.trim()
         if (!folderName) return
 
+        const current = state.folders.find((f) => f.id === folderId)
+        const siblingFolderNames = state.folders
+          .filter((f) => {
+            if (f.id === folderId) return false
+            const sameProject = (f.projectId ?? undefined) === (current?.projectId ?? undefined)
+            const sameParent = (f.parentId ?? undefined) === (current?.parentId ?? undefined)
+            return sameProject && sameParent
+          })
+          .map((f) => f.name)
+        const uniqueFolderName = makeUniqueFolderName(folderName, siblingFolderNames)
+
         const toastId = toast.loading('Renaming folder...')
         try {
-          const res = await foldersApi.updateFolder(parseInt(folderId), { name: folderName }, token)
+          const res = await foldersApi.updateFolder(
+            Number.parseInt(folderId, 10),
+            { name: uniqueFolderName },
+            token,
+          )
           if (res.success && res.data) {
             set((state) => ({
               folders: state.folders.map((f) =>
                 f.id === folderId
-                  ? { ...f, name: folderName, updatedAt: new Date().toISOString() }
+                  ? { ...f, name: uniqueFolderName, updatedAt: new Date().toISOString() }
                   : f
               ),
             }), false, 'renameFolder')
@@ -1021,19 +1120,114 @@ export const useFileStore = create<FileStore>()(
 
         const toastId = toast.loading('Deleting folder...')
         try {
-          const res = await foldersApi.deleteFolder(parseInt(folderId), token)
-          if (res.success) {
-            set((state) => ({
-              folders: state.folders.filter((f) => f.id !== folderId),
-            }), false, 'deleteFolder')
-            toast.success('Folder deleted', { id: toastId })
-          } else {
-            const errorText = typeof res.error === 'object' ? JSON.stringify(res.error) : res.error
-            toast.error(`Failed to delete folder: ${errorText}`, { id: toastId })
+          const state = get()
+          const folderIdsToRemove = collectDescendantFolderIds(state.folders, folderId)
+          const filesInTree = state.files.filter((f) => f.folderId && folderIdsToRemove.has(f.folderId))
+
+          // 1) Delete files first (backend rejects non-empty folder deletes).
+          const api = await import('./api').then((m) => m.fileApi)
+          for (const f of filesInTree) {
+            if (f.id.startsWith('file-')) continue
+            const fileIdNum = Number.parseInt(f.id, 10)
+            // If parse fails, skip remote delete (keeps UI consistent with local-only files)
+            if (Number.isNaN(fileIdNum)) continue
+            const delRes = await api.deleteFile(fileIdNum, token)
+            if (!delRes.success) {
+              const errorText =
+                typeof delRes.error === 'object' ? JSON.stringify(delRes.error) : delRes.error
+              toast.error(`Failed to delete file "${f.name}": ${errorText}`, { id: toastId })
+              return
+            }
           }
+
+          // 2) Delete folders deepest-first.
+          const depthOf = (id: string) => {
+            const byId = new Map(state.folders.map((x) => [x.id, x]))
+            let depth = 0
+            let cur = byId.get(id)
+            while (cur?.parentId) {
+              depth += 1
+              cur = byId.get(cur.parentId)
+            }
+            return depth
+          }
+          const folderIdsSorted = Array.from(folderIdsToRemove).sort((a, b) => depthOf(b) - depthOf(a))
+
+          for (const fid of folderIdsSorted) {
+            const delFolderRes = await foldersApi.deleteFolder(Number.parseInt(fid, 10), token)
+            if (!delFolderRes.success) {
+              const errorText =
+                typeof delFolderRes.error === 'object'
+                  ? JSON.stringify(delFolderRes.error)
+                  : delFolderRes.error
+              toast.error(`Failed to delete folder: ${errorText}`, { id: toastId })
+              return
+            }
+          }
+
+          // 3) Update local state after successful remote deletion.
+          set((s) => {
+            const removedFileIds = new Set(filesInTree.map((f) => f.id))
+            const files = s.files.filter((f) => !removedFileIds.has(f.id))
+            const folders = s.folders.filter((f) => !folderIdsToRemove.has(f.id))
+            const openFileIds = s.openFileIds.filter((id) => !removedFileIds.has(id))
+            const activeFileId =
+              s.activeFileId && removedFileIds.has(s.activeFileId)
+                ? openFileIds.at(-1) ?? null
+                : s.activeFileId
+            return { folders, files, openFileIds, activeFileId }
+          }, false, 'deleteFolder')
+
+          toast.success('Folder deleted', { id: toastId })
         } catch (error) {
           console.error('Delete folder failed', error)
           toast.error('Failed to delete folder', { id: toastId })
+        }
+      },
+
+      moveFileToFolder: async (fileId: string, folderId: string | null) => {
+        const token = useAuthStore.getState().token
+        const prev = get().files.find((f) => f.id === fileId)
+        if (!prev) return
+
+        // Optimistic UI update
+        set(
+          (state) => ({
+            files: state.files.map((f) =>
+              f.id === fileId
+                ? { ...f, folderId: folderId ?? undefined, updatedAt: new Date().toISOString() }
+                : f,
+            ),
+          }),
+          false,
+          'moveFileToFolder',
+        )
+
+        // Local-only file or unauthenticated: done.
+        if (!token || fileId.startsWith('file-')) return
+
+        try {
+          const api = await import('./api').then((m) => m.fileApi)
+          await api.updateFile(
+            Number.parseInt(fileId, 10),
+            {
+              folder_id: folderId ? Number.parseInt(folderId, 10) : null,
+            },
+            token,
+          )
+        } catch (e) {
+          console.error('moveFileToFolder failed', e)
+          // Revert on failure
+          set(
+            (state) => ({
+              files: state.files.map((f) =>
+                f.id === fileId ? { ...f, folderId: prev.folderId, updatedAt: new Date().toISOString() } : f,
+              ),
+            }),
+            false,
+            'moveFileToFolder.revert',
+          )
+          toast.error('Failed to move file')
         }
       },
 
@@ -1071,7 +1265,7 @@ export const useFileStore = create<FileStore>()(
             }, token)
           } else {
             // Update
-            res = await api.updateFile(parseInt(activeFile.id), {
+            res = await api.updateFile(Number.parseInt(activeFile.id, 10), {
               content: activeFile.content
             }, token)
           }
@@ -1115,18 +1309,19 @@ export const useFileStore = create<FileStore>()(
           return
         }
 
-        const language = getLanguageFromFilename(name)
-        const defaultContent = getDefaultNewFileContent(name, content)
+        const uniqueName = makeUniqueFilename(name, state.files.map((f) => f.name))
+        const language = getLanguageFromFilename(uniqueName)
+        const defaultContent = getDefaultNewFileContent(uniqueName, content)
         const toastId = toast.loading('Creating file...')
 
         try {
           const api = await import('./api').then(m => m.fileApi)
           const res = await api.createFile({
-            filename: name,
+            filename: uniqueName,
             content: defaultContent,
             is_main: false,
             project_id: projectId,
-            folder_id: folderId ? parseInt(folderId) : undefined,
+            folder_id: folderId ? Number.parseInt(folderId, 10) : undefined,
             is_shared: isShared
           }, token)
 
@@ -1153,7 +1348,7 @@ export const useFileStore = create<FileStore>()(
               false,
               'createFile'
             )
-            toast.success(`Created ${name}`, { id: toastId })
+            toast.success(`Created ${uniqueName}`, { id: toastId })
           } else {
             const errorText = typeof res.error === 'object' ? JSON.stringify(res.error) : res.error
             toast.error(`Failed to create file: ${errorText}`, { id: toastId })

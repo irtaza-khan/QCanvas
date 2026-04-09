@@ -79,8 +79,10 @@ class GenerateRequest(BaseModel):
         default=None,
         description="Optional algorithm hint (e.g., 'vqe', 'qaoa', 'grover').",
     )
+    enable_designer: bool = Field(default=True, description="Whether to run the Designer stage.")
     enable_validator: bool = Field(default=True, description="Whether to run the Validator stages.")
     enable_optimizer: bool = Field(default=True, description="Whether to run the Optimizer stage.")
+    enable_final_validator: bool = Field(default=True, description="Whether to run the Final Validator stage.")
     enable_educational: bool = Field(default=True, description="Whether to run the Educational agent.")
     max_optimization_loops: int = Field(
         default=3,
@@ -241,8 +243,10 @@ def generate(req: GenerateRequest) -> GenerateResponse:
     result = orchestrator.generate_code(
         query=req.description,
         algorithm=req.algorithm,
+        designer=req.enable_designer,
         optimize=req.enable_optimizer,
         validate=req.enable_validator,
+        final_validate=req.enable_final_validator,
         explain=req.enable_educational,
         max_optimization_loops=req.max_optimization_loops,
         educational_depth=req.educational_depth,

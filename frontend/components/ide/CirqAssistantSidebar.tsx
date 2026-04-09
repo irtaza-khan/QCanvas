@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { Copy, Loader2, Sparkles, History, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  Copy,
+  Loader2,
+  Sparkles,
+  History,
+  ChevronDown,
+  ChevronRight,
+  MessageSquare,
+  Settings,
+} from "lucide-react";
 import {
   generateCirqCode,
   getCirqRun,
@@ -70,14 +79,19 @@ export default function CirqAssistantSidebar({
   prefillPayload,
   onPrefillConsumed,
   onSetInputLanguage,
-}: {
+}: Readonly<{
   /** nonce must change each time the menu triggers “Ask AI”, even if text repeats */
   prefillPayload: { nonce: number; text: string } | null;
   onPrefillConsumed: () => void;
   onSetInputLanguage: Dispatch<SetStateAction<InputLanguage | "">>;
-}) {
+}>) {
+  const [activeTab, setActiveTab] = useState<"chat" | "settings">("chat");
   const [config, setConfig] = useState<CirqAgentClientConfig>({
+    designerEnabled: true,
+    validatorEnabled: true,
     optimizerEnabled: true,
+    finalValidatorEnabled: true,
+    educationalEnabled: true,
     educationalDepth: "intermediate",
     maxOptimizationLoops: 3,
   });
@@ -219,82 +233,180 @@ export default function CirqAssistantSidebar({
       <div className="shrink-0 px-3 py-2 border-b border-editor-border flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-quantum-blue-light shrink-0" />
         <span className="text-sm font-medium text-white">Cirq AI</span>
+        <div className="ml-auto flex items-center gap-1">
+          {(() => {
+            const chatCls =
+              activeTab === "chat"
+                ? "bg-editor-panelHigh text-white"
+                : "text-editor-text/70 hover:bg-editor-panelHigh/70 hover:text-white";
+            const settingsCls =
+              activeTab === "settings"
+                ? "bg-editor-panelHigh text-white"
+                : "text-editor-text/70 hover:bg-editor-panelHigh/70 hover:text-white";
+            return (
+              <>
+          <button
+            type="button"
+            className={`px-2 py-1 rounded text-xs flex items-center gap-1.5 transition-colors ${chatCls}`}
+            onClick={() => setActiveTab("chat")}
+            title="Chat"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            Chat
+          </button>
+          <button
+            type="button"
+            className={`px-2 py-1 rounded text-xs flex items-center gap-1.5 transition-colors ${settingsCls}`}
+            onClick={() => setActiveTab("settings")}
+            title="Settings"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            Settings
+          </button>
+              </>
+            );
+          })()}
+        </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
-        <div className="rounded border border-editor-border bg-editor-bg/40 p-3 space-y-3 text-xs">
-          <div className="text-[11px] uppercase tracking-wide text-editor-text/50">
-            Pipeline (fixed)
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <span className="px-2 py-1 rounded bg-editor-border/80 text-editor-text/90">
-              Designer — always on
-            </span>
-            <span className="px-2 py-1 rounded bg-editor-border/80 text-editor-text/90">
-              Validator — always on
-            </span>
-          </div>
+      {activeTab === "settings" ? (
+        <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
+          <div className="rounded border border-editor-border bg-editor-bg/40 p-3 space-y-3 text-xs">
+            <div className="text-[11px] uppercase tracking-wide text-editor-text/50">
+              Agents
+            </div>
 
-          <label className="flex items-center justify-between gap-2 cursor-pointer">
-            <span>Optimizer</span>
-            <input
-              type="checkbox"
-              className="rounded border-editor-border"
-              checked={config.optimizerEnabled}
-              onChange={(e) =>
-                setConfig((c) => ({ ...c, optimizerEnabled: e.target.checked }))
-              }
-            />
-          </label>
+            <label className="flex items-center justify-between gap-2 cursor-pointer">
+              <span>Designer</span>
+              <input
+                type="checkbox"
+                className="rounded border-editor-border"
+                checked={config.designerEnabled}
+                onChange={(e) =>
+                  setConfig((c) => ({ ...c, designerEnabled: e.target.checked }))
+                }
+              />
+            </label>
 
-          <label className="flex flex-col gap-1">
-            <span>Educational depth</span>
-            <select
-              className="bg-editor-bg border border-editor-border rounded px-2 py-1.5 text-editor-text"
-              value={config.educationalDepth}
-              onChange={(e) =>
-                setConfig((c) => ({
-                  ...c,
-                  educationalDepth: e.target.value as EducationalDepth,
-                }))
-              }
-            >
-              <option value="low">Low</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="high">High</option>
-              <option value="very_high">Very high</option>
-            </select>
-          </label>
+            <label className="flex items-center justify-between gap-2 cursor-pointer">
+              <span>Validator</span>
+              <input
+                type="checkbox"
+                className="rounded border-editor-border"
+                checked={config.validatorEnabled}
+                onChange={(e) =>
+                  setConfig((c) => ({ ...c, validatorEnabled: e.target.checked }))
+                }
+              />
+            </label>
 
-          <label className="flex flex-col gap-1">
-            <span>Max optimization loops (1–10)</span>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              className="bg-editor-bg border border-editor-border rounded px-2 py-1.5 text-editor-text"
-              value={config.maxOptimizationLoops}
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                if (Number.isFinite(n))
+            <label className="flex items-center justify-between gap-2 cursor-pointer">
+              <span>Optimizer</span>
+              <input
+                type="checkbox"
+                className="rounded border-editor-border"
+                checked={config.optimizerEnabled}
+                onChange={(e) =>
+                  setConfig((c) => ({ ...c, optimizerEnabled: e.target.checked }))
+                }
+              />
+            </label>
+
+            <label className="flex items-center justify-between gap-2 cursor-pointer">
+              <span>Final validator</span>
+              <input
+                type="checkbox"
+                className="rounded border-editor-border"
+                checked={config.finalValidatorEnabled}
+                onChange={(e) =>
                   setConfig((c) => ({
                     ...c,
-                    maxOptimizationLoops: Math.min(10, Math.max(1, n)),
-                  }));
-              }}
-            />
-          </label>
+                    finalValidatorEnabled: e.target.checked,
+                  }))
+                }
+              />
+            </label>
+          </div>
 
-          <label className="flex flex-col gap-1">
-            <span>Algorithm hint (optional)</span>
-            <input
-              className="bg-editor-bg border border-editor-border rounded px-2 py-1.5 text-editor-text placeholder:text-editor-text/40"
-              placeholder="e.g. vqe, qaoa, grover"
-              value={algorithmHint}
-              onChange={(e) => setAlgorithmHint(e.target.value)}
-            />
-          </label>
+          <div className="rounded border border-editor-border bg-editor-bg/40 p-3 space-y-3 text-xs">
+            <div className="text-[11px] uppercase tracking-wide text-editor-text/50">
+              Education
+            </div>
+
+            <label className="flex items-center justify-between gap-2 cursor-pointer">
+              <span>Educational agent</span>
+              <input
+                type="checkbox"
+                className="rounded border-editor-border"
+                checked={config.educationalEnabled}
+                onChange={(e) =>
+                  setConfig((c) => ({
+                    ...c,
+                    educationalEnabled: e.target.checked,
+                  }))
+                }
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span>Explanation depth</span>
+              <select
+                className="bg-editor-bg border border-editor-border rounded px-2 py-1.5 text-editor-text"
+                value={config.educationalDepth}
+                disabled={!config.educationalEnabled}
+                onChange={(e) =>
+                  setConfig((c) => ({
+                    ...c,
+                    educationalDepth: e.target.value as EducationalDepth,
+                  }))
+                }
+              >
+                <option value="low">Low</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="high">High</option>
+                <option value="very_high">Very high</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="rounded border border-editor-border bg-editor-bg/40 p-3 space-y-3 text-xs">
+            <div className="text-[11px] uppercase tracking-wide text-editor-text/50">
+              Optimization
+            </div>
+
+            <label className="flex flex-col gap-1">
+              <span>Max optimization loops (1–10)</span>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                className="bg-editor-bg border border-editor-border rounded px-2 py-1.5 text-editor-text"
+                value={config.maxOptimizationLoops}
+                disabled={!config.optimizerEnabled}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  if (Number.isFinite(n))
+                    setConfig((c) => ({
+                      ...c,
+                      maxOptimizationLoops: Math.min(10, Math.max(1, n)),
+                    }));
+                }}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span>Algorithm hint (optional)</span>
+              <input
+                className="bg-editor-bg border border-editor-border rounded px-2 py-1.5 text-editor-text placeholder:text-editor-text/40"
+                placeholder="e.g. vqe, qaoa, grover"
+                value={algorithmHint}
+                onChange={(e) => setAlgorithmHint(e.target.value)}
+              />
+            </label>
+          </div>
         </div>
+      ) : (
+        <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
 
         <button
           type="button"
@@ -539,7 +651,8 @@ export default function CirqAssistantSidebar({
             </motion.div>
           ))}
         </div>
-      </div>
+        </div>
+      )}
 
       <div className="shrink-0 border-t border-editor-border p-3 space-y-2 bg-editor-sidebar">
         {isGenerating && (

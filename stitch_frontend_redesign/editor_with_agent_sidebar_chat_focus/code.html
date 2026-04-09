@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QCanvas | Quantum AI Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#490006",
+                        "surface-container-lowest": "#000000",
+                        "outline-variant": "#444852",
+                        "on-secondary": "#005b34",
+                        "inverse-primary": "#006880",
+                        "outline": "#727581",
+                        "tertiary-fixed-dim": "#cedff1",
+                        "primary-container": "#00cffc",
+                        "error-dim": "#d7383b",
+                        "on-secondary-container": "#e2ffe8",
+                        "error": "#ff716c",
+                        "secondary-fixed": "#00fc9a",
+                        "primary-fixed": "#00cffc",
+                        "inverse-on-surface": "#515560",
+                        "tertiary-fixed": "#dcedff",
+                        "on-tertiary-container": "#495867",
+                        "on-tertiary-fixed-variant": "#536372",
+                        "on-primary-container": "#004050",
+                        "on-surface": "#ebedfb",
+                        "on-primary-fixed": "#002a35",
+                        "surface-container-low": "#0f131d",
+                        "on-tertiary-fixed": "#374655",
+                        "surface-dim": "#0a0e17",
+                        "secondary-fixed-dim": "#00ec90",
+                        "surface-container-high": "#1a1f2c",
+                        "on-error-container": "#ffa8a3",
+                        "surface-variant": "#202633",
+                        "surface-container-highest": "#202633",
+                        "tertiary-container": "#dcedff",
+                        "secondary-dim": "#00ec90",
+                        "error-container": "#9f0519",
+                        "on-primary-fixed-variant": "#004a5c",
+                        "surface-bright": "#262c3a",
+                        "on-secondary-fixed-variant": "#00653b",
+                        "surface": "#0a0e17",
+                        "surface-tint": "#69daff",
+                        "primary": "#69daff",
+                        "on-surface-variant": "#a7abb7",
+                        "primary-fixed-dim": "#00c0ea",
+                        "inverse-surface": "#faf9ff",
+                        "on-tertiary": "#516170",
+                        "background": "#0a0e17",
+                        "on-background": "#ebedfb",
+                        "secondary": "#00fc9a",
+                        "on-secondary-fixed": "#004627",
+                        "surface-container": "#151925",
+                        "tertiary-dim": "#cedff1",
+                        "on-primary": "#004a5d",
+                        "tertiary": "#f7f9ff",
+                        "primary-dim": "#00c0ea",
+                        "secondary-container": "#006d40"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #0a0e17; color: #ebedfb; overflow: hidden; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-panel { backdrop-filter: blur(20px); background: rgba(38, 44, 58, 0.6); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #202633; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #69daff; }
+        .quantum-pulse { background: linear-gradient(135deg, #69daff 0%, #00cffc 100%); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="flex flex-col items-center py-4 space-y-8 bg-slate-900 docked left-0 h-full w-16 z-50">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">hub</span>
+</div>
+<nav class="flex flex-col space-y-6 items-center">
+<button class="text-primary border-l-2 border-cyan-400 w-full flex justify-center py-2 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="folder">folder</span>
+</button>
+<button class="text-slate-500 hover:bg-slate-800 hover:text-slate-300 w-full flex justify-center py-2 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="text-slate-500 hover:bg-slate-800 hover:text-slate-300 w-full flex justify-center py-2 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+</button>
+<button class="text-slate-500 hover:bg-slate-800 hover:text-slate-300 w-full flex justify-center py-2 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="extension">extension</span>
+</button>
+</nav>
+<div class="mt-auto flex flex-col space-y-6 pb-4">
+<button class="text-slate-500 hover:bg-slate-800 hover:text-slate-300 w-full flex justify-center py-2 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+<button class="text-slate-500 hover:bg-slate-800 hover:text-slate-300 w-full flex justify-center py-2 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col relative h-full overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="flex justify-between items-center px-6 h-14 w-full z-50 bg-slate-950/80 backdrop-blur-xl border-b-0">
+<div class="flex items-center space-x-8">
+<span class="text-xl font-medium tracking-tighter text-cyan-400 font-['Space_Grotesk']">QCanvas</span>
+<nav class="hidden md:flex space-x-6">
+<a class="text-cyan-400 border-b-2 border-cyan-400 pb-1 font-['Space_Grotesk'] text-sm tracking-tight" href="#">Editor</a>
+<a class="text-slate-400 hover:text-cyan-300 transition-colors duration-200 ease-in-out font-['Space_Grotesk'] text-sm tracking-tight" href="#">Simulation</a>
+<a class="text-slate-400 hover:text-cyan-300 transition-colors duration-200 ease-in-out font-['Space_Grotesk'] text-sm tracking-tight" href="#">Circuits</a>
+<a class="text-slate-400 hover:text-cyan-300 transition-colors duration-200 ease-in-out font-['Space_Grotesk'] text-sm tracking-tight" href="#">Workspaces</a>
+</nav>
+</div>
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-2 bg-slate-900/50 px-3 py-1.5 rounded-lg border border-outline-variant/15">
+<span class="material-symbols-outlined text-xs text-secondary">cloud_done</span>
+<span class="text-[10px] font-mono tracking-widest uppercase opacity-60">Connected: RIG_ASPEN_M3</span>
+</div>
+<span class="material-symbols-outlined text-slate-400 hover:text-cyan-300 cursor-pointer" data-icon="terminal">terminal</span>
+<span class="material-symbols-outlined text-slate-400 hover:text-cyan-300 cursor-pointer" data-icon="help">help</span>
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden ring-1 ring-primary/30">
+<img alt="Researcher Profile" class="w-full h-full object-cover" data-alt="close-up portrait of a male researcher in a modern laboratory environment with soft blue lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApRs_9vi-_B2pZdZtzn4AVIDB-dEhHN6Zy_RLx8jAVsObnDdRqIaY4doXOVA_TUqZEJSgOllKzipKFNQaG9Ejim_0vq2hLyZYl41JwmPrKa9AVcssdqi4Eusf1-59RXEimTevtIgm1QChz2Ho5C5A-U_QEAkQZu9NeQzVjsh6oOUSLfhExkomDkhRKySUGi325h4gUf-gcb0wDSwsXUwOuSxdnOkqenTcd0WdMp_qOc6149z51scQfEuENhfZM65h9ZMpOT_SfQA"/>
+</div>
+</div>
+</header>
+<!-- Code Editor Area -->
+<div class="flex-1 flex overflow-hidden">
+<!-- File Explorer (Subtle) -->
+<div class="w-48 bg-surface-container-low border-r border-outline-variant/5 hidden lg:block p-4">
+<div class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Project Alpha</div>
+<div class="space-y-1">
+<div class="flex items-center space-x-2 text-sm text-primary py-1 px-2 bg-primary/5 rounded">
+<span class="material-symbols-outlined text-sm">description</span>
+<span class="truncate">bell_state.py</span>
+</div>
+<div class="flex items-center space-x-2 text-sm text-on-surface-variant py-1 px-2 hover:bg-surface-variant rounded cursor-pointer">
+<span class="material-symbols-outlined text-sm">description</span>
+<span class="truncate">optimizer_v2.py</span>
+</div>
+<div class="flex items-center space-x-2 text-sm text-on-surface-variant py-1 px-2 hover:bg-surface-variant rounded cursor-pointer">
+<span class="material-symbols-outlined text-sm">analytics</span>
+<span class="truncate">metrics.json</span>
+</div>
+</div>
+</div>
+<!-- Code Content -->
+<div class="flex-1 bg-surface-container-lowest relative font-mono text-sm p-6 overflow-auto custom-scrollbar">
+<div class="flex items-start">
+<div class="pr-6 text-outline text-right select-none opacity-40">
+                        1<br/>2<br/>3<br/>4<br/>5<br/>6<br/>7<br/>8<br/>9<br/>10<br/>11<br/>12<br/>13<br/>14<br/>15<br/>16
+                    </div>
+<div class="flex-1 text-on-surface-variant">
+<span class="text-primary">import</span> cirq<br/>
+<br/>
+<span class="text-outline"># Define qubits</span><br/>
+                        q0 = cirq.GridQubit(<span class="text-secondary">0</span>, <span class="text-secondary">0</span>)<br/>
+                        q1 = cirq.GridQubit(<span class="text-secondary">0</span>, <span class="text-secondary">1</span>)<br/>
+<br/>
+<span class="text-outline"># Original Bell State Circuit</span><br/>
+                        circuit = cirq.Circuit(<br/>
+                            cirq.H(q0),<br/>
+                            cirq.CNOT(q0, q1),<br/>
+                            cirq.measure(q0, q1, key=<span class="text-secondary">'result'</span>)<br/>
+                        )<br/>
+<br/>
+<span class="text-outline"># Simulate the circuit</span><br/>
+                        simulator = cirq.Simulator()<br/>
+                        result = simulator.run(circuit, repetitions=<span class="text-secondary">1000</span>)<br/>
+<span class="text-primary">print</span>(result)
+                        <div class="mt-8 p-4 bg-surface-container-low/50 rounded-lg border border-primary/10">
+<div class="flex items-center space-x-2 mb-2">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="text-[10px] text-secondary font-bold uppercase tracking-wider">Simulation Ready</span>
+</div>
+<span class="text-xs text-on-surface-variant">Last run: 0.024ms | Coherence: 98.4%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Assistant Panel (Cirq-RAG Assistant) -->
+<aside class="w-[420px] bg-slate-900/90 backdrop-blur-2xl fixed right-0 top-0 h-full flex flex-col p-0 z-40 shadow-2xl shadow-black/40 border-l border-outline-variant/10">
+<!-- Drawer Header -->
+<div class="p-6 border-b border-outline-variant/10">
+<div class="flex justify-between items-center mb-1">
+<h2 class="text-emerald-400 font-bold font-['Space_Grotesk'] tracking-tight text-lg">Cirq-RAG Assistant</h2>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-white">close</span>
+</div>
+<p class="text-xs text-slate-400">Quantum AI Agent Active | Model: Q-Neuron 4.5</p>
+</div>
+<!-- Chat History -->
+<div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+<!-- User Message -->
+<div class="flex flex-col items-end space-y-2">
+<div class="bg-surface-container-high px-4 py-3 rounded-xl rounded-tr-none max-w-[90%] text-sm text-on-surface">
+                            Can you optimize the Bell State circuit for the RIG_ASPEN_M3 architecture? I'm seeing decoherence on the CNOT gate.
+                        </div>
+<span class="text-[10px] text-outline uppercase tracking-widest px-1">14:22 • User</span>
+</div>
+<!-- Assistant Message -->
+<div class="flex flex-col items-start space-y-3">
+<div class="flex items-center space-x-2">
+<div class="w-6 h-6 rounded-full bg-emerald-400/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-emerald-400" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Quantum Optimizer</span>
+</div>
+<div class="bg-surface-variant/40 border border-emerald-400/10 px-4 py-4 rounded-xl rounded-tl-none w-full text-sm text-on-surface leading-relaxed">
+                            Based on current calibration data from <span class="text-emerald-400 font-mono">RIG_ASPEN_M3</span>, the CZ gate has 12% lower error than the CNOT. I've refactored the circuit to use a CZ gate sandwiched between Hadamards on the target qubit.
+                            
+                            <div class="mt-4 p-3 bg-black rounded-lg border border-outline-variant/20 font-mono text-xs">
+<span class="text-outline"># Optimized for Aspen-M3</span><br/>
+<span class="text-emerald-400">circuit = cirq.Circuit(<br/>
+                                    cirq.H(q0),<br/>
+                                    cirq.H(q1),<br/>
+                                    cirq.CZ(q0, q1),<br/>
+                                    cirq.H(q1)<br/>
+                                )</span>
+</div>
+<div class="mt-4 grid grid-cols-2 gap-3">
+<div class="bg-surface-container-low p-2 rounded border border-emerald-400/10">
+<div class="text-[9px] text-on-surface-variant uppercase mb-1">Gate Fidelity</div>
+<div class="text-emerald-400 font-bold text-lg">99.82%</div>
+</div>
+<div class="bg-surface-container-low p-2 rounded border border-emerald-400/10">
+<div class="text-[9px] text-on-surface-variant uppercase mb-1">Depth Reduc.</div>
+<div class="text-emerald-400 font-bold text-lg">-14.2%</div>
+</div>
+</div>
+</div>
+<div class="flex space-x-2 w-full">
+<button class="flex-1 quantum-pulse text-on-primary-container text-xs font-bold py-2 rounded-md transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-2">
+<span class="material-symbols-outlined text-sm">sync_alt</span>
+<span>Apply to Editor</span>
+</button>
+<button class="px-3 bg-surface-container border border-outline-variant/20 rounded-md hover:bg-surface-variant text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+</button>
+</div>
+</div>
+<!-- AI thinking placeholder -->
+<div class="flex items-center space-x-2 opacity-50">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" style="animation-delay: 0.2s"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" style="animation-delay: 0.4s"></span>
+<span class="text-[10px] text-emerald-400 uppercase tracking-widest ml-2">Analyzing circuit topology...</span>
+</div>
+</div>
+<!-- Input Footer -->
+<div class="p-4 border-t border-outline-variant/10 bg-slate-900">
+<div class="relative group">
+<textarea class="w-full bg-surface-container-low border-0 rounded-xl p-4 pr-12 text-sm text-on-surface placeholder:text-outline focus:ring-1 focus:ring-emerald-400/50 min-h-[100px] resize-none" placeholder="Ask about Bell State optimization..."></textarea>
+<button class="absolute bottom-4 right-4 w-8 h-8 rounded-lg bg-emerald-400 text-on-primary-container flex items-center justify-center hover:shadow-[0_0_15px_rgba(0,252,154,0.3)] transition-all">
+<span class="material-symbols-outlined text-xl">arrow_upward</span>
+</button>
+</div>
+<div class="flex items-center justify-between mt-3 px-1">
+<div class="flex space-x-3">
+<span class="material-symbols-outlined text-outline hover:text-emerald-400 cursor-pointer text-lg">attach_file</span>
+<span class="material-symbols-outlined text-outline hover:text-emerald-400 cursor-pointer text-lg">mic</span>
+<span class="material-symbols-outlined text-outline hover:text-emerald-400 cursor-pointer text-lg">image</span>
+</div>
+<span class="text-[10px] text-outline font-mono">Cirq 1.4.0 • context: 4.2k tokens</span>
+</div>
+</div>
+</aside>
+</div>
+<!-- Horizontal Tabs (Mobile) - Hidden on Web per rules -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-xl flex justify-around items-center border-t border-outline-variant/10 z-50">
+<span class="material-symbols-outlined text-cyan-400">edit</span>
+<span class="material-symbols-outlined text-slate-500">memory</span>
+<span class="material-symbols-outlined text-slate-500">account_tree</span>
+<span class="material-symbols-outlined text-slate-500">chat_bubble</span>
+</div>
+<!-- Optimization FAB (Contextual) -->
+<button class="fixed bottom-8 right-[440px] w-12 h-12 rounded-full quantum-pulse text-on-primary-container shadow-2xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 group z-30">
+<span class="material-symbols-outlined group-hover:rotate-180 transition-transform duration-500">bolt</span>
+<div class="absolute right-16 px-3 py-1.5 bg-slate-950/90 text-emerald-400 text-[10px] font-bold uppercase tracking-widest rounded border border-emerald-400/20 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                Quick Optimize
+            </div>
+</button>
+</main>
+<!-- Event Horizon Background Texture (Overlay) -->
+<div class="fixed inset-0 pointer-events-none opacity-20 overflow-hidden -z-10">
+<div class="absolute -top-[20%] -left-[10%] w-[120%] h-[120%] bg-[radial-gradient(circle_at_50%_50%,rgba(105,218,255,0.05)_0%,rgba(0,0,0,0)_70%)]"></div>
+<div class="absolute bottom-0 right-0 w-full h-full bg-[conic-gradient(from_0deg_at_50%_50%,rgba(0,252,154,0.02)_0%,rgba(0,0,0,0)_20%,rgba(105,218,255,0.02)_40%,rgba(0,0,0,0)_100%)]"></div>
+</div>
+</body></html>

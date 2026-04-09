@@ -96,8 +96,10 @@ class Orchestrator:
         self,
         query: str,
         algorithm: Optional[str] = None,
+        designer: bool = True,
         optimize: bool = True,
         validate: bool = True,
+        final_validate: bool = True,
         explain: bool = True,
         max_optimization_loops: int = 3,
         educational_depth: Optional[str] = None,
@@ -137,21 +139,26 @@ class Orchestrator:
         
         try:
             # ===== STAGE 1: Designer (Always Runs) =====
-            logger.info(f"🎨 [Stage 1/4] Designer Agent generating code...")
-            result["stages"].append("designer")
-            
-            design_result = self._run_with_retry(
-                lambda: self.designer.run({"query": query, "algorithm": algorithm}),
-                stage_name="Designer"
-            )
-            
-            if not design_result.get("success"):
-                result["errors"].append(f"Designer failed: {design_result.get('error')}")
+            if designer and self.designer and self.designer_enabled:
+                logger.info(f"🎨 [Stage 1/4] Designer Agent generating code...")
+                result["stages"].append("designer")
+                
+                design_result = self._run_with_retry(
+                    lambda: self.designer.run({"query": query, "algorithm": algorithm}),
+                    stage_name="Designer"
+                )
+                
+                if not design_result.get("success"):
+                    result["errors"].append(f"Designer failed: {design_result.get('error')}")
+                    return result
+                
+                result["code"] = design_result.get("code")
+                current_code = result["code"]
+                logger.info(f"✅ Designer generated code ({len(current_code)} chars)")
+            else:
+                logger.info(f"⏭️ [Stage 1/4] Designer skipped (disabled or not available)")
+                result["errors"].append("Designer is disabled; cannot generate code.")
                 return result
-            
-            result["code"] = design_result.get("code")
-            current_code = result["code"]
-            logger.info(f"✅ Designer generated code ({len(current_code)} chars)")
             
             # ===== STAGE 2: Validator (Conditional) =====
             if validate and self.validator and self.validator_enabled:
@@ -228,7 +235,7 @@ class Orchestrator:
             # ===== STAGE 4: Final Validator (Always Runs) =====
             final_code = result.get("optimized_code") or result["code"]
             
-            if self.validator and self.validator_enabled:
+            if final_validate and self.validator and self.validator_enabled:
                 logger.info(f"🔍 [Stage 4/4] Final Validator ensuring quality...")
                 result["stages"].append("final_validator")
                 
@@ -248,7 +255,7 @@ class Orchestrator:
                 else:
                     logger.info(f"✅ Final validation passed")
             else:
-                logger.info(f"⏭️ [Stage 4/4] Final Validator skipped (no validator available)")
+                logger.info(f"⏭️ [Stage 4/4] Final Validator skipped (disabled or not available)")
             
             # ===== STAGE 5: Educational Agent (Runs Last) =====
             # Note: Runs at the END to avoid resource conflicts with other LLM models

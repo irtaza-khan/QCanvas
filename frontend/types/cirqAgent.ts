@@ -47,7 +47,16 @@ export interface CirqRunSummary {
 export type EducationalDepth = 'low' | 'intermediate' | 'high' | 'very_high'
 
 export interface CirqAgentClientConfig {
+  // Pipeline toggles
+  designerEnabled: boolean
+  validatorEnabled: boolean
   optimizerEnabled: boolean
+  finalValidatorEnabled: boolean
+
+  // Education controls
+  educationalEnabled: boolean
   educationalDepth: EducationalDepth
+
+  // Optimizer controls
   maxOptimizationLoops: number
 }

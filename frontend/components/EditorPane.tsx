@@ -86,6 +86,12 @@ export default function EditorPane({
   const qasmConfigProviderRef = useRef<any>(null);
   const pythonqTokensProviderRef = useRef<any>(null);
   const pythonqConfigProviderRef = useRef<any>(null);
+  const pendingRevealRef = useRef<{
+    fileId: string;
+    lineNumber: number;
+    column?: number;
+    query?: string;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const runMenuRef = useRef<HTMLDivElement>(null);
   const activeFile = getActiveFile();
@@ -248,6 +254,53 @@ export default function EditorPane({
 
     editorRef.current = editor;
     monacoRef.current = monacoInstance;
+
+    const applyRevealIfReady = (payload: {
+      fileId: string;
+      lineNumber: number;
+      column?: number;
+      query?: string;
+    }) => {
+      pendingRevealRef.current = payload;
+
+      const model = editorRef.current?.getModel?.();
+      const currentActiveId = useFileStore.getState().activeFileId;
+      if (!model) return;
+      if (!currentActiveId || currentActiveId !== payload.fileId) return;
+
+      const lineNumber = Math.max(1, payload.lineNumber);
+      const maxColumn = model.getLineMaxColumn(lineNumber);
+      const column = Math.min(
+        Math.max(1, payload.column ?? 1),
+        Math.max(1, maxColumn),
+      );
+
+      const qLen = payload.query ? payload.query.length : 0;
+      const endColumn = qLen > 0 ? Math.min(maxColumn, column + qLen) : column;
+
+      editorRef.current.setSelection?.({
+        startLineNumber: lineNumber,
+        startColumn: column,
+        endLineNumber: lineNumber,
+        endColumn,
+      });
+      editorRef.current.setPosition?.({ lineNumber, column });
+      editorRef.current.revealLineInCenter?.(lineNumber);
+      editorRef.current.focus?.();
+    };
+
+    const onReveal = (e: Event) => {
+      const ce = e as CustomEvent;
+      if (!ce.detail) return;
+      applyRevealIfReady(ce.detail);
+    };
+
+    globalThis.window?.addEventListener("qcanvas:reveal-in-editor", onReveal);
+
+    // Cleanup listener if Monaco is disposed/re-mounted.
+    editor.onDidDispose?.(() => {
+      globalThis.window?.removeEventListener("qcanvas:reveal-in-editor", onReveal);
+    });
 
     // Register language-level providers only once; dispose previous on re-mount
     if (hoverProviderRef.current) {
@@ -494,11 +547,59 @@ export default function EditorPane({
         "popcount",
       ];
 
+      // Common gate/instruction identifiers (non-exhaustive).
+      // Treated as "function" tokens so they get gate-like coloring.
+      const quantumGates = [
+        // Single-qubit
+        "id",
+        "x",
+        "y",
+        "z",
+        "h",
+        "s",
+        "sdg",
+        "t",
+        "tdg",
+        "sx",
+        "sxdg",
+        "p",
+        // Parametric rotations
+        "rx",
+        "ry",
+        "rz",
+        "u",
+        "u1",
+        "u2",
+        "u3",
+        // Two/three-qubit
+        "cx",
+        "cnot",
+        "cz",
+        "cy",
+        "ch",
+        "swap",
+        "iswap",
+        "cswap",
+        "ccx",
+        "toffoli",
+        "ccz",
+        // Controlled-phase / rotation families
+        "cp",
+        "crx",
+        "cry",
+        "crz",
+        // Instructions (also appear in keywords, but harmless here)
+        "barrier",
+        "measure",
+        "reset",
+      ];
+
       qasmTokensProviderRef.current =
         monacoInstance.languages.setMonarchTokensProvider("qasm", {
           keywords,
           types,
           builtins,
+          quantumGates,
           tokenizer: {
             root: [
               // Whitespace
@@ -515,6 +616,7 @@ export default function EditorPane({
                     "@keywords": "keyword",
                     "@types": "type",
                     "@builtins": "function",
+                    "@quantumGates": "function",
                     "@default": "identifier",
                   },
                 },
@@ -661,6 +763,8 @@ export default function EditorPane({
         "any",
         "all",
         "isinstance",
+        // Qiskit helpers commonly used in examples
+        "execute",
       ];
 
       const quantumGateMethods = [
@@ -700,6 +804,7 @@ export default function EditorPane({
       ];
 
       const quantumGateClasses = [
+        // Generic gates across frameworks
         "H",
         "X",
         "Y",
@@ -722,6 +827,7 @@ export default function EditorPane({
         "CRY",
         "CRZ",
         "CP",
+        "U",
         "Hadamard",
         "PauliX",
         "PauliY",
@@ -730,12 +836,42 @@ export default function EditorPane({
         "PhaseShift",
       ];
 
+      const quantumFrameworkMethods = [
+        // PennyLane
+        "device",
+        "qnode",
+        "measure",
+        "expval",
+        "probs",
+        "state",
+        "sample",
+        "counts",
+        // Cirq / Qiskit common helpers that appear in examples
+        "Circuit",
+        "LineQubit",
+      ];
+
+      const quantumFrameworkClasses = [
+        // Cirq
+        "Circuit",
+        "LineQubit",
+        "GridQubit",
+        "NamedQubit",
+        "Simulator",
+        "DensityMatrixSimulator",
+        // Qiskit
+        "QuantumCircuit",
+        "Aer",
+      ];
+
       pythonqTokensProviderRef.current =
         monacoInstance.languages.setMonarchTokensProvider("pythonq", {
           keywords: pyKeywords,
           builtins,
           quantumGateMethods,
           quantumGateClasses,
+          quantumFrameworkMethods,
+          quantumFrameworkClasses,
           tokenizer: {
             root: [
               { include: "@whitespace" },
@@ -762,6 +898,18 @@ export default function EditorPane({
                       "",
                       "delimiter.parenthesis",
                     ],
+                    "$2@quantumGateClasses": [
+                      "delimiter",
+                      "function",
+                      "",
+                      "delimiter.parenthesis",
+                    ],
+                    "$2@quantumFrameworkMethods": [
+                      "delimiter",
+                      "function",
+                      "",
+                      "delimiter.parenthesis",
+                    ],
                     "@default": [
                       "delimiter",
                       "identifier",
@@ -778,6 +926,7 @@ export default function EditorPane({
                 {
                   cases: {
                     "@quantumGateClasses": "function",
+                    "@quantumFrameworkClasses": "type.identifier",
                     "@default": "type.identifier",
                   },
                 },
@@ -954,6 +1103,32 @@ export default function EditorPane({
     hoverProviderRef.current = registerQuantumHover("python");
     hoverProviderPythonqRef.current = registerQuantumHover("pythonq");
   };
+
+  // Apply a pending "reveal in editor" after the correct file becomes active.
+  useEffect(() => {
+    const pending = pendingRevealRef.current;
+    if (!pending) return;
+    if (!activeFile) return;
+    if (activeFile.id !== pending.fileId) return;
+    if (!editorRef.current?.getModel?.()) return;
+
+    const model = editorRef.current.getModel();
+    const lineNumber = Math.max(1, pending.lineNumber);
+    const maxColumn = model.getLineMaxColumn(lineNumber);
+    const column = Math.min(Math.max(1, pending.column ?? 1), Math.max(1, maxColumn));
+    const qLen = pending.query ? pending.query.length : 0;
+    const endColumn = qLen > 0 ? Math.min(maxColumn, column + qLen) : column;
+
+    editorRef.current.setSelection?.({
+      startLineNumber: lineNumber,
+      startColumn: column,
+      endLineNumber: lineNumber,
+      endColumn,
+    });
+    editorRef.current.setPosition?.({ lineNumber, column });
+    editorRef.current.revealLineInCenter?.(lineNumber);
+    editorRef.current.focus?.();
+  }, [activeFile?.id]);
 
   const handleEditorChange = (value: string | undefined) => {
     if (activeFile && value !== undefined) {

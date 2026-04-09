@@ -1,4 +1,4 @@
-import { File, ApiResponse, CreateFileRequest, ExplorerTree } from '@/types'
+import { File, ApiResponse, CreateFileRequest, UpdateFileRequest, ExplorerTree } from '@/types'
 
 // =============================================================================
 // API BASE CONFIGURATION
@@ -149,16 +149,38 @@ async function apiRequest<T>(
       },
     })
 
-    // Try to parse response body even if status is not ok
-    let data: any
-    try {
-      data = await response.json()
-    } catch (e) {
-      // If response is not JSON, use status text
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`)
+    // Many endpoints (especially DELETE) can legitimately return 204 / empty bodies.
+    // Parse JSON only when we actually have a JSON body.
+    const statusNoContent = response.status === 204
+    const contentType = response.headers.get('content-type') ?? ''
+    const isJson = contentType.includes('application/json')
+
+    let data: any = undefined
+    if (!statusNoContent) {
+      const raw = await response.text()
+      const hasBody = raw.trim().length > 0
+      if (hasBody) {
+        if (isJson) {
+          try {
+            data = JSON.parse(raw)
+          } catch {
+            if (!response.ok) {
+              throw new Error(
+                `HTTP error! status: ${response.status} ${response.statusText}`,
+              )
+            }
+            throw new Error('Invalid JSON response')
+          }
+        } else {
+          // Non-JSON body; only treat as error detail when request failed.
+          if (!response.ok) {
+            throw new Error(raw)
+          }
+          data = raw
+        }
+      } else {
+        data = undefined
       }
-      throw new Error('Invalid JSON response')
     }
 
     // If response is not ok, check if we have error details in the body
@@ -239,7 +261,7 @@ export const fileApi = {
   },
 
   // Update file
-  async updateFile(id: number, data: Partial<CreateFileRequest>, token?: string): Promise<ApiResponse<File>> {
+  async updateFile(id: number, data: Partial<UpdateFileRequest>, token?: string): Promise<ApiResponse<File>> {
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
     return apiRequest<File>(`/api/files/${id}`, {
       method: 'PUT',

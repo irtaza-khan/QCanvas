@@ -10,7 +10,7 @@ export const CIRQ_GENERATE_TIMEOUT_MS = 95_000
 
 async function getCirqFetchBase(): Promise<string> {
   if (
-    typeof window !== 'undefined' &&
+    typeof globalThis.window !== 'undefined' &&
     process.env.NEXT_PUBLIC_CIRQ_USE_NEXT_REWRITE === 'true'
   ) {
     return '/cirq-api'
@@ -99,9 +99,11 @@ export async function generateCirqCode(
       body: JSON.stringify({
         description,
         algorithm: algorithm || undefined,
-        enable_validator: true,
+        enable_designer: config.designerEnabled,
+        enable_validator: config.validatorEnabled,
         enable_optimizer: config.optimizerEnabled,
-        enable_educational: true,
+        enable_final_validator: config.finalValidatorEnabled,
+        enable_educational: config.educationalEnabled,
         educational_depth: config.educationalDepth,
         max_optimization_loops: config.maxOptimizationLoops,
       }),

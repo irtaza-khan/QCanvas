@@ -125,6 +125,7 @@ export default function ExplorerView() {
   const deleteFolder = useFileStore((s) => s.deleteFolder);
   const renameFile = useFileStore((s) => s.renameFile);
   const deleteFile = useFileStore((s) => s.deleteFile);
+  const moveFileToFolder = useFileStore((s) => s.moveFileToFolder);
   const fetchExplorerTree = useFileStore((s) => s.fetchExplorerTree);
 
   const activeProjectId = useFileStore((s) => s.activeProjectId);
@@ -147,6 +148,12 @@ export default function ExplorerView() {
     | { type: "folder"; id: string; name: string; x: number; y: number }
     | null
   >(null);
+  const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<{
+    folderId: string;
+    folderName: string;
+    fileCount: number;
+  } | null>(null);
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
 
   const tree = useMemo(() => buildTree(folders, files), [folders, files]);
   const explorerStats = useMemo(
@@ -318,6 +325,40 @@ export default function ExplorerView() {
     fetchExplorerTree(nextProjectId, token);
   };
 
+  const getFolderDescendants = (rootId: string) => {
+    const childrenByParent = new Map<string, string[]>();
+    for (const f of folders) {
+      if (!f.parentId) continue;
+      const list = childrenByParent.get(f.parentId) ?? [];
+      list.push(f.id);
+      childrenByParent.set(f.parentId, list);
+    }
+    const result = new Set<string>();
+    const stack = [rootId];
+    while (stack.length > 0) {
+      const cur = stack.pop() as string;
+      if (result.has(cur)) continue;
+      result.add(cur);
+      const kids = childrenByParent.get(cur) ?? [];
+      for (const k of kids) stack.push(k);
+    }
+    return result;
+  };
+
+  const countFilesInFolderTree = (folderId: string) => {
+    const folderIds = getFolderDescendants(folderId);
+    return files.filter((f) => f.folderId && folderIds.has(f.folderId)).length;
+  };
+
+  const requestDeleteFolder = (folderId: string, folderName: string) => {
+    const fileCount = countFilesInFolderTree(folderId);
+    if (fileCount > 0) {
+      setDeleteFolderConfirm({ folderId, folderName, fileCount });
+      return;
+    }
+    void deleteFolder(folderId);
+  };
+
   const renderNode = (node: TreeNode, idx: number) => {
     const pad = 8 + node.depth * 12;
     if (node.kind === "folder") {
@@ -366,12 +407,34 @@ export default function ExplorerView() {
               <>
                 <button
                   type="button"
-                  className={`w-full flex items-center gap-2 py-1.5 pr-12 text-sm rounded-md border transition-all duration-150 ${selectedFolderId === node.folder.id ? "bg-editor-border/45 border-editor-border/90 text-white shadow-sm" : "bg-transparent border-transparent text-editor-text hover:bg-editor-border/40 hover:border-editor-border/60"}`}
+                  className={`w-full flex items-center gap-2 py-1.5 pr-12 text-sm rounded-md border transition-all duration-150 ${
+                    selectedFolderId === node.folder.id
+                      ? "bg-editor-border/45 border-editor-border/90 text-white shadow-sm"
+                      : dragOverFolderId === node.folder.id
+                        ? "bg-quantum-blue-light/10 border-quantum-blue-light/40 text-white"
+                        : "bg-transparent border-transparent text-editor-text hover:bg-editor-border/40 hover:border-editor-border/60"
+                  }`}
                   onClick={() => {
                     setSelectedFolderId(node.folder.id);
                     toggleFolder(node.folder.id);
                   }}
-                  onDoubleClick={() => startCreateFile(node.folder.id)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOverFolderId(node.folder.id);
+                  }}
+                  onDragLeave={() => {
+                    setDragOverFolderId((cur) =>
+                      cur === node.folder.id ? null : cur,
+                    );
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const fileId = e.dataTransfer.getData("text/qcanvas-file-id");
+                    if (!fileId) return;
+                    void moveFileToFolder(fileId, node.folder.id);
+                    setDragOverFolderId(null);
+                    setExpanded((p) => ({ ...p, [node.folder.id]: true }));
+                  }}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     setSelectedFolderId(node.folder.id);
@@ -383,7 +446,7 @@ export default function ExplorerView() {
                       y: e.clientY,
                     });
                   }}
-                  title="Click to select folder, double click to create file inside"
+                  title="Click to expand/collapse"
                 >
                   {isOpen ? (
                     <ChevronDown className="w-4 h-4" />
@@ -423,7 +486,7 @@ export default function ExplorerView() {
                     title="Delete folder"
                     onClick={(e) => {
                       e.stopPropagation();
-                      void deleteFolder(node.folder.id);
+                      requestDeleteFolder(node.folder.id, node.folder.name);
                     }}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -484,11 +547,16 @@ export default function ExplorerView() {
           <>
             <button
               type="button"
+              draggable
               className={`w-full flex items-center gap-2 py-1.5 pr-8 text-sm rounded-md border transition-all duration-150 ${
                 activeFileId === node.file.id
                   ? "bg-editor-accent border-editor-accent text-white shadow-sm"
                   : "text-editor-text border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
               }`}
+              onDragStart={(e) => {
+                e.dataTransfer.setData("text/qcanvas-file-id", node.file.id);
+                e.dataTransfer.effectAllowed = "move";
+              }}
               onClick={() => openFile(node.file.id)}
               onDoubleClick={() =>
                 startRenameFile(node.file.id, node.file.name)
@@ -601,6 +669,22 @@ export default function ExplorerView() {
 
       <div
         className="flex-1 overflow-y-auto p-2.5 space-y-1.5"
+        onDragOver={(e) => {
+          // Allow dropping files to move them to root (out of folders).
+          if (e.dataTransfer.types.includes("text/qcanvas-file-id")) {
+            e.preventDefault();
+          }
+        }}
+        onDrop={(e) => {
+          const fileId = e.dataTransfer.getData("text/qcanvas-file-id");
+          if (!fileId) return;
+          // Drop on empty area => move to root
+          const target = e.target as HTMLElement;
+          if (!target.closest('[data-explorer-node="true"]')) {
+            e.preventDefault();
+            void moveFileToFolder(fileId, null);
+          }
+        }}
         onClick={(e) => {
           const target = e.target as HTMLElement;
           if (!target.closest('[data-explorer-node="true"]')) {
@@ -743,7 +827,7 @@ export default function ExplorerView() {
                 type="button"
                 className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/20 rounded-md"
                 onClick={() => {
-                  void deleteFolder(contextMenu.id);
+                  requestDeleteFolder(contextMenu.id, contextMenu.name);
                   setContextMenu(null);
                 }}
               >
@@ -781,6 +865,50 @@ export default function ExplorerView() {
             </>
           )}
         </div>
+      )}
+
+      {deleteFolderConfirm && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 bg-black/50 z-[110] cursor-default"
+            onClick={() => setDeleteFolderConfirm(null)}
+            aria-label="Close delete folder confirmation"
+          />
+          <div className="fixed inset-0 z-[115] flex items-center justify-center p-4">
+            <div className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full border border-editor-border shadow-[0_24px_48px_rgba(0,0,0,0.5)]">
+              <div className="text-lg font-bold text-white">Delete folder?</div>
+              <div className="mt-2 text-sm text-editor-text">
+                <div className="font-mono text-white/90">{deleteFolderConfirm.folderName}</div>
+                <div className="mt-2">
+                  This folder contains <span className="text-white font-semibold">{deleteFolderConfirm.fileCount}</span>{' '}
+                  file{deleteFolderConfirm.fileCount === 1 ? '' : 's'}. Deleting it will delete all files inside.
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  className="px-3 py-2 rounded-md text-sm text-editor-text hover:bg-editor-border/60"
+                  onClick={() => setDeleteFolderConfirm(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="px-3 py-2 rounded-md text-sm font-semibold bg-red-500/80 hover:bg-red-500 text-white"
+                  onClick={() => {
+                    const { folderId } = deleteFolderConfirm;
+                    setDeleteFolderConfirm(null);
+                    void deleteFolder(folderId);
+                  }}
+                >
+                  Delete folder & files
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
