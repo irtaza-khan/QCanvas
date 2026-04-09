@@ -579,6 +579,25 @@ export interface RegisterRequest {
   full_name: string
 }
 
+export interface RegisterResponse {
+  verification_required: boolean
+  message: string
+  access_token?: string
+  token_type?: string
+  user: {
+    id: string
+    email: string
+    username: string
+    full_name: string
+    role: 'user' | 'admin' | 'demo'
+    is_active: boolean
+    is_verified: boolean
+    created_at: string
+    last_login_at: string | null
+    bio?: string
+  }
+}
+
 export interface AuthResponse {
   access_token: string
   token_type: string
@@ -595,6 +614,24 @@ export interface AuthResponse {
   }
 }
 
+export interface OtpSendResponse {
+  message: string
+  cooldown_seconds: number
+  expires_in_seconds: number
+  attempts_remaining: number
+  verification_required: boolean
+}
+
+export interface OtpVerifyResponse {
+  message: string
+  verified: boolean
+  access_token?: string
+  token_type?: string
+  user?: AuthResponse['user']
+  reset_token?: string
+  expires_in_seconds?: number
+}
+
 // Auth API
 export const authApi = {
   async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
@@ -604,10 +641,56 @@ export const authApi = {
     })
   },
 
-  async register(data: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
-    return apiRequest<AuthResponse>('/api/auth/register', {
+  async register(data: RegisterRequest): Promise<ApiResponse<RegisterResponse>> {
+    return apiRequest<RegisterResponse>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
+    })
+  },
+
+  async sendSignupOtp(email: string): Promise<ApiResponse<OtpSendResponse>> {
+    return apiRequest<OtpSendResponse>('/api/auth/signup/otp/send', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+  },
+
+  async resendSignupOtp(email: string): Promise<ApiResponse<OtpSendResponse>> {
+    return apiRequest<OtpSendResponse>('/api/auth/signup/otp/resend', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+  },
+
+  async verifySignupOtp(email: string, otp: string): Promise<ApiResponse<OtpVerifyResponse>> {
+    return apiRequest<OtpVerifyResponse>('/api/auth/signup/otp/verify', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    })
+  },
+
+  async sendPasswordResetOtp(email: string): Promise<ApiResponse<{ message: string }>> {
+    return apiRequest<{ message: string }>('/api/auth/password-reset/otp/send', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+  },
+
+  async verifyPasswordResetOtp(email: string, otp: string): Promise<ApiResponse<OtpVerifyResponse>> {
+    return apiRequest<OtpVerifyResponse>('/api/auth/password-reset/otp/verify', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    })
+  },
+
+  async completePasswordReset(
+    reset_token: string,
+    new_password: string,
+    confirm_password: string,
+  ): Promise<ApiResponse<{ message: string }>> {
+    return apiRequest<{ message: string }>('/api/auth/password-reset/complete', {
+      method: 'POST',
+      body: JSON.stringify({ reset_token, new_password, confirm_password }),
     })
   },
 

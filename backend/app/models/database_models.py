@@ -43,6 +43,24 @@ class SessionType(str, enum.Enum):
     WEB = "web"
 
 
+class OtpPurpose(str, enum.Enum):
+    """Supported OTP challenge purposes."""
+    SIGNUP_VERIFY = "signup_verify"
+    PASSWORD_RESET = "password_reset"
+
+
+class OtpStatus(str, enum.Enum):
+    """OTP challenge lifecycle statuses."""
+    PENDING = "pending"
+    SENT = "sent"
+    VERIFIED = "verified"
+    CONSUMED = "consumed"
+    EXPIRED = "expired"
+    LOCKED = "locked"
+    REVOKED = "revoked"
+    FAILED_SEND = "failed_send"
+
+
 class User(Base):
     """
     User model for authentication and authorization.
@@ -64,6 +82,8 @@ class User(Base):
     sessions = relationship("Session", back_populates="user")
     api_activities = relationship("ApiActivity", back_populates="user")
     files = relationship("File", back_populates="user", cascade="all, delete-orphan")
+    otp_challenges = relationship("OtpChallenge", back_populates="user", cascade="all, delete-orphan")
+    password_reset_sessions = relationship("PasswordResetSession", back_populates="user", cascade="all, delete-orphan")
     
     # Authentication
     email = Column(String(255), unique=True, nullable=False, index=True)
@@ -77,6 +97,7 @@ class User(Base):
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
+    email_verified_at = Column(TIMESTAMP, nullable=True)
     
     # Authorization
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
@@ -88,6 +109,7 @@ class User(Base):
     created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
     updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     last_login_at = Column(TIMESTAMP, nullable=True)
+    token_version = Column(Integer, default=0, nullable=False)
     
     # Soft delete
     deleted_at = Column(TIMESTAMP, nullable=True, index=True)
@@ -332,6 +354,62 @@ class ApiActivity(Base):
 
     # Relationships
     user = relationship("User", back_populates="api_activities")
+
+
+class OtpChallenge(Base):
+    """OTP challenge store for signup verification and password reset."""
+    __tablename__ = "auth_otp_challenges"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    email_snapshot = Column(String(255), nullable=False, index=True)
+    purpose = Column(Enum(OtpPurpose), nullable=False, index=True)
+    status = Column(Enum(OtpStatus), nullable=False, default=OtpStatus.PENDING, index=True)
+
+    code_hash = Column(String(128), nullable=False)
+    code_salt = Column(String(64), nullable=False)
+    attempt_count = Column(Integer, nullable=False, default=0)
+    max_attempts = Column(Integer, nullable=False, default=5)
+    resend_count = Column(Integer, nullable=False, default=0)
+
+    issued_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    sent_at = Column(TIMESTAMP, nullable=True)
+    expires_at = Column(TIMESTAMP, nullable=False, index=True)
+    verified_at = Column(TIMESTAMP, nullable=True)
+    consumed_at = Column(TIMESTAMP, nullable=True)
+    revoked_at = Column(TIMESTAMP, nullable=True)
+    locked_at = Column(TIMESTAMP, nullable=True)
+    last_attempt_at = Column(TIMESTAMP, nullable=True)
+    resend_available_at = Column(TIMESTAMP, nullable=False, index=True)
+
+    request_ip = Column(String(45), nullable=True)
+    request_user_agent = Column(Text, nullable=True)
+    delivery_provider = Column(String(40), nullable=True)
+    delivery_message_id = Column(String(255), nullable=True)
+    metadata_json = Column(JSON, nullable=True)
+
+    user = relationship("User", back_populates="otp_challenges")
+    reset_sessions = relationship("PasswordResetSession", back_populates="otp_challenge", cascade="all, delete-orphan")
+
+
+class PasswordResetSession(Base):
+    """Short-lived session minted after OTP verification to complete reset."""
+    __tablename__ = "password_reset_sessions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    otp_challenge_id = Column(UUID(as_uuid=True), ForeignKey("auth_otp_challenges.id", ondelete="CASCADE"), nullable=False, index=True)
+    reset_token_hash = Column(String(128), nullable=False, unique=True, index=True)
+
+    issued_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    expires_at = Column(TIMESTAMP, nullable=False, index=True)
+    consumed_at = Column(TIMESTAMP, nullable=True)
+    revoked_at = Column(TIMESTAMP, nullable=True)
+    request_ip = Column(String(45), nullable=True)
+    request_user_agent = Column(Text, nullable=True)
+
+    user = relationship("User", back_populates="password_reset_sessions")
+    otp_challenge = relationship("OtpChallenge", back_populates="reset_sessions")
 
 
 class SharedSnippet(Base):

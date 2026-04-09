@@ -123,9 +123,55 @@ class TokenResponse(BaseModel):
         }
 
 
+class RegisterResponse(BaseModel):
+    """Registration response supporting both direct login and OTP pending states."""
+    verification_required: bool = False
+    message: str
+    access_token: Optional[str] = None
+    token_type: Optional[str] = None
+    user: UserResponse
+
+
 class ErrorResponse(BaseModel):
     """Standard error response schema."""
     detail: str
+
+
+class EmailRequest(BaseModel):
+    email: str
+
+
+class OtpVerifyRequest(BaseModel):
+    email: str
+    otp: str
+
+
+class OtpSendResponse(BaseModel):
+    message: str
+    cooldown_seconds: int
+    expires_in_seconds: int
+    attempts_remaining: int
+    verification_required: bool = True
+
+
+class OtpVerifyResponse(BaseModel):
+    message: str
+    verified: bool
+    access_token: Optional[str] = None
+    token_type: Optional[str] = None
+    user: Optional[UserResponse] = None
+    reset_token: Optional[str] = None
+    expires_in_seconds: Optional[int] = None
+
+
+class PasswordResetCompleteRequest(BaseModel):
+    reset_token: str
+    new_password: str
+    confirm_password: str
+
+
+class MessageResponse(BaseModel):
+    message: str
 
 
 class UpdateProfileRequest(BaseModel):

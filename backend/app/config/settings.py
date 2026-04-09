@@ -23,6 +23,19 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "development_secret_key"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    AUTH_EMAIL_OTP_ENABLED: bool = False
+    OTP_EXPIRE_MINUTES: int = 5
+    OTP_MAX_ATTEMPTS: int = 5
+    OTP_RESEND_COOLDOWN_SECONDS: int = 60
+    OTP_PEPPER: str = ""
+
+    # Email
+    EMAIL_PROVIDER: str = "resend"
+    EMAIL_FROM_NAME: str = "QCanvas"
+    EMAIL_FROM_ADDRESS: str = "noreply@example.com"
+    RESEND_API_KEY: str = ""
+    RESEND_API_BASE_URL: str = "https://api.resend.com"
+    FRONTEND_URL: str = "http://localhost:3000"
     
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [

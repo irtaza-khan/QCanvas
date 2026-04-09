@@ -5,6 +5,7 @@ Provides password hashing (bcrypt) and API key encryption (AES-256-GCM).
 import bcrypt
 import secrets
 import hashlib
+import hmac
 from cryptography.fernet import Fernet
 from app.config.settings import settings
 
@@ -127,3 +128,37 @@ class SecurityUtils:
             SHA-256 hash (hex string)
         """
         return hashlib.sha256(token.encode('utf-8')).hexdigest()
+
+    @staticmethod
+    def generate_otp_code() -> str:
+        """Generate a numeric six-digit OTP code."""
+        return f"{secrets.randbelow(1_000_000):06d}"
+
+    @staticmethod
+    def generate_salt(length: int = 16) -> str:
+        """Generate random hex salt for OTP and reset token hashing."""
+        return secrets.token_hex(length)
+
+    @staticmethod
+    def hash_otp(code: str, salt: str) -> str:
+        """Hash an OTP code using HMAC-SHA256 with salt and server pepper."""
+        otp_pepper = settings.OTP_PEPPER or settings.SECRET_KEY
+        payload = f"{code}:{salt}".encode("utf-8")
+        digest = hmac.new(otp_pepper.encode("utf-8"), payload, hashlib.sha256)
+        return digest.hexdigest()
+
+    @staticmethod
+    def verify_otp(code: str, salt: str, expected_hash: str) -> bool:
+        """Verify OTP with constant-time hash comparison."""
+        calculated = SecurityUtils.hash_otp(code, salt)
+        return hmac.compare_digest(calculated, expected_hash)
+
+    @staticmethod
+    def generate_reset_token() -> str:
+        """Generate secure password reset completion token."""
+        return secrets.token_urlsafe(32)
+
+    @staticmethod
+    def hash_reset_token(token: str) -> str:
+        """Hash password reset completion token."""
+        return hashlib.sha256(token.encode("utf-8")).hexdigest()
