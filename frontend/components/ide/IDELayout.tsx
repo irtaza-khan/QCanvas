@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFileStore } from "@/lib/store";
 import MenuBar from "./MenuBar";
 import ActivityBar, { ActivityView } from "./ActivityBar";
@@ -44,10 +44,64 @@ export default function IDELayout({
   contentRef?: React.RefObject<HTMLDivElement>;
 }>) {
   const sidebarCollapsed = useFileStore((s) => s.sidebarCollapsed);
+  const [rightPanelWidth, setRightPanelWidth] = useState<number>(() => {
+    if (globalThis.window === undefined) return 420;
+    const stored = globalThis.window.localStorage.getItem(
+      "qcanvas:rightPanelWidth",
+    );
+    const n = stored ? Number.parseInt(stored, 10) : 420;
+    return Number.isFinite(n) ? n : 420;
+  });
+  const dragStateRef = useRef<{
+    startX: number;
+    startWidth: number;
+    maxWidth: number;
+  } | null>(null);
+
+  const clampedRightPanelWidth = useMemo(() => {
+    const minWidth = 340;
+    const maxWidth =
+      globalThis.window === undefined
+        ? 720
+        : Math.min(720, globalThis.window.innerWidth - 420);
+    return Math.min(Math.max(rightPanelWidth, minWidth), maxWidth);
+  }, [rightPanelWidth]);
+
+  useEffect(() => {
+    if (globalThis.window === undefined) return;
+    globalThis.window.localStorage.setItem(
+      "qcanvas:rightPanelWidth",
+      String(clampedRightPanelWidth),
+    );
+  }, [clampedRightPanelWidth]);
 
   useEffect(() => {
     if (sidebarCollapsed) onSidebarActivityChange("explorer");
   }, [sidebarCollapsed, onSidebarActivityChange]);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragStateRef.current) return;
+      const dx = dragStateRef.current.startX - e.clientX;
+      const next = dragStateRef.current.startWidth + dx;
+      const minWidth = 340;
+      const maxWidth = dragStateRef.current.maxWidth;
+      setRightPanelWidth(Math.min(Math.max(next, minWidth), maxWidth));
+    };
+    const onUp = () => {
+      if (!dragStateRef.current) return;
+      dragStateRef.current = null;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    globalThis.window.addEventListener("mousemove", onMove);
+    globalThis.window.addEventListener("mouseup", onUp);
+    return () => {
+      globalThis.window.removeEventListener("mousemove", onMove);
+      globalThis.window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
@@ -88,7 +142,30 @@ export default function IDELayout({
 
         {/* Right assistant drawer (Stitch-style) */}
         {rightPanelOpen && (
-          <aside className="w-[420px] shrink-0 h-full border-l border-editor-border/60 bg-slate-900/90 backdrop-blur-2xl shadow-[0_32px_72px_rgba(0,0,0,0.65)]">
+          <>
+            <button
+              type="button"
+              aria-label="Resize assistant panel"
+              title="Drag to resize assistant panel"
+              className="w-1.5 shrink-0 h-full cursor-col-resize bg-transparent hover:bg-white/5 active:bg-white/10"
+              onMouseDown={(e: React.MouseEvent) => {
+                const maxWidth =
+                  globalThis.window === undefined
+                    ? 720
+                    : Math.min(720, globalThis.window.innerWidth - 420);
+                dragStateRef.current = {
+                  startX: e.clientX,
+                  startWidth: clampedRightPanelWidth,
+                  maxWidth,
+                };
+                document.body.style.cursor = "col-resize";
+                document.body.style.userSelect = "none";
+              }}
+            />
+            <aside
+              className="shrink-0 h-full border-l border-editor-border/60 bg-slate-900/90 backdrop-blur-2xl shadow-[0_32px_72px_rgba(0,0,0,0.65)]"
+              style={{ width: clampedRightPanelWidth }}
+            >
             <div className="h-full flex flex-col min-h-0">
               <div className="shrink-0 px-5 pt-5 pb-4 border-b border-editor-border/40">
                 <div className="flex items-start justify-between gap-3">
@@ -97,7 +174,7 @@ export default function IDELayout({
                       Cirq-RAG Assistant
                     </div>
                     <div className="mt-1 text-[11px] text-editor-text/70">
-                      Quantum AI Agent Active | Model: Q-Neuron 4.5
+                      Quantum AI Agent Active | Model: Claude Opus 4.6
                     </div>
                   </div>
                   {onRightPanelClose && (
@@ -114,7 +191,8 @@ export default function IDELayout({
 
               <div className="flex-1 min-h-0">{cirqAssistantView ?? null}</div>
             </div>
-          </aside>
+            </aside>
+          </>
         )}
       </div>
     </div>

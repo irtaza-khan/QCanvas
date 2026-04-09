@@ -137,7 +137,7 @@ export default function CirqAssistantSidebar({
   const [activeTab, setActiveTab] = useState<"chat" | "settings">("chat");
   const [config, setConfig] = useState<CirqAgentClientConfig>({
     designerEnabled: true,
-    validatorEnabled: true,
+    validatorEnabled: false,
     optimizerEnabled: false,
     finalValidatorEnabled: true,
     educationalEnabled: false,

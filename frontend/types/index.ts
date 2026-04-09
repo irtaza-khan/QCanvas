@@ -125,6 +125,7 @@ export interface AuthState {
 export type SupportedLanguage =
   | 'python'
   | 'qasm'
+  | 'markdown'
   | 'javascript'
   | 'typescript'
   | 'plaintext'
@@ -145,6 +146,7 @@ export interface CompileOptions {
 export const LANGUAGE_EXTENSIONS: Record<SupportedLanguage, string[]> = {
   python: ['.py', '.pyw'],
   qasm: ['.qasm', '.qc'],
+  markdown: ['.md', '.markdown'],
   javascript: ['.js', '.mjs'],
   typescript: ['.ts'],
   plaintext: ['.txt'],
@@ -179,6 +181,17 @@ bit[2] c;
 h q[0];
 cx q[0], q[1];
 c = measure q;
+`,
+  markdown: `# New Markdown file
+
+Write notes in **Markdown**.
+
+- Use \`inline code\`
+- Use code blocks:
+
+\`\`\`python
+print("Hello QCanvas")
+\`\`\`
 `,
   javascript: `// Quantum circuit simulation
 console.log("Quantum JavaScript simulation");

@@ -18,6 +18,7 @@ import {
 } from "@/lib/circuitParser";
 import FindReplace from "./FindReplace";
 import CircuitVisualization from "./CircuitVisualization";
+import MarkdownPreview from "./MarkdownPreview";
 import { InputLanguage } from "@/types";
 
 type SimulationBackend = "cirq" | "qiskit" | "pennylane" | "";
@@ -106,6 +107,7 @@ export default function EditorPane({
   const [isMounted, setIsMounted] = useState(false);
   const [circuitHeight, setCircuitHeight] = useState(200);
   const [isDraggingCircuit, setIsDraggingCircuit] = useState(false);
+  const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
 
   // Parsed circuit state for async AST parsing
   const [parsedGates, setParsedGates] = useState<ParsedGate[]>([]);
@@ -116,6 +118,12 @@ export default function EditorPane({
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Default to preview when switching to a markdown file.
+  useEffect(() => {
+    const isMd = !!activeFile?.name?.toLowerCase().endsWith(".md");
+    setShowMarkdownPreview(isMd);
+  }, [activeFile?.id]);
 
   useEffect(() => {
     if (!showRunMenu) return;
@@ -1196,6 +1204,8 @@ export default function EditorPane({
         return "json";
       case "qasm":
         return "qasm";
+      case "markdown":
+        return "markdown";
       default:
         return "plaintext";
     }
@@ -1224,6 +1234,20 @@ export default function EditorPane({
       {/* Top utility row with VS Code-style run controls on the right */}
       <div className="relative z-40 overflow-visible h-10 bg-gradient-to-r from-editor-sidebar via-editor-sidebar to-editor-bg/90 border-b border-editor-border/80 flex items-center justify-between px-2.5 gap-2 backdrop-blur-sm">
         <div className="flex items-center gap-2">
+          {activeFile.name.toLowerCase().endsWith(".md") && (
+            <button
+              type="button"
+              onClick={() => setShowMarkdownPreview((p) => !p)}
+              className={`px-2.5 py-1 text-xs rounded-md border transition-all duration-200 ${
+                showMarkdownPreview
+                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-200"
+                  : "bg-editor-bg/90 border-editor-border text-editor-text hover:bg-editor-border/70 hover:border-editor-border/90"
+              }`}
+              title="Toggle Markdown Preview"
+            >
+              {showMarkdownPreview ? "Preview: On" : "Preview"}
+            </button>
+          )}
           {(activeFile.language === "python" ||
             activeFile.language === "qasm") && (
             <>
@@ -1450,7 +1474,9 @@ export default function EditorPane({
 
       {/* Monaco Editor - only render when mounted on client */}
       <div className="flex-1 overflow-hidden">
-        {isMounted ? (
+        {activeFile.name.toLowerCase().endsWith(".md") && showMarkdownPreview ? (
+          <MarkdownPreview markdown={activeFile.content} />
+        ) : isMounted ? (
           <Editor
             key={activeFile.id}
             height="100%"
