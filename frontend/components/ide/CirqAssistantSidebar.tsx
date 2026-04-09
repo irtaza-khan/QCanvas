@@ -6,12 +6,15 @@ import toast from "react-hot-toast";
 import {
   Copy,
   Loader2,
-  Sparkles,
   History,
   ChevronDown,
   ChevronRight,
   MessageSquare,
   Settings,
+  Send,
+  Paperclip,
+  Mic,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   generateCirqCode,
@@ -75,6 +78,52 @@ interface Turn {
   error?: string;
 }
 
+function Toggle({
+  checked,
+  onChange,
+  disabled,
+  label,
+  description,
+}: Readonly<{
+  checked: boolean;
+  onChange?: (next: boolean) => void;
+  disabled?: boolean;
+  label: string;
+  description?: string;
+}>) {
+  const isDisabled = !!disabled || !onChange;
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <div className={`text-sm ${isDisabled ? "text-editor-text/55" : "text-editor-text"}`}>
+          {label}
+        </div>
+        {description && (
+          <div className="text-[11px] text-editor-text/55 mt-0.5">{description}</div>
+        )}
+      </div>
+      <button
+        type="button"
+        disabled={isDisabled}
+        onClick={() => onChange?.(!checked)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full border transition-colors ${
+          checked
+            ? "bg-emerald-400/80 border-emerald-400/40"
+            : "bg-slate-800/60 border-editor-border/40"
+        } ${isDisabled ? "opacity-60 cursor-not-allowed" : "hover:brightness-110"}`}
+        aria-pressed={checked}
+        aria-label={label}
+      >
+        <span
+          className={`inline-block h-5 w-5 transform rounded-full bg-slate-950 shadow transition-transform ${
+            checked ? "translate-x-5" : "translate-x-1"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
 export default function CirqAssistantSidebar({
   prefillPayload,
   onPrefillConsumed,
@@ -89,9 +138,9 @@ export default function CirqAssistantSidebar({
   const [config, setConfig] = useState<CirqAgentClientConfig>({
     designerEnabled: true,
     validatorEnabled: true,
-    optimizerEnabled: true,
+    optimizerEnabled: false,
     finalValidatorEnabled: true,
-    educationalEnabled: true,
+    educationalEnabled: false,
     educationalDepth: "intermediate",
     maxOptimizationLoops: 3,
   });
@@ -125,6 +174,13 @@ export default function CirqAssistantSidebar({
       const trimmed = description.trim();
       if (!trimmed) return;
 
+      // Enforce locked stages (Designer + Final Validator always enabled).
+      const effectiveConfig: CirqAgentClientConfig = {
+        ...config,
+        designerEnabled: true,
+        finalValidatorEnabled: true,
+      };
+
       const id =
         typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()
@@ -137,7 +193,7 @@ export default function CirqAssistantSidebar({
 
       try {
         const algo = algorithmHint.trim() || undefined;
-        const res = await generateCirqCode(trimmed, config, algo);
+        const res = await generateCirqCode(trimmed, effectiveConfig, algo);
         setTurns((t) =>
           t.map((row) => (row.id === id ? { ...row, result: res } : row)),
         );
@@ -229,148 +285,141 @@ export default function CirqAssistantSidebar({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-editor-sidebar text-editor-text">
-      <div className="shrink-0 px-3 py-2 border-b border-editor-border flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-quantum-blue-light shrink-0" />
-        <span className="text-sm font-medium text-white">Cirq AI</span>
-        <div className="ml-auto flex items-center gap-1">
-          {(() => {
-            const chatCls =
-              activeTab === "chat"
-                ? "bg-editor-panelHigh text-white"
-                : "text-editor-text/70 hover:bg-editor-panelHigh/70 hover:text-white";
-            const settingsCls =
-              activeTab === "settings"
-                ? "bg-editor-panelHigh text-white"
-                : "text-editor-text/70 hover:bg-editor-panelHigh/70 hover:text-white";
-            return (
-              <>
+    <div className="flex flex-col h-full min-h-0 text-editor-text">
+      {/* Tab bar (match Stitch multi-tab shell, but only 2 tabs) */}
+      <div className="shrink-0 px-5 pt-4">
+        <div className="flex gap-1 bg-slate-800/40 p-1 rounded-xl border border-editor-border/30">
           <button
             type="button"
-            className={`px-2 py-1 rounded text-xs flex items-center gap-1.5 transition-colors ${chatCls}`}
             onClick={() => setActiveTab("chat")}
-            title="Chat"
+            className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all ${
+              activeTab === "chat"
+                ? "bg-emerald-400/10 text-emerald-300"
+                : "text-editor-text/70 hover:bg-white/5 hover:text-editor-text"
+            }`}
           >
-            <MessageSquare className="w-3.5 h-3.5" />
-            Chat
+            <MessageSquare className="w-5 h-5" />
+            <span className="text-[10px] mt-1 tracking-tight font-medium">
+              AI Chat
+            </span>
           </button>
           <button
             type="button"
-            className={`px-2 py-1 rounded text-xs flex items-center gap-1.5 transition-colors ${settingsCls}`}
             onClick={() => setActiveTab("settings")}
-            title="Settings"
+            className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all ${
+              activeTab === "settings"
+                ? "bg-emerald-400/10 text-emerald-300"
+                : "text-editor-text/70 hover:bg-white/5 hover:text-editor-text"
+            }`}
           >
-            <Settings className="w-3.5 h-3.5" />
-            Settings
+            <Settings className="w-5 h-5" />
+            <span className="text-[10px] mt-1 tracking-tight font-medium">
+              Settings
+            </span>
           </button>
-              </>
-            );
-          })()}
         </div>
       </div>
 
       {activeTab === "settings" ? (
-        <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
-          <div className="rounded border border-editor-border bg-editor-bg/40 p-3 space-y-3 text-xs">
-            <div className="text-[11px] uppercase tracking-wide text-editor-text/50">
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
+          <div className="rounded-2xl border border-editor-border/30 bg-slate-800/20 p-4 space-y-3 text-xs">
+            <div className="text-[10px] uppercase tracking-[0.22em] text-editor-text/60">
               Agents
             </div>
 
-            <label className="flex items-center justify-between gap-2 cursor-pointer">
-              <span>Designer</span>
-              <input
-                type="checkbox"
-                className="rounded border-editor-border"
-                checked={config.designerEnabled}
-                onChange={(e) =>
-                  setConfig((c) => ({ ...c, designerEnabled: e.target.checked }))
-                }
-              />
-            </label>
+            <Toggle
+              label="Designer"
+              description="Always runs first (locked)"
+              checked
+              disabled
+            />
 
-            <label className="flex items-center justify-between gap-2 cursor-pointer">
-              <span>Validator</span>
-              <input
-                type="checkbox"
-                className="rounded border-editor-border"
-                checked={config.validatorEnabled}
-                onChange={(e) =>
-                  setConfig((c) => ({ ...c, validatorEnabled: e.target.checked }))
-                }
-              />
-            </label>
+            <Toggle
+              label="Validator"
+              description="Initial validation stage"
+              checked={config.validatorEnabled}
+              onChange={(next) =>
+                setConfig((c) => ({ ...c, validatorEnabled: next }))
+              }
+              disabled={isGenerating}
+            />
 
-            <label className="flex items-center justify-between gap-2 cursor-pointer">
-              <span>Optimizer</span>
-              <input
-                type="checkbox"
-                className="rounded border-editor-border"
-                checked={config.optimizerEnabled}
-                onChange={(e) =>
-                  setConfig((c) => ({ ...c, optimizerEnabled: e.target.checked }))
-                }
-              />
-            </label>
+            <Toggle
+              label="Optimizer"
+              description="Optimizes code + loops with validator"
+              checked={config.optimizerEnabled}
+              onChange={(next) =>
+                setConfig((c) => ({ ...c, optimizerEnabled: next }))
+              }
+              disabled={isGenerating}
+            />
 
-            <label className="flex items-center justify-between gap-2 cursor-pointer">
-              <span>Final validator</span>
-              <input
-                type="checkbox"
-                className="rounded border-editor-border"
-                checked={config.finalValidatorEnabled}
-                onChange={(e) =>
-                  setConfig((c) => ({
-                    ...c,
-                    finalValidatorEnabled: e.target.checked,
-                  }))
-                }
-              />
-            </label>
+            <Toggle
+              label="Final validator"
+              description="Always runs at the end (locked)"
+              checked
+              disabled
+            />
           </div>
 
-          <div className="rounded border border-editor-border bg-editor-bg/40 p-3 space-y-3 text-xs">
-            <div className="text-[11px] uppercase tracking-wide text-editor-text/50">
+          <div className="rounded-2xl border border-editor-border/30 bg-slate-800/20 p-4 space-y-3 text-xs">
+            <div className="text-[10px] uppercase tracking-[0.22em] text-editor-text/60">
               Education
             </div>
 
-            <label className="flex items-center justify-between gap-2 cursor-pointer">
-              <span>Educational agent</span>
-              <input
-                type="checkbox"
-                className="rounded border-editor-border"
-                checked={config.educationalEnabled}
-                onChange={(e) =>
-                  setConfig((c) => ({
-                    ...c,
-                    educationalEnabled: e.target.checked,
-                  }))
-                }
-              />
-            </label>
+            <Toggle
+              label="Educational agent"
+              description="Adds explanations and learning material"
+              checked={config.educationalEnabled}
+              onChange={(next) =>
+                setConfig((c) => ({ ...c, educationalEnabled: next }))
+              }
+              disabled={isGenerating}
+            />
 
-            <label className="flex flex-col gap-1">
-              <span>Explanation depth</span>
-              <select
-                className="bg-editor-bg border border-editor-border rounded px-2 py-1.5 text-editor-text"
-                value={config.educationalDepth}
-                disabled={!config.educationalEnabled}
-                onChange={(e) =>
-                  setConfig((c) => ({
-                    ...c,
-                    educationalDepth: e.target.value as EducationalDepth,
-                  }))
-                }
-              >
-                <option value="low">Low</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="high">High</option>
-                <option value="very_high">Very high</option>
-              </select>
-            </label>
+            {config.educationalEnabled && (
+              <div className="pt-1">
+                <div className="text-[11px] text-editor-text/60 mb-2">
+                  Explanation depth
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      ["low", "Low"],
+                      ["intermediate", "Medium"],
+                      ["high", "High"],
+                      ["very_high", "Very High"],
+                    ] as const
+                  ).map(([value, label]) => {
+                    const active = config.educationalDepth === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        disabled={isGenerating}
+                        onClick={() =>
+                          setConfig((c) => ({
+                            ...c,
+                            educationalDepth: value as EducationalDepth,
+                          }))
+                        }
+                        className={`px-3 py-2 rounded-xl text-xs border transition-colors ${
+                          active
+                            ? "bg-emerald-400/10 text-emerald-200 border-emerald-400/30"
+                            : "bg-slate-900/20 text-editor-text/70 border-editor-border/30 hover:bg-white/5 hover:text-editor-text"
+                        } ${isGenerating ? "opacity-60 cursor-not-allowed" : ""}`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="rounded border border-editor-border bg-editor-bg/40 p-3 space-y-3 text-xs">
-            <div className="text-[11px] uppercase tracking-wide text-editor-text/50">
+          <div className="rounded-2xl border border-editor-border/30 bg-slate-800/20 p-4 space-y-3 text-xs">
+            <div className="text-[10px] uppercase tracking-[0.22em] text-editor-text/60">
               Optimization
             </div>
 
@@ -406,12 +455,12 @@ export default function CirqAssistantSidebar({
           </div>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-6">
 
         <button
           type="button"
           onClick={() => setHistoryOpen((o) => !o)}
-          className="w-full flex items-center justify-between text-xs text-editor-text/80 hover:text-white py-1"
+          className="w-full flex items-center justify-between text-xs text-editor-text/75 hover:text-white"
         >
           <span className="flex items-center gap-1">
             <History className="w-3.5 h-3.5" />
@@ -440,28 +489,35 @@ export default function CirqAssistantSidebar({
                 <div className="flex justify-center py-4">
                   <Loader2 className="w-5 h-5 animate-spin text-quantum-blue-light" />
                 </div>
-              ) : runs.length === 0 ? (
-                <p className="text-xs text-editor-text/50">No runs yet.</p>
-              ) : (
-                <ul className="space-y-1 max-h-40 overflow-y-auto">
-                  {runs.map((r) => (
-                    <li key={r.run_id}>
-                      <button
-                        type="button"
-                        className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-editor-border/60 truncate"
-                        onClick={() => void handleLoadRun(r.run_id)}
-                        title={r.prompt_preview}
-                      >
-                        <span className="text-editor-text/60">
-                          {new Date(r.created_at).toLocaleString()}
-                        </span>
-                        <br />
-                        <span className="text-editor-text">{r.prompt_preview}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              ) : (() => {
+                  if (runs.length === 0) {
+                    return (
+                      <p className="text-xs text-editor-text/50">No runs yet.</p>
+                    );
+                  }
+                  return (
+                    <ul className="space-y-1 max-h-40 overflow-y-auto">
+                      {runs.map((r) => (
+                        <li key={r.run_id}>
+                          <button
+                            type="button"
+                            className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-editor-border/60 truncate"
+                            onClick={() => void handleLoadRun(r.run_id)}
+                            title={r.prompt_preview}
+                          >
+                            <span className="text-editor-text/60">
+                              {new Date(r.created_at).toLocaleString()}
+                            </span>
+                            <br />
+                            <span className="text-editor-text">
+                              {r.prompt_preview}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                })()}
             </motion.div>
           )}
         </AnimatePresence>
@@ -492,26 +548,42 @@ export default function CirqAssistantSidebar({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="rounded border border-editor-border bg-editor-bg/30 p-3 space-y-3"
+              className="space-y-3"
             >
-              <div className="text-xs text-quantum-blue-light/90 font-medium">
-                You
+              {/* User bubble */}
+              <div className="flex flex-col items-end gap-2">
+                <div className="bg-slate-800/60 border border-editor-border/20 px-4 py-3 rounded-2xl rounded-tr-md max-w-[92%] text-sm text-editor-text leading-relaxed">
+                  {turn.prompt}
+                </div>
+                <div className="text-[10px] text-editor-text/45 uppercase tracking-widest px-1">
+                  User
+                </div>
               </div>
-              <p className="text-sm text-editor-text whitespace-pre-wrap">
-                {turn.prompt}
-              </p>
 
               {turn.error && (
-                <div className="text-sm text-red-400 border border-red-500/30 rounded p-2">
+                <div className="text-sm text-red-400 border border-red-500/30 rounded-xl p-3 bg-red-500/10">
                   {turn.error}
                 </div>
               )}
 
               {turn.result && (
                 <>
-                  <div className="text-xs text-editor-text/50 uppercase tracking-wide">
-                    Pipeline
+                  {/* Assistant header */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-emerald-400/15 flex items-center justify-center border border-emerald-400/20">
+                      <span className="text-emerald-300 text-[11px] font-bold">
+                        AI
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-emerald-300 font-bold uppercase tracking-widest">
+                      Cirq-RAG
+                    </div>
                   </div>
+
+                  <div className="bg-slate-800/25 border border-editor-border/25 px-4 py-4 rounded-2xl rounded-tl-md w-full text-sm text-editor-text leading-relaxed space-y-4">
+                    <div className="text-[10px] text-editor-text/55 uppercase tracking-[0.22em]">
+                      Pipeline
+                    </div>
                   <ul className="space-y-2">
                     {filterAgents(
                       turn.result.agents || [],
@@ -545,10 +617,7 @@ export default function CirqAssistantSidebar({
                         const opt = turn.result.agents.find(
                           (x) => x.name === "optimizer",
                         );
-                        const m = opt?.metrics as
-                          | Record<string, unknown>
-                          | null
-                          | undefined;
+                        const m = opt?.metrics;
                         if (
                           m &&
                           typeof m.gate_count_before === "number" &&
@@ -566,10 +635,7 @@ export default function CirqAssistantSidebar({
                         const fv = turn.result.agents.find(
                           (x) => x.name === "final_validator",
                         );
-                        const m = fv?.metrics as
-                          | Record<string, unknown>
-                          | null
-                          | undefined;
+                        const m = fv?.metrics;
                         if (m && typeof m.validation_passed === "boolean") {
                           return (
                             <p>
@@ -586,30 +652,31 @@ export default function CirqAssistantSidebar({
                   {turn.result.final_code ? (
                     <>
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-editor-text/50">
-                          Final code
+                        <span className="text-[10px] text-editor-text/55 uppercase tracking-[0.22em]">
+                          Output
                         </span>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1.5">
                           <button
                             type="button"
-                            className="text-xs px-2 py-1 rounded bg-editor-border hover:bg-quantum-blue-light/20"
-                            onClick={() => copyCode(turn.result!.final_code!)}
+                            className="px-3 py-2 rounded-md text-xs bg-slate-900/70 border border-editor-border/30 hover:bg-white/5 text-editor-text"
+                            onClick={() => copyCode(turn.result.final_code ?? "")}
                           >
                             <Copy className="w-3.5 h-3.5 inline mr-1" />
                             Copy
                           </button>
                           <button
                             type="button"
-                            className="text-xs px-2 py-1 rounded bg-quantum-blue-light/20 hover:bg-quantum-blue-light/30 text-white"
-                            onClick={() =>
-                              loadIntoCanvas(turn.result!.final_code)
-                            }
+                            className="px-3 py-2 rounded-md text-xs font-semibold bg-gradient-to-br from-quantum-blue-light to-cyan-300 text-black hover:opacity-95"
+                            onClick={() => loadIntoCanvas(turn.result.final_code)}
                           >
-                            Load into canvas
+                            Apply to Editor
                           </button>
                         </div>
                       </div>
-                      <CirqCodePreview value={turn.result.final_code} />
+
+                      <div className="rounded-xl overflow-hidden border border-editor-border/25 bg-black/40">
+                        <CirqCodePreview value={turn.result.final_code} />
+                      </div>
                     </>
                   ) : (
                     <p className="text-sm text-amber-400/90">
@@ -634,8 +701,8 @@ export default function CirqAssistantSidebar({
                     if (!md) return null;
                     const depth = ex.depth as EducationalDepth | undefined;
                     return (
-                      <div className="rounded border border-editor-border bg-editor-bg/20 p-2 mt-2">
-                        <div className="text-xs text-editor-text/50 mb-2">
+                      <div className="rounded-xl border border-editor-border/25 bg-black/20 p-3">
+                        <div className="text-[10px] text-editor-text/55 uppercase tracking-[0.22em] mb-2">
                           Explanation
                           {depth ? ` (${depth})` : ""}
                         </div>
@@ -646,6 +713,7 @@ export default function CirqAssistantSidebar({
                       </div>
                     );
                   })()}
+                  </div>
                 </>
               )}
             </motion.div>
@@ -654,34 +722,54 @@ export default function CirqAssistantSidebar({
         </div>
       )}
 
-      <div className="shrink-0 border-t border-editor-border p-3 space-y-2 bg-editor-sidebar">
+      <div className="shrink-0 border-t border-editor-border/40 px-5 py-4 bg-slate-900/60">
         {isGenerating && (
-          <div className="flex items-center gap-2 text-xs text-quantum-blue-light">
+          <div className="flex items-center gap-2 text-xs text-emerald-300/90">
             <Loader2 className="w-4 h-4 animate-spin" />
             Running pipeline (may take 15–60s)…
           </div>
         )}
-        <textarea
-          className="w-full min-h-[72px] max-h-[160px] resize-y rounded border border-editor-border bg-editor-bg px-2 py-2 text-sm text-editor-text placeholder:text-editor-text/40 disabled:opacity-50"
-          placeholder="Describe the circuit or algorithm…"
-          value={input}
-          disabled={isGenerating}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit();
-            }
-          }}
-        />
-        <button
-          type="button"
-          disabled={isGenerating || !input.trim()}
-          onClick={handleSubmit}
-          className="w-full py-2 rounded bg-quantum-blue-light text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Generate
-        </button>
+        <div className="relative">
+          <textarea
+            className="w-full min-h-[96px] max-h-[200px] resize-y rounded-2xl border border-editor-border/30 bg-slate-800/30 px-4 py-4 pr-14 text-sm text-editor-text placeholder:text-editor-text/40 focus:outline-none focus:ring-1 focus:ring-emerald-400/40 disabled:opacity-50"
+            placeholder="Ask the assistant…"
+            value={input}
+            disabled={isGenerating}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
+          />
+          <button
+            type="button"
+            disabled={isGenerating || !input.trim()}
+            onClick={handleSubmit}
+            className="absolute bottom-4 right-4 w-9 h-9 rounded-xl bg-emerald-400 text-slate-950 flex items-center justify-center hover:shadow-[0_0_18px_rgba(0,252,154,0.25)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Send"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between mt-3 px-1">
+          <div className="flex items-center gap-3 text-editor-text/55">
+            <button type="button" className="hover:text-emerald-300 transition-colors" title="Attach">
+              <Paperclip className="w-4 h-4" />
+            </button>
+            <button type="button" className="hover:text-emerald-300 transition-colors" title="Mic">
+              <Mic className="w-4 h-4" />
+            </button>
+            <button type="button" className="hover:text-emerald-300 transition-colors" title="Image">
+              <ImageIcon className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="text-[10px] text-editor-text/50 font-mono">
+            Cirq • context: 4.2k tokens
+          </div>
+        </div>
       </div>
     </div>
   );

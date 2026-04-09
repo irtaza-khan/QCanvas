@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useFileStore } from "@/lib/store";
-import { fileApi } from "@/lib/api";
 import { InputLanguage } from "@/types";
 import { detectFramework } from "@/lib/utils";
 
@@ -51,14 +50,16 @@ export default function AppPage() {
 
   const [sidebarActivity, setSidebarActivity] =
     useState<ActivityView>("explorer");
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [cirqPrefill, setCirqPrefill] = useState<{
     nonce: number;
     text: string;
   } | null>(null);
 
   const handleSidebarActivityChange = useCallback((v: ActivityView) => {
-    if (v === "cirqAssistant" && useFileStore.getState().sidebarCollapsed) {
-      useFileStore.getState().toggleSidebar();
+    if (v === "cirqAssistant") {
+      setAssistantOpen(true);
+      return;
     }
     setSidebarActivity(v);
   }, []);
@@ -71,7 +72,7 @@ export default function AppPage() {
     }
     const text = `I have this quantum circuit open in QCanvas:\n\n${f.content}\n\nCan you explain what it does and suggest any optimizations?`;
     setCirqPrefill({ nonce: Date.now(), text });
-    handleSidebarActivityChange("cirqAssistant");
+    setAssistantOpen(true);
   }, [handleSidebarActivityChange]);
 
   // Check for mobile screen size
@@ -362,6 +363,8 @@ export default function AppPage() {
       sidebarActivity={sidebarActivity}
       onSidebarActivityChange={handleSidebarActivityChange}
       onAskAiAboutCircuit={handleAskAiAboutCircuit}
+      rightPanelOpen={assistantOpen}
+      onRightPanelClose={() => setAssistantOpen(false)}
       cirqAssistantView={
         <CirqAssistantSidebar
           prefillPayload={cirqPrefill}
