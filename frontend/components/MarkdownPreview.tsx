@@ -10,8 +10,36 @@ import "katex/dist/katex.min.css";
 import "github-markdown-css/github-markdown-dark.css";
 
 const mdComponents = {
-  // Keep GitHub-like alignment/spacing by letting `github-markdown-css`
-  // style the structure. Only override link behavior (open in new tab).
+  h1: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h1
+      className="text-2xl font-semibold text-white mt-6 mb-3 first:mt-0"
+      {...props}
+    >
+      {children}
+    </h1>
+  ),
+  h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h2 className="text-xl font-semibold text-white/95 mt-5 mb-2" {...props}>
+      {children}
+    </h2>
+  ),
+  h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 className="text-lg font-medium text-white/90 mt-4 mb-2" {...props}>
+      {children}
+    </h3>
+  ),
+  p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
+    <p className="text-editor-text/90 leading-relaxed mb-3" {...props} />
+  ),
+  ul: (props: React.HTMLAttributes<HTMLUListElement>) => (
+    <ul className="list-disc pl-6 mb-3 space-y-1 text-editor-text/90" {...props} />
+  ),
+  ol: (props: React.HTMLAttributes<HTMLOListElement>) => (
+    <ol className="list-decimal pl-6 mb-3 space-y-1 text-editor-text/90" {...props} />
+  ),
+  li: (props: React.HTMLAttributes<HTMLLIElement>) => (
+    <li className="leading-relaxed" {...props} />
+  ),
   a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a target="_blank" rel="noopener noreferrer" {...props} />
   ),

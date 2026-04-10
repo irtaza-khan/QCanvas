@@ -142,81 +142,28 @@
 
 ## What's Left to Build
 
-### High Priority Features 🚧
-1. **OpenQASM 3.0 Compiler Integration**
-   - Integrate OpenQASM 3.0 compiler with web interface
-   - Add validation of generated OpenQASM 3.0 code
-   - Implement error handling and user feedback
-   - Add conversion statistics and metadata
+Authoritative scope and roadmap narrative: `docs/project-scope.md`. This section tracks **remaining or follow-on** work; core compilation, parsers, IDE basics, auth, and QSim integration are **already shipped** (see “What Works” above).
 
-2. **Framework Code Parsing**
-   - Implement parsing for Cirq, Qiskit, and PennyLane code
-   - Extract circuit structures and operations
-   - Convert to OpenQASM 3.0 format
-   - Handle different code patterns and edge cases
+### High priority 🚧
+1. **New IDE shell parity** — `docs/code-editor-functional-regressions.md`: wire Run/compile/hybrid to mounted layout (or migrate handlers off unmounted `TopBar`), restore project load from DB in the active screen, custom new-file naming, rename in explorer, and consistent DB-backed file creation.
+2. **WebSockets (product polish)** — Backend has a WebSocket manager; optional deeper use for long-run sim progress and live status if desired.
+3. **End-to-end tests** — pytest `tests/e2e/` exists; expand coverage for full UI/API workflows.
 
-3. **Real-time WebSocket Communication**
-   - Progress tracking for long operations
-   - Real-time conversion updates
-   - Simulation progress broadcasting
-   - Connection management and cleanup
+### Medium priority 📋
+1. **Measured performance** — Record baseline API, conversion, and sim times; align with targets in “Performance Metrics” and populate `docs/PERFORMANCE_METRICS.md` / `benchmarks/` as needed.
+2. **Gamification UI** — Per `docs/gamification_implementation_guide.md`: achievements surface and leaderboard page (APIs/backend partially ready).
+3. **Production hardening** — Monitoring, structured logging, backups, and deployment runbooks beyond Docker Compose dev (see `docs/deployment/`).
 
-4. **User Interface Components**
-   - Circuit code editor with syntax highlighting
-   - Framework selection interface
-   - Results visualization components
-   - Progress indicators and status updates
-
-### Medium Priority Features 📋
-1. **Advanced Conversion Features**
-   - Batch conversion support
-   - Circuit optimization options
-   - Conversion comparison tools
-   - Framework-specific optimizations
-
-2. **Enhanced Simulation (QSim)**
-   - Multiple backend comparison
-   - Performance benchmarking
-   - Resource usage monitoring (node stats, CPU/QPU utilization)
-   - Simulation result analysis
-
-3. **User Experience Enhancements**
-   - Dark/light theme support
-   - Keyboard shortcuts
-   - Find and replace functionality
-   - Export/import capabilities
-
-4. **API Enhancements**
-   - Comprehensive API documentation
-   - Rate limiting and authentication
-   - API versioning
-   - Error handling improvements
-
-### Low Priority Features 📝
-1. **Advanced Features**
-   - Quantum algorithm library
-   - Circuit optimization algorithms
-   - Advanced visualization tools
-   - Performance analytics
-
-2. **Collaboration Features**
-   - User authentication and sessions
-   - Circuit sharing and collaboration
-   - User preferences and settings
-   - Usage analytics
-
-3. **Educational Features**
-   - Interactive tutorials
-   - Learning progress tracking
-   - Example circuit library
-   - Assessment tools
+### Lower priority / future scope 📝
+1. **Advanced product** — Batch conversion, side-by-side framework comparison, richer analytics (see `docs/features.md` “PLANNED”).
+2. **Community** — GitHub-style circuit sharing and collaboration (broader than current auth + examples).
+3. **Research directions** — `docs/project-scope.md` section 4.2 (Future Work): Q#/Braket, OpenPulse, QEC, real QPUs, visual debugger.
 
 ## Current Status
 
 ### Development Phase
-**Status**: Iteration I & II Complete, Production Ready
-**Progress**: ~85% Complete (Major Milestones: 100% Iteration I & II Implementation)
-**Next Milestone**: Frontend Integration, User Testing, and Production Deployment
+**Status:** Iteration I & II complete; hybrid runtime and expanded examples shipped (see `memory-bank/activeContext.md`).  
+**Focus:** IDE regression fixes, optional polish (gamification UI, e2e, observability), and FYP/defense documentation accuracy.
 
 ### Completed Components
 - ✅ Project setup and documentation
@@ -246,38 +193,30 @@
   - Complex type, while/break/continue, bitwise/shift ops, subroutines
   - All features production-ready and OpenQASM 3.0 compliant
 
-### In Progress
-- 🚧 Frontend integration with new converters
-- 🚧 Quantum simulation backend optimization
-- 🚧 WebSocket real-time communication
-- 🚧 User interface enhancements
+### In progress / follow-on
+- 🚧 New IDE shell: execution and project/file flows per `docs/code-editor-functional-regressions.md`
+- 🚧 E2E test expansion; performance benchmark baselines
+- 🚧 Gamification: achievements UI and leaderboard page (see gamification implementation guide)
 
-### Not Started
-- ❌ Advanced conversion features
-- ❌ Enhanced simulation capabilities
-- ❌ User authentication system
-- ❌ Performance optimization
-- ❌ Production deployment
+### Explicitly not started (optional / future)
+- ❌ Full production SRE stack (metrics, alerting, backups) unless prioritized
+- ❌ Roadmap items in `project-scope.md` section 4.2 (extra languages, pulse, native QPU, etc.)
 
 ## Known Issues
 
-### Technical Issues
-1. **Framework Compatibility**: Some edge cases in framework conversion not yet handled
-2. **Performance**: Simulation performance needs optimization for larger circuits
-3. **Error Handling**: Comprehensive error handling not yet implemented
-4. **Testing**: Test coverage needs improvement
+### Technical
+1. **Framework edge cases** — Unusual library patterns may still fail conversion; tracked via integration tests and issues.
+2. **Large-circuit performance** — Sim time and memory scale with qubits/shots; tuning and caching are ongoing where needed.
+3. **Hybrid sandbox** — Security is config-driven; review `config/config.py` for deployment context.
 
-### Development Issues
-1. **Documentation**: Some API endpoints lack comprehensive documentation
-2. **User Experience**: Interface needs refinement for better usability
-3. **Performance**: Need to establish performance benchmarks
-4. **Security**: Security measures need implementation
+### Product / UX
+1. **IDE regressions** — Documented in `docs/code-editor-functional-regressions.md` (Run pipeline, projects, rename, new-file naming, DB persistence path).
 
-### Infrastructure Issues
-1. **Monitoring**: Production monitoring not yet implemented
-2. **Logging**: Structured logging needs enhancement
-3. **Deployment**: Production deployment pipeline needs completion
-4. **Backup**: Data backup and recovery procedures not established
+### Documentation
+1. **API docs** — OpenAPI at `/docs`; some niche endpoints may need richer descriptions over time.
+
+### Infrastructure
+1. **Production** — Docker Compose supports dev/demo; dedicated prod monitoring/logging/backup is optional follow-on.
 
 ## Performance Metrics
 
@@ -330,48 +269,37 @@
 - ✅ Hot reloading for both frontend and backend
 - ✅ Environment variable management
 
-### Production Environment
-- ❌ Production deployment not yet implemented
-- ❌ Monitoring and logging not yet configured
-- ❌ Security measures not yet implemented
-- ❌ Performance optimization not yet done
+### Production / demo
+- ✅ Docker Compose stack for Postgres, Redis, backend, optional Cirq agent (see root `README.md`)
+- ⏳ Optional: hardened prod deploy, observability, formal backup policy
 
 ## Next Development Priorities
 
-### Immediate (Next 1-2 weeks)
-1. Complete basic circuit conversion functionality
-2. Implement core quantum simulation features
-3. Set up real-time WebSocket communication
-4. Create functional user interface components
+### Immediate
+1. Resolve IDE shell regressions (`docs/code-editor-functional-regressions.md`)
+2. Verify Run/compile/hybrid and DB project flows in the active app route
 
-### Short-term (Next 1-2 months)
-1. Enhance conversion accuracy and error handling
-2. Optimize simulation performance
-3. Improve user experience and interface
-4. Implement comprehensive testing
+### Short-term
+1. E2E coverage for critical paths; document benchmark procedure
+2. Gamification UI completion where backend already exists
 
-### Long-term (Next 3-6 months)
-1. Add advanced quantum computing features
-2. Implement user authentication and collaboration
-3. Optimize for production deployment
-4. Add educational and tutorial features
+### Long-term
+1. Items under `docs/project-scope.md` section 4.2 and `docs/features.md` “PLANNED”
 
 ## Success Criteria
 
-### Technical Success
-- [ ] Successful conversion between all supported frameworks
-- [ ] Real-time simulation with acceptable performance
-- [ ] Comprehensive test coverage (>80%)
-- [ ] Production deployment with monitoring
+### Technical success
+- [x] Successful conversion from supported frameworks to OpenQASM 3.0 (Iteration I & II scope)
+- [x] Simulation via QSim with multiple backends; hybrid execution path shipped
+- [~] Test coverage: strong unit + integration; e2e and perf tests still expandable
+- [~] Production: Dockerized services yes; full monitored prod optional
 
-### User Experience Success
-- [ ] Intuitive interface for quantum computing beginners
-- [ ] Fast and reliable conversion and simulation
-- [ ] Clear error messages and helpful feedback
-- [ ] Comprehensive documentation and examples
+### User experience success
+- [x] Web IDE with examples, themes, shortcuts, results visualization
+- [x] Clear errors and feedback in many paths; IDE shell regressions tracked separately
+- [x] Documentation and examples (`docs/`, README)
 
-### Educational Success
-- [ ] Effective learning platform for quantum computing
-- [ ] Clear examples and tutorials
-- [ ] Progress tracking and assessment tools
-- [ ] Community engagement and collaboration features
+### Educational success
+- [x] Example library and user guides
+- [~] Gamification core (per implementation guide); full achievements/leaderboard UI optional
+- [ ] Broader community/collaboration features (future scope)

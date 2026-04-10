@@ -1,5 +1,9 @@
 # Iteration II Feature Gap Report
 
+> **How to read this document**  
+> **Current truth** for Iteration II delivery is the [High-Level Findings](#high-level-findings) table, the [Outstanding Items Checklist](#outstanding-items-checklist) (all complete), [iteration-ii-implementation-summary.md](iteration-ii-implementation-summary.md), and [Post-Iteration II Bug Fixes](#post-iteration-ii-bug-fixes-nov-26-2025).  
+> The [Methodology](#methodology) and framework notes under [Framework-Specific Details](#framework-specific-details) describe how the audit was done. The short [Historical gap analysis (superseded)](#historical-gap-analysis-superseded) section replaces an older mid-document write-up that stated pre-shipment gaps; it is kept only for traceability, not as a description of today’s code.
+
 ## Methodology
 
 - Read all Memory Bank files and `docs/project-scope.md` to refresh authoritative scope.
@@ -37,48 +41,13 @@
 
 ### PennyLane Converter
 
-The PennyLane → QASM registry only enumerates Iteration I gates:
+- **Registry**: `quantum_converters/config/mappings.py` includes Iteration II gates (CY, CH, CRX, CRY, CRZ, CP, CSWAP, CCZ, GlobalPhase) with OpenQASM mapping and parameter handling aligned to the other frameworks.
+- **Converter/parser**: Iteration II operations are emitted through the shared QASM3 builder path (not left as comments-only fallbacks for that gate set). Implementation details and test pointers: [iteration-ii-implementation-summary.md](iteration-ii-implementation-summary.md).
+- **Tests**: `tests/integration/test_pennylane_iteration_ii.py` (8 tests) covers Iteration II gate coverage; `tests/integration/test_pennylane_integration.py` covers Iteration I parity.
 
-```
-57:86:quantum_converters/config/mappings.py
-        "h": GateMap(...),
-        ...
-        "swap": GateMap(...),
-        "ccx": GateMap(openqasm_gate="ccx", target_gate="Toffoli"),
-```
+## Historical gap analysis (superseded)
 
-The converter calls `builder.add_comment` for anything outside that list (`_add_pennylane_operation`), so all Iteration II gates (CY, CH, CR*, CP, CU, CSWAP, CCZ, GPHASE) are still missing exactly as the checklist states.
-
-## Shared Infrastructure Gaps
-
-### Gate Modifiers
-
-`GateModifier` and `QASM3Builder._build_modifier_str` only know about `inv`, `ctrl`, and `pow`, but no code sets `pow` or multi-control counts, and there is no representation for `negctrl@`.
-
-```
-64:88:quantum_converters/base/qasm3_gates.py
-class GateModifier:
-    inverse: bool = False
-    ctrl_qubits: Optional[int] = None
-    power: Optional[float] = None
-    ...
-        if self.ctrl_qubits is not None:
-            if self.ctrl_qubits == 1:
-                parts.append("ctrl")
-            else:
-                parts.append(f"ctrl({self.ctrl_qubits})")
-```
-
-Converters never populate `GateModifier.ctrl_qubits` or `power`, so `ctrl(n)@` and `pow(k)@` remain theoretical.
-
-### Language / Control-Flow Features
-
-- `QASM3Builder` exposes `add_if_statement` and `add_for_loop` only; there are no helpers for `while`, `break`, or `continue`.
-- No builder or parser support exists for declaring the Iteration II `complex` type or type casting.
-- The expression parser (`quantum_converters/base/qasm3_expression.py`) stops at arithmetic/logical operators; bitwise (`& | ^ ~`) and shift (`<< >>`) operators from Iteration II are absent from `PRECEDENCE` and never emitted.
-- There is no representation of subroutine/function AST nodes or builder methods for `def`/`return`, so Subroutines/Functions remain unimplemented.
-
-These observations confirm the “Missing AST nodes / advanced language features” portion of the checklist.
+*Before **2025-11-18**, a prior revision of this report documented concrete gaps: PennyLane registry stopped at Iteration I gates; `GateModifier` / builder did not yet cover `negctrl@`, `ctrl(n)@`, and `pow(k)@` end-to-end; `QASM3Builder` lacked `while` / `break` / `continue`, `complex`, bitwise and shift operators in the expression layer, and subroutine/`return` support. That analysis drove the implementation. **Those gaps are closed** for Iteration II scope—see the High-Level Findings table and Outstanding Items Checklist above. The obsolete code excerpts and “still missing” wording were removed to avoid contradicting the shipped state.*
 
 ## Outstanding Items Checklist
 
@@ -102,7 +71,7 @@ All previously outstanding items have been implemented and tested:
 **Test status**: All passing (54/54 integration tests)  
 **Implementation date**: November 18, 2025
 
-See `docs/iteration-ii-implementation-summary.md` for detailed implementation documentation.
+See [iteration-ii-implementation-summary.md](iteration-ii-implementation-summary.md) for a concise implementation summary (shipped areas, key paths, tests).
 
 
 ## Post-Iteration II Bug Fixes (Nov 26, 2025)

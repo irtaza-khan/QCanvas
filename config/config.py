@@ -1,4 +1,31 @@
 """
+Shared config used by converters/parsers.
+
+This module exists primarily to satisfy imports like `from config.config import VERBOSE, vprint`.
+Keep it dependency-free so tests can import converter modules without requiring
+the full backend configuration stack.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+
+# Verbose debug printing for converters/parsers.
+VERBOSE: bool = False
+
+
+# Some converters gate extra QASM variable/constant emission on these flags.
+INCLUDE_VARS: bool = True
+INCLUDE_CONSTANTS: bool = True
+
+
+def vprint(*args: Any, **kwargs: Any) -> None:
+    """Verbose print helper (no-op unless VERBOSE=True)."""
+    if VERBOSE:
+        print(*args, **kwargs)
+
+"""
 Global configuration for QCanvas.
 
 Centralizes runtime flags and tunables to avoid scattering constants
