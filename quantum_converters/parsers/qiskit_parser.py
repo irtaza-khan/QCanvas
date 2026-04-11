@@ -1406,8 +1406,9 @@ class QiskitASTParser:
             vprint(f"[QiskitASTParser] Qubits: {self.visitor.qubits}, Clbits: {self.visitor.clbits}")
             vprint(f"[QiskitASTParser] Parameters: {list(self.visitor.parameters)}")
 
-        # Validate that we found a circuit
-        if not self.visitor.operations:
+        # Validate that we found a circuit. Allow empty-operation circuits when
+        # circuit dimensions were discovered (e.g., range(0) loops).
+        if not self.visitor.operations and self.visitor.qubits <= 0:
             raise ValueError("No circuit operations found in source code. Make sure to define a get_circuit() function or circuit operations.")
 
         # Create CircuitAST

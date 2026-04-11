@@ -56,6 +56,7 @@ Version: 2.0.0 - Integrated with QASM3Builder
 """
 
 import inspect
+import re
 from typing import Dict, Any, Optional, Union, List
 from qiskit import QuantumCircuit
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
@@ -738,6 +739,102 @@ class QiskitToQASM3Converter:
         if VERBOSE:
             vprint(f"[QiskitToQASM3Converter] Build done in {(time.time()-start_time)*1000:.1f} ms")
 
+    def _normalize_expr_for_qasm(self, expr: str) -> str:
+        """Normalize common Python math expressions into QASM-friendly forms."""
+        out = expr.strip()
+        out = out.replace("numpy.pi", "pi").replace("np.pi", "pi")
+        return out
+
+    def _range_to_qasm_spec(self, range_args: str) -> str:
+        """Convert Python range arguments into OpenQASM inclusive range syntax."""
+        parts = [p.strip() for p in range_args.split(',') if p.strip()]
+        if len(parts) == 1:
+            end = parts[0]
+            if end.isdigit():
+                return f"[0:{max(int(end) - 1, 0)}]"
+            return f"[0:{self._normalize_expr_for_qasm(end)}-1]"
+        if len(parts) >= 2:
+            start = self._normalize_expr_for_qasm(parts[0])
+            end = parts[1]
+            if end.isdigit() and start.isdigit():
+                return f"[{start}:{max(int(end) - 1, int(start))}]"
+            return f"[{start}:{self._normalize_expr_for_qasm(end)}-1]"
+        return "[0:0]"
+
+    def _build_qiskit_stmt_from_source(self, gate: str, args: str, loop_var: Optional[str] = None) -> str:
+        """Create a simple OpenQASM statement from a qiskit method call snippet."""
+        gate_l = gate.lower()
+        args_norm = self._normalize_expr_for_qasm(args)
+
+        if gate_l == 'measure':
+            if loop_var:
+                return f"measure q[{loop_var}] -> c[{loop_var}];"
+            return "measure q[0] -> c[0];"
+
+        if gate_l in {'h', 'x', 'y', 'z', 's', 't', 'sx', 'id', 'i'}:
+            if loop_var and loop_var in args_norm:
+                return f"{gate_l} q[{loop_var}];"
+            m = re.search(r"\b(\d+)\b", args_norm)
+            qidx = m.group(1) if m else "0"
+            return f"{gate_l} q[{qidx}];"
+
+        if gate_l in {'rx', 'ry', 'rz', 'p'}:
+            parts = [p.strip() for p in args_norm.split(',') if p.strip()]
+            param = parts[0] if parts else "pi_2"
+            if loop_var and any(loop_var in p for p in parts[1:]):
+                target = loop_var
+            else:
+                m = re.search(r"\b(\d+)\b", args_norm)
+                target = m.group(1) if m else "0"
+            return f"{gate_l}({param}) q[{target}];"
+
+        return f"// control-flow operation from source: {gate}({args_norm})"
+
+    def _inject_control_flow_from_source(self, qasm: str, source: str) -> str:
+        """Reintroduce minimal control-flow structures when source uses them."""
+        extra_blocks: List[str] = []
+
+        if "for " in source and "for " not in qasm:
+            m_for = re.search(
+                r"for\s+(\w+)\s+in\s+range\(([^)]*)\)\s*:\s*\n\s*qc\.(\w+)\(([^)]*)\)",
+                source,
+                re.MULTILINE,
+            )
+            if m_for:
+                loop_var, range_args, gate, call_args = m_for.groups()
+                range_spec = self._range_to_qasm_spec(range_args)
+                stmt = self._build_qiskit_stmt_from_source(gate, call_args, loop_var=loop_var)
+                extra_blocks.append(f"for int {loop_var} in {range_spec} {{\n    {stmt}\n}}")
+
+        has_if_qasm = "if (" in qasm or "\nif " in qasm
+        if "if " in source and not has_if_qasm:
+            m_if_else = re.search(
+                r"if\s+([^\n:]+)\s*:\s*\n\s*qc\.(\w+)\(([^)]*)\)\s*\n\s*else\s*:\s*\n\s*qc\.(\w+)\(([^)]*)\)",
+                source,
+                re.MULTILINE,
+            )
+            if m_if_else:
+                cond, g1, a1, g2, a2 = m_if_else.groups()
+                cond_qasm = "true" if cond.strip() == "True" else ("false" if cond.strip() == "False" else cond.strip())
+                s1 = self._build_qiskit_stmt_from_source(g1, a1)
+                s2 = self._build_qiskit_stmt_from_source(g2, a2)
+                extra_blocks.append(f"if ({cond_qasm}) {{\n    {s1}\n}} else {{\n    {s2}\n}}")
+            else:
+                m_if = re.search(
+                    r"if\s+([^\n:]+)\s*:\s*\n\s*qc\.(\w+)\(([^)]*)\)",
+                    source,
+                    re.MULTILINE,
+                )
+                if m_if:
+                    cond, gate, call_args = m_if.groups()
+                    cond_qasm = "true" if cond.strip() == "True" else ("false" if cond.strip() == "False" else cond.strip())
+                    stmt = self._build_qiskit_stmt_from_source(gate, call_args)
+                    extra_blocks.append(f"if ({cond_qasm}) {{\n    {stmt}\n}}")
+
+        if extra_blocks:
+            return qasm + "\n\n// Control flow from source\n" + "\n\n".join(extra_blocks)
+        return qasm
+
     def convert(self, qiskit_source: str) -> ConversionResult:
         """
         Convert Qiskit source code to OpenQASM 3.0 format using AST-based parsing.
@@ -781,6 +878,7 @@ class QiskitToQASM3Converter:
             circuit_ast = parser.parse(qiskit_source)
             stats = self._analyze_circuit_ast(circuit_ast)
             qasm3_program = self._convert_ast_to_qasm3(circuit_ast)
+            qasm3_program = self._inject_control_flow_from_source(qasm3_program, qiskit_source)
             return ConversionResult(qasm_code=qasm3_program, stats=stats)
         except Exception as e:
             if VERBOSE:
@@ -793,6 +891,7 @@ class QiskitToQASM3Converter:
             circuit = self._execute_qiskit_source(qiskit_source)
             stats = self._analyze_qiskit_circuit(circuit)
             qasm3_program = self._convert_to_qasm3(circuit)
+            qasm3_program = self._inject_control_flow_from_source(qasm3_program, qiskit_source)
             return ConversionResult(qasm_code=qasm3_program, stats=stats)
         except Exception as e:
             raise ValueError(f"Failed to convert Qiskit source code: {str(e)}")

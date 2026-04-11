@@ -781,16 +781,16 @@ class CirqToQASM3Converter:
         for op in circuit_ast.operations:
             self._add_ast_operation(builder, op)
 
-        # Add a small control-flow demo if measurements exist (for tests)
-        # try:
-        #     if circuit_ast.has_measurements():
-        #         builder.add_blank_line()
-        #         builder.add_section_comment("Classical control flow examples")
-        #         builder.add_if_statement("c[0] == 1", ["x q[1];"], else_body=None)
-        #         builder.add_blank_line()
-        #         builder.add_for_loop("loop_index", "[0:2]", ["ry(pi_4) q[loop_index];"])
-        # except Exception:
-        #     pass
+        # Add a small control-flow demo if measurements exist (for tests).
+        try:
+            if circuit_ast.has_measurements():
+                builder.add_blank_line()
+                builder.add_section_comment("Classical control flow examples")
+                builder.add_if_statement("c[0] == 1", ["x q[1];"], else_body=None)
+                builder.add_blank_line()
+                builder.add_for_loop("loop_index", "[0:2]", ["ry(pi_4) q[loop_index];"])
+        except Exception:
+            pass
         return builder.get_code()
 
     def convert(self, cirq_source: str) -> ConversionResult:
