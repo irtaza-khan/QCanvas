@@ -8,6 +8,7 @@ export interface TeamMember {
   email?: string
   github?: string
   linkedin?: string
+  image?: string
 }
 
 export interface SocialLinks {
@@ -56,21 +57,24 @@ export const qcanvasTeam: TeamMember[] = [
     team: 'QCanvas',
     email: 'umerfarooqcs0891@gmail.com',
     github: 'https://github.com/Umer-Farooq-CS',
-    linkedin: 'https://www.linkedin.com/in/umer-farooq-a0838a2a1/'
+    linkedin: 'https://www.linkedin.com/in/umer-farooq-a0838a2a1/',
+    image: '/images/team/Umer.jpg'
   },
   {
     name: 'Hussan Waseem Syed',
     team: 'QCanvas',
     email: 'hussainwaseemsyed@gmail.com',
     github: 'https://github.com/hussan-waseem',
-    linkedin: 'https://www.linkedin.com/in/hussain-waseem-syed-323948361/'
+    linkedin: 'https://www.linkedin.com/in/hussain-waseem-syed-323948361/',
+    image: '/images/team/Hussain.jpg'
   },
   {
     name: 'Muhammad Irtaza Khan',
     team: 'QCanvas',
     email: 'muhammadirtazakhan2003@gmail.com',
     github: 'https://github.com/irtaza-khan',
-    linkedin: 'https://www.linkedin.com/in/muhammad-irtaza-khan-35589a1b8/'
+    linkedin: 'https://www.linkedin.com/in/muhammad-irtaza-khan-35589a1b8/',
+    image: '/images/team/Irtaza.jpg'
   }
 ]
 
