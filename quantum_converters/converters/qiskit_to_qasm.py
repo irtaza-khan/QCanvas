@@ -58,15 +58,27 @@ Version: 2.0.0 - Integrated with QASM3Builder
 import inspect
 import re
 from typing import Dict, Any, Optional, Union, List
-from qiskit import QuantumCircuit
-from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
-from quantum_converters.base.qasm3_builder import QASM3Builder
-from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
-from quantum_converters.base.circuit_ast import GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
+
+# Import Qiskit with graceful fallback for when package is not installed
+try:
+    from qiskit import QuantumCircuit
+except ImportError:
+    QuantumCircuit = None
+
+try:
+    from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
+    from quantum_converters.base.qasm3_builder import QASM3Builder
+    from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
+    from quantum_converters.base.circuit_ast import GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
+    from quantum_converters.base.qasm3_gates import QASM3GateLibrary
+    from quantum_converters.parsers.qiskit_parser import QiskitASTParser
+    from quantum_converters.config import get_qiskit_inverse_qasm_map, QISKIT_TO_QASM_REGISTRY
+except ImportError as e:
+    # If any dependency fails, set markers for runtime detection
+    QASM3Builder = None
+    QiskitASTParser = None
+
 import time
-from quantum_converters.base.qasm3_gates import QASM3GateLibrary
-from quantum_converters.parsers.qiskit_parser import QiskitASTParser
-from quantum_converters.config import get_qiskit_inverse_qasm_map, QISKIT_TO_QASM_REGISTRY
 
 class QiskitToQASM3Converter:
     """

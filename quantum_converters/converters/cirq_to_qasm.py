@@ -54,24 +54,50 @@ Author: QCanvas Team
 Date: 2025-08-20
 Version: 2.0.0 - Integrated with QASM3Builder
 """
+from __future__ import annotations
 
 import inspect
-from typing import Dict, Any, Optional, Union, List
-from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
-from quantum_converters.base.qasm3_builder import QASM3Builder
-from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
-from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
-from quantum_converters.parsers.cirq_parser import CirqASTParser
-from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
+from typing import Dict, Any, Optional, Union, List, TYPE_CHECKING
 import time
-from quantum_converters.config import get_cirq_inverse_qasm_map, CIRQ_TO_QASM_REGISTRY
 
-# Import Circuit only when needed to avoid dependency issues
-try:
+# Import all dependencies with graceful fallback for when packages are not installed
+if TYPE_CHECKING:
+    from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
+    from quantum_converters.base.qasm3_builder import QASM3Builder
+    from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
+    from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
+    from quantum_converters.parsers.cirq_parser import CirqASTParser
     from cirq import Circuit
+else:
+    try:
+        from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
+        from quantum_converters.base.qasm3_builder import QASM3Builder
+        from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
+        from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
+        from quantum_converters.parsers.cirq_parser import CirqASTParser
+    except ImportError:
+        QASM3Builder = None
+        CirqASTParser = None
+    
+    try:
+        from cirq import Circuit
+    except ImportError:
+        Circuit = None
+
+try:
+    from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
 except ImportError:
-    # Define a placeholder for type hints
-    Circuit = 'Circuit'
+    VERBOSE = False
+    def vprint(*args, **kwargs):
+        pass
+    INCLUDE_VARS = False
+    INCLUDE_CONSTANTS = False
+
+try:
+    from quantum_converters.config import get_cirq_inverse_qasm_map, CIRQ_TO_QASM_REGISTRY
+except ImportError:
+    get_cirq_inverse_qasm_map = None
+    CIRQ_TO_QASM_REGISTRY = {}
 
 class CirqToQASM3Converter:
     """
