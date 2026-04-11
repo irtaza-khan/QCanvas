@@ -5,6 +5,8 @@
 export interface TeamMember {
   name: string
   team: 'QCanvas' | 'QSim'
+  role: string
+  bio: string
   email?: string
   github?: string
   linkedin?: string
@@ -55,6 +57,8 @@ export const qcanvasTeam: TeamMember[] = [
   {
     name: 'Umer Farooq',
     team: 'QCanvas',
+    role: 'Core Developer',
+    bio: 'Leads the visual editing experience and helps shape the core QCanvas workflow.',
     email: 'umerfarooqcs0891@gmail.com',
     github: 'https://github.com/Umer-Farooq-CS',
     linkedin: 'https://www.linkedin.com/in/umer-farooq-a0838a2a1/',
@@ -63,6 +67,8 @@ export const qcanvasTeam: TeamMember[] = [
   {
     name: 'Hussan Waseem Syed',
     team: 'QCanvas',
+    role: 'Core Developer',
+    bio: 'Focuses on the conversion pipeline and the interactive logic behind QCanvas.',
     email: 'hussainwaseemsyed@gmail.com',
     github: 'https://github.com/hussan-waseem',
     linkedin: 'https://www.linkedin.com/in/hussain-waseem-syed-323948361/',
@@ -71,6 +77,8 @@ export const qcanvasTeam: TeamMember[] = [
   {
     name: 'Muhammad Irtaza Khan',
     team: 'QCanvas',
+    role: 'Core Developer',
+    bio: 'Works on reliability, integration, and the simulation experience across the app.',
     email: 'muhammadirtazakhan2003@gmail.com',
     github: 'https://github.com/irtaza-khan',
     linkedin: 'https://www.linkedin.com/in/muhammad-irtaza-khan-35589a1b8/',
@@ -83,6 +91,8 @@ export const qsimTeam: TeamMember[] = [
   {
     name: 'Aneeq Ahmed Malik',
     team: 'QSim',
+    role: 'Simulation Research',
+    bio: 'Focuses on simulation algorithms and backend execution fidelity.',
     email: 'aneeq.malik@nu.edu.pk',
     github: 'https://github.com/aneeq-malik',
     linkedin: 'https://linkedin.com/in/aneeq-malik'
@@ -90,6 +100,8 @@ export const qsimTeam: TeamMember[] = [
   {
     name: 'Abeer Noor',
     team: 'QSim',
+    role: 'Simulation Research',
+    bio: 'Works on circuit interpretation and result visualization workflows.',
     email: 'abeer.noor@nu.edu.pk',
     github: 'https://github.com/abeernoor05',
     linkedin: 'https://www.linkedin.com/in/abeernoor/'
@@ -97,6 +109,8 @@ export const qsimTeam: TeamMember[] = [
   {
     name: 'Abdullah Mehmood',
     team: 'QSim',
+    role: 'Simulation Research',
+    bio: 'Supports integration, testing, and simulator reliability across modules.',
     email: 'abdullah.mehmood@nu.edu.pk',
     github: 'https://github.com/NoOne619',
     linkedin: 'https://www.linkedin.com/in/abdullah-mehmood-12548a228/'
