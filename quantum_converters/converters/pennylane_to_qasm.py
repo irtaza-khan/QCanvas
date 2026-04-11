@@ -600,19 +600,40 @@ class PennyLaneToQASM3Converter:
             include_vars=INCLUDE_VARS,
             include_constants=INCLUDE_CONSTANTS
         )
-        if circuit_ast.parameters:
-            builder.add_section_comment("Circuit parameters")
-            for param_name in circuit_ast.parameters:
-                builder.declare_variable(param_name, 'float')
+
+        # ── Array parameters (e.g. theta[0]..theta[3]) ─────────────────────────
+        # Emitted as `array[float[64], N] name;` — the OpenQASM 3 syntax that
+        # pyqasm parses as ClassicalDeclaration/ArrayType, which the visitor fully
+        # supports via visit_ArrayType. This also allows subscript access theta[i].
+        if circuit_ast.array_parameters:
+            builder.add_section_comment("Array input parameters")
+            for param_name, param_shape in sorted(circuit_ast.array_parameters.items()):
+                # Format shape as comma-separated list
+                shape_str = ", ".join(str(s) for s in param_shape)
+                builder.lines.append(f"array[float[64], {shape_str}] {param_name};")
             builder.add_blank_line()
-        # We skip declaring circuit_ast.variables because they are used internally 
+
+        # ── Simple scalar parameters (bare variable names used in gates) ────────
+        # Filter out names that were already declared as array parameters above.
+        scalar_params = [
+            p for p in (circuit_ast.parameters or [])
+            if p not in circuit_ast.array_parameters
+        ]
+        if scalar_params:
+            builder.add_section_comment("Scalar input parameters")
+            for param_name in scalar_params:
+                builder.add_input_directive(param_name, 'float[64]')
+            builder.add_blank_line()
+
+        # We skip declaring circuit_ast.variables because they are used internally
         # during PennyLane AST parsing to expand loops and resolve parameters.
         # Emitting them to QASM can cause name collisions with reserved keywords (e.g., 'bit').
-        
+
         builder.add_section_comment("Circuit operations")
         for op in circuit_ast.operations:
             self._add_ast_operation(builder, op)
         return builder.get_code()
+
 
     def convert(self, pennylane_code: str) -> ConversionResult:
         """

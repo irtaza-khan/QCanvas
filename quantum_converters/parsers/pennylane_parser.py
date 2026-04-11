@@ -86,6 +86,8 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         self.qubits: int = 0
         self.clbits: int = 0
         self.variables: Dict[str, Any] = {}  # Track variable assignments
+        # Maps array name -> required size (max_index + 1) for undeclared subscript params
+        self.array_parameters: Dict[str, int] = {}
 
     # Detect qml.device(..., wires=N) and track variable assignments
     def visit_Assign(self, node: ast.Assign) -> None:
@@ -890,33 +892,97 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         return [self._extract_parameter(elt) for elt in node.elts]
 
     def _handle_subscript_parameter(self, node: ast.Subscript):
-        """Handle subscript access like theta[w] or list[:n]."""
+        """Handle subscript access like theta[w], list[:n], or weights[layer, i, 0]."""
+        # ── 1. Determine the base name ───────────────────────────────────────
+        base_name: Optional[str] = None
+        if isinstance(node.value, ast.Name):
+            base_name = node.value.id
+        elif isinstance(node.value, ast.Subscript):
+            # Handle nested subscripts if necessary (e.g., x[i][j])
+            pass
+
+        # ── 2. Extract and resolve all indices ────────────────────────────────
+        # Python 3.8 wraps in ast.Index, 3.9+ doesn't.
+        # Multi-dimensional indexing (x[i, j]) uses ast.Tuple in the slice.
+        index_node = node.slice.value if hasattr(node.slice, 'value') and isinstance(node.slice, ast.Index) else node.slice
+        
+        indices_nodes = []
+        if isinstance(index_node, ast.Tuple):
+            indices_nodes = index_node.elts
+        else:
+            indices_nodes = [index_node]
+
+        resolved_indices: List[Union[int, str]] = []
+        for idx_node in indices_nodes:
+            val = self._extract_parameter(idx_node)
+            if isinstance(val, (int, float)):
+                resolved_indices.append(int(val))
+            else:
+                resolved_indices.append(str(val))
+
+        all_concrete = all(isinstance(idx, int) for idx in resolved_indices)
+
+        # ── 3. Handle known variables (e.g. lists or numpy arrays in scope) ──
+        if base_name and base_name in self.variables:
+            base = self.variables[base_name]
+            try:
+                if all_concrete:
+                    # Try to index into the actual object if it's in scope
+                    target = base
+                    for idx in resolved_indices:
+                        target = target[idx]
+                    if isinstance(target, (int, float, complex)):
+                        return float(target)
+            except Exception:
+                pass
+
+        # ── 4. Track symbolic parameter array and declare shape ───────────────
+        if base_name and base_name not in self.variables:
+            # Initialize or update the tracked shape (list of max sizes seen so far)
+            current_shape = self.array_parameters.get(base_name, [])
+            
+            # Ensure current_shape has enough dimensions
+            while len(current_shape) < len(resolved_indices):
+                current_shape.append(1)
+            
+            # Update each dimension's size
+            for i, idx in enumerate(resolved_indices):
+                if isinstance(idx, int):
+                    current_shape[i] = max(current_shape[i], idx + 1)
+                else:
+                    # For symbolic indices, we can't accurately know the size
+                    # but we've already registered the dimension above with size 1
+                    pass
+            
+            self.array_parameters[base_name] = current_shape
+
+            # Return the substituted or partially-substituted string
+            # e.g. "weights[0, 1, 0]" instead of raw "weights[layer, i, 0]"
+            idx_str = ", ".join(str(idx) for idx in resolved_indices)
+            return f"{base_name}[{idx_str}]"
+
+        # ── 5. Fallback ──────────────────────────────────────────────────────
         try:
-            # Try to unparse the whole subscript expression (e.g., "theta[w]" or "DATA_POINT[:n]")
+            expr = ast.unparse(node) if hasattr(ast, 'unparse') else None
+            if expr:
+                return expr.replace(' ', '')
+        except Exception:
+            pass
+        return f"{base_name}[?]"
+
+        # ── Generic eval fallback ─────────────────────────────────────────────
+        try:
             expr = ast.unparse(node) if hasattr(ast, 'unparse') else None
             if expr:
                 try:
-                    # Evaluate identifying variables in scope
                     val = eval(expr, {"__builtins__": {}}, self.variables)
                     if isinstance(val, (int, float, list)):
                         return val
                 except Exception:
-                    # Fallback to symbolic representation if eval fails
                     return expr.replace(' ', '')
         except Exception:
             pass
-            
-        # Legacy fallback logic for older Python or complex cases
-        if isinstance(node.value, ast.Name) and node.value.id in self.variables:
-            base = self.variables[node.value.id]
-            # Handle Index (deprecated) or modern slice
-            index_node = node.slice.value if hasattr(node.slice, 'value') else node.slice
-            index = self._extract_parameter(index_node)
-            if isinstance(base, list) and isinstance(index, int) and 0 <= index < len(base):
-                return base[index]
-            elif isinstance(base, list) and isinstance(index, str):
-                return f"{node.value.id}[{index}]"
-                
+
         return 'expr'
 
     def _handle_listcomp_parameter(self, node: ast.ListComp):
@@ -1003,7 +1069,8 @@ class PennyLaneASTParser:
             clbits=clbit_count,
             operations=self.visitor.operations,
             parameters=list(self.visitor.parameters),
-            variables=self.visitor.variables
+            variables=self.visitor.variables,
+            array_parameters=self.visitor.array_parameters
         )
 
         vprint("[PennyLaneASTParser] Built CircuitAST")

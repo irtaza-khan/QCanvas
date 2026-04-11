@@ -757,9 +757,24 @@ class CirqToQASM3Converter:
             include_vars=INCLUDE_VARS,
             include_constants=INCLUDE_CONSTANTS,
         )
-        if circuit_ast.parameters:
-            builder.add_section_comment("Circuit parameters")
-            for param_name in circuit_ast.parameters:
+        # ── Array parameters (e.g. theta[0]..theta[3]) ─────────────────────────
+        if hasattr(circuit_ast, 'array_parameters') and circuit_ast.array_parameters:
+            builder.add_section_comment("Array input parameters")
+            for param_name, param_shape in sorted(circuit_ast.array_parameters.items()):
+                # Format shape as comma-separated list
+                shape_str = ", ".join(str(s) for s in param_shape)
+                builder.lines.append(f"array[float[64], {shape_str}] {param_name};")
+            builder.add_blank_line()
+
+        # ── Simple scalar parameters (bare variable names used in gates) ────────
+        # Filter out names that were already declared as array parameters above.
+        all_params = circuit_ast.parameters if isinstance(circuit_ast.parameters, list) else list(circuit_ast.parameters or [])
+        array_param_names = getattr(circuit_ast, 'array_parameters', {}).keys()
+        scalar_params = [p for p in all_params if p not in array_param_names]
+        
+        if scalar_params:
+            builder.add_section_comment("Scalar input parameters")
+            for param_name in scalar_params:
                 builder.declare_variable(param_name, 'float')
             builder.add_blank_line()
         builder.add_section_comment("Circuit operations")

@@ -223,7 +223,7 @@ class QASM3Builder:
         self.variables[name] = QASMVariable(name, 'bit', size=size)
         self.lines.append(f"bit[{size}] {name};")
         
-    def declare_variable(self, name: str, type_: str, size: Optional[int] = None, 
+    def declare_variable(self, name: str, type_: str, size: Optional[Union[int, List[int]]] = None, 
                         value: Optional[str] = None):
         """
         Declare a variable.
@@ -237,7 +237,11 @@ class QASM3Builder:
         self.variables[name] = QASMVariable(name, type_, size=size, value=value)
         
         if size:
-            decl = f"{type_}[{size}] {name}"
+            if isinstance(size, list):
+                size_str = ", ".join(str(s) for s in size)
+                decl = f"{type_}[{size_str}] {name}"
+            else:
+                decl = f"{type_}[{size}] {name}"
         else:
             decl = f"{type_} {name}"
             
@@ -675,19 +679,26 @@ class QASM3Builder:
             self.declare_variable('counter', 'uint')
             self.add_blank_line()
 
-    def add_input_directive(self, name: str, type_: str, size: Optional[int] = None):
+    def add_input_directive(self, name: str, type_: str, size: Optional[Union[int, List[int]]] = None):
         """
         Add an input directive.
 
         Args:
             name: Identifier name
             type_: Data type (bit, int, uint, float, angle, bool)
-            size: Optional array size (for bit[n], int[m], etc.)
+            size: Optional array size or shape (for bit[n], int[m], array[float, n, m], etc.)
         """
-        decl = f"{type_}[{size}] {name}" if size is not None else f"{type_} {name}"
+        if size is not None:
+            if isinstance(size, list):
+                size_str = ", ".join(str(s) for s in size)
+                decl = f"{type_}[{size_str}] {name}"
+            else:
+                decl = f"{type_}[{size}] {name}"
+        else:
+            decl = f"{type_} {name}"
         self.lines.append(f"input {decl};")
 
-    def add_output_directive(self, name: str, type_: str, size: Optional[int] = None):
+    def add_output_directive(self, name: str, type_: str, size: Optional[Union[int, List[int]]] = None):
         """
         Add an output directive.
 

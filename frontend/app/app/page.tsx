@@ -166,6 +166,28 @@ export default function AppPage() {
     };
   }, [isAuthenticated]);
 
+  // Handle examples passed via sessionStorage (from Examples page or Homepage)
+  useEffect(() => {
+    if (!isAuthenticated || !token) return;
+
+    const pendingJson = sessionStorage.getItem("pending-example");
+    if (pendingJson) {
+      try {
+        const example = JSON.parse(pendingJson);
+        if (example && example.name && example.content) {
+          // Use createFile to persist the example
+          useFileStore.getState().createFile(example.name, example.content);
+          toast.success(`Example loaded: ${example.name}`);
+        }
+      } catch (e) {
+        console.error("Failed to parse pending example", e);
+      } finally {
+        // Clear immediately to prevent re-creation on refresh
+        sessionStorage.removeItem("pending-example");
+      }
+    }
+  }, [isAuthenticated, token]);
+
   // Handle global save event
   useEffect(() => {
     const handleSave = () => {

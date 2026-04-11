@@ -160,6 +160,8 @@ class CircuitAST:
         operations: List of circuit operations (gates, measurements, etc.)
         parameters: Dict of circuit parameters
         variables: Dict of circuit variables (e.g., loop variables, constants)
+        array_parameters: Dict mapping array parameter names to their required size
+                          e.g., {'theta': 4} for a circuit using theta[0]..theta[3]
         metadata: Additional circuit metadata
     """
     qubits: int = 0
@@ -167,6 +169,7 @@ class CircuitAST:
     operations: List[Union[GateNode, MeasurementNode, ResetNode, BarrierNode, 'ForLoopNode', 'IfStatementNode']] = field(default_factory=list)
     parameters: Dict[str, Any] = field(default_factory=dict)
     variables: Dict[str, Any] = field(default_factory=dict)
+    array_parameters: Dict[str, List[int]] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def add_gate(self, gate: GateNode) -> None:

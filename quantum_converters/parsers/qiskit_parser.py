@@ -90,6 +90,7 @@ class QiskitASTVisitor(ast.NodeVisitor):
         self.quantum_registers: Set[str] = set() # Track quantum register names
         self.classical_registers: Set[str] = set()  # Track classical register names
         self.clbit_counter: int = 0  # Counter for automatic clbit allocation
+        self.array_parameters: Dict[str, int] = {}  # Track array parameters and their sizes
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Handle variable assignments, particularly QuantumCircuit creation."""
@@ -479,38 +480,87 @@ class QiskitASTVisitor(ast.NodeVisitor):
         """Extract qubits and clbits from QuantumCircuit constructor."""
         args = node.args
         if len(args) >= 1:
-            # First argument is typically number of qubits
+            # First argument is number of qubits — try constant/name first, then full expression
             try:
-                if isinstance(args[0], ast.Constant):  # Python 3.8+
-                    self.qubits = int(args[0].value)
-                elif isinstance(args[0], ast.Name) and args[0].id in self.variables:
-                    val = self.variables[args[0].id]
-                    if isinstance(val, (int, float)):
-                        self.qubits = int(val)
-                    elif isinstance(val, str) and val.isdigit():
-                        self.qubits = int(val)
-                elif isinstance(args[0], ast.Name) and args[0].id in self.registers:
-                    self.qubits = int(self.registers[args[0].id]['size'])
-            except (ValueError, TypeError, KeyError):
+                val = self._resolve_int_arg(args[0])
+                if val is not None:
+                    self.qubits = val
+                elif VERBOSE:
+                    vprint(f"[QiskitASTVisitor] Could not resolve qubits count from {ast.dump(args[0])}")
+            except Exception:
                 if VERBOSE:
-                    vprint(f"[QiskitASTVisitor] Could not resolve qubits count from {args[0]}")
+                    vprint(f"[QiskitASTVisitor] Exception resolving qubits count")
 
         if len(args) >= 2:
             # Second argument is number of classical bits
             try:
-                if isinstance(args[1], ast.Constant):
-                    self.clbits = int(args[1].value)
-                elif isinstance(args[1], ast.Name) and args[1].id in self.variables:
-                    val = self.variables[args[1].id]
-                    if isinstance(val, (int, float)):
-                        self.clbits = int(val)
-                    elif isinstance(val, str) and val.isdigit():
-                        self.clbits = int(val)
-                elif isinstance(args[1], ast.Name) and args[1].id in self.registers:
-                    self.clbits = int(self.registers[args[1].id]['size'])
-            except (ValueError, TypeError, KeyError):
+                val = self._resolve_int_arg(args[1])
+                if val is not None:
+                    self.clbits = val
+                elif VERBOSE:
+                    vprint(f"[QiskitASTVisitor] Could not resolve clbits count from {ast.dump(args[1])}")
+            except Exception:
                 if VERBOSE:
-                    vprint(f"[QiskitASTVisitor] Could not resolve clbits count from {args[1]}")
+                    vprint(f"[QiskitASTVisitor] Exception resolving clbits count")
+
+    def _resolve_int_arg(self, node: ast.expr) -> Optional[int]:
+        """
+        Resolve an AST node to an integer value, handling:
+        - Literal integers (ast.Constant)
+        - Known variable names (ast.Name)
+        - Named register references
+        - Binary/unary expressions (e.g. n + 1, n - 1)
+        Returns None if the value cannot be statically determined.
+        """
+        # 1. Direct integer literal
+        if isinstance(node, ast.Constant) and isinstance(node.value, int):
+            return node.value
+
+        # 2. Known variable
+        if isinstance(node, ast.Name):
+            if node.id in self.variables:
+                val = self.variables[node.id]
+                try:
+                    return int(val)
+                except (TypeError, ValueError):
+                    pass
+            if node.id in self.registers:
+                try:
+                    return int(self.registers[node.id]['size'])
+                except (TypeError, ValueError, KeyError):
+                    pass
+            return None
+
+        # 3. Binary expression: evaluate with known variables
+        if isinstance(node, ast.BinOp):
+            left = self._resolve_int_arg(node.left)
+            right = self._resolve_int_arg(node.right)
+            if left is not None and right is not None:
+                if isinstance(node.op, ast.Add):
+                    return left + right
+                if isinstance(node.op, ast.Sub):
+                    return left - right
+                if isinstance(node.op, ast.Mult):
+                    return left * right
+                if isinstance(node.op, ast.FloorDiv) and right != 0:
+                    return left // right
+            return None
+
+        # 4. Unary expression: -n
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+            val = self._resolve_int_arg(node.operand)
+            return -val if val is not None else None
+
+        # 5. Fallback: use _extract_parameter which handles more cases
+        try:
+            result = self._extract_parameter(node)
+            if isinstance(result, (int, float)) and result != 'expr':
+                return int(result)
+        except Exception:
+            pass
+
+        return None
+
 
     def _is_register_call(self, call: ast.Call) -> bool:
         """Check if this is a QuantumRegister or ClassicalRegister call."""
@@ -1139,7 +1189,41 @@ class QiskitASTVisitor(ast.NodeVisitor):
         elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.attr == 'pi' and node.value.id in ('np', 'numpy'):
             return np.pi
         elif isinstance(node, (ast.BinOp, ast.UnaryOp, ast.Subscript, ast.Call, ast.List, ast.Tuple, ast.ListComp)):
-            # Robust evaluation via eval
+            # Special handling for Subscript to track array parameters and handle unrolled loop variables
+            if isinstance(node, ast.Subscript):
+                base_name = None
+                if isinstance(node.value, ast.Name):
+                    base_name = node.value.id
+                
+                # Resolve all indices
+                index_node = node.slice
+                if hasattr(ast, 'Index') and isinstance(index_node, ast.Index):
+                    index_node = index_node.value
+                
+                indices_nodes = index_node.elts if isinstance(index_node, ast.Tuple) else [index_node]
+                resolved_indices = []
+                for idx_node in indices_nodes:
+                    val = self._extract_parameter(idx_node)
+                    if isinstance(val, (int, float)):
+                        resolved_indices.append(int(val))
+                    else:
+                        resolved_indices.append(str(val))
+                
+                if base_name and base_name not in self.variables:
+                    # Update shape tracking
+                    current_shape = self.array_parameters.get(base_name, [])
+                    while len(current_shape) < len(resolved_indices):
+                        current_shape.append(1)
+                    for i, idx in enumerate(resolved_indices):
+                        if isinstance(idx, int):
+                            current_shape[i] = max(current_shape[i], idx + 1)
+                    self.array_parameters[base_name] = current_shape
+                    
+                    # Return substituted string
+                    idx_str = ", ".join(str(idx) for idx in resolved_indices)
+                    return f"{base_name}[{idx_str}]"
+
+            # Robust evaluation via eval for other expressions
             expr_str = ast.unparse(node)
             safe_globals = {
                 "__builtins__": {
@@ -1331,7 +1415,8 @@ class QiskitASTParser:
             qubits=self.visitor.qubits,
             clbits=self.visitor.clbits,
             operations=self.visitor.operations,
-            parameters=list(self.visitor.parameters)
+            parameters=list(self.visitor.parameters),
+            array_parameters=self.visitor.array_parameters
         )
 
         if VERBOSE:

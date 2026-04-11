@@ -541,6 +541,52 @@ class PennylaneVisitor(BaseVisitor):
             self.set_var('env', var_name, np.zeros(shape=expected_shape, dtype=numpy_dtype))
 
 
+    def visit_IODeclaration(self, node):
+        """
+        Handles `input` / `output` directives (IODeclaration nodes from pyqasm).
+
+        In QSim simulation mode there is no external caller to supply runtime
+        values, so we treat every `input` declaration the same way as a
+        regular variable declaration — initialising it to a sensible default
+        (zeros for arrays, 0.0 for scalars).  `output` declarations are
+        ignored because they only annotate which variables to export.
+
+        IODeclaration has:
+            node.io_identifier  — 'input' or 'output'
+            node.type           — the type node  (ArrayType, FloatType, …)
+            node.identifier     — the Identifier (name)
+        """
+        import openqasm3.ast as _ast
+
+        # 'output' annotations are informational only; skip them
+        io_kind = getattr(node, 'io_identifier', None)
+        if io_kind is not None and str(io_kind).lower() == 'output':
+            return
+
+        type_node = node.type  # e.g. ArrayType, FloatType, IntType, …
+
+        # Build a synthetic node that looks like a ClassicalDeclaration so we
+        # can re-use the existing visit_*Type infrastructure.
+        class _FakeDecl:
+            """Minimal duck-type wrapper so visit_*Type methods work unchanged."""
+            def __init__(self, type_, identifier):
+                self.type = type_
+                self.identifier = identifier
+                self.init_expression = None   # no initialiser — default to zeros/0
+
+        fake = _FakeDecl(type_node, node.identifier)
+
+        type_class_name = type(type_node).__name__  # e.g. 'ArrayType', 'FloatType'
+        method_name = 'visit_' + type_class_name
+
+        if hasattr(self, method_name):
+            getattr(self, method_name)(fake)
+        else:
+            # Fallback: treat unrecognised input types as float scalars with value 0.0
+            var_name = node.identifier.name
+            self.set_var('env', var_name, 0.0)
+
+
     def visit_AngleType(self, node):
         """Handles angle[size] declarations by creating an Angle object."""
         var_name = node.identifier.name

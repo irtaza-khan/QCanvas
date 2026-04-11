@@ -91,6 +91,7 @@ class CirqASTVisitor(ast.NodeVisitor):
         self.measurement_keys: Dict[str, List[int]] = {} # Map measurement keys to list of clbit indices
         self.unsupported_operations: Set[str] = set()
         self.variables: Dict[str, Any] = {}  # Track numeric variable assignments
+        self.array_parameters: Dict[str, int] = {}  # Track array parameters and their sizes
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Handle variable assignments, particularly Circuit creation."""
@@ -182,6 +183,10 @@ class CirqASTVisitor(ast.NodeVisitor):
         
         loop_var = node.target.id
         
+        # Track loop variables to avoid them being treated as global parameters
+        old_val = self.variables.get(loop_var)
+        self.variables[loop_var] = "loop_var"
+        
         # Extract range information
         range_start, range_end = self._extract_range(node.iter)
         if range_start is None or range_end is None:
@@ -216,6 +221,12 @@ class CirqASTVisitor(ast.NodeVisitor):
         else:
             if VERBOSE:
                 vprint(f"[CirqASTVisitor] Skipping empty for loop: {loop_var}")
+
+        # Restore variable state
+        if old_val is not None:
+            self.variables[loop_var] = old_val
+        else:
+            del self.variables[loop_var]
 
     def visit_If(self, node: ast.If) -> None:
         """Handle if statements in Cirq code."""
@@ -1179,8 +1190,14 @@ class CirqASTVisitor(ast.NodeVisitor):
         elif isinstance(node, ast.Constant):
             return node.value
         elif isinstance(node, ast.Name):
-            # Parameter name - add to parameters set
+            # Parameter name - substitute if it's a known variable, else add to parameters set
             param_name = node.id
+            if param_name in self.variables:
+                val = self.variables[param_name]
+                if isinstance(val, (int, float)):
+                    return val
+                return param_name
+            
             self.parameters.add(param_name)
             return param_name
         elif isinstance(node, ast.BinOp):
@@ -1188,6 +1205,9 @@ class CirqASTVisitor(ast.NodeVisitor):
             return self._extract_expression(node)
         elif isinstance(node, ast.Attribute):
             # Handle attributes like np.pi
+            return self._extract_expression(node)
+        elif isinstance(node, ast.Subscript):
+            # Handle subscripts like gamma[layer]
             return self._extract_expression(node)
         return 0
 
@@ -1209,6 +1229,36 @@ class CirqASTVisitor(ast.NodeVisitor):
             return str(node.n)
         elif isinstance(node, ast.Constant):
             return str(node.value)
+        elif isinstance(node, ast.Subscript):
+            # Handle array access like gamma[layer]
+            base = self._extract_expression(node.value)
+            
+            # Resolve all indices
+            index_node = node.slice
+            if hasattr(ast, 'Index') and isinstance(index_node, ast.Index):
+                index_node = index_node.value
+            
+            indices_nodes = index_node.elts if isinstance(index_node, ast.Tuple) else [index_node]
+            resolved_indices = []
+            for idx_node in indices_nodes:
+                val = self._extract_parameter(idx_node)
+                if isinstance(val, (int, float)):
+                    resolved_indices.append(int(val))
+                else:
+                    resolved_indices.append(str(val))
+            
+            if base and base not in self.variables:
+                # Update shape tracking
+                current_shape = self.array_parameters.get(base, [])
+                while len(current_shape) < len(resolved_indices):
+                    current_shape.append(1)
+                for i, idx in enumerate(resolved_indices):
+                    if isinstance(idx, int):
+                        current_shape[i] = max(current_shape[i], idx + 1)
+                self.array_parameters[base] = current_shape
+            
+            idx_str = ", ".join(str(idx) for idx in resolved_indices)
+            return f"{base}[{idx_str}]"
         else:
             # Fallback for unsupported expressions
             try:
@@ -1317,7 +1367,8 @@ class CirqASTParser:
             qubits=qubit_count,
             clbits=clbit_count if clbit_count > 0 else qubit_count,
             operations=self.visitor.operations,
-            parameters=list(self.visitor.parameters)
+            parameters=list(self.visitor.parameters),
+            array_parameters=self.visitor.array_parameters
         )
 
         if VERBOSE:

@@ -46,6 +46,6 @@ ALLOWED_NODE_TYPES = {
     "AliasStatement",
     "QuantumGateModifier",
     "ForLoop",
-    
+    "IODeclaration",   # input / output directives
 
 }
