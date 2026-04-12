@@ -48,8 +48,18 @@ class Settings(BaseSettings):
     # Cirq-RAG-Code-Assistant (proxied at /api/cirq-agent/*). Use port 8001 locally to avoid clashing with QCanvas on 8000.
     CIRQ_AGENT_URL: str = "http://127.0.0.1:8001"
 
+    def _should_rebuild_database_url(self) -> bool:
+        if not self.DATABASE_URL:
+            return True
+
+        local_hosts = {"127.0.0.1", "localhost"}
+        if self.POSTGRES_SERVER in local_hosts:
+            return False
+
+        return any(host in self.DATABASE_URL for host in local_hosts)
+
     def model_post_init(self, __context):
-        if self.DATABASE_URL is None:
+        if self._should_rebuild_database_url():
             self.DATABASE_URL = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         if self.REDIS_URL is None:
             self.REDIS_URL = f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"

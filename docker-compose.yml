@@ -43,16 +43,14 @@ services:
     container_name: qcanvas_cirq_agent
     ports:
       - "8001:8000"
+    env_file:
+      - ./Cirq-RAG-Code-Assistant/.env
     environment:
       - PYTHONPATH=/app
       # Do not pass AWS_ACCESS_KEY_ID / AWS_SECRET with ${VAR:-} here: unset host vars become
       # empty strings in the container and block python-dotenv from reading the mounted .env.
       # Put keys in Cirq-RAG-Code-Assistant/.env or pass real values explicitly below if needed.
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
-      - BEDROCK_INFERENCE_PROFILE_ARN_DESIGNER=${BEDROCK_INFERENCE_PROFILE_ARN_DESIGNER:-}
-      - BEDROCK_INFERENCE_PROFILE_ARN_OPTIMIZER=${BEDROCK_INFERENCE_PROFILE_ARN_OPTIMIZER:-}
-      - BEDROCK_INFERENCE_PROFILE_ARN_VALIDATOR=${BEDROCK_INFERENCE_PROFILE_ARN_VALIDATOR:-}
-      - BEDROCK_INFERENCE_PROFILE_ARN_EDUCATIONAL=${BEDROCK_INFERENCE_PROFILE_ARN_EDUCATIONAL:-}
     volumes:
       - ./Cirq-RAG-Code-Assistant:/app
     command: [ "uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]

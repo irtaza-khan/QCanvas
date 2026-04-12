@@ -2,6 +2,7 @@ import sys
 import os
 import time
 import psutil
+import re
 from typing import Dict, Any, Optional, List
 import numpy as np
 
@@ -126,6 +127,20 @@ class SimulationService:
                     "success": False,
                     "error": f"Unsupported QSim backend: {backend}. Available: {self.available_backends}"
                 }
+
+            # Normalize common user-input artifacts (markdown fences/BOM/hidden chars)
+            # before passing QASM to the parser.
+            normalized_qasm = self._sanitize_qasm_input(qasm_code)
+            if not normalized_qasm:
+                return {
+                    "success": False,
+                    "error": "QASM input is empty after sanitization."
+                }
+            if "OPENQASM" not in normalized_qasm.upper():
+                return {
+                    "success": False,
+                    "error": "Invalid OpenQASM input: missing OPENQASM header."
+                }
             
             # Capture initial memory and CPU stats
             process = psutil.Process()
@@ -134,7 +149,7 @@ class SimulationService:
             
             # Create RunArgs for QSim
             args = RunArgs(
-                qasm_input=qasm_code,
+                qasm_input=normalized_qasm,
                 backend=backend,
                 shots=shots
             )
@@ -209,6 +224,28 @@ class SimulationService:
                 "success": False,
                 "error": f"QSim simulation failed: {error_msg}"
             }
+
+    def _sanitize_qasm_input(self, qasm_code: str) -> str:
+        """Remove common formatting artifacts before parser invocation."""
+        if not isinstance(qasm_code, str):
+            return ""
+
+        # Remove UTF-8 BOM and zero-width spaces that commonly appear in pasted content.
+        cleaned = qasm_code.replace("\ufeff", "").replace("\u200b", "").strip()
+        if not cleaned:
+            return ""
+
+        # Unwrap markdown fences like ```qasm ... ```.
+        fence_match = re.search(r"```(?:qasm|openqasm)?\s*(.*?)\s*```", cleaned, flags=re.IGNORECASE | re.DOTALL)
+        if fence_match:
+            cleaned = fence_match.group(1).strip()
+
+        # If extra prose exists before the actual program, keep only from OPENQASM onward.
+        header_match = re.search(r"OPENQASM\s+[0-9]+(?:\.[0-9]+)?\s*;", cleaned, flags=re.IGNORECASE)
+        if header_match and header_match.start() > 0:
+            cleaned = cleaned[header_match.start():].lstrip()
+
+        return cleaned
     
     def _simulate_statevector(self, qasm_code: str, shots: int) -> Dict[str, Any]:
         """Simulate using statevector backend"""
