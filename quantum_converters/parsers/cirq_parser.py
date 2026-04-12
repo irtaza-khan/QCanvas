@@ -731,40 +731,18 @@ class CirqASTVisitor(ast.NodeVisitor):
         elif method_upper in ['RX', 'RY', 'RZ']:
             # Handle parameterized rotations
             param = None
-            qubits: List[Union[int, str]] = []
+            qubit = 0
             if len(args) >= 2:
                 param = self._extract_parameter(args[0])
-                qubits = [self._extract_qubit_index(args[1])]
-            elif len(args) == 1:
-                # Pattern such as cirq.rx(theta)(q) arrives here first as
-                # cirq.rx(theta) before the outer (q) call is resolved.
-                param = self._extract_parameter(args[0])
-                qubits = []
+                qubit = self._extract_qubit_index(args[1])
+            elif args:
+                qubit = self._extract_qubit_index(args[0])
             if keywords:
                 for kw in keywords:
                     if kw.arg in ['rads', 'theta', 'exponent', 'half_turns']:
                         param = self._extract_parameter(kw.value)
                         if kw.arg in ['exponent', 'half_turns']: param = f"({param})*pi"
-            return GateNode(name=method_name.lower(), qubits=qubits, parameters=[param] if param is not None else [])
-        elif method_upper == 'RESET':
-            if args:
-                qubit = self._extract_qubit_index(args[0])
-                return ResetNode(qubit=qubit)
-            return None
-        elif method_upper == 'TOFFOLI':
-            if len(args) >= 3:
-                q0 = self._extract_qubit_index(args[0])
-                q1 = self._extract_qubit_index(args[1])
-                q2 = self._extract_qubit_index(args[2])
-                return GateNode(name='ccx', qubits=[q0, q1, q2])
-            return None
-        elif method_upper == 'FREDKIN':
-            if len(args) >= 3:
-                q0 = self._extract_qubit_index(args[0])
-                q1 = self._extract_qubit_index(args[1])
-                q2 = self._extract_qubit_index(args[2])
-                return GateNode(name='cswap', qubits=[q0, q1, q2])
-            return None
+            return GateNode(name=method_name.lower(), qubits=[qubit], parameters=[param] if param else [])
         elif method_upper == 'MEASURE':
             return self._handle_measurement_cirq_node(args, keywords)
         

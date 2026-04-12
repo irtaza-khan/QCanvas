@@ -4,7 +4,6 @@ Make sure the backend server is running first: python backend/start.py
 """
 import requests
 import json
-import pytest
 
 BASE_URL = "http://localhost:8000"
 
@@ -22,7 +21,6 @@ def test_auth():
         "password": "TestPass123!",
         "full_name": "Test User"
     }
-    access_token = None
     
     try:
         response = requests.post(f"{BASE_URL}/api/auth/register", json=register_data)
@@ -32,19 +30,11 @@ def test_auth():
             print("   ✅ Registration successful!")
             print(f"   User ID: {data['user']['id']}")
             print(f"   Email: {data['user']['email']}")
-            access_token = data.get("access_token")
-            if access_token:
-                print(f"   Token: {access_token[:50]}...")
-            else:
-                verification_required = data.get("verification_required", False)
-                print("   ℹ️ No token returned on registration")
-                if verification_required:
-                    print("   ℹ️ OTP verification appears enabled")
+            print(f"   Token: {data['access_token'][:50]}...")
+            access_token = data['access_token']
         else:
             print(f"   ❌ Registration failed: {response.json()}")
-
-        # If registration did not provide a token (or registration failed), try login.
-        if not access_token:
+            # If user already exists, try logging in
             print("\n   Trying to login instead...")
             login_data = {
                 "email": register_data["email"],
@@ -54,20 +44,16 @@ def test_auth():
             if response.status_code == 200:
                 data = response.json()
                 print("   ✅ Login successful!")
-                access_token = data.get("access_token")
+                access_token = data['access_token']
             else:
-                print(f"   ⚠️ Login failed: {response.json()}")
+                print(f"   ❌ Login also failed: {response.json()}")
+                return
     except requests.exceptions.ConnectionError:
         print("   ❌ Could not connect to server!")
         print("   Make sure the backend is running: python backend/start.py")
         return
     
     print()
-
-    # If OTP verification is enabled and the user is unverified, token-based tests
-    # cannot proceed in this script without the OTP code.
-    if not access_token:
-        pytest.skip("No access token available (likely OTP verification required). Skipping token-protected checks.")
     
     # Test 2: Get current user
     print("2. Testing Get Current User...")

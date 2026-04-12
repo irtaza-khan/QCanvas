@@ -651,100 +651,10 @@ class PennyLaneToQASM3Converter:
         # First try AST-based conversion (preferred)
         ast_result = self._try_ast_conversion(pennylane_code)
         if ast_result is not None:
-            ast_result.qasm_code = self._inject_control_flow_from_source(ast_result.qasm_code, pennylane_code)
             return ast_result
 
         # Fall back to legacy conversion
-        legacy_result = self._convert_legacy(pennylane_code)
-        legacy_result.qasm_code = self._inject_control_flow_from_source(legacy_result.qasm_code, pennylane_code)
-        return legacy_result
-
-    def _normalize_expr_for_qasm(self, expr: str) -> str:
-        out = expr.strip()
-        out = out.replace("numpy.pi", "pi").replace("np.pi", "pi")
-        return out
-
-    def _range_to_qasm_spec(self, range_args: str) -> str:
-        parts = [p.strip() for p in range_args.split(',') if p.strip()]
-        if len(parts) == 1:
-            end = parts[0]
-            if end.isdigit():
-                return f"[0:{max(int(end) - 1, 0)}]"
-            return f"[0:{self._normalize_expr_for_qasm(end)}-1]"
-        if len(parts) >= 2:
-            start = self._normalize_expr_for_qasm(parts[0])
-            end = parts[1]
-            if end.isdigit() and start.isdigit():
-                return f"[{start}:{max(int(end) - 1, int(start))}]"
-            return f"[{start}:{self._normalize_expr_for_qasm(end)}-1]"
-        return "[0:0]"
-
-    def _build_pennylane_stmt_from_source(self, gate: str, args: str, loop_var: Optional[str] = None) -> str:
-        gate_map = {
-            'Hadamard': 'h', 'PauliX': 'x', 'PauliY': 'y', 'PauliZ': 'z',
-            'RX': 'rx', 'RY': 'ry', 'RZ': 'rz'
-        }
-        qasm_gate = gate_map.get(gate, gate.lower())
-        args_norm = self._normalize_expr_for_qasm(args)
-
-        m_wire = re.search(r"wires\s*=\s*([A-Za-z_][A-Za-z_0-9]*|\d+)", args_norm)
-        if m_wire:
-            wire = m_wire.group(1)
-        elif loop_var and loop_var in args_norm:
-            wire = loop_var
-        else:
-            m_num = re.search(r"\b(\d+)\b", args_norm)
-            wire = m_num.group(1) if m_num else "0"
-
-        if qasm_gate in {'rx', 'ry', 'rz'}:
-            param = args_norm.split(',')[0].strip() if args_norm else "pi_2"
-            return f"{qasm_gate}({param}) q[{wire}];"
-
-        return f"{qasm_gate} q[{wire}];"
-
-    def _inject_control_flow_from_source(self, qasm: str, source: str) -> str:
-        extra_blocks: List[str] = []
-
-        if "for " in source and "for " not in qasm:
-            m_for = re.search(
-                r"for\s+(\w+)\s+in\s+range\(([^)]*)\)\s*:\s*\n\s*qml\.(\w+)\(([^)]*)\)",
-                source,
-                re.MULTILINE,
-            )
-            if m_for:
-                loop_var, range_args, gate, call_args = m_for.groups()
-                range_spec = self._range_to_qasm_spec(range_args)
-                stmt = self._build_pennylane_stmt_from_source(gate, call_args, loop_var=loop_var)
-                extra_blocks.append(f"for int {loop_var} in {range_spec} {{\n    {stmt}\n}}")
-
-        has_if_qasm = "if (" in qasm or "\nif " in qasm
-        if "if " in source and not has_if_qasm:
-            m_if_else = re.search(
-                r"if\s+([^\n:]+)\s*:\s*\n\s*qml\.(\w+)\(([^)]*)\)\s*\n\s*else\s*:\s*\n\s*qml\.(\w+)\(([^)]*)\)",
-                source,
-                re.MULTILINE,
-            )
-            if m_if_else:
-                cond, g1, a1, g2, a2 = m_if_else.groups()
-                cond_qasm = "true" if cond.strip() == "True" else ("false" if cond.strip() == "False" else cond.strip())
-                s1 = self._build_pennylane_stmt_from_source(g1, a1)
-                s2 = self._build_pennylane_stmt_from_source(g2, a2)
-                extra_blocks.append(f"if ({cond_qasm}) {{\n    {s1}\n}} else {{\n    {s2}\n}}")
-            else:
-                m_if = re.search(
-                    r"if\s+([^\n:]+)\s*:\s*\n\s*qml\.(\w+)\(([^)]*)\)",
-                    source,
-                    re.MULTILINE,
-                )
-                if m_if:
-                    cond, gate, call_args = m_if.groups()
-                    cond_qasm = "true" if cond.strip() == "True" else ("false" if cond.strip() == "False" else cond.strip())
-                    stmt = self._build_pennylane_stmt_from_source(gate, call_args)
-                    extra_blocks.append(f"if ({cond_qasm}) {{\n    {stmt}\n}}")
-
-        if extra_blocks:
-            return qasm + "\n\n// Control flow from source\n" + "\n\n".join(extra_blocks)
-        return qasm
+        return self._convert_legacy(pennylane_code)
 
     def _convert_legacy(self, pennylane_code: str) -> ConversionResult:
         """Convert using the legacy parsing approach."""
