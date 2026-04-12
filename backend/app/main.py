@@ -1,11 +1,5 @@
 import sys
 import os
-
-# Add the backend directory to Python path before importing `app.*` modules.
-current_file = os.path.abspath(__file__)
-backend_root = os.path.dirname(os.path.dirname(current_file))
-sys.path.insert(0, backend_root)
-
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -15,8 +9,10 @@ from slowapi.errors import RateLimitExceeded
 from app.core.middleware import limiter, SecurityHeadersMiddleware, AuditLogMiddleware
 
 
-# Keep project root available as metadata/logging context.
+# Add the project root directory to Python path
+current_file = os.path.abspath(__file__)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+sys.path.insert(0, project_root)
 
 from app.api.routes import converter, health, simulator, hybrid, auth, projects, files, gamification, shared, folders, cirq_agent_proxy
 from app.services.conversion_service import ConversionService

@@ -1,14 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
 import time
-from sqlalchemy.exc import OperationalError
 
 try:
     from backend.app.main import app
-    # Import DB symbols from the same module namespace used by app bootstrap
-    # to avoid loading model modules twice under different package names.
-    from app.models.database_models import ApiActivity
-    from app.config.database import SessionLocal
+    from backend.app.models.database_models import ApiActivity
+    from backend.app.config.database import SessionLocal
 except ModuleNotFoundError as e:
     pytest.skip(f"Security tests require optional deps: {e}", allow_module_level=True)
 
@@ -20,8 +17,7 @@ def test_security_headers():
     assert response.headers["X-Frame-Options"] == "DENY"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
-    csp = response.headers.get("Content-Security-Policy", "")
-    assert "default-src 'self'" in csp
+    assert response.headers["Content-Security-Policy"] == "default-src 'self'"
 
 def test_audit_logging():
     # Make a request to a monitored endpoint
@@ -31,18 +27,14 @@ def test_audit_logging():
     
     # Check database for log
     db = SessionLocal()
-    try:
-        # Wait a moment for async write if any (though our middleware is sync)
-        log = db.query(ApiActivity).order_by(ApiActivity.created_at.desc()).first()
-    except OperationalError as exc:
-        pytest.skip(f"PostgreSQL not available for audit log validation: {exc}")
-    finally:
-        db.close()
-
+    # Wait a moment for async write if any (though our middleware is sync)
+    log = db.query(ApiActivity).order_by(ApiActivity.created_at.desc()).first()
+    
     assert log is not None
     assert log.endpoint == "/api/frameworks"
     assert log.method == "GET"
     assert log.status_code == 200
+    db.close()
 
 # Note: Rate limiting is hard to test with TestClient as it mocks the request
 # and slowapi relies on IP address which might be consistent or mocked.

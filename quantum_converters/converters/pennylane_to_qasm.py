@@ -54,27 +54,17 @@ Author: QCanvas Team
 Date: 2025-08-22
 Version: 2.0.0 - Integrated with QASM3Builder
 """
+import numpy as np
 import re
 from typing import List, Dict, Any, Union, Optional
+from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
+from quantum_converters.base.qasm3_builder import QASM3Builder
+from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
+from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
+from quantum_converters.parsers.pennylane_parser import PennyLaneASTParser
+from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
+from quantum_converters.config import get_pl_inverse_qasm_map
 import time
-
-# Import numpy and other dependencies with graceful fallback
-try:
-    import numpy as np
-except ImportError:
-    np = None
-
-try:
-    from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
-    from quantum_converters.base.qasm3_builder import QASM3Builder
-    from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
-    from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
-    from quantum_converters.parsers.pennylane_parser import PennyLaneASTParser
-    from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
-    from quantum_converters.config import get_pl_inverse_qasm_map
-except ImportError:
-    QASM3Builder = None
-    PennyLaneASTParser = None
 
 class PennyLaneToQASM3Converter:
     """
