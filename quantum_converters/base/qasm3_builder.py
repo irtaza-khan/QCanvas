@@ -399,11 +399,10 @@ class QASM3Builder:
     def add_measurement(self, qubit: str, bit: str):
         """
         Add a measurement operation.
-
-        OpenQASM 3 uses the assignment form for measurements:
-            bit_expr = measure qubit_expr;
         """
-        self.lines.append(f"{bit} = measure {qubit};")
+        # Keep arrow syntax for backward compatibility with existing tests and
+        # downstream consumers that expect OpenQASM-style measure statements.
+        self.lines.append(f"measure {qubit} -> {bit};")
         
     def add_reset(self, qubit: str):
         """

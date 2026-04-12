@@ -259,21 +259,31 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
             # Not a simple range() call, skip for now
             self.generic_visit(node)
             return
-        
-        if isinstance(range_start, int) and isinstance(range_end, int):
-            # Expand the loop since we have concrete values
-            if VERBOSE:
-                vprint(f"[PennyLaneASTVisitor] Expanding range loop: {loop_var} in range({range_start}, {range_end})")
-            for val in range(range_start, range_end):
-                self.variables[loop_var] = val
-                for stmt in node.body:
-                    self.visit(stmt)
+
+        # Preserve loop structure for OpenQASM output instead of unrolling.
+        old_val = self.variables.get(loop_var)
+        self.variables[loop_var] = loop_var
+
+        loop_body = []
+        saved_operations = self.operations
+        self.operations = loop_body
+        for stmt in node.body:
+            self.visit(stmt)
+        self.operations = saved_operations
+
+        if old_val is None:
+            self.variables.pop(loop_var, None)
         else:
-            # Fallback for symbolic range: if we wanted to support OpenQASM 3.0 loops,
-            # we would create a ForLoopNode here. For now, we skip or visit generically.
-            if VERBOSE:
-                vprint(f"[PennyLaneASTVisitor] Symbolic range loop detected ({range_start}, {range_end}); skipping expansion")
-            self.generic_visit(node)
+            self.variables[loop_var] = old_val
+
+        self.operations.append(
+            ForLoopNode(
+                variable=loop_var,
+                range_start=range_start,
+                range_end=range_end,
+                body=loop_body,
+            )
+        )
 
     def visit_If(self, node: ast.If) -> None:
         """Handle if statements in PennyLane code."""
@@ -289,33 +299,6 @@ class PennyLaneASTVisitor(ast.NodeVisitor):
         # Extract condition
         condition = self._extract_condition(node.test)
 
-        # Attempt to evaluate condition statically if all dependent variables are known
-        try:
-            # We use a limited namespace for evaluation
-            # Use ast.unparse if available (Python 3.9+)
-            condition_expr = ast.unparse(node.test) if hasattr(ast, "unparse") else condition
-            
-            # Map common OpenQASM 3.0 operators back to Python if needed, 
-            # but unparse should give us valid Python.
-            
-            if eval(condition_expr, {"__builtins__": {}}, self.variables):
-                if VERBOSE:
-                    vprint(f"[PennyLaneASTVisitor] Static If evaluation: True for '{condition}'")
-                for stmt in node.body:
-                    self.visit(stmt)
-                return
-            else:
-                if VERBOSE:
-                    vprint(f"[PennyLaneASTVisitor] Static If evaluation: False for '{condition}'")
-                if node.orelse:
-                    for stmt in node.orelse:
-                        self.visit(stmt)
-                return
-        except Exception as e:
-            if VERBOSE:
-                vprint(f"[PennyLaneASTVisitor] Static If evaluation failed for '{condition}': {e}")
-            pass
-        
         # Collect operations in the if body
         if_body = []
         saved_operations = self.operations

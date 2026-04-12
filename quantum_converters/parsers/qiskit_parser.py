@@ -185,56 +185,41 @@ class QiskitASTVisitor(ast.NodeVisitor):
         """Handle for loops in Qiskit code."""
         if VERBOSE:
             vprint("[QiskitASTVisitor] visit_For: inspecting for loop")
-        
-        # Check if we can unroll the loop statically
-        iterable = self._extract_parameter(node.iter)
-        if isinstance(iterable, (list, range, np.ndarray)) or (isinstance(iterable, str) and iterable == 'range'):
-            # If iterable is literally 'range', we try to resolve start/end
-            if iterable == 'range':
-                range_start, range_end = self._extract_range(node.iter)
-                if range_start is not None and range_end is not None:
-                    iterable = range(range_start, range_end)
-            
-            if isinstance(iterable, (list, range, np.ndarray, tuple)):
-                if VERBOSE:
-                    vprint(f"[QiskitASTVisitor] Unrolling loop over iterable of length {len(iterable)}")
-                
-                # Handle targets
-                targets = []
-                if isinstance(node.target, ast.Name):
-                    targets = [node.target.id]
-                elif isinstance(node.target, (ast.Tuple, ast.List)):
-                    targets = [t.id if isinstance(t, ast.Name) else None for t in node.target.elts]
-                
-                # Unroll
-                for item in iterable:
-                    # Inject loop variables
-                    if len(targets) == 1:
-                        self.variables[targets[0]] = item
-                    elif isinstance(item, (list, tuple, np.ndarray)) and len(targets) == len(item):
-                        for t, val in zip(targets, item):
-                            if t: self.variables[t] = val
-                    elif hasattr(item, '__iter__'):
-                        # Handle generic iterables if targets > 1
-                        try:
-                            vals = list(item)
-                            if len(targets) == len(vals):
-                                for t, val in zip(targets, vals):
-                                    if t: self.variables[t] = val
-                        except:
-                            pass
-                    
-                    # Visit body
-                    for stmt in node.body:
-                        self.visit(stmt)
-                return
 
-        # Fallback to symbolic if not resolvable but has circuit ops
-        if self._has_circuit_ops(node.body):
-            if VERBOSE:
-                vprint(f"[QiskitASTVisitor] Fallback triggered by symbolic loop")
-            raise ValueError("Cannot resolve loop iterator for circuit operations")
-        
+        if not isinstance(node.target, ast.Name):
+            self.generic_visit(node)
+            return
+
+        loop_var = node.target.id
+        range_start, range_end = self._extract_range(node.iter)
+
+        if self._has_circuit_ops(node.body) and range_start is not None and range_end is not None:
+            # Preserve control flow in emitted QASM rather than unrolling.
+            old_val = self.variables.get(loop_var)
+            self.variables[loop_var] = loop_var
+
+            loop_body = []
+            saved_operations = self.operations
+            self.operations = loop_body
+            for stmt in node.body:
+                self.visit(stmt)
+            self.operations = saved_operations
+
+            if old_val is None:
+                self.variables.pop(loop_var, None)
+            else:
+                self.variables[loop_var] = old_val
+
+            self.operations.append(
+                ForLoopNode(
+                    variable=loop_var,
+                    range_start=range_start,
+                    range_end=range_end,
+                    body=loop_body,
+                )
+            )
+            return
+
         self.generic_visit(node)
 
     def visit_If(self, node: ast.If) -> None:
@@ -246,16 +231,6 @@ class QiskitASTVisitor(ast.NodeVisitor):
             if VERBOSE:
                 vprint("[QiskitASTVisitor] Skipping __main__ guard block")
             return
-
-        # Try to extract condition. If it's a symbolic bit/variable we can't resolve,
-        # and the body has circuit ops, we should fallback.
-        if self._has_circuit_ops(node.body) or self._has_circuit_ops(node.orelse):
-             # For Qiskit, we only support very specific if-conditions statically (ClassicalRegister == val)
-             # If it's more complex (like 'if bit == 1'), we fallback.
-             try:
-                 self._extract_qiskit_condition(node.test)
-             except Exception:
-                 raise ValueError("Complex if-condition with circuit operations - triggering fallback")
 
         # Extract condition
         condition = self._extract_condition(node.test)
@@ -1406,8 +1381,9 @@ class QiskitASTParser:
             vprint(f"[QiskitASTParser] Qubits: {self.visitor.qubits}, Clbits: {self.visitor.clbits}")
             vprint(f"[QiskitASTParser] Parameters: {list(self.visitor.parameters)}")
 
-        # Validate that we found a circuit
-        if not self.visitor.operations:
+        # Validate that we found a circuit. Empty circuits are still valid when
+        # a QuantumCircuit was declared (e.g. range(0) loops).
+        if not self.visitor.operations and self.visitor.qubits == 0 and not self.visitor.circuit_vars:
             raise ValueError("No circuit operations found in source code. Make sure to define a get_circuit() function or circuit operations.")
 
         # Create CircuitAST

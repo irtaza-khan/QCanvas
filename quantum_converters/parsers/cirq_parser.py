@@ -736,13 +736,32 @@ class CirqASTVisitor(ast.NodeVisitor):
                 param = self._extract_parameter(args[0])
                 qubit = self._extract_qubit_index(args[1])
             elif args:
-                qubit = self._extract_qubit_index(args[0])
+                # Pattern like cirq.rx(theta)(q): the inner call carries parameter,
+                # the outer call supplies qubits.
+                param = self._extract_parameter(args[0])
+                return GateNode(name=method_name.lower(), qubits=[], parameters=[param])
             if keywords:
                 for kw in keywords:
                     if kw.arg in ['rads', 'theta', 'exponent', 'half_turns']:
                         param = self._extract_parameter(kw.value)
                         if kw.arg in ['exponent', 'half_turns']: param = f"({param})*pi"
             return GateNode(name=method_name.lower(), qubits=[qubit], parameters=[param] if param else [])
+        elif method_upper == 'RESET':
+            if args:
+                qubit = self._extract_qubit_index(args[0])
+                return ResetNode(qubit=qubit)
+        elif method_upper == 'TOFFOLI':
+            if len(args) >= 3:
+                q0 = self._extract_qubit_index(args[0])
+                q1 = self._extract_qubit_index(args[1])
+                q2 = self._extract_qubit_index(args[2])
+                return GateNode(name='ccx', qubits=[q0, q1, q2])
+        elif method_upper == 'FREDKIN':
+            if len(args) >= 3:
+                q0 = self._extract_qubit_index(args[0])
+                q1 = self._extract_qubit_index(args[1])
+                q2 = self._extract_qubit_index(args[2])
+                return GateNode(name='cswap', qubits=[q0, q1, q2])
         elif method_upper == 'MEASURE':
             return self._handle_measurement_cirq_node(args, keywords)
         
