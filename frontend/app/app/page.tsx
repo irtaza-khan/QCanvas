@@ -13,7 +13,7 @@ import CirqAssistantSidebar from "@/components/ide/CirqAssistantSidebar";
 import type { ActivityView } from "@/components/ide/ActivityBar";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { useAuthStore } from "@/lib/authStore";
+import { hasValidAuth, useAuthStore } from "@/lib/authStore";
 import { useExecutionActions } from "@/components/ide/useExecutionActions";
 
 export default function AppPage() {
@@ -95,12 +95,19 @@ export default function AppPage() {
 
   // Authentication check
   useEffect(() => {
-    const authStatus = localStorage.getItem("qcanvas-auth");
+    const persistedAuth = localStorage.getItem("qcanvas-auth");
 
-    if (!authStatus) {
+    if (!persistedAuth) {
       setIsAuthenticated(false);
-    } else {
-      setIsAuthenticated(true);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(persistedAuth);
+      const persistedState = parsed?.state ?? parsed;
+      setIsAuthenticated(hasValidAuth(persistedState));
+    } catch {
+      setIsAuthenticated(false);
     }
   }, []);
 
@@ -364,7 +371,7 @@ export default function AppPage() {
 
   // Not authenticated - redirect to login
   if (!isAuthenticated) {
-    router.push("/login");
+    router.replace("/login");
     return (
       <div className="flex items-center justify-center h-screen bg-editor-bg px-4">
         <div className="max-w-md mx-auto p-8 quantum-glass-dark rounded-lg text-center">

@@ -29,6 +29,17 @@ interface AuthState {
     updateUser: (user: Partial<User>) => void
 }
 
+export function hasValidAuth(auth: {
+    isAuthenticated?: boolean | null
+    token?: string | null
+} | null | undefined): boolean {
+    return Boolean(
+        auth?.isAuthenticated === true &&
+        typeof auth?.token === 'string' &&
+        auth.token.trim().length > 0
+    )
+}
+
 export const useAuthStore = create<AuthState>()(
     persist(
         (set, get) => ({

@@ -15,6 +15,7 @@ import {
   Globe,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { hasValidAuth, useAuthStore } from "@/lib/authStore";
 import {
   config,
   getCopyrightText,
@@ -98,7 +99,7 @@ function TeamMemberCard({
       onFocus={onImmediateActivate}
       onClick={onImmediateActivate}
       aria-pressed={active}
-      className={`group w-full text-left rounded-[2rem] border shadow-xl transform-gpu transition-[transform,box-shadow,border-color,background-color,opacity] duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500/60 dark:focus-visible:ring-blue-400/60 ${accent.cardBorder} ${accent.cardBackground} ${active ? "shadow-2xl" : variant === "stack" ? "opacity-90 hover:-translate-y-1 lg:translate-x-8 lg:scale-[0.68] lg:origin-right" : "hover:-translate-y-1"}`}
+      className={`group w-full text-left rounded-[2rem] border shadow-xl transform-gpu transition-[transform,box-shadow,border-color,background-color,opacity] duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500/60 dark:focus-visible:ring-blue-400/60 ${accent.cardBorder} ${accent.cardBackground} ${active ? "shadow-2xl" : variant === "stack" ? "opacity-90 hover:-translate-y-1 lg:-mt-16 lg:translate-x-2 lg:scale-[0.68] lg:origin-right" : "hover:-translate-y-1"}`}
     >
       <div className="relative aspect-square overflow-hidden rounded-[2rem]">
         {member.image ? (
@@ -121,7 +122,7 @@ function TeamMemberCard({
       </div>
 
       <div
-        className={`${compact ? "p-3" : "p-6"} ${compact ? "space-y-1.5" : "space-y-3"} transition-transform duration-[1100ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${active ? "translate-y-0" : ""}`}
+        className={`${compact ? "p-3" : "p-4"} ${compact ? "space-y-1.5" : "space-y-3"} transition-transform duration-[1100ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${active ? "translate-y-0" : ""}`}
       >
         <div
           className={`inline-flex items-center rounded-full px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.28em] ${accent.badge}`}
@@ -318,7 +319,7 @@ function TeamSpotlightSection({
               .map((member, index) => (
                 <div
                   key={member.name}
-                  className={`animate-[spotlight-stack-in_1100ms_cubic-bezier(0.16,1,0.3,1)_both] ${index > 0 ? "-mt-4 lg:-mt-16" : ""}`}
+                  className={`animate-[spotlight-stack-in_1100ms_cubic-bezier(0.16,1,0.3,1)_both] ${index > 0 ? "-mt-4 lg:-mt-8" : ""}`}
                   style={{ animationDelay: `${180 + index * 180}ms` }}
                 >
                   <TeamMemberCard
@@ -339,6 +340,9 @@ function TeamSpotlightSection({
 }
 
 export default function AboutPage() {
+  const { isAuthenticated, token } = useAuthStore();
+  const canAccessApp = hasValidAuth({ isAuthenticated, token });
+
   const [activeSpotlight, setActiveSpotlight] = useState<ActiveSpotlight>(null);
   const hoverTimerRef = useRef<number | null>(null);
 
@@ -585,7 +589,7 @@ export default function AboutPage() {
         <section className="px-8 py-32 max-w-5xl mx-auto">
           <div className="flex flex-col gap-24">
             <div className="flex flex-col md:flex-row items-start gap-12 group reveal-on-scroll">
-              <span className="font-headline text-8xl font-black text-slate-100 dark:text-slate-900 group-hover:text-blue-600/10 dark:group-hover:text-blue-400/10 transition-colors duration-500 leading-none">
+              <span className="font-headline text-8xl font-black text-blue-800/50 dark:text-slate-900 group-hover:text-blue-600/10 dark:group-hover:text-blue-400/10 light:text-blue-300 transition-colors duration-500 leading-none">
                 01
               </span>
               <div>
@@ -619,7 +623,7 @@ export default function AboutPage() {
             </div>
 
             <div className="flex flex-col md:flex-row items-start gap-12 group reveal-on-scroll">
-              <span className="font-headline text-8xl font-black text-slate-100 dark:text-slate-900 group-hover:text-blue-600/10 dark:group-hover:text-blue-400/10 transition-colors duration-500 leading-none">
+              <span className="font-headline text-8xl font-black text-blue-800/50 dark:text-slate-900 group-hover:text-blue-600/10 dark:group-hover:text-blue-400/10 transition-colors duration-500 leading-none">
                 03
               </span>
               <div>
@@ -654,8 +658,8 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
               <Link
-                href="/app"
-                className="bg-blue-600 dark:bg-gradient-to-r dark:from-blue-600 dark:to-indigo-600 text-white dark:text-white px-10 py-4 rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] transition-all hover:-translate-y-1 active:scale-95"
+                href={canAccessApp ? "/app" : "/login"}
+                className="bg-blue-600 dark:bg-gradient-to-r dark:from-blue-600 dark:to-indigo-600 text-gray-100 dark:text-white px-10 py-4 rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] transition-all hover:-translate-y-1 active:scale-95"
               >
                 Start Experimenting
               </Link>
