@@ -1,33 +1,33 @@
-'use client'
+"use client";
 
-import { X } from 'lucide-react'
-import { useMemo } from 'react'
-import { useFileStore } from '@/lib/store'
+import { X } from "lucide-react";
+import { useMemo } from "react";
+import { useFileStore } from "@/lib/store";
 
 export default function EditorTabs() {
-  const openFileIds = useFileStore((s) => s.openFileIds)
-  const files = useFileStore((s) => s.files)
-  const activeFileId = useFileStore((s) => s.activeFileId)
-  const openFile = useFileStore((s) => s.openFile)
-  const closeFile = useFileStore((s) => s.closeFile)
+  const openFileIds = useFileStore((s) => s.openFileIds);
+  const files = useFileStore((s) => s.files);
+  const activeFileId = useFileStore((s) => s.activeFileId);
+  const openFile = useFileStore((s) => s.openFile);
+  const closeFile = useFileStore((s) => s.closeFile);
 
   const openFiles = useMemo(() => {
-    const byId = new Map(files.map((f) => [f.id, f]))
-    return openFileIds.map((id) => byId.get(id)).filter(Boolean)
-  }, [files, openFileIds])
+    const byId = new Map(files.map((f) => [f.id, f]));
+    return openFileIds.map((id) => byId.get(id)).filter(Boolean);
+  }, [files, openFileIds]);
 
-  if (openFiles.length === 0) return null
+  if (openFiles.length === 0) return null;
 
   return (
-    <div className="h-9 bg-editor-sidebar flex items-end overflow-x-auto px-1.5 gap-0.5">
+    <div className="h-9 bg-slate-100 dark:bg-slate-900 flex items-end overflow-x-auto px-1.5 gap-0.5">
       {openFiles.map((f: any) => (
         <button
           key={f.id}
           type="button"
           className={`flex items-center gap-2 px-3 h-8 rounded-t-md transition-colors ${
             activeFileId === f.id
-              ? 'bg-editor-bg text-white'
-              : 'bg-editor-sidebar text-editor-text hover:bg-editor-panelHigh/70'
+              ? "bg-gray-200 text-white dark:bg-gray-800"
+              : "bg-editor-sidebar text-editor-text hover:bg-editor-panelHigh/70"
           }`}
           onClick={() => openFile(f.id)}
           role="tab"
@@ -38,8 +38,8 @@ export default function EditorTabs() {
             type="button"
             className="p-1 rounded hover:bg-editor-panelHigh"
             onClick={(e) => {
-              e.stopPropagation()
-              closeFile(f.id)
+              e.stopPropagation();
+              closeFile(f.id);
             }}
             title="Close"
           >
@@ -48,6 +48,5 @@ export default function EditorTabs() {
         </button>
       ))}
     </div>
-  )
+  );
 }
-

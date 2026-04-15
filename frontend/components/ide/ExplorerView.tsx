@@ -462,7 +462,9 @@ export default function ExplorerView() {
                   }}
                   onDrop={(e) => {
                     e.preventDefault();
-                    const fileId = e.dataTransfer.getData("text/qcanvas-file-id");
+                    const fileId = e.dataTransfer.getData(
+                      "text/qcanvas-file-id",
+                    );
                     if (!fileId) return;
                     void moveFileToFolder(fileId, node.folder.id);
                     setDragOverFolderId(null);
@@ -646,7 +648,7 @@ export default function ExplorerView() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-editor-sidebar">
-      <div className="px-3 py-2.5 bg-editor-sidebar/90 backdrop-blur-sm">
+      <div className="px-3 py-2.5 bg-gray-500/10 backdrop-blur-sm">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="text-[11px] font-semibold tracking-[0.14em] text-black dark:text-gray-400 uppercase">
@@ -755,7 +757,7 @@ export default function ExplorerView() {
             </div>
             <button
               type="button"
-              className="p-1.5 rounded-md border border-transparent hover:bg-editor-panelHigh/70 hover:border-editor-border text-editor-text transition-colors"
+              className="p-1.5 rounded-md border border-transparent hover:bg-gray-100 hover:border-editor-border text-editor-text transition-colors"
               title="New Folder"
               onClick={() => startCreateFolder()}
             >
@@ -763,7 +765,7 @@ export default function ExplorerView() {
             </button>
             <button
               type="button"
-              className="p-1.5 rounded-md border border-transparent hover:bg-editor-panelHigh/70 hover:border-editor-border text-editor-text transition-colors"
+              className="p-1.5 rounded-md border border-transparent hover:bg-gray-100 hover:border-editor-border text-editor-text transition-colors"
               title={
                 selectedFolderId ? "New File in Selected Folder" : "New File"
               }
@@ -1025,10 +1027,16 @@ export default function ExplorerView() {
             <div className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full border border-editor-border shadow-[0_24px_48px_rgba(0,0,0,0.5)]">
               <div className="text-lg font-bold text-white">Delete folder?</div>
               <div className="mt-2 text-sm text-editor-text">
-                <div className="font-mono text-white/90">{deleteFolderConfirm.folderName}</div>
+                <div className="font-mono text-white/90">
+                  {deleteFolderConfirm.folderName}
+                </div>
                 <div className="mt-2">
-                  This folder contains <span className="text-white font-semibold">{deleteFolderConfirm.fileCount}</span>{' '}
-                  file{deleteFolderConfirm.fileCount === 1 ? '' : 's'}. Deleting it will delete all files inside.
+                  This folder contains{" "}
+                  <span className="text-white font-semibold">
+                    {deleteFolderConfirm.fileCount}
+                  </span>{" "}
+                  file{deleteFolderConfirm.fileCount === 1 ? "" : "s"}. Deleting
+                  it will delete all files inside.
                 </div>
               </div>
 

@@ -116,7 +116,10 @@ export default function IDELayout({
         />
 
         {/* Sidebar panel */}
-        <div className={sidebarContainerClassName} style={sidebarContainerStyle}>
+        <div
+          className={sidebarContainerClassName}
+          style={sidebarContainerStyle}
+        >
           {!sidebarCollapsed && (
             <div className="h-full bg-editor-sidebar border-r border-editor-border overflow-hidden">
               {sidebarActivity === "explorer" && <ExplorerView />}
@@ -132,7 +135,10 @@ export default function IDELayout({
 
         {/* Editor + Results stack */}
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <div ref={contentRef} className="flex flex-col h-full overflow-hidden">
+          <div
+            ref={contentRef}
+            className="flex flex-col h-full overflow-hidden"
+          >
             <EditorTabs />
             {editor}
             {bottomDragHandle}
@@ -163,34 +169,36 @@ export default function IDELayout({
               }}
             />
             <aside
-              className="shrink-0 h-full border-l border-editor-border/60 bg-slate-900/90 backdrop-blur-2xl shadow-[0_32px_72px_rgba(0,0,0,0.65)]"
+              className="shrink-0 h-full border-l border-editor-border/60 bg-gray-200 dark:bg-slate-900/90 backdrop-blur-2xl shadow-[0_32px_72px_rgba(0,0,0,0.65)]"
               style={{ width: clampedRightPanelWidth }}
             >
-            <div className="h-full flex flex-col min-h-0">
-              <div className="shrink-0 px-5 pt-5 pb-4 border-b border-editor-border/40">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-emerald-400 font-semibold tracking-tight text-lg">
-                      Cirq-RAG Assistant
+              <div className="h-full flex flex-col min-h-0">
+                <div className="shrink-0 px-5 pt-5 pb-4 border-b border-editor-border/40">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-emerald-400 font-semibold tracking-tight text-lg">
+                        Cirq-RAG Assistant
+                      </div>
+                      <div className="mt-1 text-[11px] text-editor-text/70">
+                        Quantum AI Agent Active | Model: Claude Opus 4.6
+                      </div>
                     </div>
-                    <div className="mt-1 text-[11px] text-editor-text/70">
-                      Quantum AI Agent Active | Model: Claude Opus 4.6
-                    </div>
+                    {onRightPanelClose && (
+                      <button
+                        type="button"
+                        className="px-2.5 py-1.5 text-xs rounded-md text-editor-text/70 hover:text-white hover:bg-white/5 border border-editor-border/40"
+                        onClick={onRightPanelClose}
+                      >
+                        Close
+                      </button>
+                    )}
                   </div>
-                  {onRightPanelClose && (
-                    <button
-                      type="button"
-                      className="px-2.5 py-1.5 text-xs rounded-md text-editor-text/70 hover:text-white hover:bg-white/5 border border-editor-border/40"
-                      onClick={onRightPanelClose}
-                    >
-                      Close
-                    </button>
-                  )}
+                </div>
+
+                <div className="flex-1 min-h-0">
+                  {cirqAssistantView ?? null}
                 </div>
               </div>
-
-              <div className="flex-1 min-h-0">{cirqAssistantView ?? null}</div>
-            </div>
             </aside>
           </>
         )}

@@ -307,7 +307,10 @@ export default function EditorPane({
 
     // Cleanup listener if Monaco is disposed/re-mounted.
     editor.onDidDispose?.(() => {
-      globalThis.window?.removeEventListener("qcanvas:reveal-in-editor", onReveal);
+      globalThis.window?.removeEventListener(
+        "qcanvas:reveal-in-editor",
+        onReveal,
+      );
     });
 
     // Register language-level providers only once; dispose previous on re-mount
@@ -614,7 +617,10 @@ export default function EditorPane({
               { include: "@whitespace" },
 
               // Directives / version
-              [/(OPENQASM)(\s+)(\d+(\.\d+)?)(\s*;)/, ["keyword", "", "number", "number", "delimiter"]],
+              [
+                /(OPENQASM)(\s+)(\d+(\.\d+)?)(\s*;)/,
+                ["keyword", "", "number", "number", "delimiter"],
+              ],
 
               // Identifiers and keywords
               [
@@ -634,7 +640,10 @@ export default function EditorPane({
               [/\d+(_\d+)*(\.\d+(_\d+)*)?([eE][+-]?\d+)?/, "number"],
 
               // Strings
-              [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
+              [
+                /"/,
+                { token: "string.quote", bracket: "@open", next: "@string" },
+              ],
 
               // Operators & delimiters
               [/[-+*/%]=?/, "operator"],
@@ -951,7 +960,10 @@ export default function EditorPane({
                 },
               ],
 
-              [/==|!=|<=|>=|<|>|:=|=|\+|\-|\*|\/|%|\*\*|\||&|\^|~|<<|>>/, "operator"],
+              [
+                /==|!=|<=|>=|<|>|:=|=|\+|\-|\*|\/|%|\*\*|\||&|\^|~|<<|>>/,
+                "operator",
+              ],
               [/[,.;:]/, "delimiter"],
               [/[[\]{}()]/, "@brackets"],
             ],
@@ -1123,7 +1135,10 @@ export default function EditorPane({
     const model = editorRef.current.getModel();
     const lineNumber = Math.max(1, pending.lineNumber);
     const maxColumn = model.getLineMaxColumn(lineNumber);
-    const column = Math.min(Math.max(1, pending.column ?? 1), Math.max(1, maxColumn));
+    const column = Math.min(
+      Math.max(1, pending.column ?? 1),
+      Math.max(1, maxColumn),
+    );
     const qLen = pending.query ? pending.query.length : 0;
     const endColumn = qLen > 0 ? Math.min(maxColumn, column + qLen) : column;
 
@@ -1232,7 +1247,8 @@ export default function EditorPane({
   return (
     <div ref={containerRef} className="editor-pane">
       {/* Top utility row with VS Code-style run controls on the right */}
-      <div className="relative z-40 overflow-visible h-10 bg-gradient-to-r from-editor-sidebar via-editor-sidebar to-editor-bg/90 border-b border-editor-border/80 flex items-center justify-between px-2.5 gap-2 backdrop-blur-sm">
+      <div className="relative z-40 overflow-visible h-10 bg-gray-300 border-b border-editor-border/80 flex items-center justify-between px-2.5 gap-2 backdrop-blur-sm">
+        {/* <div className="relative z-40 overflow-visible h-10 bg-gradient-to-r from-editor-sidebar via-editor-sidebar to-editor-bg/90 border-b border-editor-border/80 flex items-center justify-between px-2.5 gap-2 backdrop-blur-sm"> */}
         <div className="flex items-center gap-2">
           {activeFile.name.toLowerCase().endsWith(".md") && (
             <button
@@ -1258,7 +1274,7 @@ export default function EditorPane({
                 className={`px-2.5 py-1 text-xs rounded-md border transition-all duration-200 ${
                   showCircuitVisualization
                     ? "bg-quantum-blue-light/20 border-quantum-blue-light/50 text-quantum-blue-light shadow-[0_0_0_1px_rgba(59,130,246,0.2)]"
-                    : "bg-editor-bg/90 border-editor-border text-editor-text hover:bg-editor-border/70 hover:border-editor-border/90"
+                    : "bg-editor-bg border-editor-border text-editor-text hover:bg-editor-border/70 hover:border-editor-border/90"
                 }`}
                 title="Toggle Circuit View"
               >
@@ -1266,16 +1282,16 @@ export default function EditorPane({
               </button>
 
               {showCircuitVisualization && (
-                <div className="flex items-center bg-editor-bg/95 border border-editor-border rounded-md p-0.5 shadow-sm">
+                <div className="flex items-center bg-editor-bg border border-editor-border rounded-md p-0.5 shadow-sm">
                   <button
                     onClick={() => setIs3DMode(false)}
-                    className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? "text-editor-text hover:bg-editor-border/70" : "bg-editor-accent text-white shadow-sm"}`}
+                    className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? "text-editor-text hover:bg-editor-border/70 hover:bg-editor-bg/10" : "bg-editor-accent text-white shadow-sm"}`}
                   >
                     2D
                   </button>
                   <button
                     onClick={() => setIs3DMode(true)}
-                    className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? "bg-editor-accent text-white shadow-sm" : "text-editor-text hover:bg-editor-border/70"}`}
+                    className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? "bg-editor-accent text-white shadow-sm" : "text-editor-text hover:bg-editor-border/70 hover:bg-editor-bg/10"}`}
                   >
                     3D
                   </button>
@@ -1474,7 +1490,8 @@ export default function EditorPane({
 
       {/* Monaco Editor - only render when mounted on client */}
       <div className="flex-1 overflow-hidden">
-        {activeFile.name.toLowerCase().endsWith(".md") && showMarkdownPreview ? (
+        {activeFile.name.toLowerCase().endsWith(".md") &&
+        showMarkdownPreview ? (
           <MarkdownPreview markdown={activeFile.content} />
         ) : isMounted ? (
           <Editor
