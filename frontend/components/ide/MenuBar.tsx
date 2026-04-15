@@ -322,7 +322,7 @@ export default function MenuBar({
             <div key={m.id} className="relative">
               <button
                 type="button"
-                className={`px-2 py-1 text-xs rounded-md transition-colors ${openMenu === m.id ? "bg-editor-panelHigh text-white" : "text-editor-text hover:bg-editor-panelHigh/85 hover:text-white"}`}
+                className={`px-2 py-1 text-xs rounded-md transition-colors ${openMenu === m.id ? "bg-editor-bg/10 text-white" : "text-editor-text hover:bg-editor-panelHigh/10 hover:text-white"}`}
                 onClick={() =>
                   setOpenMenu((cur) => (cur === m.id ? null : m.id))
                 }
@@ -334,7 +334,7 @@ export default function MenuBar({
               </button>
 
               {openMenu === m.id && (
-                <div className="absolute left-0 top-full mt-1.5 w-56 bg-editor-panelHighest/85 backdrop-blur-xl border border-editor-border rounded-md shadow-[0_24px_48px_rgba(0,0,0,0.5)] z-50 overflow-hidden">
+                <div className="absolute left-0 top-full mt-1.5 w-56 bg-editor-bg border border-editor-border rounded-md z-50 overflow-hidden">
                   {menus[m.id].map((item, idx) => (
                     <button
                       key={`${m.id}-${idx}`}
@@ -343,7 +343,7 @@ export default function MenuBar({
                       className={`w-full flex items-center justify-between px-3 py-2 text-xs text-left ${
                         item.disabled
                           ? "opacity-50 cursor-not-allowed text-editor-text"
-                          : "text-editor-text hover:bg-editor-panelHigh hover:text-white"
+                          : "text-editor-text hover:border hover:rounded-md hover:bg-editor-panelHigh/10 hover:text-white"
                       }`}
                       onClick={() => {
                         item.onSelect();
@@ -367,7 +367,7 @@ export default function MenuBar({
         <div className="ml-auto flex items-center gap-2">
           <button
             type="button"
-            className="text-xs text-editor-text hover:text-white px-2 py-1 rounded-md hover:bg-editor-panelHigh hidden sm:inline-flex"
+            className="text-xs text-editor-text hover:text-white px-2 py-1 rounded-md hover:bg-editor-bg/10 hidden sm:inline-flex"
             onClick={() => setShowTemplatesPicker(true)}
           >
             Templates
@@ -471,7 +471,9 @@ export default function MenuBar({
                   onClick={() => {
                     const name = newProjectName.trim();
                     if (!name || !token) return;
-                    void useFileStore.getState().createProject(name, false, token);
+                    void useFileStore
+                      .getState()
+                      .createProject(name, false, token);
                     setShowNewProjectModal(false);
                   }}
                 >
@@ -511,7 +513,7 @@ export default function MenuBar({
                 </button>
               </div>
 
-              <div className="mb-4 flex items-center justify-between rounded-lg border border-editor-border bg-editor-panelLowest px-3 py-2">
+              <div className="mb-4 flex items-center justify-between rounded-lg border border-editor-border bg-editor-bg/10 px-3 py-2">
                 <p className="text-xs text-editor-text">
                   Start quickly with ready-made templates.
                 </p>

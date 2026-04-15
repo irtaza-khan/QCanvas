@@ -36,7 +36,7 @@ export default function EditorTabs() {
           <span className="text-xs whitespace-nowrap">{f.name}</span>
           <button
             type="button"
-            className="p-1 rounded hover:bg-editor-panelHigh"
+            className="p-1 rounded hover:bg-editor-bg/10"
             onClick={(e) => {
               e.stopPropagation();
               closeFile(f.id);

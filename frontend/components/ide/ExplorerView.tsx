@@ -404,7 +404,7 @@ export default function ExplorerView() {
             data-explorer-node="true"
           >
             {editingFolderId === node.folder.id ? (
-              <div className="w-full flex items-center gap-2 py-1.5 pr-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
+              <div className="w-full flex items-center gap-2 py-1.5 pr-2 pl-2 text-sm rounded-md border border-editor-border/20 bg-editor-bg shadow-sm">
                 <FolderIcon className="w-4 h-4 text-quantum-blue-light" />
                 <input
                   value={editingFolderName}
@@ -546,7 +546,7 @@ export default function ExplorerView() {
         data-explorer-node="true"
       >
         {editingFileId === node.file.id ? (
-          <div className="w-full flex items-center gap-2 py-1.5 pr-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
+          <div className="w-full flex items-center gap-2 py-1.5 pr-2 text-sm rounded-md border border-editor-border/30 bg-editor-bg shadow-sm">
             {getFileTypeIcon(node.file, false, accent.icon)}
             <input
               value={editingFileName}
@@ -583,10 +583,10 @@ export default function ExplorerView() {
             <button
               type="button"
               draggable
-              className={`w-full flex items-center gap-2 py-1.5 pr-8 text-sm rounded-md border transition-all duration-150 ${
+              className={`w-full flex items-center gap-2 py-1.5 pr-8 pl-2 text-sm rounded-md border transition-all duration-150 ${
                 activeFileId === node.file.id
-                  ? "bg-editor-accent border-editor-accent text-white shadow-sm"
-                  : "text-editor-text border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
+                  ? "bg-editor-accent/90 border-editor-accent text-gray-100 shadow-sm"
+                  : "text-gray-900 border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
               }`}
               onDragStart={(e) => {
                 e.dataTransfer.setData("text/qcanvas-file-id", node.file.id);
@@ -619,7 +619,11 @@ export default function ExplorerView() {
             <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
               <button
                 type="button"
-                className="p-1 rounded-md hover:bg-editor-border/70 text-editor-text"
+                className={`p-1 rounded-md hover:bg-editor-border/70 dark:text-emerald-600 ${
+                  activeFileId === node.file.id
+                    ? "bg-editor-accent/90 border-editor-accent text-gray-100 shadow-sm"
+                    : "text-gray-900 border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
+                }`}
                 title="Rename file"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -630,7 +634,13 @@ export default function ExplorerView() {
               </button>
               <button
                 type="button"
-                className="p-1 rounded-md hover:bg-editor-border/70 text-editor-text"
+                // className="p-1 rounded-md hover:bg-editor-border/70 dark:text-red-600
+                // "
+                className={`p-1 rounded-md hover:bg-editor-border/70 dark:text-red-600 ${
+                  activeFileId === node.file.id
+                    ? "bg-editor-accent/90 border-editor-accent text-gray-100 shadow-sm"
+                    : "text-gray-900 border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
+                }`}
                 title="Delete file"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -663,7 +673,7 @@ export default function ExplorerView() {
               <button
                 type="button"
                 ref={projectMenuButtonRef}
-                className="max-w-[180px] inline-flex items-center gap-2 bg-editor-panelLowest border border-editor-border rounded-md px-2 py-1 text-xs text-editor-text shadow-sm hover:bg-editor-panelHigh/70 transition-colors"
+                className="max-w-[180px] inline-flex items-center gap-2 bg-editor-bg border border-editor-border rounded-md px-2 py-1 text-xs text-editor-text shadow-sm hover:bg-editor-bg/10 transition-colors"
                 title="Switch project"
                 onClick={() => setProjectMenuOpen((o) => !o)}
               >
@@ -683,7 +693,7 @@ export default function ExplorerView() {
                       onClick={() => setProjectMenuOpen(false)}
                     />
                     <div
-                      className="fixed z-[160] bg-editor-panelHighest/92 border border-editor-border rounded-lg shadow-[0_24px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl overflow-hidden"
+                      className="fixed z-[160] bg-editor-bg border border-editor-border rounded-lg shadow-[0_24px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl overflow-hidden"
                       role="dialog"
                       aria-label="Project menu"
                       style={{
@@ -698,8 +708,8 @@ export default function ExplorerView() {
                           type="button"
                           className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-md transition-colors ${
                             activeProjectId
-                              ? "text-editor-text hover:bg-editor-panelHigh hover:text-white"
-                              : "bg-editor-panelHigh text-white"
+                              ? "text-editor-text hover:bg-editor-bg hover:text-white"
+                              : "bg-editor-panelHigh/90 text-gray-100 shadow-sm"
                           }`}
                           onClick={() => {
                             if (!token) return;
@@ -718,8 +728,8 @@ export default function ExplorerView() {
                               type="button"
                               className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-md transition-colors ${
                                 active
-                                  ? "bg-editor-panelHigh text-white"
-                                  : "text-editor-text hover:bg-editor-panelHigh hover:text-white"
+                                  ? "bg-editor-panelHigh text-gray-100"
+                                  : "text-editor-text hover:bg-editor-panelHigh hover:text-gray-100"
                               }`}
                               onClick={() => {
                                 if (!token) return;
@@ -740,7 +750,7 @@ export default function ExplorerView() {
                         </div>
                         <button
                           type="button"
-                          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold bg-emerald-400/10 text-emerald-200 border border-emerald-400/25 hover:bg-emerald-400/15 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold bg-emerald-400/10 text-emerald-500 dark:text-emerald-200 border border-emerald-400/25 hover:bg-emerald-400/15 transition-colors"
                           onClick={() => {
                             setProjectMenuOpen(false);
                             startCreateProject();
@@ -875,7 +885,7 @@ export default function ExplorerView() {
         )}
 
         {showNewFolderInput && (
-          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
+          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded-md border border-editor-border/20 bg-editor-bg shadow-sm">
             <FolderIcon className="w-4 h-4 text-quantum-blue-light" />
             <input
               value={newFolderName}
@@ -907,7 +917,7 @@ export default function ExplorerView() {
         )}
 
         {showNewFileInput && (
-          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
+          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded-md border border-editor-border/20 bg-editor-bg shadow-sm">
             <FileIcon className="w-4 h-4 text-editor-text" />
             <input
               value={newFileName}

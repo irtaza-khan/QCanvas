@@ -28,7 +28,7 @@ def upgrade() -> None:
     op.alter_column('files', 'user_id',
                existing_type=sa.UUID(),
                nullable=True)
-    op.drop_constraint(op.f('fk_files_user_id_users'), 'files', type_='foreignkey')
+    op.execute('ALTER TABLE files DROP CONSTRAINT IF EXISTS fk_files_user_id_users')
     op.create_foreign_key(None, 'files', 'users', ['user_id'], ['id'])
     op.alter_column('gamification_activities', 'activity_metadata',
                existing_type=postgresql.JSONB(astext_type=sa.Text()),
@@ -65,7 +65,7 @@ def downgrade() -> None:
                existing_type=sa.JSON(),
                type_=postgresql.JSONB(astext_type=sa.Text()),
                existing_nullable=True)
-    op.drop_constraint(None, 'files', type_='foreignkey')
+    op.execute('ALTER TABLE files DROP CONSTRAINT IF EXISTS fk_files_user_id_users')
     op.create_foreign_key(op.f('fk_files_user_id_users'), 'files', 'users', ['user_id'], ['id'], ondelete='CASCADE')
     op.alter_column('files', 'user_id',
                existing_type=sa.UUID(),

@@ -1247,7 +1247,7 @@ export default function EditorPane({
   return (
     <div ref={containerRef} className="editor-pane">
       {/* Top utility row with VS Code-style run controls on the right */}
-      <div className="relative z-40 overflow-visible h-10 bg-gray-300 border-b border-editor-border/80 flex items-center justify-between px-2.5 gap-2 backdrop-blur-sm">
+      <div className="relative z-40 overflow-visible h-10 bg-editor-bg border-b border-editor-border/80 flex items-center justify-between px-2.5 gap-2 backdrop-blur-sm">
         {/* <div className="relative z-40 overflow-visible h-10 bg-gradient-to-r from-editor-sidebar via-editor-sidebar to-editor-bg/90 border-b border-editor-border/80 flex items-center justify-between px-2.5 gap-2 backdrop-blur-sm"> */}
         <div className="flex items-center gap-2">
           {activeFile.name.toLowerCase().endsWith(".md") && (
@@ -1256,8 +1256,8 @@ export default function EditorPane({
               onClick={() => setShowMarkdownPreview((p) => !p)}
               className={`px-2.5 py-1 text-xs rounded-md border transition-all duration-200 ${
                 showMarkdownPreview
-                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-200"
-                  : "bg-editor-bg/90 border-editor-border text-editor-text hover:bg-editor-border/70 hover:border-editor-border/90"
+                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-800 dark:text-emerald-300 shadow-[0_0_0_1px_rgba(132, 225, 190, 0.4)]"
+                  : "bg-editor-bg border-editor-border text-editor-text hover:bg-editor-border/70 hover:border-editor-border/90"
               }`}
               title="Toggle Markdown Preview"
             >
@@ -1302,7 +1302,7 @@ export default function EditorPane({
         </div>
 
         <div className="relative z-50" ref={runMenuRef}>
-          <div className="flex items-stretch rounded-lg border border-editor-border/80 overflow-hidden bg-editor-bg/85 shadow-[0_4px_16px_rgba(0,0,0,0.22)]">
+          <div className="flex items-stretch rounded-lg border border-editor-border/80 overflow-hidden bg-editor-bg shadow-[0_4px_16px_rgba(0,0,0,0.22)]">
             <button
               type="button"
               onClick={() => onRun()}
@@ -1320,7 +1320,7 @@ export default function EditorPane({
             <button
               type="button"
               onClick={() => setShowRunMenu((prev) => !prev)}
-              className="px-2 py-1.5 bg-editor-bg/95 text-editor-text hover:bg-editor-border/70 border-l border-editor-border/80 transition-colors"
+              className="px-2 py-1.5 bg-editor-bg text-editor-text hover:bg-editor-border/70 border-l border-editor-border/80 transition-colors"
               aria-label="Run options"
               title="Run options"
             >
@@ -1331,7 +1331,7 @@ export default function EditorPane({
           </div>
 
           {showRunMenu && (
-            <div className="absolute right-0 top-11 z-[120] w-80 rounded-xl border border-editor-border/80 bg-gradient-to-b from-editor-sidebar to-editor-bg/95 shadow-[0_20px_45px_rgba(0,0,0,0.45)] p-3.5 space-y-3 backdrop-blur-md">
+            <div className="absolute bg-editor-bg right-0 top-11 z-[120] w-80 rounded-xl border border-editor-border/80 bg-gradient-to-b shadow-[0_20px_45px_rgba(0,0,0,0.45)] p-3.5 space-y-3 backdrop-blur-md">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-[11px] uppercase tracking-wide text-black dark:text-gray-400">
@@ -1349,8 +1349,8 @@ export default function EditorPane({
                       onClick={() => setExecutionMode(m)}
                       className={`px-2.5 py-2 text-xs rounded-md border capitalize transition-all duration-200 ${
                         executionMode === m
-                          ? "bg-editor-accent border-editor-accent text-white shadow-[0_0_18px_rgba(59,130,246,0.25)]"
-                          : "bg-editor-bg/90 border-editor-border text-editor-text hover:bg-editor-border/70"
+                          ? "bg-editor-accent border-editor-accent text-gray-100 shadow-[0_0_18px_rgba(59,130,246,0.25)]"
+                          : "bg-editor-bg border-editor-border text-editor-text hover:bg-editor-border/70"
                       }`}
                     >
                       {m}
@@ -1419,7 +1419,7 @@ export default function EditorPane({
                   </div>
                 </>
               ) : (
-                <div className="text-xs text-black dark:text-gray-400 bg-editor-bg/95 border border-editor-border rounded-md p-2.5 leading-relaxed">
+                <div className="text-xs text-black dark:text-gray-400 bg-editor-bg/10 border border-editor-border rounded-md p-2.5 leading-relaxed">
                   Expert mode runs hybrid Python workflows. Basic simulation
                   settings are not used in this mode.
                 </div>
