@@ -1,4 +1,5 @@
 import { getApiBase } from '@/lib/api'
+import { useAuthStore } from '@/lib/authStore'
 import type {
   CirqAgentClientConfig,
   CirqRunSummary,
@@ -58,6 +59,12 @@ async function parseCirqJson<T>(res: Response): Promise<T> {
   }
 }
 
+function getAuthHeaders(): Record<string, string> {
+  const token = useAuthStore.getState().token
+  if (!token) return {}
+  return { Authorization: `Bearer ${token}` }
+}
+
 function withTimeout(signal?: AbortSignal): AbortSignal {
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), CIRQ_GENERATE_TIMEOUT_MS)
@@ -95,7 +102,10 @@ export async function generateCirqCode(
   try {
     res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify({
         description,
         algorithm: algorithm || undefined,
@@ -130,7 +140,13 @@ export async function listCirqRuns(signal?: AbortSignal): Promise<CirqRunSummary
   const base = await getCirqFetchBase()
   const url = buildCirqUrl(base, '/api/v1/runs')
 
-  const res = await fetch(url, { method: 'GET', signal })
+  const res = await fetch(url, {
+    method: 'GET',
+    signal,
+    headers: {
+      ...getAuthHeaders(),
+    },
+  })
   return parseCirqJson<CirqRunSummary[]>(res)
 }
 
@@ -144,6 +160,12 @@ export async function getCirqRun(
     `/api/v1/runs/${encodeURIComponent(runId)}`,
   )
 
-  const res = await fetch(url, { method: 'GET', signal })
+  const res = await fetch(url, {
+    method: 'GET',
+    signal,
+    headers: {
+      ...getAuthHeaders(),
+    },
+  })
   return parseCirqJson<GenerateCirqResponse>(res)
 }

@@ -11,6 +11,7 @@ import ShareModal from "@/components/ShareModal";
 import AddNewLanguage from "@/components/AddNewLanguage";
 import { FILE_TEMPLATES_PRESETS } from "@/lib/fileTemplates";
 import { Code, FileText } from "@/components/Icons";
+import { Check, X } from "lucide-react";
 
 type MenuId =
   | "file"
@@ -53,6 +54,8 @@ export default function MenuBar({
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showTemplatesPicker, setShowTemplatesPicker] = useState(false);
   const [showAddLanguage, setShowAddLanguage] = useState(false);
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
   const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -108,6 +111,13 @@ export default function MenuBar({
             } else {
               useFileStore.getState().addFile(fileName, undefined);
             }
+          },
+        },
+        {
+          label: "New Project…",
+          onSelect: () => {
+            setNewProjectName("");
+            setShowNewProjectModal(true);
           },
         },
         {
@@ -229,6 +239,7 @@ export default function MenuBar({
       onRun,
       setExecutionMode,
       theme,
+      token,
       toggleResults,
       toggleSidebar,
       toggleTheme,
@@ -384,6 +395,95 @@ export default function MenuBar({
         fileName={activeFile?.name || ""}
       />
 
+      {showNewProjectModal && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 bg-black/50 z-[55] cursor-default"
+            onClick={() => setShowNewProjectModal(false)}
+            aria-label="Close create project"
+          />
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full border border-editor-border shadow-[0_24px_48px_rgba(0,0,0,0.5)]">
+              <div className="flex items-center justify-between">
+                <div className="text-lg font-bold text-white">
+                  Create new project
+                </div>
+                <button
+                  type="button"
+                  className="btn-ghost p-1 hover:bg-editor-border rounded-lg"
+                  onClick={() => setShowNewProjectModal(false)}
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="mt-2 text-sm text-editor-text">
+                Projects keep files organized and switchable.
+              </div>
+
+              <div className="mt-4">
+                <label
+                  htmlFor="menubar-new-project-name"
+                  className="text-[10px] uppercase tracking-[0.22em] text-editor-text/60"
+                >
+                  Project name
+                </label>
+                <input
+                  id="menubar-new-project-name"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setShowNewProjectModal(false);
+                    if (e.key === "Enter") {
+                      const name = newProjectName.trim();
+                      if (!name) return;
+                      if (!token) return;
+                      void useFileStore
+                        .getState()
+                        .createProject(name, false, token);
+                      setShowNewProjectModal(false);
+                    }
+                  }}
+                  placeholder="e.g. Bell States"
+                  className="mt-2 w-full bg-editor-bg border border-editor-border rounded-xl px-3 py-2 text-sm text-white placeholder:text-editor-text/40 focus:outline-none focus:ring-1 focus:ring-emerald-400/40"
+                  autoFocus
+                />
+                {!token && (
+                  <div className="mt-2 text-xs text-amber-300">
+                    You must be logged in to create projects.
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  className="px-3 py-2 rounded-md text-sm text-editor-text hover:bg-editor-border/60"
+                  onClick={() => setShowNewProjectModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!token || !newProjectName.trim()}
+                  className="px-3 py-2 rounded-md text-sm font-semibold bg-emerald-400/80 hover:bg-emerald-400 text-slate-950 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                  onClick={() => {
+                    const name = newProjectName.trim();
+                    if (!name || !token) return;
+                    void useFileStore.getState().createProject(name, false, token);
+                    setShowNewProjectModal(false);
+                  }}
+                >
+                  <Check className="w-4 h-4" />
+                  Create project
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       <AddNewLanguage
         isOpen={showAddLanguage}
         onClose={() => setShowAddLanguage(false)}
@@ -429,8 +529,9 @@ export default function MenuBar({
 
               <div className="overflow-y-auto max-h-[65vh] pr-1 grid md:grid-cols-2 gap-4">
                 {FILE_TEMPLATES_PRESETS.map((t) => (
-                  <div
+                  <button
                     key={t.filename}
+                    type="button"
                     className="quantum-glass-dark rounded-lg p-4 border border-editor-border hover:border-framework-qiskit/60 transition-all duration-200 cursor-pointer"
                     onClick={async () => {
                       setOpenMenu(null);
@@ -478,7 +579,7 @@ export default function MenuBar({
                     <div className="text-[11px] text-black dark:text-gray-500 mt-1 font-mono">
                       {t.filename}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

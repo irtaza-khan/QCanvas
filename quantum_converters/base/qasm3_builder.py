@@ -120,6 +120,8 @@ class QASM3Builder:
         self.aliases: Dict[str, QASMAlias] = {}
         self.lines: List[str] = []
         self.included_files: Set[str] = set()
+        self.used_math_constants: Set[str] = set()
+        self._emit_math_constants: bool = True
         
         # Standard mathematical constants
         self.math_constants = {
@@ -181,12 +183,27 @@ class QASM3Builder:
             self.lines.append(f"// {text}")
             
     def add_mathematical_constants(self):
-        """Add standard mathematical constants."""
+        """
+        Add mathematical constants.
+
+        QCanvas behavior: emit only constants that are actually referenced in the
+        program. (This avoids repeating the entire constants block for every output.)
+        """
+        self.add_mathematical_constants_used_only()
+
+    def add_mathematical_constants_used_only(self):
+        """Add only those mathematical constants that were actually referenced."""
+        ordered_used = [k for k in self.math_constants.keys() if k in self.used_math_constants]
+        if not ordered_used:
+            return
+
         self.add_comment("Mathematical constants")
-        
-        for name, value in self.math_constants.items():
-            self.add_constant(name, 'float', value)
-        
+        for name in ordered_used:
+            # Avoid duplicating if already present.
+            prefix = f"const float {name} ="
+            if any(line.strip().startswith(prefix) for line in self.lines):
+                continue
+            self.add_constant(name, 'float', self.math_constants[name])
         self.lines.append("")
         
     def add_constant(self, name: str, type_: str, value: str):
@@ -570,6 +587,8 @@ class QASM3Builder:
 
         for constant_value, constant_name in constants:
             if abs(value - constant_value) < 1e-10:
+                if constant_name in self.math_constants:
+                    self.used_math_constants.add(constant_name)
                 return constant_name
 
         return None
@@ -590,7 +609,81 @@ class QASM3Builder:
         Returns:
             Complete QASM code as string
         """
-        return '\n'.join(self.lines)
+        lines = list(self.lines)
+
+        # Detect constant usage even when symbols appear directly in expressions.
+        # (e.g., code contains `rz(pi/2)` as a string, not a numeric float.)
+        used_by_scan: Set[str] = set()
+        const_names = list(self.math_constants.keys())
+        patterns = {name: re.compile(rf"\b{re.escape(name)}\b") for name in const_names}
+
+        for line in lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("//") or stripped.startswith("/*"):
+                continue
+            # Don't treat the declarations themselves as "usage"
+            if stripped.startswith("const "):
+                continue
+            for name, pat in patterns.items():
+                if pat.search(stripped):
+                    used_by_scan.add(name)
+
+        self.used_math_constants |= used_by_scan
+
+        # Remove any previously emitted constant block / declarations for our known constants.
+        filtered: List[str] = []
+        for raw in lines:
+            s = raw.strip()
+            if s == "// Mathematical constants":
+                continue
+            if s.startswith("const float "):
+                m = re.match(r"^const\s+float\s+([A-Za-z_]\w*)\s*=", s)
+                if m and m.group(1) in self.math_constants:
+                    continue
+            filtered.append(raw)
+        lines = filtered
+
+        # Inject only referenced math constants after the header/includes section.
+        if self._emit_math_constants and self.used_math_constants:
+            insert_at = None
+            for i, line in enumerate(lines):
+                if line.strip() == "":
+                    insert_at = i
+                    break
+            if insert_at is None:
+                insert_at = len(lines)
+
+            tmp = QASM3Builder()
+            tmp.lines = []
+            tmp.used_math_constants = set(self.used_math_constants)
+            tmp.math_constants = dict(self.math_constants)
+            tmp.add_mathematical_constants_used_only()
+            const_block = tmp.lines
+
+            if const_block:
+                lines = lines[:insert_at] + const_block + lines[insert_at:]
+
+        # Whitespace normalization: remove trailing spaces + collapse blank runs.
+        normalized: List[str] = []
+        blank_run = 0
+        for raw in lines:
+            s = raw.rstrip()
+            if s == "":
+                blank_run += 1
+                if blank_run > 1:
+                    continue
+                normalized.append("")
+            else:
+                blank_run = 0
+                normalized.append(s)
+
+        # Trim leading/trailing blank lines.
+        while normalized and normalized[0] == "":
+            normalized.pop(0)
+        while normalized and normalized[-1] == "":
+            normalized.pop()
+
+        return "\n".join(normalized) + "\n"
         
     def validate_identifier(self, name: str) -> bool:
         """
@@ -656,10 +749,7 @@ class QASM3Builder:
         """
         # Header
         self.initialize_header()
-        
-        # Mathematical constants (optional)
-        if include_constants:
-            self.add_mathematical_constants()
+        self._emit_math_constants = bool(include_constants)
         
         # Quantum registers
         self.add_section_comment("Quantum and classical registers")

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ChevronRight,
   ChevronDown,
@@ -132,6 +133,12 @@ export default function ExplorerView() {
   const token = useAuthStore((s) => s.token);
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [projectMenuOpen, setProjectMenuOpen] = useState(false);
+  const [projectMenuPos, setProjectMenuPos] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
   const [showNewFileInput, setShowNewFileInput] = useState(false);
   const [newFileName, setNewFileName] = useState("new.py");
   const [showNewProjectInput, setShowNewProjectInput] = useState(false);
@@ -154,6 +161,8 @@ export default function ExplorerView() {
     fileCount: number;
   } | null>(null);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+  const projectMenuRef = useRef<HTMLDivElement>(null);
+  const projectMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   const tree = useMemo(() => buildTree(folders, files), [folders, files]);
   const explorerStats = useMemo(
@@ -174,6 +183,30 @@ export default function ExplorerView() {
     document.addEventListener("click", onDocClick);
     return () => document.removeEventListener("click", onDocClick);
   }, [contextMenu]);
+
+  useEffect(() => {
+    if (!projectMenuOpen) return;
+    const updatePos = () => {
+      const btn = projectMenuButtonRef.current;
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      setProjectMenuPos({
+        top: r.bottom + 6,
+        left: Math.max(8, r.right - 240),
+        width: Math.min(260, Math.max(200, r.width)),
+      });
+    };
+    updatePos();
+
+    const onResize = () => updatePos();
+    const onScroll = () => updatePos();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [projectMenuOpen]);
 
   const startCreateFile = (folderId?: string) => {
     setContextMenu(null);
@@ -319,11 +352,11 @@ export default function ExplorerView() {
     setEditingFolderName("");
   };
 
-  const handleProjectChange = (value: string) => {
-    if (!token) return;
-    const nextProjectId = value === "" ? null : Number(value);
-    fetchExplorerTree(nextProjectId, token);
-  };
+  const activeProjectLabel = useMemo(() => {
+    if (!activeProjectId) return "My Files";
+    const p = projects.find((x) => x.id === activeProjectId);
+    return p?.name ?? "Project";
+  }, [activeProjectId, projects]);
 
   const getFolderDescendants = (rootId: string) => {
     const childrenByParent = new Map<string, string[]>();
@@ -624,27 +657,102 @@ export default function ExplorerView() {
             </div>
           </div>
           <div className="flex items-center gap-1 min-w-0">
-            <select
-              className="max-w-[150px] bg-editor-panelLowest border border-editor-border rounded-md px-2 py-1 text-xs text-editor-text shadow-sm"
-              value={activeProjectId?.toString() ?? ""}
-              onChange={(e) => handleProjectChange(e.target.value)}
-              title="Switch project"
-            >
-              <option value="">My Files</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="p-1.5 rounded-md border border-transparent hover:bg-editor-panelHigh/70 hover:border-editor-border text-editor-text transition-colors"
-              title="New Project"
-              onClick={startCreateProject}
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+            <div className="relative" ref={projectMenuRef}>
+              <button
+                type="button"
+                ref={projectMenuButtonRef}
+                className="max-w-[180px] inline-flex items-center gap-2 bg-editor-panelLowest border border-editor-border rounded-md px-2 py-1 text-xs text-editor-text shadow-sm hover:bg-editor-panelHigh/70 transition-colors"
+                title="Switch project"
+                onClick={() => setProjectMenuOpen((o) => !o)}
+              >
+                <span className="truncate">{activeProjectLabel}</span>
+                <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+              </button>
+
+              {projectMenuOpen &&
+                projectMenuPos &&
+                typeof document !== "undefined" &&
+                createPortal(
+                  <>
+                    <button
+                      type="button"
+                      className="fixed inset-0 z-[150] cursor-default bg-transparent"
+                      aria-label="Close project menu"
+                      onClick={() => setProjectMenuOpen(false)}
+                    />
+                    <div
+                      className="fixed z-[160] bg-editor-panelHighest/92 border border-editor-border rounded-lg shadow-[0_24px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl overflow-hidden"
+                      role="dialog"
+                      aria-label="Project menu"
+                      style={{
+                        top: projectMenuPos.top,
+                        left: projectMenuPos.left,
+                        width: 240,
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <div className="p-1.5">
+                        <button
+                          type="button"
+                          className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-md transition-colors ${
+                            activeProjectId
+                              ? "text-editor-text hover:bg-editor-panelHigh hover:text-white"
+                              : "bg-editor-panelHigh text-white"
+                          }`}
+                          onClick={() => {
+                            if (!token) return;
+                            fetchExplorerTree(null, token);
+                            setProjectMenuOpen(false);
+                          }}
+                        >
+                          <span className="truncate">My Files</span>
+                        </button>
+
+                        {projects.map((project) => {
+                          const active = activeProjectId === project.id;
+                          return (
+                            <button
+                              key={project.id}
+                              type="button"
+                              className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-md transition-colors ${
+                                active
+                                  ? "bg-editor-panelHigh text-white"
+                                  : "text-editor-text hover:bg-editor-panelHigh hover:text-white"
+                              }`}
+                              onClick={() => {
+                                if (!token) return;
+                                fetchExplorerTree(project.id, token);
+                                setProjectMenuOpen(false);
+                              }}
+                              title={project.name}
+                            >
+                              <span className="truncate">{project.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="border-t border-editor-border/70 p-2">
+                        <div className="px-2 pb-1 text-[10px] uppercase tracking-[0.22em] text-editor-text/60">
+                          Add new
+                        </div>
+                        <button
+                          type="button"
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold bg-emerald-400/10 text-emerald-200 border border-emerald-400/25 hover:bg-emerald-400/15 transition-colors"
+                          onClick={() => {
+                            setProjectMenuOpen(false);
+                            startCreateProject();
+                          }}
+                        >
+                          <Plus className="w-4 h-4" />
+                          Create new project
+                        </button>
+                      </div>
+                    </div>
+                  </>,
+                  document.body,
+                )}
+            </div>
             <button
               type="button"
               className="p-1.5 rounded-md border border-transparent hover:bg-editor-panelHigh/70 hover:border-editor-border text-editor-text transition-colors"
@@ -693,36 +801,75 @@ export default function ExplorerView() {
         }}
       >
         {showNewProjectInput && (
-          <div className="flex items-center gap-2 py-1.5 px-2 text-sm rounded-md border border-editor-border/70 bg-editor-bg/90 shadow-sm">
-            <FolderIcon className="w-4 h-4 text-editor-text" />
-            <input
-              value={newProjectName}
-              onChange={(e) => setNewProjectName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void submitCreateProject();
-                if (e.key === "Escape") cancelCreateProject();
-              }}
-              placeholder="Project name"
-              className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text focus-quantum"
-              autoFocus
-            />
+          <>
             <button
               type="button"
-              className="p-1 rounded hover:bg-green-500/20 text-green-400"
-              title="Create project"
-              onClick={() => void submitCreateProject()}
-            >
-              <Check className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              className="p-1 rounded hover:bg-red-500/20 text-red-400"
-              title="Cancel"
+              className="fixed inset-0 bg-black/50 z-[110] cursor-default"
               onClick={cancelCreateProject}
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
+              aria-label="Close create project"
+            />
+            <div className="fixed inset-0 z-[115] flex items-center justify-center p-4">
+              <div
+                className="quantum-glass-dark rounded-2xl p-6 max-w-md w-full border border-editor-border shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="create-project-title"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <div
+                  id="create-project-title"
+                  className="text-lg font-bold text-white"
+                >
+                  Create new project
+                </div>
+                <div className="mt-2 text-sm text-editor-text">
+                  Projects group your files and folders.
+                </div>
+
+                <div className="mt-4">
+                  <label
+                    htmlFor="explorer-new-project-name"
+                    className="text-[10px] uppercase tracking-[0.22em] text-editor-text/60"
+                  >
+                    Project name
+                  </label>
+                  <div className="mt-2 flex items-center gap-2 rounded-xl border border-editor-border/40 bg-black/20 px-3 py-2">
+                    <FolderIcon className="w-4 h-4 text-emerald-300" />
+                    <input
+                      id="explorer-new-project-name"
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") void submitCreateProject();
+                        if (e.key === "Escape") cancelCreateProject();
+                      }}
+                      placeholder="e.g. Grover Experiments"
+                      className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-editor-text/40"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-5 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    className="px-3 py-2 rounded-md text-sm text-editor-text hover:bg-editor-border/60"
+                    onClick={cancelCreateProject}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-2 rounded-md text-sm font-semibold bg-emerald-400/80 hover:bg-emerald-400 text-slate-950"
+                    onClick={() => void submitCreateProject()}
+                    disabled={!newProjectName.trim()}
+                  >
+                    Create project
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
         {showNewFolderInput && (
@@ -796,7 +943,6 @@ export default function ExplorerView() {
         <div
           className="fixed z-[120] min-w-[180px] bg-editor-panelHighest/90 border border-editor-border rounded-lg shadow-[0_24px_48px_rgba(0,0,0,0.5)] p-1.5 backdrop-blur-xl"
           style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={(e) => e.stopPropagation()}
         >
           {contextMenu.type === "folder" ? (
             <>

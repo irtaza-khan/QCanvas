@@ -21,6 +21,7 @@ import {
   getCirqRun,
   listCirqRuns,
 } from "@/lib/cirqAgentApi";
+import { useAuthStore } from "@/lib/authStore";
 import { useFileStore } from "@/lib/store";
 import type { InputLanguage } from "@/types";
 import type { Dispatch, SetStateAction } from "react";
@@ -134,6 +135,9 @@ export default function CirqAssistantSidebar({
   onPrefillConsumed: () => void;
   onSetInputLanguage: Dispatch<SetStateAction<InputLanguage | "">>;
 }>) {
+  const currentUser = useAuthStore((s) => s.user);
+  const canUseAssistant = currentUser?.role === "admin";
+
   const [activeTab, setActiveTab] = useState<"chat" | "settings">("chat");
   const [config, setConfig] = useState<CirqAgentClientConfig>({
     designerEnabled: true,
@@ -154,6 +158,7 @@ export default function CirqAssistantSidebar({
   const lastPrefillNonce = useRef<number | null>(null);
 
   const loadRuns = useCallback(async () => {
+    if (!canUseAssistant) return;
     setLoadingRuns(true);
     try {
       const list = await listCirqRuns();
@@ -173,6 +178,11 @@ export default function CirqAssistantSidebar({
     async (description: string) => {
       const trimmed = description.trim();
       if (!trimmed) return;
+
+      if (!canUseAssistant) {
+        toast.error("You do not have permission to use the Cirq-RAG assistant.");
+        return;
+      }
 
       // Enforce locked stages (Designer + Final Validator always enabled).
       const effectiveConfig: CirqAgentClientConfig = {
@@ -566,8 +576,10 @@ export default function CirqAssistantSidebar({
                 </div>
               )}
 
-              {turn.result && (
-                <>
+              {turn.result && (() => {
+                const result = turn.result;
+                return (
+                  <>
                   {/* Assistant header */}
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-emerald-400/15 flex items-center justify-center border border-emerald-400/20">
@@ -586,7 +598,7 @@ export default function CirqAssistantSidebar({
                     </div>
                   <ul className="space-y-2">
                     {filterAgents(
-                      turn.result.agents || [],
+                      result.agents || [],
                       turn.optimizerEnabled,
                     ).map((a, i) => (
                       <motion.li
@@ -614,7 +626,7 @@ export default function CirqAssistantSidebar({
                   {turn.result.agents && (
                     <div className="text-[11px] text-editor-text/60 space-y-1">
                       {(() => {
-                        const opt = turn.result.agents.find(
+                        const opt = result.agents?.find(
                           (x) => x.name === "optimizer",
                         );
                         const m = opt?.metrics;
@@ -632,7 +644,7 @@ export default function CirqAssistantSidebar({
                         return null;
                       })()}
                       {(() => {
-                        const fv = turn.result.agents.find(
+                        const fv = result.agents?.find(
                           (x) => x.name === "final_validator",
                         );
                         const m = fv?.metrics;
@@ -649,7 +661,7 @@ export default function CirqAssistantSidebar({
                     </div>
                   )}
 
-                  {turn.result.final_code ? (
+                  {result.final_code ? (
                     <>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] text-editor-text/55 uppercase tracking-[0.22em]">
@@ -659,7 +671,7 @@ export default function CirqAssistantSidebar({
                           <button
                             type="button"
                             className="px-3 py-2 rounded-md text-xs bg-slate-900/70 border border-editor-border/30 hover:bg-white/5 text-editor-text"
-                            onClick={() => copyCode(turn.result.final_code ?? "")}
+                            onClick={() => copyCode(result.final_code ?? "")}
                           >
                             <Copy className="w-3.5 h-3.5 inline mr-1" />
                             Copy
@@ -667,7 +679,7 @@ export default function CirqAssistantSidebar({
                           <button
                             type="button"
                             className="px-3 py-2 rounded-md text-xs font-semibold bg-gradient-to-br from-quantum-blue-light to-cyan-300 text-black hover:opacity-95"
-                            onClick={() => loadIntoCanvas(turn.result.final_code)}
+                            onClick={() => loadIntoCanvas(result.final_code)}
                           >
                             Apply to Editor
                           </button>
@@ -675,7 +687,7 @@ export default function CirqAssistantSidebar({
                       </div>
 
                       <div className="rounded-xl overflow-hidden border border-editor-border/25 bg-black/40">
-                        <CirqCodePreview value={turn.result.final_code} />
+                        <CirqCodePreview value={result.final_code} />
                       </div>
                     </>
                   ) : (
@@ -684,7 +696,7 @@ export default function CirqAssistantSidebar({
                     </p>
                   )}
 
-                  {turn.result.status === "error" && (
+                  {result.status === "error" && (
                     <p className="text-sm text-red-400">
                       Run finished with error status. See raw details in the
                       response if needed.
@@ -692,7 +704,7 @@ export default function CirqAssistantSidebar({
                   )}
 
                   {(() => {
-                    const ex = turn.result.explanation;
+                    const ex = result.explanation;
                     if (!ex || typeof ex !== "object") return null;
                     const md =
                       "markdown" in ex && typeof ex.markdown === "string"
@@ -714,8 +726,9 @@ export default function CirqAssistantSidebar({
                     );
                   })()}
                   </div>
-                </>
-              )}
+                  </>
+                );
+              })()}
             </motion.div>
           ))}
         </div>
@@ -723,6 +736,11 @@ export default function CirqAssistantSidebar({
       )}
 
       <div className="shrink-0 border-t border-editor-border/40 px-5 py-4 bg-slate-900/60">
+        {!canUseAssistant && (
+          <div className="mb-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
+            Cirq-RAG assistant is <span className="font-semibold">admin-only</span>.
+          </div>
+        )}
         {isGenerating && (
           <div className="flex items-center gap-2 text-xs text-emerald-300/90">
             <Loader2 className="w-4 h-4 animate-spin" />

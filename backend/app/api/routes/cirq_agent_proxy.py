@@ -10,10 +10,12 @@ Uses a long read timeout because the pipeline is synchronous and often 15–60+ 
 from __future__ import annotations
 
 import httpx
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.responses import JSONResponse
 
 from app.config.settings import settings
+from app.models.database_models import User, UserRole
+from app.api.routes.auth import get_current_user
 
 router = APIRouter(prefix="/api/cirq-agent", tags=["cirq-agent"])
 
@@ -49,7 +51,17 @@ def _forward_request_headers(request: Request) -> dict[str, str]:
     "/{path:path}",
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"],
 )
-async def proxy_cirq_agent(path: str, request: Request) -> Response:
+async def proxy_cirq_agent(
+    path: str,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    if current_user.role != UserRole.ADMIN:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"detail": "You do not have permission to use the Cirq-RAG assistant."},
+        )
+
     base = settings.CIRQ_AGENT_URL.rstrip("/")
     url = f"{base}/{path}"
     q = str(request.query_params)

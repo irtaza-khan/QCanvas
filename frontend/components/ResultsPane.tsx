@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { Terminal, BarChart3, Copy, Download, AlertCircle, AlertTriangle, Activity, Cpu, Zap, TrendingUp, ResultIcon, OutputIcon } from '@/components/Icons';
-import { Minimize2, Maximize2, XCircle, CheckCircle, Trash2, FileCode2 } from 'lucide-react';
+import { Minimize2, Maximize2, XCircle, CheckCircle, Trash2, FileCode2, FileDown, Copy as CopyIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFileStore } from '@/lib/store'
 import {
@@ -25,6 +26,19 @@ ChartJS.register(
   Legend
 )
 
+// Dynamically import Monaco Editor (SSR-safe) for syntax highlighting in Results.
+const MonacoEditor = dynamic(
+  () => import('@monaco-editor/react').then((mod) => mod.Editor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-48 bg-editor-panelLowest border border-editor-border rounded">
+        <span className="text-sm text-editor-text/70">Loading viewer…</span>
+      </div>
+    ),
+  },
+)
+
 interface LogEntry {
   id: string
   timestamp: string
@@ -44,7 +58,21 @@ interface ErrorEntry {
 }
 
 export default function ResultsPane() {
-  const { resultsCollapsed, toggleResults, compiledQasm, getActiveFile, conversionStats, simulationResults, hybridResult, executionMode, theme } = useFileStore()
+  const {
+    resultsCollapsed,
+    toggleResults,
+    compiledQasm,
+    getActiveFile,
+    conversionStats,
+    simulationResults,
+    hybridResult,
+    executionMode,
+    theme,
+    createFile,
+    activeProjectId,
+    files,
+  } = useFileStore()
+  const activeFile = getActiveFile()
 
   // Helper function to get display stats from backend conversion stats
   const getDisplayStats = () => {
@@ -259,6 +287,16 @@ export default function ResultsPane() {
     return sortedEntries
   }
 
+  // Histogram should follow typical simulator-style display:
+  // - show only states that actually occurred (non-zero)
+  // - keep a simple "natural" ordering by bitstring (not count-sorted)
+  const getHistogramStates = (counts: { [state: string]: number }) => {
+    const entries = Object.entries(counts || {}).filter(([, count]) => count > 0)
+    // Bitstrings are same length; lexicographic == numeric ascending for equal-length binary strings.
+    entries.sort(([a], [b]) => a.localeCompare(b))
+    return entries
+  }
+
   // Helper function to add an error entry
   const addError = (message: string, severity: 'error' | 'warning' | 'info' = 'error', details?: string) => {
     const newError: ErrorEntry = {
@@ -380,6 +418,46 @@ export default function ResultsPane() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     toast.success('Copied to clipboard')
+  }
+
+  const saveQasmNextToActiveFile = async () => {
+    if (!compiledQasm) {
+      toast.error('No OpenQASM to save')
+      return
+    }
+    if (!activeFile) {
+      toast.error('No active file')
+      return
+    }
+
+    const base = activeFile.name.replace(/\.[^/.]+$/, '')
+    const desired = `${base}.qasm`
+
+    // Ensure uniqueness inside the current file scope list.
+    const existing = new Set((files || []).map((f) => f.name.trim().toLowerCase()))
+    let candidate = desired
+    if (existing.has(candidate.toLowerCase())) {
+      let i = 1
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        candidate = `${base} (${i}).qasm`
+        if (!existing.has(candidate.toLowerCase())) break
+        i += 1
+      }
+    }
+
+    try {
+      await createFile(
+        candidate,
+        compiledQasm,
+        activeProjectId ?? undefined,
+        false,
+        activeFile.folderId,
+      )
+      toast.success(`Saved ${candidate}`)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to save .qasm')
+    }
   }
 
   const downloadResults = () => {
@@ -527,6 +605,24 @@ export default function ResultsPane() {
         </div>
 
         <div className="flex items-center space-x-2">
+          {activeTab === 'qasm' && compiledQasm && (
+            <>
+              <button
+                onClick={() => copyToClipboard(compiledQasm)}
+                className="btn-ghost p-1"
+                title="Copy OpenQASM"
+              >
+                <CopyIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => void saveQasmNextToActiveFile()}
+                className="btn-ghost p-1"
+                title="Save as .qasm (next to current file)"
+              >
+                <FileDown className="w-4 h-4" />
+              </button>
+            </>
+          )}
           <button
             onClick={downloadResults}
             className="btn-ghost p-1"
@@ -842,14 +938,13 @@ print(result.counts)`}
                   <Bar
                     data={(() => {
                       const shots = quantumResults.shots || 0
-                      // Don't pass nQubits - let the function infer from actual state strings
-                      const sortedStates = getAllStatesWithCounts(quantumResults.counts, 0, shots)
+                      const histStates = getHistogramStates(quantumResults.counts)
                       return {
-                        labels: sortedStates.map(([state]) => `|${state}⟩`),
+                        labels: histStates.map(([state]) => `|${state}⟩`),
                         datasets: [
                           {
                             label: 'Measurement Counts',
-                            data: sortedStates.map(([, count]) => count),
+                            data: histStates.map(([, count]) => count),
                             backgroundColor: 'rgba(99, 102, 241, 0.6)',
                             borderColor: 'rgba(99, 102, 241, 1)',
                             borderWidth: 1,
@@ -930,19 +1025,15 @@ print(result.counts)`}
                   {/* Show probabilities if available */}
                   {simulationResults?.probs && (() => {
                     const shots = simulationResults.metadata.shots || 0
-                    // Convert probs to counts format for sorting, then back to probs
-                    const probsAsCounts: { [state: string]: number } = {}
-                    Object.entries(simulationResults.probs).forEach(([state, prob]) => {
-                      probsAsCounts[state] = prob * shots
-                    })
-                    // Don't pass nQubits - let the function infer from actual state strings
-                    const sortedStates = getAllStatesWithCounts(probsAsCounts, 0, shots)
+                    // Mirror histogram behavior: show only non-zero-probability states, in bitstring order
+                    const probEntries = Object.entries(simulationResults.probs)
+                      .filter(([, prob]) => prob > 0)
+                      .sort(([a], [b]) => a.localeCompare(b))
                     return (
                       <div className="mt-4 pt-4 border-t border-editor-border/50">
                         <h5 className="text-xs font-medium text-black dark:text-gray-400 mb-2">State Probabilities</h5>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                          {sortedStates.map(([state]) => {
-                            const prob = simulationResults.probs![state] || 0
+                          {probEntries.map(([state, prob]) => {
                             return (
                               <div key={state} className="bg-editor-panelLowest border border-editor-border rounded px-2 py-1">
                                 <span className="text-black dark:text-gray-400">|{state}⟩:</span>
@@ -973,8 +1064,27 @@ print(result.counts)`}
                 <p className="text-sm">No compiled OpenQASM yet. Select &quot;Compile&quot; mode and run to generate QASM.</p>
               </div>
             ) : (
-              <div className="bg-editor-panelLowest border border-editor-border rounded p-3">
-                <pre className="text-sm text-editor-text whitespace-pre-wrap">{compiledQasm}</pre>
+              <div className="bg-editor-panelLowest border border-editor-border rounded overflow-hidden">
+                <MonacoEditor
+                  height="460px"
+                  language="qasm"
+                  theme={theme === 'light' ? 'quantum-light' : 'quantum-dark'}
+                  value={compiledQasm}
+                  options={{
+                    readOnly: true,
+                    domReadOnly: true,
+                    minimap: { enabled: false },
+                    lineNumbers: 'on',
+                    wordWrap: 'on',
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    fontSize: 13,
+                    fontFamily: 'JetBrains Mono, Fira Code, Monaco, Consolas, monospace',
+                    renderWhitespace: 'selection',
+                    renderControlCharacters: false,
+                    padding: { top: 12, bottom: 12 },
+                  }}
+                />
               </div>
             )}
           </div>
