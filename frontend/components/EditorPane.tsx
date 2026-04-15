@@ -109,6 +109,41 @@ export default function EditorPane({
   const [isDraggingCircuit, setIsDraggingCircuit] = useState(false);
   const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
 
+  const disposeMonacoProviders = () => {
+    if (hoverProviderRef.current) {
+      hoverProviderRef.current.dispose();
+      hoverProviderRef.current = null;
+    }
+    if (hoverProviderPythonqRef.current) {
+      hoverProviderPythonqRef.current.dispose();
+      hoverProviderPythonqRef.current = null;
+    }
+    if (completionProviderRef.current) {
+      completionProviderRef.current.dispose();
+      completionProviderRef.current = null;
+    }
+    if (completionProviderPythonqRef.current) {
+      completionProviderPythonqRef.current.dispose();
+      completionProviderPythonqRef.current = null;
+    }
+    if (qasmTokensProviderRef.current) {
+      qasmTokensProviderRef.current.dispose();
+      qasmTokensProviderRef.current = null;
+    }
+    if (qasmConfigProviderRef.current) {
+      qasmConfigProviderRef.current.dispose();
+      qasmConfigProviderRef.current = null;
+    }
+    if (pythonqTokensProviderRef.current) {
+      pythonqTokensProviderRef.current.dispose();
+      pythonqTokensProviderRef.current = null;
+    }
+    if (pythonqConfigProviderRef.current) {
+      pythonqConfigProviderRef.current.dispose();
+      pythonqConfigProviderRef.current = null;
+    }
+  };
+
   // Parsed circuit state for async AST parsing
   const [parsedGates, setParsedGates] = useState<ParsedGate[]>([]);
   const [parsedQubits, setParsedQubits] = useState(2);
@@ -117,6 +152,14 @@ export default function EditorPane({
   // Ensure component is mounted on client before rendering Monaco
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  // Monaco providers are language-level singletons; always release them on unmount
+  // so remounts/hot reloads do not stack duplicate hover providers.
+  useEffect(() => {
+    return () => {
+      disposeMonacoProviders();
+    };
   }, []);
 
   // Default to preview when switching to a markdown file.
@@ -313,39 +356,8 @@ export default function EditorPane({
       );
     });
 
-    // Register language-level providers only once; dispose previous on re-mount
-    if (hoverProviderRef.current) {
-      hoverProviderRef.current.dispose();
-      hoverProviderRef.current = null;
-    }
-    if (hoverProviderPythonqRef.current) {
-      hoverProviderPythonqRef.current.dispose();
-      hoverProviderPythonqRef.current = null;
-    }
-    if (completionProviderRef.current) {
-      completionProviderRef.current.dispose();
-      completionProviderRef.current = null;
-    }
-    if (completionProviderPythonqRef.current) {
-      completionProviderPythonqRef.current.dispose();
-      completionProviderPythonqRef.current = null;
-    }
-    if (qasmTokensProviderRef.current) {
-      qasmTokensProviderRef.current.dispose();
-      qasmTokensProviderRef.current = null;
-    }
-    if (qasmConfigProviderRef.current) {
-      qasmConfigProviderRef.current.dispose();
-      qasmConfigProviderRef.current = null;
-    }
-    if (pythonqTokensProviderRef.current) {
-      pythonqTokensProviderRef.current.dispose();
-      pythonqTokensProviderRef.current = null;
-    }
-    if (pythonqConfigProviderRef.current) {
-      pythonqConfigProviderRef.current.dispose();
-      pythonqConfigProviderRef.current = null;
-    }
+    // Register language-level providers only once; dispose previous on re-mount.
+    disposeMonacoProviders();
 
     // Ensure Ctrl+A selects all text as a single continuous selection
     // The issue: setSelection might not clear existing multi-cursor selections
