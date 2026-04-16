@@ -772,7 +772,7 @@ export default function CirqAssistantSidebar({
         )}
         <div className="relative">
           <textarea
-            className="w-full min-h-[96px] max-h-[200px] resize-y rounded-2xl border border-editor-border/30 bg-gray-200/20 dark:bg-slate-800/30 px-4 py-4 pr-14 text-sm text-editor-text placeholder:text-editor-text/40 focus:outline-none focus:ring-1 focus:ring-emerald-400/40 disabled:opacity-50"
+            className="w-full min-h-[96px] max-h-[200px] resize-y rounded-2xl border border-editor-border/70 bg-gray-100/90 dark:bg-slate-800/30 px-4 py-4 pr-14 text-sm text-editor-text placeholder:text-editor-text/80 focus:outline-none focus:ring-1 focus:ring-emerald-400/40 disabled:opacity-50"
             placeholder="Ask the assistant…"
             value={input}
             disabled={isGenerating}
