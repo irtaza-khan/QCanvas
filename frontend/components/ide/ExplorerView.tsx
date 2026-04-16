@@ -586,7 +586,7 @@ export default function ExplorerView() {
               className={`w-full flex items-center gap-2 py-1.5 pr-8 pl-2 text-sm rounded-md border transition-all duration-150 ${
                 activeFileId === node.file.id
                   ? "bg-editor-accent/90 border-editor-accent text-gray-100 shadow-sm"
-                  : "text-gray-900 border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
+                  : "text-gray-900 dark:text-gray-100 border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
               }`}
               onDragStart={(e) => {
                 e.dataTransfer.setData("text/qcanvas-file-id", node.file.id);
@@ -619,7 +619,7 @@ export default function ExplorerView() {
             <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
               <button
                 type="button"
-                className={`p-1 rounded-md hover:bg-editor-border/70 dark:text-emerald-600 ${
+                className={`p-1 rounded-md hover:bg-editor-border/70${
                   activeFileId === node.file.id
                     ? "bg-editor-accent/90 border-editor-accent text-gray-100 shadow-sm"
                     : "text-gray-900 border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
@@ -636,10 +636,10 @@ export default function ExplorerView() {
                 type="button"
                 // className="p-1 rounded-md hover:bg-editor-border/70 dark:text-red-600
                 // "
-                className={`p-1 rounded-md hover:bg-editor-border/70 dark:text-red-600 ${
+                className={`p-1 rounded-md hover:bg-editor-border/70 ${
                   activeFileId === node.file.id
                     ? "bg-editor-accent/90 border-editor-accent text-gray-100 shadow-sm"
-                    : "text-gray-900 border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
+                    : "text-gray-900 dark:text-gray-200 border-transparent hover:bg-editor-border/40 hover:border-editor-border/60"
                 }`}
                 title="Delete file"
                 onClick={(e) => {
