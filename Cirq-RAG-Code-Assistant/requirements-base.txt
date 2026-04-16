@@ -1,0 +1,46 @@
+# Base runtime dependencies for the production image.
+# These are the ONLY packages needed to serve POST /api/v1/generate in prod
+# with AWS Bedrock embeddings + LLMs and Postgres/pgvector as the RAG store.
+
+# Quantum (used by the Validator's local compile/simulate step). cirq-core is
+# the minimal subset; full 'cirq' pulls in every vendor backend we do not use.
+cirq-core>=1.3.0
+
+# Numerical
+numpy>=1.24.0,<2.0
+scipy>=1.11.0
+
+# Web framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+starlette>=0.27.0
+
+# HTTP
+httpx>=0.25.0
+requests>=2.31.0
+
+# AWS
+boto3>=1.28.0
+botocore>=1.31.0
+
+# Postgres + pgvector (RAG store)
+psycopg[binary]>=3.1.0
+pgvector>=0.2.5
+
+# Redis (run history + rate limiting stores)
+redis>=5.0.0
+
+# Config / env
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+
+# Logging / retries
+loguru>=0.7.2
+tenacity>=8.2.0
+
+# CLI utilities (used by scripts/*.py)
+click>=8.1.0
+rich>=13.7.0
+tqdm>=4.66.0

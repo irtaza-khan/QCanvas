@@ -1,15 +1,49 @@
+# Source control / IDE
+.git
+.gitignore
+.vscode
+.idea
+.cursor
+.cursorrules
+
+# Python caches
 venv
 .venv
 __pycache__
 *.pyc
-.git
-.gitignore
-*.md
-notebooks
-outputs
+*.pyo
 .pytest_cache
 .mypy_cache
+.ruff_cache
 dist
+build
 *.egg-info
+
+# Docs / notebooks / research assets not needed at runtime
+*.md
+docs
+notebooks
+sample\ dataset
+memory-bank
+tests
+CHANGELOG.md
+IMPLEMENTATION_STATUS.md
+QCANVAS_INTEGRATION_GUIDE.md
+README.md
+README_CONFIG.md
+
+# Local developer state
 .env
+.cache
+outputs
 *.log
+
+# Cached/persisted vector indexes (we load from Postgres in prod)
+data/models
+data/datasets
+
+# Setup helpers used outside the container
+setup-dev.bat
+setup-dev.ps1
+setup-dev.sh
+setup.py

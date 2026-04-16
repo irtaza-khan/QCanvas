@@ -1,0 +1,19 @@
+# Local-development extras.
+#
+# Installs everything in requirements-base.txt plus the heavyweight ML stack
+# that lets developers run the FAISS / local-sentence-transformers code path
+# without a Postgres or a Bedrock account.
+#
+# Usage:
+#     pip install -r requirements-local.txt
+
+-r requirements-base.txt
+
+# Vector store backends (optional in prod; FAISS is the default local-dev store).
+faiss-cpu>=1.7.4
+chromadb>=0.4.15
+
+# Local embedding model stack (sentence-transformers pulls transformers+torch).
+sentence-transformers>=2.2.2
+transformers>=4.35.0
+torch>=2.1.0

@@ -36,27 +36,47 @@ class LoggingConfig:
         self.max_file_size = max_file_size
         self.backup_count = backup_count
 
-        log_path = Path(self.log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
+        # Only touch the filesystem if we actually plan to write log files.
+        # In the production container we run stdout-only and filesystem writes
+        # would fail (or be pointless on an ephemeral Fargate task).
+        if self.enable_file:
+            log_path = Path(self.log_file)
+            try:
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                # Read-only filesystem or permission denied: fall back to
+                # console-only logging rather than crashing on import.
+                self.enable_file = False
 
     def setup_loguru(self) -> None:
         logger.remove()
 
         if self.enable_console:
-            console_format = (
-                "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
-                "<level>{level: <8}</level> | "
-                "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
-                "<level>{message}</level>"
-            )
-            logger.add(
-                sys.stderr,
-                format=console_format,
-                level=self.log_level,
-                colorize=True,
-                backtrace=True,
-                diagnose=True,
-            )
+            if self.log_format == "json":
+                # loguru's built-in JSON serializer keeps structured fields so
+                # CloudWatch Insights can parse `level`, `message`, `extra`, etc.
+                logger.add(
+                    sys.stdout,
+                    level=self.log_level,
+                    serialize=True,
+                    backtrace=True,
+                    diagnose=False,
+                )
+            else:
+                console_format = (
+                    "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
+                    "<level>{level: <8}</level> | "
+                    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
+                    "<level>{message}</level>"
+                )
+                logger.add(
+                    sys.stderr,
+                    format=console_format,
+                    level=self.log_level,
+                    colorize=True,
+                    backtrace=True,
+                    diagnose=True,
+                )
 
         if self.enable_file:
             file_format = (
@@ -100,18 +120,23 @@ class LoggingConfig:
         )
 
     def setup_standard_logging(self) -> None:
+        handlers: list = [logging.StreamHandler(sys.stdout)]
+        if self.enable_file:
+            try:
+                handlers.append(logging.FileHandler(self.log_file))
+            except OSError:
+                # If the file can't be opened (read-only FS in container, etc.)
+                # silently skip the file handler rather than refusing to start.
+                pass
+
         logging.basicConfig(
             level=getattr(logging, self.log_level),
             format=(
                 "%(asctime)s - %(name)s - %(levelname)s - "
                 "%(filename)s:%(lineno)d - %(message)s"
             ),
-            handlers=[
-                logging.StreamHandler(sys.stdout),
-                logging.FileHandler(self.log_file)
-                if self.enable_file
-                else logging.NullHandler(),
-            ],
+            handlers=handlers,
+            force=True,
         )
 
         logging.getLogger("torch").setLevel(logging.WARNING)

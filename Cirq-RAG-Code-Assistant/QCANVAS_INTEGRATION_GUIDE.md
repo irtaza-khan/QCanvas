@@ -123,8 +123,40 @@ BEDROCK_INFERENCE_PROFILE_ARN_EDUCATIONAL=arn:aws:bedrock:...
 
 ### Base URL
 ```
-http://localhost:8000
+http://localhost:8000          # dev
+https://<your-alb-domain>      # prod (ECS Fargate behind ALB, idle timeout ≥ 180s)
 ```
+
+### Authentication
+
+In any environment where `CIRQ_RAG_API_KEY` is set, every call to `/api/v1/*`
+**must** include the header:
+
+```
+X-API-Key: <the key from Secrets Manager>
+```
+
+Missing or wrong keys return `401` with a JSON envelope:
+
+```json
+{ "error": { "code": "invalid_api_key", "message": "Missing or invalid X-API-Key header.", "retryable": false } }
+```
+
+`GET /health` and `GET /readiness` are always open (used by ALB/ECS health
+checks). In development, if `CIRQ_RAG_API_KEY` is unset the dependency becomes
+a no-op so existing local workflows keep working.
+
+### Error envelope
+
+Upstream (Bedrock) throttling or timeouts are mapped to HTTP **`503`** with a
+`Retry-After: 15` header and the body:
+
+```json
+{ "error": { "code": "ThrottlingException", "message": "...", "retryable": true } }
+```
+
+The frontend should treat `retryable: true` as a transient failure and surface
+a "please retry in a few seconds" message.
 
 ---
 
@@ -356,6 +388,15 @@ import type {
 // In prod: replace with the deployed backend URL or a different proxy path
 const BASE = '/cirq-api';
 
+// The API key should be provided via build-time env and forwarded by your
+// backend/proxy in production. Do NOT ship a production key to the browser -
+// have QCanvas's own backend attach the header on server-to-server calls.
+const API_KEY = (import.meta as any).env?.VITE_CIRQ_API_KEY ?? '';
+
+function authHeaders(): Record<string, string> {
+  return API_KEY ? { 'X-API-Key': API_KEY } : {};
+}
+
 async function parseJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text();
@@ -371,7 +412,7 @@ export async function generateCirqCode(
 ): Promise<GenerateResponse> {
   const res = await fetch(`${BASE}/api/v1/generate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({
       description,
       algorithm: algorithm ?? undefined,
@@ -386,12 +427,12 @@ export async function generateCirqCode(
 }
 
 export async function listCirqRuns(): Promise<RunSummary[]> {
-  const res = await fetch(`${BASE}/api/v1/runs`);
+  const res = await fetch(`${BASE}/api/v1/runs`, { headers: authHeaders() });
   return parseJson<RunSummary[]>(res);
 }
 
 export async function getCirqRun(runId: string): Promise<GenerateResponse> {
-  const res = await fetch(`${BASE}/api/v1/runs/${runId}`);
+  const res = await fetch(`${BASE}/api/v1/runs/${runId}`, { headers: authHeaders() });
   return parseJson<GenerateResponse>(res);
 }
 ```

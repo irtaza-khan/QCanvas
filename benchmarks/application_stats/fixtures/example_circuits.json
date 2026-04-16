@@ -1,0 +1,177 @@
+[
+  {
+    "id": "cirq_bell",
+    "name": "Bell State (Cirq)",
+    "framework": "cirq",
+    "category": "Basic Circuits",
+    "code": "import cirq\nq0, q1 = cirq.LineQubit.range(2)\ncircuit = cirq.Circuit([\n    cirq.H(q0),\n    cirq.CNOT(q0, q1),\n    cirq.measure(q0, q1, key='result')\n])\nprint(circuit)"
+  },
+  {
+    "id": "qiskit_bell",
+    "name": "Bell State (Qiskit)",
+    "framework": "qiskit",
+    "category": "Basic Circuits",
+    "code": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(2, 2)\nqc.h(0)\nqc.cx(0, 1)\nqc.measure([0, 1], [0, 1])"
+  },
+  {
+    "id": "pennylane_bell",
+    "name": "Bell State (PennyLane)",
+    "framework": "pennylane",
+    "category": "Basic Circuits",
+    "code": "import pennylane as qml\ndev = qml.device('default.qubit', wires=2)\n@qml.qnode(dev)\ndef bell_state():\n    qml.Hadamard(wires=0)\n    qml.CNOT(wires=[0, 1])\n    return qml.probs(wires=[0, 1])"
+  },
+  {
+    "id": "cirq_ghz",
+    "name": "GHZ State (Cirq)",
+    "framework": "cirq",
+    "category": "Basic Circuits",
+    "code": "import cirq\nqubits = cirq.LineQubit.range(3)\ncircuit = cirq.Circuit([\n    cirq.H(qubits[0]),\n    cirq.CNOT(qubits[0], qubits[1]),\n    cirq.CNOT(qubits[1], qubits[2]),\n    cirq.measure(*qubits, key='result')\n])\nprint(circuit)"
+  },
+  {
+    "id": "qiskit_ghz",
+    "name": "GHZ State (Qiskit)",
+    "framework": "qiskit",
+    "category": "Basic Circuits",
+    "code": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(3, 3)\nqc.h(0)\nqc.cx(0, 1)\nqc.cx(1, 2)\nqc.measure([0, 1, 2], [0, 1, 2])"
+  },
+  {
+    "id": "pennylane_ghz",
+    "name": "GHZ State (PennyLane)",
+    "framework": "pennylane",
+    "category": "Basic Circuits",
+    "code": "import pennylane as qml\ndev = qml.device('default.qubit', wires=3)\n@qml.qnode(dev)\ndef ghz_state():\n    qml.Hadamard(wires=0)\n    qml.CNOT(wires=[0, 1])\n    qml.CNOT(wires=[1, 2])\n    return qml.probs(wires=[0, 1, 2])"
+  },
+  {
+    "id": "cirq_teleportation",
+    "name": "Quantum Teleportation (Cirq)",
+    "framework": "cirq",
+    "category": "Quantum Algorithms",
+    "code": "import cirq\nmsg, alice, bob = cirq.LineQubit.range(3)\ncircuit = cirq.Circuit()\ncircuit.append(cirq.X(msg))\ncircuit.append([cirq.H(alice), cirq.CNOT(alice, bob)])\ncircuit.append([cirq.CNOT(msg, alice), cirq.H(msg)])\ncircuit.append(cirq.measure(msg, alice, key='alice_bits'))\ncircuit.append([cirq.CNOT(alice, bob), cirq.CZ(msg, bob)])\ncircuit.append(cirq.measure(bob, key='bob_bit'))"
+  },
+  {
+    "id": "qiskit_teleportation",
+    "name": "Quantum Teleportation (Qiskit)",
+    "framework": "qiskit",
+    "category": "Quantum Algorithms",
+    "code": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(3, 3)\nqc.x(0)\nqc.h(1)\nqc.cx(1, 2)\nqc.cx(0, 1)\nqc.h(0)\nqc.measure([0, 1], [0, 1])\nqc.cx(1, 2)\nqc.cz(0, 2)\nqc.measure(2, 2)"
+  },
+  {
+    "id": "pennylane_teleportation",
+    "name": "Quantum Teleportation (PennyLane)",
+    "framework": "pennylane",
+    "category": "Quantum Algorithms",
+    "code": "import pennylane as qml\ndev = qml.device('default.qubit', wires=3)\n@qml.qnode(dev)\ndef teleportation():\n    qml.PauliX(wires=0)\n    qml.Hadamard(wires=1)\n    qml.CNOT(wires=[1, 2])\n    qml.CNOT(wires=[0, 1])\n    qml.Hadamard(wires=0)\n    return qml.probs(wires=[0, 1, 2])"
+  },
+  {
+    "id": "cirq_deutsch_jozsa",
+    "name": "Deutsch-Jozsa (Cirq)",
+    "framework": "cirq",
+    "category": "Quantum Algorithms",
+    "code": "import cirq\nn = 3\nqubits = cirq.LineQubit.range(n + 1)\ncircuit = cirq.Circuit()\ncircuit.append(cirq.X(qubits[-1]))\ncircuit.append(cirq.H.on_each(*qubits))\ncircuit.append(cirq.CNOT(qubits[0], qubits[-1]))\ncircuit.append(cirq.H.on_each(*qubits[:-1]))\ncircuit.append(cirq.measure(*qubits[:-1], key='result'))"
+  },
+  {
+    "id": "qiskit_deutsch_jozsa",
+    "name": "Deutsch-Jozsa (Qiskit)",
+    "framework": "qiskit",
+    "category": "Quantum Algorithms",
+    "code": "from qiskit import QuantumCircuit\nn = 3\nqc = QuantumCircuit(n + 1, n)\nqc.x(n)\nqc.h(range(n + 1))\nqc.cx(0, n)\nqc.h(range(n))\nqc.measure(range(n), range(n))"
+  },
+  {
+    "id": "pennylane_deutsch_jozsa",
+    "name": "Deutsch-Jozsa (PennyLane)",
+    "framework": "pennylane",
+    "category": "Quantum Algorithms",
+    "code": "import pennylane as qml\nn = 3\ndev = qml.device('default.qubit', wires=n+1)\n@qml.qnode(dev)\ndef deutsch_jozsa():\n    qml.PauliX(wires=n)\n    for i in range(n+1):\n        qml.Hadamard(wires=i)\n    qml.CNOT(wires=[0, n])\n    for i in range(n):\n        qml.Hadamard(wires=i)\n    return qml.probs(wires=range(n))"
+  },
+  {
+    "id": "cirq_grover",
+    "name": "Grover's Search (Cirq)",
+    "framework": "cirq",
+    "category": "Quantum Algorithms",
+    "code": "import cirq\nq0, q1 = cirq.LineQubit.range(2)\ncircuit = cirq.Circuit()\ncircuit.append(cirq.H.on_each(q0, q1))\ncircuit.append(cirq.CZ(q0, q1))\ncircuit.append(cirq.H.on_each(q0, q1))\ncircuit.append(cirq.X.on_each(q0, q1))\ncircuit.append(cirq.CZ(q0, q1))\ncircuit.append(cirq.X.on_each(q0, q1))\ncircuit.append(cirq.H.on_each(q0, q1))\ncircuit.append(cirq.measure(q0, q1, key='result'))"
+  },
+  {
+    "id": "qiskit_grover",
+    "name": "Grover's Search (Qiskit)",
+    "framework": "qiskit",
+    "category": "Quantum Algorithms",
+    "code": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(2, 2)\nqc.h([0, 1])\nqc.cz(0, 1)\nqc.h([0, 1])\nqc.x([0, 1])\nqc.cz(0, 1)\nqc.x([0, 1])\nqc.h([0, 1])\nqc.measure([0, 1], [0, 1])"
+  },
+  {
+    "id": "pennylane_grover",
+    "name": "Grover's Search (PennyLane)",
+    "framework": "pennylane",
+    "category": "Quantum Algorithms",
+    "code": "import pennylane as qml\ndev = qml.device('default.qubit', wires=2)\n@qml.qnode(dev)\ndef grover():\n    qml.Hadamard(wires=0)\n    qml.Hadamard(wires=1)\n    qml.CZ(wires=[0, 1])\n    qml.Hadamard(wires=0)\n    qml.Hadamard(wires=1)\n    qml.PauliX(wires=0)\n    qml.PauliX(wires=1)\n    qml.CZ(wires=[0, 1])\n    qml.PauliX(wires=0)\n    qml.PauliX(wires=1)\n    qml.Hadamard(wires=0)\n    qml.Hadamard(wires=1)\n    return qml.probs(wires=[0, 1])"
+  },
+  {
+    "id": "cirq_qrng",
+    "name": "QRNG (Cirq)",
+    "framework": "cirq",
+    "category": "Quantum Algorithms",
+    "code": "import cirq\nqubits = cirq.LineQubit.range(4)\ncircuit = cirq.Circuit()\ncircuit.append(cirq.H.on_each(*qubits))\ncircuit.append(cirq.measure(*qubits, key='random_bits'))"
+  },
+  {
+    "id": "qiskit_qrng",
+    "name": "QRNG (Qiskit)",
+    "framework": "qiskit",
+    "category": "Quantum Algorithms",
+    "code": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(4, 4)\nqc.h([0, 1, 2, 3])\nqc.measure([0, 1, 2, 3], [0, 1, 2, 3])"
+  },
+  {
+    "id": "pennylane_qrng",
+    "name": "QRNG (PennyLane)",
+    "framework": "pennylane",
+    "category": "Quantum Algorithms",
+    "code": "import pennylane as qml\ndev = qml.device('default.qubit', wires=4)\n@qml.qnode(dev)\ndef qrng():\n    for i in range(4):\n        qml.Hadamard(wires=i)\n    return qml.probs(wires=[0, 1, 2, 3])"
+  },
+  {
+    "id": "pennylane_xor",
+    "name": "XOR Demonstration (PennyLane)",
+    "framework": "pennylane",
+    "category": "Quantum Algorithms",
+    "code": "import pennylane as qml\ndev = qml.device('default.qubit', wires=2)\n@qml.qnode(dev)\ndef xor_circuit(x, y):\n    if x:\n        qml.PauliX(wires=0)\n    if y:\n        qml.PauliX(wires=1)\n    qml.CNOT(wires=[0, 1])\n    return qml.probs(wires=[0, 1])"
+  },
+  {
+    "id": "pennylane_qml_xor",
+    "name": "QML XOR Classifier (PennyLane)",
+    "framework": "pennylane",
+    "category": "Quantum Machine Learning",
+    "code": "import pennylane as qml\ndev = qml.device('default.qubit', wires=2)\n@qml.qnode(dev)\ndef qml_xor(x, weights):\n    qml.RX(x[0], wires=0)\n    qml.RX(x[1], wires=1)\n    qml.CNOT(wires=[0, 1])\n    qml.RY(weights[0], wires=0)\n    qml.RY(weights[1], wires=1)\n    return qml.expval(qml.PauliZ(1))"
+  },
+  {
+    "id": "qiskit_vqe",
+    "name": "VQE (Qiskit)",
+    "framework": "qiskit",
+    "category": "Variational Algorithms",
+    "code": "from qiskit import QuantumCircuit\nimport numpy as np\ntheta = np.pi / 4\nqc = QuantumCircuit(2, 2)\nqc.h(0)\nqc.rx(theta, 0)\nqc.ry(theta, 1)\nqc.cx(0, 1)\nqc.measure([0, 1], [0, 1])"
+  },
+  {
+    "id": "pennylane_vqe",
+    "name": "VQE (PennyLane)",
+    "framework": "pennylane",
+    "category": "Variational Algorithms",
+    "code": "import pennylane as qml\nimport numpy as np\ndev = qml.device('default.qubit', wires=2)\n@qml.qnode(dev)\ndef vqe_circuit(theta):\n    qml.Hadamard(wires=0)\n    qml.RX(theta[0], wires=0)\n    qml.RY(theta[1], wires=1)\n    qml.CNOT(wires=[0, 1])\n    return qml.expval(qml.PauliZ(0) @ qml.PauliZ(1))"
+  },
+  {
+    "id": "qiskit_qaoa",
+    "name": "QAOA (Qiskit)",
+    "framework": "qiskit",
+    "category": "Variational Algorithms",
+    "code": "from qiskit import QuantumCircuit\nimport numpy as np\ngamma = np.pi / 4\nbeta = np.pi / 8\nqc = QuantumCircuit(2, 2)\nqc.h([0, 1])\nqc.cx(0, 1)\nqc.rz(2 * gamma, 1)\nqc.cx(0, 1)\nqc.rx(2 * beta, 0)\nqc.rx(2 * beta, 1)\nqc.measure([0, 1], [0, 1])"
+  },
+  {
+    "id": "qiskit_bit_flip_error",
+    "name": "Bit-Flip Error Code (Qiskit)",
+    "framework": "qiskit",
+    "category": "Error Correction",
+    "code": "from qiskit import QuantumCircuit\nqc = QuantumCircuit(3, 1)\nqc.cx(0, 1)\nqc.cx(0, 2)\nqc.x(0)\nqc.cx(0, 1)\nqc.cx(0, 2)\nqc.ccx(1, 2, 0)\nqc.measure(0, 0)"
+  },
+  {
+    "id": "cirq_bit_flip_error",
+    "name": "Bit-Flip Error Code (Cirq)",
+    "framework": "cirq",
+    "category": "Error Correction",
+    "code": "import cirq\nq0, q1, q2 = cirq.LineQubit.range(3)\ncircuit = cirq.Circuit()\ncircuit.append([cirq.CNOT(q0, q1), cirq.CNOT(q0, q2)])\ncircuit.append(cirq.X(q0))\ncircuit.append([cirq.CNOT(q0, q1), cirq.CNOT(q0, q2)])\ncircuit.append(cirq.CCX(q1, q2, q0))\ncircuit.append(cirq.measure(q0, key='result'))"
+  }
+]

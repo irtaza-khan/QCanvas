@@ -1,76 +1,227 @@
 """
 FastAPI server for Cirq-RAG-Code-Assistant.
 
-This module exposes a simple HTTP API that wraps the Orchestrator
-so the React frontend can drive the full multi-agent pipeline.
+This module exposes a small HTTP API that wraps the Orchestrator so the
+QCanvas frontend can drive the full multi-agent pipeline.
 
 Primary endpoints:
-- POST /api/v1/generate  -> run a pipeline execution
-- GET  /api/v1/runs      -> list recent runs (in-memory history)
-- GET  /api/v1/runs/{id} -> fetch a specific run
+* POST /api/v1/generate       - run a pipeline execution (requires API key)
+* GET  /api/v1/runs           - list recent runs                (requires API key)
+* GET  /api/v1/runs/{run_id}  - fetch a specific run            (requires API key)
+* GET  /health                - liveness probe (always open)
+* GET  /readiness             - readiness probe (checks deps; always open)
+
+Production hardening implemented here:
+* CORS middleware (allowed origins from env).
+* ``X-API-Key`` auth on every ``/api/v1/*`` route.
+* Redis- or memory-backed run-history store.
+* Bedrock throttling / timeouts mapped to HTTP 503 with ``Retry-After``.
+* Fail-fast startup validation for required env vars.
+* stdout-only JSON logging when ``CIRQ_RAG_LOG_MODE=stdout``.
 """
 
 from __future__ import annotations
 
+import os
+import sys
+import time
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Set
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from typing import Set
 
-from .cirq_rag_code_assistant.config.logging import get_logger
-from .orchestration.orchestrator import Orchestrator
+from .auth import require_api_key
+from .cirq_rag_code_assistant.config import get_config
+from .cirq_rag_code_assistant.config.logging import get_logger, setup_logging
 from .cli.commands import get_orchestrator as get_cli_orchestrator
+from .orchestration.orchestrator import Orchestrator
+from .run_history import RunHistoryStore, build_run_history_store
 
 
 logger = get_logger(__name__)
 
+
+# ---------------------------------------------------------------------------
+# Startup-time configuration
+# ---------------------------------------------------------------------------
+
+
+def _configure_logging_from_env() -> None:
+    """Reconfigure loguru based on ``CIRQ_RAG_LOG_MODE`` / ``CIRQ_RAG_LOG_FORMAT``.
+
+    In prod the container sets ``CIRQ_RAG_LOG_MODE=stdout`` (see Dockerfile)
+    which disables file handlers entirely - CloudWatch picks up stdout for us.
+    """
+    mode = (os.getenv("CIRQ_RAG_LOG_MODE") or "").strip().lower()
+    log_format = (os.getenv("CIRQ_RAG_LOG_FORMAT") or "").strip().lower() or "text"
+    level = (os.getenv("LOG_LEVEL") or "INFO").upper()
+
+    if mode == "stdout":
+        setup_logging(
+            log_level=level,
+            log_format=log_format,
+            enable_console=True,
+            enable_file=False,
+        )
+    elif mode == "file":
+        setup_logging(
+            log_level=level,
+            log_format=log_format,
+            enable_console=False,
+            enable_file=True,
+        )
+    elif mode == "both":
+        setup_logging(
+            log_level=level,
+            log_format=log_format,
+            enable_console=True,
+            enable_file=True,
+        )
+    # If unset, the module-level logger.bind() is still functional and uses
+    # whatever defaults the app picked up during import. No-op path keeps
+    # existing behaviour for unit tests.
+
+
+_REQUIRED_PROD_ENV = (
+    "AWS_DEFAULT_REGION",
+    "CIRQ_RAG_API_KEY",
+)
+
+_REQUIRED_PROD_ENV_WHEN_PGVECTOR = ("CIRQ_RAG_DB_URL",)
+_REQUIRED_PROD_ENV_WHEN_REDIS = ("CIRQ_RAG_REDIS_URL",)
+
+
+def _validate_prod_env() -> None:
+    """Fail fast in prod if critical env vars are missing.
+
+    In development we stay silent: devs iterate with partial configs all the
+    time. In production we refuse to start rather than 500-ing the first
+    request.
+    """
+    env = (os.getenv("ENVIRONMENT") or "development").strip().lower()
+    if env != "production":
+        return
+
+    missing: List[str] = [k for k in _REQUIRED_PROD_ENV if not os.getenv(k)]
+
+    vector_type = (os.getenv("CIRQ_RAG_VECTOR_STORE_TYPE") or "").strip().lower()
+    if vector_type == "pgvector":
+        missing.extend(k for k in _REQUIRED_PROD_ENV_WHEN_PGVECTOR if not os.getenv(k))
+
+    history_backend = (os.getenv("CIRQ_RAG_RUN_HISTORY_BACKEND") or "").strip().lower()
+    if history_backend == "redis":
+        missing.extend(k for k in _REQUIRED_PROD_ENV_WHEN_REDIS if not os.getenv(k))
+
+    if missing:
+        logger.error(
+            "Refusing to start in production - missing required env vars: %s",
+            ", ".join(missing),
+        )
+        raise SystemExit(
+            "Cirq-RAG refuses to start in production with missing env vars: "
+            + ", ".join(missing)
+        )
+
+
+_configure_logging_from_env()
+_validate_prod_env()
+
+
+_ALLOWED_ORIGINS: List[str] = [
+    o.strip()
+    for o in (os.getenv("CIRQ_RAG_ALLOWED_ORIGINS") or "*").split(",")
+    if o.strip()
+]
+_DISABLE_DOCS = (os.getenv("CIRQ_RAG_DISABLE_DOCS") or "").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+)
+
+
 app = FastAPI(
     title="Cirq-RAG-Code-Assistant API",
-    version="0.1.0",
+    version="0.2.0",
     description="HTTP API for the Cirq RAG Code Assistant multi-agent pipeline.",
+    docs_url=None if _DISABLE_DOCS else "/docs",
+    redoc_url=None if _DISABLE_DOCS else "/redoc",
+    openapi_url=None if _DISABLE_DOCS else "/openapi.json",
 )
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "X-API-Key"],
+    allow_credentials=False,
+)
+
+
+_RUN_HISTORY: RunHistoryStore = build_run_history_store()
+
+
+@app.on_event("startup")
+async def _log_startup_banner() -> None:
+    cfg = get_config()
+    logger.info(
+        "Cirq-RAG starting | env=%s vector_store=%s embedding_provider=%s "
+        "run_history=%s docs=%s allowed_origins=%s",
+        cfg.get("app", {}).get("environment"),
+        cfg.get("rag", {}).get("vector_store", {}).get("type"),
+        cfg.get("models", {}).get("embedding", {}).get("provider"),
+        type(_RUN_HISTORY).__name__,
+        "disabled" if _DISABLE_DOCS else "enabled",
+        _ALLOWED_ORIGINS,
+    )
+
+
+# ---------------------------------------------------------------------------
+# JSON safety helper (preserved from the previous implementation)
+# ---------------------------------------------------------------------------
 
 
 def _json_safe(value: Any, _seen: Optional[Set[int]] = None) -> Any:
     """
     Convert arbitrary python objects into JSON-serializable values.
 
-    FastAPI/Pydantic will otherwise error on unknown runtime types (e.g. `cirq.Circuit`).
+    FastAPI/Pydantic will otherwise error on unknown runtime types (e.g.
+    ``cirq.Circuit``).
     """
     if _seen is None:
         _seen = set()
 
-    # Basic primitives
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
 
-    # Prevent infinite recursion on self-referential objects
     obj_id = id(value)
     if obj_id in _seen:
         return str(value)
     _seen.add(obj_id)
 
-    # Collections
     if isinstance(value, dict):
         return {str(k): _json_safe(v, _seen) for k, v in value.items()}
     if isinstance(value, (list, tuple, set)):
         return [_json_safe(v, _seen) for v in value]
 
-    # Cirq objects (not JSON-serializable by default)
     try:
         import cirq  # type: ignore
 
         if isinstance(value, cirq.Circuit):
             return repr(value)
     except Exception:
-        # If cirq isn't available or type check fails, fall back to string.
         pass
 
-    # Fallback: string representation
     return str(value)
+
+
+# ---------------------------------------------------------------------------
+# Schemas (unchanged public shape)
+# ---------------------------------------------------------------------------
 
 
 class GenerateRequest(BaseModel):
@@ -133,29 +284,19 @@ class RunDetail(GenerateResponse):
     pass
 
 
-_RUN_HISTORY: Dict[str, GenerateResponse] = {}
-_MAX_HISTORY = 50
+# ---------------------------------------------------------------------------
+# Orchestrator factory (unchanged - reuses the CLI's singleton)
+# ---------------------------------------------------------------------------
 
 
 def _get_orchestrator(req: GenerateRequest) -> Orchestrator:
-    """
-    Get the shared Orchestrator instance used by the CLI.
-    This reuses the same RAG stack (EmbeddingModel, VectorStore, KnowledgeBase)
-    and agent wiring (Designer, Optimizer, Validator, Educational).
-    """
-    orchestrator = get_cli_orchestrator()
-    return orchestrator
+    return get_cli_orchestrator()
 
 
 def _build_agent_steps(orchestrator_result: Dict[str, Any]) -> List[AgentStep]:
-    """
-    Adapt the orchestrator's result dictionary into a list of AgentStep
-    entries that the frontend can render in a pipeline timeline.
-    """
     stages: List[str] = orchestrator_result.get("stages", [])
     steps: List[AgentStep] = []
 
-    # Designer
     if "designer" in stages:
         steps.append(
             AgentStep(
@@ -166,7 +307,6 @@ def _build_agent_steps(orchestrator_result: Dict[str, Any]) -> List[AgentStep]:
             )
         )
 
-    # Initial validator
     if "validator" in stages:
         validation = orchestrator_result.get("validation") or {}
         steps.append(
@@ -181,7 +321,6 @@ def _build_agent_steps(orchestrator_result: Dict[str, Any]) -> List[AgentStep]:
             )
         )
 
-    # Optimizer
     if "optimizer" in stages:
         optimization_metrics = orchestrator_result.get("optimization_metrics") or {}
         steps.append(
@@ -194,7 +333,6 @@ def _build_agent_steps(orchestrator_result: Dict[str, Any]) -> List[AgentStep]:
             )
         )
 
-    # Final validator
     if "final_validator" in stages:
         final_validation = orchestrator_result.get("final_validation") or {}
         steps.append(
@@ -209,7 +347,6 @@ def _build_agent_steps(orchestrator_result: Dict[str, Any]) -> List[AgentStep]:
             )
         )
 
-    # Educational
     if "educational" in stages:
         explanation = orchestrator_result.get("explanation") or {}
         steps.append(
@@ -224,13 +361,143 @@ def _build_agent_steps(orchestrator_result: Dict[str, Any]) -> List[AgentStep]:
     return steps
 
 
-@app.post("/api/v1/generate", response_model=GenerateResponse)
+# ---------------------------------------------------------------------------
+# Error translation - wrap Bedrock throttling / timeouts into HTTP 503
+# ---------------------------------------------------------------------------
+
+
+def _classify_error(exc: BaseException) -> Optional[Dict[str, Any]]:
+    """
+    Decide whether an exception is a known transient AWS/Bedrock failure and,
+    if so, produce a structured envelope. Returns None if the error is not
+    recognised as retryable - the caller should re-raise or 500.
+    """
+    name = type(exc).__name__
+    message = str(exc)
+
+    # boto/botocore ClientError instances carry a dict response with Error.Code.
+    err_code = None
+    response = getattr(exc, "response", None)
+    if isinstance(response, dict):
+        err_code = (response.get("Error") or {}).get("Code")
+
+    retryable_codes = {
+        "ThrottlingException",
+        "TooManyRequestsException",
+        "ServiceUnavailableException",
+        "ModelTimeoutException",
+        "RequestTimeout",
+        "RequestTimeoutException",
+    }
+
+    if err_code in retryable_codes or name in retryable_codes or "Throttling" in name:
+        return {
+            "error": {
+                "code": err_code or name or "throttled",
+                "message": message or "Upstream model provider throttled the request.",
+                "retryable": True,
+            }
+        }
+
+    if "ReadTimeout" in name or "ConnectTimeout" in name or "Timeout" in name:
+        return {
+            "error": {
+                "code": "upstream_timeout",
+                "message": message or "Upstream model provider timed out.",
+                "retryable": True,
+            }
+        }
+
+    return None
+
+
+@app.exception_handler(Exception)
+async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Translate known transient failures into 503 with Retry-After."""
+    envelope = _classify_error(exc)
+    if envelope is not None:
+        logger.warning("Upstream transient failure: %s", exc)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=envelope,
+            headers={"Retry-After": "15"},
+        )
+
+    logger.exception("Unhandled server error: %s", exc)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": {
+                "code": "internal_error",
+                "message": "An unexpected server error occurred.",
+                "retryable": False,
+            }
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# Public endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.get("/health", include_in_schema=False)
+def health() -> Dict[str, str]:
+    """Liveness probe: proves the process is up. Always open."""
+    return {"status": "ok"}
+
+
+@app.get("/readiness", include_in_schema=False)
+def readiness() -> Dict[str, Any]:
+    """Readiness probe: checks that deps the request path needs are reachable.
+
+    Kept deliberately cheap - used by ECS/ALB health checks every 30s.
+    """
+    checks: Dict[str, Any] = {"status": "ok", "components": {}}
+
+    # Run-history store.
+    try:
+        _RUN_HISTORY.list(limit=1)
+        checks["components"]["run_history"] = "ok"
+    except Exception as exc:
+        checks["status"] = "degraded"
+        checks["components"]["run_history"] = f"error: {exc}"
+
+    # Postgres/pgvector, if configured.
+    if (os.getenv("CIRQ_RAG_VECTOR_STORE_TYPE") or "").strip().lower() == "pgvector":
+        dsn = os.getenv("CIRQ_RAG_DB_URL")
+        if not dsn:
+            checks["status"] = "degraded"
+            checks["components"]["postgres"] = "CIRQ_RAG_DB_URL not set"
+        else:
+            try:
+                import psycopg
+
+                with psycopg.connect(dsn, connect_timeout=3) as conn:
+                    with conn.cursor() as cur:
+                        cur.execute("SELECT 1")
+                        cur.fetchone()
+                checks["components"]["postgres"] = "ok"
+            except Exception as exc:
+                checks["status"] = "degraded"
+                checks["components"]["postgres"] = f"error: {exc}"
+
+    if checks["status"] != "ok":
+        return JSONResponse(status_code=503, content=checks)  # type: ignore[return-value]
+    return checks
+
+
+@app.post(
+    "/api/v1/generate",
+    response_model=GenerateResponse,
+    dependencies=[Depends(require_api_key)],
+)
 def generate(req: GenerateRequest) -> GenerateResponse:
-    """
-    Run the full multi-agent pipeline for a single prompt.
-    """
+    """Run the full multi-agent pipeline for a single prompt."""
+    started = time.monotonic()
     logger.info(
-        "Received generate request (algorithm=%s, validator=%s, optimizer=%s, educational=%s, educational_depth=%s)",
+        "Received generate request (algorithm=%s, validator=%s, optimizer=%s, "
+        "educational=%s, educational_depth=%s)",
         req.algorithm,
         req.enable_validator,
         req.enable_optimizer,
@@ -252,12 +519,9 @@ def generate(req: GenerateRequest) -> GenerateResponse:
         educational_depth=req.educational_depth,
     )
 
-    # Ensure raw_result is fully JSON-serializable for FastAPI/Pydantic.
-    # Validator currently includes a `cirq.Circuit` object inside `validation.compilation`,
-    # which otherwise causes `PydanticSerializationError` (HTTP 500).
     serializable_result = _json_safe(result)
 
-    status = "completed" if result.get("success") else "error"
+    status_text = "completed" if result.get("success") else "error"
     run_id = str(uuid.uuid4())
     created_at = datetime.utcnow()
 
@@ -266,7 +530,7 @@ def generate(req: GenerateRequest) -> GenerateResponse:
 
     response = GenerateResponse(
         run_id=run_id,
-        status=status,
+        status=status_text,
         created_at=created_at,
         prompt=req.description,
         algorithm=req.algorithm,
@@ -276,58 +540,61 @@ def generate(req: GenerateRequest) -> GenerateResponse:
         raw_result=serializable_result,
     )
 
-    _RUN_HISTORY[run_id] = response
-    if len(_RUN_HISTORY) > _MAX_HISTORY:
-        # Drop oldest entry
-        oldest_id = sorted(_RUN_HISTORY.values(), key=lambda r: r.created_at)[0].run_id
-        _RUN_HISTORY.pop(oldest_id, None)
+    try:
+        # Store a JSON-safe dict; Pydantic's model_dump gives us exactly that.
+        _RUN_HISTORY.put(run_id, _json_safe(response.model_dump(mode="json")))
+    except Exception as exc:
+        # Persisting run history is best-effort; never fail the request for it.
+        logger.warning("Failed to persist run history for %s: %s", run_id, exc)
 
+    elapsed = time.monotonic() - started
+    logger.info("Completed run %s in %.2fs (status=%s)", run_id, elapsed, status_text)
     return response
 
 
-@app.get("/api/v1/runs", response_model=List[RunSummary])
+@app.get(
+    "/api/v1/runs",
+    response_model=List[RunSummary],
+    dependencies=[Depends(require_api_key)],
+)
 def list_runs() -> List[RunSummary]:
-    """
-    List recent runs in reverse chronological order.
-    """
-    runs = sorted(_RUN_HISTORY.values(), key=lambda r: r.created_at, reverse=True)
+    """List recent runs in reverse chronological order."""
     summaries: List[RunSummary] = []
-    for r in runs:
+    for r in _RUN_HISTORY.list(limit=50):
+        prompt = r.get("prompt", "") or ""
+        prompt_preview = (prompt[:120] + "...") if len(prompt) > 120 else prompt
+        agents = r.get("agents") or []
+        agent_names = {(a.get("name") or "") for a in agents if isinstance(a, dict)}
         summaries.append(
             RunSummary(
-                run_id=r.run_id,
-                created_at=r.created_at,
-                prompt_preview=(r.prompt[:120] + "...") if len(r.prompt) > 120 else r.prompt,
-                status=r.status,
-                enable_validator=bool(
-                    any(step.name.startswith("validator") for step in r.agents)
-                ),
-                enable_optimizer=bool(
-                    any(step.name == "optimizer" for step in r.agents)
-                ),
-                enable_educational=bool(
-                    any(step.name == "educational" for step in r.agents)
-                ),
+                run_id=r.get("run_id", ""),
+                created_at=r.get("created_at") or datetime.utcnow(),
+                prompt_preview=prompt_preview,
+                status=r.get("status", "unknown"),
+                enable_validator=any(n.startswith("validator") for n in agent_names),
+                enable_optimizer="optimizer" in agent_names,
+                enable_educational="educational" in agent_names,
             )
         )
     return summaries
 
 
-@app.get("/api/v1/runs/{run_id}", response_model=RunDetail)
+@app.get(
+    "/api/v1/runs/{run_id}",
+    response_model=RunDetail,
+    dependencies=[Depends(require_api_key)],
+)
 def get_run(run_id: str) -> RunDetail:
-    """
-    Fetch details for a specific run.
-    """
+    """Fetch details for a specific run."""
     run = _RUN_HISTORY.get(run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
-    return RunDetail(**run.dict())
+    return RunDetail(**run)
 
 
 def get_app() -> FastAPI:
     """
     Uvicorn entrypoint helper:
-    `uvicorn src.server:get_app` (with appropriate PYTHONPATH).
+    ``uvicorn src.server:get_app`` (with appropriate PYTHONPATH).
     """
     return app
-

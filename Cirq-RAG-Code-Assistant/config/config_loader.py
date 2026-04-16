@@ -121,27 +121,71 @@ class ConfigLoader:
             logger.info("Using default configuration")
             self.config = self._get_default_config()
     
-    def _apply_env_overrides(self) -> None:
-        """Apply environment variable overrides to config."""
-        # Environment
-        if os.getenv("ENVIRONMENT"):
-            self.config["app"]["environment"] = os.getenv("ENVIRONMENT")
-        if os.getenv("DEBUG"):
-            self.config["app"]["debug"] = os.getenv("DEBUG").lower() in ("true", "1", "yes")
-        
+    # Explicit mapping of env var -> (dotted config path, cast).
+    # Declared as a class attribute so the set of supported overrides is
+    # discoverable and trivially testable. `cast` accepts a raw string and
+    # must return the value to store in config.
+    _ENV_OVERRIDES = (
+        # App
+        ("ENVIRONMENT", "app.environment", str),
+        ("DEBUG", "app.debug", lambda v: v.lower() in ("true", "1", "yes")),
         # Logging
-        if os.getenv("LOG_LEVEL"):
-            self.config["logging"]["log_level"] = os.getenv("LOG_LEVEL")
+        ("LOG_LEVEL", "logging.log_level", str),
+        ("CIRQ_RAG_LOG_MODE", "logging.mode", str),            # "stdout" | "file" | "both"
+        ("CIRQ_RAG_LOG_FORMAT", "logging.log_format", str),    # "text" | "json"
+        # AWS
+        ("AWS_DEFAULT_REGION", "aws.region", str),
+        # LLM (legacy generic overrides, still supported)
+        ("LLM_PROVIDER", "models.llm.provider", str),
+        ("LLM_MODEL", "models.llm.model", str),
+        # Vector store selection
+        ("CIRQ_RAG_VECTOR_STORE_TYPE", "rag.vector_store.type", str),
+        ("CIRQ_RAG_PGVECTOR_SCHEMA", "rag.vector_store.pgvector.schema", str),
+        ("CIRQ_RAG_PGVECTOR_TABLE", "rag.vector_store.pgvector.table", str),
+        ("CIRQ_RAG_PGVECTOR_DSN_ENV", "rag.vector_store.pgvector.dsn_env", str),
+        # Server / deployment
+        ("CIRQ_RAG_ALLOWED_ORIGINS", "server.allowed_origins", str),
+        ("CIRQ_RAG_DISABLE_DOCS", "server.disable_docs", lambda v: v.lower() in ("true", "1", "yes")),
+        ("CIRQ_RAG_RUN_HISTORY_BACKEND", "server.run_history_backend", str),  # "memory" | "redis"
+        ("CIRQ_RAG_RUN_HISTORY_TTL_SECONDS", "server.run_history_ttl_seconds", int),
+    )
 
-        # AWS (region from env; credentials come from env / .env only, never from config)
-        if os.getenv("AWS_DEFAULT_REGION"):
-            self.config.setdefault("aws", {})["region"] = os.getenv("AWS_DEFAULT_REGION")
+    def _apply_env_overrides(self) -> None:
+        """Apply environment variable overrides to config.
 
-        # Models (LLM)
-        if os.getenv("LLM_PROVIDER"):
-            self.config.setdefault("models", {}).setdefault("llm", {})["provider"] = os.getenv("LLM_PROVIDER")
-        if os.getenv("LLM_MODEL"):
-            self.config.setdefault("models", {}).setdefault("llm", {})["model"] = os.getenv("LLM_MODEL")
+        Env vars always win over values baked into `config.json`. Only
+        whitelisted variables (see `_ENV_OVERRIDES`) are honoured; secrets
+        such as AWS credentials and DSNs are intentionally NOT copied into
+        the config dict - they stay in process env and are read at the
+        point of use.
+        """
+        for env_key, dotted_path, cast in self._ENV_OVERRIDES:
+            raw = os.getenv(env_key)
+            if raw is None or raw == "":
+                continue
+            try:
+                value: Any = cast(raw)
+            except Exception:
+                logger.warning(
+                    "Could not cast env override %s=%r for %s; ignoring.",
+                    env_key,
+                    raw,
+                    dotted_path,
+                )
+                continue
+            self._set_dotted(dotted_path, value)
+
+    def _set_dotted(self, dotted_path: str, value: Any) -> None:
+        """Set a nested config value using a dotted path, creating dicts as needed."""
+        keys = dotted_path.split(".")
+        cursor: Dict[str, Any] = self.config
+        for key in keys[:-1]:
+            next_val = cursor.get(key)
+            if not isinstance(next_val, dict):
+                next_val = {}
+                cursor[key] = next_val
+            cursor = next_val
+        cursor[keys[-1]] = value
     
     def _get_default_config(self) -> Dict[str, Any]:
         """Get default configuration."""
@@ -310,9 +354,9 @@ def get_config_loader(config_file: Optional[str] = None) -> ConfigLoader:
     if _config_loader is None:
         _config_loader = ConfigLoader(config_file)
         _config_loader.create_directories()
-        if not _config_loader.get("app.debug", False):
+        if _should_setup_pytorch(_config_loader):
             _config_loader.setup_pytorch()
-    
+
     return _config_loader
 
 
@@ -339,7 +383,27 @@ def reload_config(config_file: Optional[str] = None) -> ConfigLoader:
     global _config_loader
     _config_loader = ConfigLoader(config_file)
     _config_loader.create_directories()
-    if not _config_loader.get("app.debug", False):
+    if _should_setup_pytorch(_config_loader):
         _config_loader.setup_pytorch()
     return _config_loader
+
+
+def _should_setup_pytorch(loader: "ConfigLoader") -> bool:
+    """Decide whether to run PyTorch init on startup.
+
+    We skip it when:
+    * app.debug is true (devs iterating quickly), OR
+    * the embedding provider is AWS (Bedrock) AND torch is not installed -
+      the production slim image does not ship torch and attempting to
+      import it every startup is wasted work.
+    """
+    if loader.get("app.debug", False):
+        return False
+    provider = str(loader.get("models.embedding.provider", "")).lower()
+    if provider == "aws":
+        try:
+            import torch  # noqa: F401
+        except ImportError:
+            return False
+    return True
 

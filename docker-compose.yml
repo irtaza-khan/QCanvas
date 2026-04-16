@@ -35,11 +35,13 @@ services:
       timeout: 5s
       retries: 5
 
-  # Cirq-RAG-Code-Assistant (QCanvas IDE "Cirq AI"). Set AWS_* and BEDROCK_* in project root .env (see Cirq-RAG-Code-Assistant/.env.example).
+  # Cirq-RAG-Code-Assistant (QCanvas IDE "Cirq AI"). Development image.
+  # Production deployment lives in docker-compose.prod.yml (slim image, no
+  # bind-mount, pgvector-backed RAG, Redis-backed run history, API key auth).
   cirq_agent:
     build:
       context: ./Cirq-RAG-Code-Assistant
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: qcanvas_cirq_agent
     ports:
       - "8001:8000"
@@ -51,6 +53,7 @@ services:
       # empty strings in the container and block python-dotenv from reading the mounted .env.
       # Put keys in Cirq-RAG-Code-Assistant/.env or pass real values explicitly below if needed.
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - ENVIRONMENT=development
     volumes:
       - ./Cirq-RAG-Code-Assistant:/app
     command: [ "uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
@@ -58,7 +61,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/docs', timeout=5).read(1)\"",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()\"",
         ]
       interval: 30s
       timeout: 10s

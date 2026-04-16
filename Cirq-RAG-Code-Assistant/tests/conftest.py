@@ -8,6 +8,9 @@ from pathlib import Path
 # Add src to Python path
 PROJECT_ROOT = Path(__file__).parent.parent
 SRC_PATH = PROJECT_ROOT / "src"
+# Project root enables `from src.xxx import ...` (matches how uvicorn loads it);
+# src path is retained for tests written against bare module names.
+sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(SRC_PATH))
 
 @pytest.fixture

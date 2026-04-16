@@ -1,0 +1,117 @@
+# Production-parity Docker Compose for the Cirq-RAG stack.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# What this differs from docker-compose.yml in:
+#   * Builds the SLIM Dockerfile (no torch/sentence-transformers/FAISS).
+#   * No bind-mount of the source tree into the container.
+#   * No --reload; production uvicorn command.
+#   * RAG reads from pgvector in Postgres (not on-disk FAISS).
+#   * Run history persisted in Redis with a 24h TTL.
+#   * X-API-Key required on every /api/v1/* request.
+#   * Health-checked via /health, not /docs.
+#
+# Required env (set in project .env or exported before `docker compose up`):
+#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION
+#   BEDROCK_INFERENCE_PROFILE_ARN_DESIGNER / OPTIMIZER / VALIDATOR / EDUCATIONAL
+#   CIRQ_RAG_API_KEY                (long random string)
+#   CIRQ_RAG_ALLOWED_ORIGINS        (comma-separated list of frontend origins)
+#   POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB (optional overrides)
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: qcanvas_postgres_prod
+    # We run the *official* postgres image in compose for prod-parity tests.
+    # The real ECS deployment points CIRQ_RAG_DB_URL at an RDS/Aurora Postgres
+    # instance; pgvector is available on Postgres 15.5+.
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-qcanvas_db}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks:
+      - qcanvas_network_prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:alpine
+    container_name: qcanvas_redis_prod
+    volumes:
+      - redis_data_prod:/data
+    networks:
+      - qcanvas_network_prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  cirq_agent:
+    build:
+      context: ./Cirq-RAG-Code-Assistant
+      dockerfile: Dockerfile
+    image: cirq-rag-code-assistant:prod
+    container_name: qcanvas_cirq_agent_prod
+    ports:
+      - "8001:8000"
+    environment:
+      - ENVIRONMENT=production
+      - PYTHONPATH=/app
+      # AWS
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - BEDROCK_INFERENCE_PROFILE_ARN_DESIGNER=${BEDROCK_INFERENCE_PROFILE_ARN_DESIGNER}
+      - BEDROCK_INFERENCE_PROFILE_ARN_OPTIMIZER=${BEDROCK_INFERENCE_PROFILE_ARN_OPTIMIZER}
+      - BEDROCK_INFERENCE_PROFILE_ARN_VALIDATOR=${BEDROCK_INFERENCE_PROFILE_ARN_VALIDATOR}
+      - BEDROCK_INFERENCE_PROFILE_ARN_EDUCATIONAL=${BEDROCK_INFERENCE_PROFILE_ARN_EDUCATIONAL}
+      # RAG store
+      - CIRQ_RAG_VECTOR_STORE_TYPE=pgvector
+      - CIRQ_RAG_DB_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-qcanvas_db}
+      # Run history
+      - CIRQ_RAG_RUN_HISTORY_BACKEND=redis
+      - CIRQ_RAG_REDIS_URL=redis://redis:6379/1
+      - CIRQ_RAG_RUN_HISTORY_TTL_SECONDS=86400
+      # Security / CORS
+      - CIRQ_RAG_API_KEY=${CIRQ_RAG_API_KEY}
+      - CIRQ_RAG_ALLOWED_ORIGINS=${CIRQ_RAG_ALLOWED_ORIGINS:-}
+      - CIRQ_RAG_DISABLE_DOCS=true
+      # Logging
+      - CIRQ_RAG_LOG_MODE=stdout
+      - CIRQ_RAG_LOG_FORMAT=json
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://127.0.0.1:8000/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - qcanvas_network_prod
+
+volumes:
+  postgres_data_prod:
+  redis_data_prod:
+
+networks:
+  qcanvas_network_prod:
+    driver: bridge

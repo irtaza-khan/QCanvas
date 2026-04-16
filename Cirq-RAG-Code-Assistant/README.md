@@ -204,7 +204,13 @@ chmod +x setup-dev.sh
    DATABASE_URL=sqlite:///data/cirq_rag.db
    ```
 
-### 🤖 Ollama Custom Models
+### 🤖 Ollama Custom Models (Local Development Only)
+
+> **Note**: The production stack (see `config/config.json` → `models.*.provider`
+> and `models.embedding.provider`) uses **AWS Bedrock** for every agent and for
+> embeddings. Ollama is an alternative local backend retained for offline
+> experimentation. If you are deploying on AWS or using the `aws` provider you
+> can skip this section entirely.
 
 This project uses custom Ollama Modelfiles with optimized parameters for each agent. You must create these models before running the notebooks.
 
@@ -338,17 +344,27 @@ The complete research paper is available in `docs/Research Paper/LaTeX Files/mai
 
 ## 🐳 Docker Deployment
 
-The project includes a `Dockerfile` for containerized deployment:
+Two images are shipped:
+
+- **`Dockerfile`** - Production slim image (FastAPI + Bedrock + pgvector,
+  no torch / sentence-transformers / FAISS). Used by `docker-compose.prod.yml`
+  and the ECS Fargate deployment.
+- **`Dockerfile.dev`** - Development image with the full ML stack (torch,
+  sentence-transformers, FAISS, test tooling). Used by the project-root
+  `docker-compose.yml` with bind-mounts and `--reload`.
 
 ```bash
-# Build the Docker image
-docker build -t cirq-rag-code-assistant .
+# Build the slim production image
+docker build -t cirq-rag-code-assistant:prod -f Dockerfile .
 
-# Run the container
-docker run -it cirq-rag-code-assistant
+# Run locally with production-parity services (Postgres + Redis)
+cd ..   # project root (QCanvas)
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-See the `Dockerfile` for details on the containerization setup.
+For full AWS (ECS Fargate + RDS + ElastiCache + Secrets Manager) instructions
+see [`deploy/ecs/README.md`](deploy/ecs/README.md) and
+[`docs/deployment-aws.md`](docs/deployment-aws.md).
 
 ## 🔮 Future Enhancements
 

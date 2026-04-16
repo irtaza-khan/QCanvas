@@ -35,7 +35,12 @@
     "vector_store": {
       "type": "faiss",
       "index_path": "data/models/vector_index",
-      "use_gpu": false
+      "use_gpu": false,
+      "pgvector": {
+        "schema": "cirq_rag",
+        "table": "rag_knowledge_base",
+        "dsn_env": "CIRQ_RAG_DB_URL"
+      }
     },
     "retrieval": {
       "top_k_results": 5,

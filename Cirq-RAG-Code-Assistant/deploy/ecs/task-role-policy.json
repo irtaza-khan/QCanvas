@@ -1,0 +1,25 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BedrockInvoke",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:<REGION>::foundation-model/*",
+        "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:inference-profile/*"
+      ]
+    },
+    {
+      "Sid": "BedrockListModelsForReadiness",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:ListFoundationModels"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
