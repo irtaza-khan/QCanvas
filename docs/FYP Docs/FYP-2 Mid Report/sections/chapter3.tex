@@ -1,0 +1,305 @@
+\chapter{System Overview}
+
+The system architecture of QCanvas follows a modular layered design separating conversion, validation, simulation, and UI concerns. This design ensures scalability, maintainability, and flexibility while supporting the hybrid CPU–QPU execution model \cite{peruzzo2014variational}.
+
+\section{Architectural Design}
+
+QCanvas employs a hybrid architecture where the Next.js frontend handles UI and simple operations, while the FastAPI backend manages complex quantum computations. QCanvas orchestrates compilation and validation; QSim executes circuits on simulation backends.
+
+\subsection{Layered Responsibilities}
+\begin{itemize}
+    \item \textbf{Presentation Layer (Next.js)}: Editor UI, circuit visualization, results dashboards, accessibility features, and client-side state management.
+    \item \textbf{API Layer (FastAPI)}: REST endpoints for conversion/validation/simulation, WebSocket for progress streams, structured error handling, and request validation.
+    \item \textbf{Conversion Layer (QCanvas)}: AST parsing, intelligent gate mapping, OpenQASM 3.0 generation, validation, analytics, and logging.
+    \item \textbf{Execution Layer (QSim)}: Simulation backends (statevector, density matrix, stabilizer), job scheduling, result aggregation, caching, and metrics.
+    \item \textbf{Persistence Layer}: PostgreSQL for user data and projects (future), Redis for caching and sessions (future).
+    \item \textbf{Observability Layer}: Health checks, Prometheus metrics, execution time histograms, and structured logging.
+\end{itemize}
+
+\subsection{Technology Stack}
+
+\subsubsection{Frontend Technologies}
+\begin{itemize}
+    \item Next.js 14 with App Router for server-side rendering and routing
+    \item React 18 with TypeScript for type-safe UI development
+    \item Tailwind CSS for styling with custom quantum-themed design
+    \item Monaco Editor for code editing with syntax highlighting
+    \item Zustand for lightweight state management
+    \item Chart.js for measurement histogram visualization
+    \item WebSocket client for real-time updates
+\end{itemize}
+
+\subsubsection{Backend Technologies}
+\begin{itemize}
+    \item Python 3.11+ for backend logic
+    \item FastAPI for high-performance async API framework
+    \item Uvicorn ASGI server for production deployment
+    \item Pydantic for data validation and serialization
+    \item SQLAlchemy ORM with PostgreSQL (future)
+    \item Redis for caching and session management (future)
+\end{itemize}
+
+\subsubsection{Quantum Computing Stack}
+\begin{itemize}
+    \item Cirq 1.0+ for Google quantum framework support \cite{cirq_developers_2023}
+    \item Qiskit 0.44+ for IBM quantum framework support \cite{qiskit}
+    \item PennyLane 0.33+ for Xanadu quantum framework support \cite{bergholm2018pennylane}
+    \item Custom OpenQASM 3.0 generator (QASM3Builder) \cite{cross2021openqasm}
+    \item Custom simulation backends (statevector, density matrix, stabilizer) \cite{nielsen2010quantum}
+\end{itemize}
+
+\subsection{Hybrid CPU–QPU Execution Model}
+
+\subsubsection{Orchestration Boundary}
+\begin{itemize}
+    \item \textbf{CPU Responsibilities}: Circuit construction, parameter preparation, AST parsing, OpenQASM generation, validation, pre/post-processing, result aggregation.
+    \item \textbf{QPU/Simulator Responsibilities}: Gate-level circuit execution, statevector/density matrix evolution, measurement sampling, state snapshot generation.
+\end{itemize}
+
+\subsubsection{Data Flow}
+\begin{enumerate}
+    \item User writes circuit in source framework (Qiskit/Cirq/PennyLane)
+    \item Frontend sends code to backend via REST API
+    \item Backend parses code using AST or runtime execution
+    \item QCanvas generates OpenQASM 3.0 intermediate representation
+    \item Validation checks conformance to supported subset
+    \item QSim executes circuit on selected backend
+    \item Results aggregated and returned via API
+    \item Frontend visualizes results (histograms, statistics)
+    \item WebSocket provides real-time progress updates
+\end{enumerate}
+
+\subsubsection{Execution Scope}
+\begin{itemize}
+    \item Simulation-first: All execution through software simulators
+    \item No pulse-level control or timing features
+    \item Future pluggable QPU endpoints behind same API contract
+    \item Intelligent caching for identical circuit executions
+\end{itemize}
+
+\section{Design Models}
+
+The diagrams below are grouped by behavior rather than by file location so the reader can connect each model to the corresponding runtime concern without jumping back and forth across the chapter.
+
+\subsection{Activity Diagrams}
+
+The activity diagrams summarize the end-to-end user journeys that matter most in Sprint 3: circuit conversion, execution, and onboarding. They make the validation and orchestration boundaries visible before the reader reaches the detailed component diagrams.
+
+\subsubsection{Activity Diagram: Circuit Conversion and Execution}
+This diagram presents the end-to-end flow from code input in the Next.js editor, through FastAPI conversion and validation services, into QSim execution and results visualization.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\linewidth]{FYP-Activity-2.png}
+    \caption{Activity Diagram — Circuit Conversion and Execution}
+    \label{fig:activity_convert_run}
+\end{figure}
+
+\subsubsection{Activity Diagram: User Registration}
+This diagram captures the user registration and onboarding flow implemented in the authentication module.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{FYP-ActivityRegistration.png}
+    \caption{Activity Diagram — User Registration}
+\end{figure}
+
+\subsection{Sequence Diagrams}
+
+The sequence diagrams focus on interactions between concrete software components. They are especially useful in QCanvas because the same user action can trigger the editor, converter, validator, simulator, and result renderer in one path.
+
+\subsubsection{Sequence Diagram: Unified Execution Flow}
+This diagram shows the unified interaction flow across concrete system components.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.98\linewidth]{FYP-SequenceUnified.png}
+    \caption{Sequence Diagram — Unified Flow}
+    \label{fig:seq_unified}
+\end{figure}
+
+\subsubsection{Sequence Diagram: Authentication}
+This diagram details the authentication process involving the frontend, API, and Database.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{FYP-SequenceAuth.png}
+    \caption{Sequence Diagram — Authentication}
+\end{figure}
+
+\subsubsection{System Sequence Diagrams (SSD)}
+The following diagrams illustrate the system event flows for key scenarios.
+
+\textbf{SSD: Authentication}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{FYP-Ssd-Auth.png}
+    \caption{SSD — Authentication}
+\end{figure}
+
+\textbf{SSD: Conversion}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\linewidth]{FYP-Ssd-Conversion.png}
+    \caption{SSD — Conversion}
+\end{figure}
+
+\textbf{SSD: Simulation}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{FYP-Ssd-Simulation.png}
+    \caption{SSD — Simulation}
+\end{figure}
+
+\clearpage
+\subsection{Architecture Diagram}
+This diagram provides a high-level view of the deployed QCanvas stack: the Next.js IDE, FastAPI API layer, \texttt{quantum\_converters} and \texttt{quantum\_simulator} packages, PostgreSQL/Redis persistence, and WebSocket/REST communication channels used for compilation and simulation.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{FYP-SystemArchitecture.png}
+    \caption{Architecture Diagram}
+\end{figure}
+
+\clearpage
+\subsection{Component Diagram}
+This diagram depicts concrete module boundaries: editor and results components in the frontend, API routes and services in the backend, conversion/validation modules, simulation backends, and shared utilities that are implemented in the current codebase.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{FYP-Component.png}
+    \caption{Component Diagram}
+\end{figure}
+
+\clearpage
+\subsection{Package Diagram}
+This diagram outlines the actual package organization across the frontend (Next.js \texttt{app}, \texttt{components}, and \texttt{lib}), backend (\texttt{app/api}, \texttt{core}, \texttt{services}, \texttt{models}), \texttt{quantum\_converters} (parsers, converters, optimizers), and \texttt{quantum\_simulator} libraries.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{Package Diagram.jpeg}
+    \caption{Package Diagram}
+\end{figure}
+
+\clearpage
+\subsection{Deployment Diagram}
+This diagram shows the deployment view for development and production, including an HTTP reverse proxy (e.g., Nginx), the FastAPI backend service, the Next.js frontend, PostgreSQL/Redis containers, and scaling via Docker Compose or Kubernetes as described in the deployment documentation.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{FYP-Deployment.png}
+    \caption{Deployment Diagram}
+\end{figure}
+
+\clearpage
+\subsection{State Diagrams}
+These diagrams model the state transitions of critical system entities such as conversion requests, simulation jobs, and user sessions, following the states and transitions implemented in the backend services and job orchestration logic.
+
+\subsubsection{State Diagram: Conversion Process}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{FYP-StateConversion.png}
+    \caption{State Diagram — Conversion}
+\end{figure}
+
+\subsubsection{State Diagram: Simulation Job}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{FYP-StateJob.png}
+    \caption{State Diagram — Job}
+\end{figure}
+
+\clearpage
+\subsection{Data Flow Diagrams (DFD)}
+These diagrams illustrate the flow of data through the system's processes, from user interactions in the IDE to backend processing, database updates, and simulation results being returned to the frontend.
+
+\subsubsection{DFD Level 0 (Context Diagram)}
+At the context level, the DFD shows QCanvas as a single system interacting with external entities such as the User, Authentication Provider, and QSim backend.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{FYP-DFD-lvl0.png}
+    \caption{DFD Level 0}
+\end{figure}
+
+\subsubsection{DFD Level 1}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.98\linewidth]{FYP-DFD-lvl1.png}
+    \caption{DFD Level 1}
+\end{figure}
+
+\section{Data Design}
+
+This section links the conceptual domain model to the concrete payloads, tables, and runtime structures used by the application. It shows how the user-facing workflows are persisted and how the backend represents them internally.
+
+\subsection{Information Domain Transformation}
+
+The conceptual entities from the domain model are transformed into runtime data structures and serialized formats:
+
+\subsubsection{Core Entities}
+\begin{itemize}
+    \item \textbf{Circuit}: Framework source code, parsed AST, OpenQASM 3.0 representation, metadata, and statistics (qubits, depth, gate counts).
+    \item \textbf{ConversionRequest}: Source framework, target framework or QASM, source code, optimization options, validation flags.
+    \item \textbf{ConversionResult}: Generated OpenQASM 3.0 code, conversion statistics, warnings, errors, execution time.
+    \item \textbf{SimulationJob}: OpenQASM code, selected backend, shots, seed, execution status, progress percentage.
+    \item \textbf{SimulationResult}: Measurement counts, statevector/density matrix (optional), execution time, metadata.
+    \item \textbf{Project}: Files collection, active file reference, project settings, theme preferences.
+\end{itemize}
+
+\subsubsection{Entity Relationship Diagram (ERD)}
+The ERD below illustrates the schema and relationships for the Core Entities implemented in the database and runtime models, including how users own projects and files, how conversion results and simulation jobs are linked to circuits, and how results are persisted for later retrieval.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.98\linewidth]{FYP-ErdDiagram.png}
+    \caption{Entity Relationship Diagram}
+\end{figure}
+
+\subsection{Data Organization and Processing}
+
+The table below keeps the data-processing pipeline explicit so the reader can follow the path from raw user input to stored results without assuming hidden steps.
+
+\begin{longtable}{p{0.22\textwidth} p{0.7\textwidth}}
+\toprule
+\textbf{Layer} & \textbf{Data Handled / Description} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Layer} & \textbf{Data Handled / Description} \\
+\midrule
+\endhead
+Input Layer & Source code (Python/QASM), examples, editor configuration (JSON), user preferences \\
+Parsing Layer & Python AST, circuit operations, gate definitions, qubit mappings \\
+Conversion Layer & CircuitAST intermediate format, gate mappings, OpenQASM 3.0 text, diagnostics with line/column info \\
+Validation Layer & Syntax errors, semantic errors, unsupported feature warnings, subset conformance checks \\
+Simulation Layer & Backend selection (statevector/density/stabilizer), shots configuration, execution parameters, caching keys \\
+Results Layer & Measurement counts, histograms, statevector arrays, execution metadata \\
+Rendering Layer & Circuit diagrams (SVG), charts (Chart.js), formatted statistics (client-rendered) \\
+Persistence Layer & Project files, conversion history, results cache, user sessions (file- or memory-backed, DB in future) \\
+\bottomrule
+\caption{Data Organization and Processing}
+\label{tab:data-organization}
+\end{longtable}
+
+\subsection{Data Storage Mechanisms}
+
+\subsubsection{Current Implementation}
+\begin{itemize}
+    \item \textbf{In-memory storage}: Active sessions and temporary computation results.
+    \item \textbf{File-based storage}: Example circuits and templates.
+    \item \textbf{PostgreSQL}: Persistent storage for user accounts, projects, and conversion history.
+    \item \textbf{Redis}: Caching layer for session management and optimization.
+    \item \textbf{SQLAlchemy ORM}: Database abstraction layer.
+    \item \textbf{Frontend local storage}: User preferences and theme settings.
+\end{itemize}
+
+\subsection{API Data Models}
+
+All API endpoints use Pydantic models for validation:
+
+\subsubsection{Request Models}
+\begin{itemize}
+    \item ConversionRequest: source\_framework, target\_framework, source\_code, style, validate
+    \item SimulationRequest: qasm\_code, backend, shots, seed, noise\_model
+    \item FileRequest: name, content, language, project\_id
+\end{itemize}
+
+\subsubsection{Response Models}
+\begin{itemize}
+    \item ConversionResponse: success, qasm\_code, stats, warnings, errors, timestamp
+    \item SimulationResponse: success, results, execution\_time, backend\_info, timestamp
+    \item ErrorResponse: error\_code, message, details, suggestions
+\end{itemize}
+
+ 

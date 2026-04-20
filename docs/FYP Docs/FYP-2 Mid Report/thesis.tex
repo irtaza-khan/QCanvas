@@ -1,0 +1,97 @@
+\documentclass{fast-nuces-bs}
+
+\usepackage{blindtext}
+\usepackage{mathptmx}% Times Roman font
+\usepackage[T1]{fontenc}
+\usepackage{lipsum} 
+\usepackage{sectsty}
+\usepackage{ragged2e}
+\usepackage{tikz-uml}
+\usepackage{graphicx}
+\graphicspath{{ThesisFigs/}}
+\usepackage{float}
+\usepackage{needspace}
+\usepackage{etoolbox}
+\usepackage{placeins}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+% Left-align headings and keep body text justified
+\titleformat{\section}[hang]{\normalfont\bfseries\Large\raggedright}{\thesection}{1em}{}
+\titleformat{\subsection}[hang]{\normalfont\bfseries\large\raggedright}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}[hang]{\normalfont\bfseries\raggedright}{\thesubsubsection}{1em}{}
+
+% Information about the Thesis 
+% -----------------------------------------------------------------------------
+% (All are compulsory, do not delete any line other than author Information)
+% For e.g., usually there are 3 students in a group, so leave authorone, 
+% authortwo, and authorthree, and delete authorfour.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\department{Department of Computer Science}
+\faculty{Computer Science}
+\degreeyear{2026}
+\degreemonth{April}
+\degreename{Computer Science}
+\campuscity{Islamabad}
+\authorone{Umer Farooq}{22I-0891}
+\authortwo{Hussan Waseem Syed}{22I-0893}
+\authorthree{Muhammad Irtaza Khan}{22I-0911}
+\supervisor{Dr. Imran Ashraf}
+\sessionduration{2022-2026}
+\cosupervisor{Dr. Muhammad Nouman Noor}
+\deanname{Dr. Jawwad Ahmed Shamsi}
+\directorname{Dr. Waseem Shahzad}
+\hodname{Dr. Hasan Mujtaba}
+\fypcoordinatorname{Dr. Imran Ashraf}
+\title{F25-038-D-QCanvas Mid Report}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Former document starts below this
+% Do not force chapters to start on right-hand (recto) pages
+\let\cleardoublepage\clearpage
+\begin{document}
+
+\justifying
+
+% Tighten top-of-page spacing and remove header rule
+\renewcommand{\headrulewidth}{0pt}
+\setlength{\headsep}{6pt}
+\pagestyle{fancy}
+\raggedbottom
+
+% Reduce excessive whitespace around floats
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\floatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+
+% Keep headings with following text and prevent orphans/widows
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+
+% Ensure floats are processed before a new section and keep some lines after headings
+\makeatletter
+\pretocmd{\section}{\FloatBarrier\Needspace{6\baselineskip}}{}{}
+\pretocmd{\subsection}{\Needspace{5\baselineskip}}{}{}
+\pretocmd{\subsubsection}{\Needspace{4\baselineskip}}{}{}
+\makeatother
+
+% Fix TOC numbering to avoid "1111" issues
+\renewcommand{\thesection}{\thechapter.\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+
+\include{sections/chapter1}
+\include{sections/chapter2}
+\include{sections/chapter3}
+\include{sections/chapter4}
+\include{sections/conclusion}
+%\appendix
+%\include{appendix1/appendix1}
+
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+\end{document}

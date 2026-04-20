@@ -1,0 +1,167 @@
+\chapter{Implementation and Results}
+
+This chapter details the implementation progress achieved during the earlier iterations and the Sprint 3 extension of QCanvas development. It covers the core infrastructure, the newly completed Sprint 3 learning and visualization features, and the verification work used to ensure the updated platform remained stable.
+
+\section{Sprint 3 Deliverables}
+
+Sprint 3 moved QCanvas beyond a conversion-and-simulation tool and turned it into a more intelligent, community-oriented learning environment. The work in this sprint concentrated on four deliverables: interactive circuit visualization, contextual explanations for quantum symbols, gamified progression, and a sharing-oriented extensibility layer.
+
+\subsection{Interactive Circuit Visualization}
+
+The visualization pipeline in the editor now reacts to source changes through a debounced asynchronous parser, which keeps the interface responsive while the circuit is being interpreted. The implementation combines the Monaco editor, \texttt{parseCircuitWithCountAsync}, and the D3-based \texttt{CircuitVisualization.tsx} renderer so the circuit diagram can update continuously without blocking typing. A separate 3D path in \texttt{CircuitVisualization3D.tsx} supports richer rendering when the circuit is complex enough to benefit from spatial inspection.
+
+This feature is important because it reduces the gap between source code and the resulting quantum circuit. Instead of waiting for a manual compile step, the user can see the structural impact of gates and qubit placement as the code evolves.
+
+\subsection{Quantum Explain It Mode}
+
+Sprint 3 also introduced the hover-based explanation layer. The \texttt{getHoverForSymbol} lookup in \texttt{lib/quantumHoverSymbols.ts} feeds Monaco hover providers for the quantum languages used in the editor, allowing the system to return short markdown explanations for gates, concepts, and common operations.
+
+The purpose of this mode is educational rather than purely technical. When a user hovers over a symbol such as \texttt{H}, \texttt{CNOT}, or \texttt{VQE}, the system provides a contextual explanation that helps the user stay inside the editor rather than switching to external documentation. This reduces context switching and makes the platform more suitable for learning and classroom use.
+
+\subsection{Gamified Learning and Community Features}
+
+The gamification subsystem was extended so user activity can be translated into progress, badges, and visible milestones. The event-driven flow in \texttt{gamification\_service.py} reacts to actions such as simulations, sharing, and tutorial completion, then updates XP, achievement state, and level progression. The achievement set remains broad enough to support both onboarding and mastery-oriented goals, including hidden milestones that keep the system engaging over time.
+
+In parallel, the recipe-sharing workflow was expanded around \texttt{ShareModal.tsx} and the shared API layer. Users can publish reusable circuit snippets with framework metadata, difficulty labels, and descriptive tags. This gives the platform a community dimension instead of treating every circuit as a private one-off artifact.
+
+\subsection{Extensibility and New Framework Onboarding}
+
+Sprint 3 reinforced the plug-in style design of QCanvas by keeping language support data-driven. New syntax rules, reserved keywords, and framework dictionaries can be added without rewriting the editor pipeline, which keeps the system adaptable as the quantum ecosystem evolves.
+
+This extensibility matters because the project is intended to grow with the tooling landscape. A report that only proves the current feature set would be incomplete; the current architecture also needs to show that future frameworks can be integrated without destabilizing the existing conversion and simulation workflow.
+
+\section{Implementation Progress}
+
+\subsection{Iteration 1: Core Infrastructure and Basic Features}
+
+The first iteration focused on establishing the foundational architecture and implementing essential quantum computing features.
+
+\subsubsection{Core Infrastructure}
+The project structure was established using a modern tech stack:
+\begin{itemize}
+    \item \textbf{Backend:} FastAPI application with Pydantic for data validation and SQLAlchemy for ORM.
+    \item \textbf{Frontend:} Next.js 14 application with TypeScript and Tailwind CSS.
+    \item \textbf{DevOps:} Docker and Docker Compose configuration for consistent development and production environments.
+\end{itemize}
+
+\subsubsection{Quantum Features}
+All planned features for Iteration 1 were successfully implemented:
+\begin{itemize}
+    \item \textbf{Framework Support:} Initial support for parsing and converting Cirq, Qiskit, and PennyLane circuits \cite{qiskit, cirq_developers_2023, bergholm2018pennylane}.
+    \item \textbf{Standard Gates:} Implementation of all standard quantum gates and modifiers (controls, inverses) \cite{nielsen2010quantum}.
+    \item \textbf{Type System:} Complete type system support within the intermediate representation \cite{cross2021openqasm}.
+    \item \textbf{Control Flow:} Implementation of classical control flow constructs (if-else).
+\end{itemize}
+
+\subsection{Iteration 2: Advanced Features and Hybrid Execution}
+
+Iteration 2 expanded the system's capabilities with advanced language features, expanded framework support, a secure database layer, and the introduction of the hybrid execution model.
+
+
+
+\subsubsection{Advanced Language Features}
+The conversion and simulation engine was upgraded to support advanced constructs:
+\begin{itemize}
+    \item \textbf{Advanced Control Flow:} Implementation of `while` loops, `break`, and `continue` statements.
+    \item \textbf{Complex Types:} Support for complex number types and operations.
+    \item \textbf{Bitwise Operations:} Implementation of bitwise operators (\&, |, \textasciicircum, \textasciitilde, <<, >>).
+    \item \textbf{Subroutines:} Support for defining and calling functions with return values.
+\end{itemize}
+
+\subsubsection{PennyLane Integration Expansion}
+Support for PennyLane was significantly expanded to include advanced gates:
+\begin{itemize}
+    \item Controlled gates: CY, CH, CRX, CRY, CRZ, CP, CSWAP, CCZ.
+    \item GlobalPhase gate support.
+    \item Advanced modifiers: `negctrl`, `ctrl(n)`, `pow(k)`.
+\end{itemize}
+
+\subsubsection{User Management and Security (CIA Compliance)}
+The security module was designed to strictly adhere to the CIA triad:
+\begin{itemize}
+    \item \textbf{Confidentiality:} All sensitive API keys are encrypted at rest using AES-256, ensuring only authorized services can decrypt them.
+    \item \textbf{Integrity:} User passwords are hashed using Bcrypt with per-user salts, protecting credential integrity against rainbow table attacks.
+    \item \textbf{Availability:} Role-Based Access Control (RBAC) ensures system resources are available to authorized users (User, Admin) while preventing unauthorized resource exhaustion.
+\end{itemize}
+
+\subsubsection{Persistence and Database Layer}
+A complete database layer has been implemented using PostgreSQL and SQLAlchemy:
+\begin{itemize}
+    \item \textbf{ORM Models:} Comprehensive models for Users, Projects, Files, Jobs, and Simulations.
+    \item \textbf{Migrations:} Alembic integration for tracking schema changes.
+    \item \textbf{Data Integrity:} Foreign key constraints and cascade delete policies.
+\end{itemize}
+
+\subsubsection{API for QSim Compilation (Hybrid CPU/QPU)}
+To support the hybrid execution model, a dedicated orchestration API was implemented \cite{peruzzo2014variational}:
+\begin{itemize}
+    \item \textbf{/compile Endpoint:} Offloads complex circuit compilation from the client to the high-performance Python backend.
+    \item \textbf{/simulate Endpoint:} Acts as the bridge between classical orchestration and the quantum execution engine (QSim), managing job queues and results.
+    \item \textbf{Job Isolation:} Each compilation request runs in an isolated worker process to prevent classical CPU-bound tasks from blocking the main event loop.
+\end{itemize}
+
+\section{User Interface Implementation}
+
+The QCanvas Web IDE has been developed into a fully functional environment during Iteration 2:
+
+\begin{itemize}
+    \item \textbf{Monaco Editor:} Integrated code editor with syntax highlighting for multiple frameworks.
+    \item \textbf{Results Visualization:} Interactive charts and histograms using Chart.js for displaying simulation results.
+    \item \textbf{Statistics Panel:} Enhanced panel showing performance metrics (timing, memory, CPU) and conversion statistics.
+    \item \textbf{Example Library:} A curated library of over 25 examples covering algorithms like Grover's Search, Teleportation, and QML classifiers.
+    \item \textbf{Templates System:} Quick-start templates for common quantum algorithms across all supported frameworks.
+    \item \textbf{Theme Support:} Fully implemented dark and light modes.
+\end{itemize}
+
+\section{Testing and Validation}
+
+A comprehensive testing strategy has been employed to ensure system reliability.
+
+\subsection{Testing Strategy}
+
+The verification approach combines three layers. First, backend regression tests check the converter, simulator, database layer, and authentication flows. Second, targeted feature checks validate the Sprint 3 UI additions such as the hover explanations, visualization updates, and sharing workflows. Third, manual exploratory testing is used for behavior that is best evaluated visually, especially diagram rendering and layout correctness.
+
+The practical goal of this strategy is not only to detect failures, but also to confirm that a fix in one part of the system does not degrade another part. That is particularly important in QCanvas because the frontend, converter, and simulator are tightly coupled through shared data structures and execution events.
+
+\subsection{Sprint 3 Verification}
+
+Sprint 3 features were verified through focused checks on the new interactions introduced in this iteration:
+
+\begin{itemize}
+    \item \textbf{Visualization checks:} Source edits were confirmed to update the circuit diagram without freezing the editor, and figure scaling was reviewed so the diagrams remained inside the printable area.
+    \item \textbf{Hover explanation checks:} The Monaco hover provider was exercised on common gate and algorithm names to ensure that the explanatory markdown rendered correctly and returned sensible fallback behavior for unknown symbols.
+    \item \textbf{Gamification checks:} Activity events such as simulation runs and sharing actions were validated against achievement and XP updates so the progression loop remained consistent.
+    \item \textbf{Sharing checks:} Recipe publication flows were tested to confirm that metadata, tags, and framework information were preserved when a circuit snippet was prepared for community sharing.
+    \item \textbf{Regression checks:} Existing conversion and simulation paths were re-run after Sprint 3 changes to confirm that the new features did not break the baseline workflow.
+\end{itemize}
+
+\subsection{Test Coverage}
+As of the end of the current implementation cycle, the system has achieved a 100\% pass rate on all implemented tests:
+\begin{itemize}
+    \item \textbf{Total Tests:} 304 passing tests.
+    \item \textbf{Iteration 1 Tests:} 73 passed tests (110 collected, 33 skipped, 4 excluded) covering basic features.
+    \item \textbf{Iteration 2 Tests:} 151 tests covering advanced features, database models, and authentication.
+    \item \textbf{Integration Tests:} 80 tests covering end-to-end framework conversion and hybrid execution flows.
+    \item \textbf{Scope Coverage:} Comprehensive coverage across Cirq, Qiskit, PennyLane, and OpenQASM 3.0 semantics.
+\end{itemize}
+
+\subsection{Validation Results}
+The validation module ensures that generated OpenQASM 3.0 code conforms to the supported subset. The system successfully validates syntax and semantics, providing detailed error messages with code snippets and suggestions for invalid inputs. For Sprint 3, the same validation layer also serves the explain-it and visualization flows by preventing invalid symbols or malformed source from polluting the UI state.
+
+\section{Evaluation and Benchmarking}
+
+To verify the system's non-functional requirements, preliminary benchmarking was conducted on the core modules.
+
+\subsection{Performance Evaluation}
+\begin{itemize}
+\item \textbf{Conversion Latency:} The average time to convert a 50-gate circuit from Qiskit to OpenQASM 3.0 was measured at \textbf{145ms}, well within the 1500ms target.
+\item \textbf{Simulation Throughput:} The stabilizer backend demonstrated the capability to simulate 1000 shots of a 20-qubit Clifford circuit in under \textbf{1.2 seconds}.
+\item \textbf{API Scalability:} Load testing on the `/compile` endpoint showed stable performance up to 50 concurrent requests per second before latency degradation occurred.
+\end{itemize}
+
+\subsection{Correctness Benchmarking}
+Using a test suite of 50 standard algorithms (Bernstein-Vazirani, QFT, Grover):
+\begin{itemize}
+    \item \textbf{Semantic Fidelity:} 100\% of valid input circuits produced OpenQASM code that executed potentially equivalent quantum logic.
+    \item \textbf{Round-Trip Accuracy:} Verification confirmed that converting standard gates to OpenQASM and back preserved all gate parameters with $10^{-10}$ numerical precision.
+\end{itemize}

@@ -1,0 +1,106 @@
+\chapter{Introduction}
+
+The field of quantum computing has transitioned significantly from theoretical abstraction to the era of Noisy Intermediate-Scale Quantum (NISQ) devices \cite{preskill2018quantum, nielsen2010quantum}. As hardware vendors like IBM, Google, and Rigetti race to increase qubit counts and fidelity, the accompanying software ecosystem has expanded rapidly. However, this growth has come at the cost of fragmentation. Researchers and developers today are confronted with a "Tower of Babel" scenario, where competing frameworks—such as Qiskit, Cirq, and PennyLane—operate in silos, each with unique syntax, compilation targets, and visualization tools \cite{qiskit, cirq_developers_2023, bergholm2018pennylane}.
+
+This fragmentation poses a barrier to entry for students and creates friction for experienced researchers who wish to compare algorithms across different hardware baselines. The lack of a unified development environment that can transparently bridge these frameworks means that users often spend more time wrestling with proprietary APIs than designing quantum logic. Furthermore, the absence of standardized intermediate representations in educational tools obscures the critical translation step where high-level Python code becomes executable quantum instructions.
+
+"QCanvas" is proposed as a definitive solution to this interoperability challenge. It is designed as a unified, standard-compliant simulation platform that serves as a universal translator and execution engine for quantum circuits. By centering its architecture on OpenQASM 3.0 \cite{cross2021openqasm, cross2017openqasm}, QCanvas provides a transparent window into quantum execution, allowing code from any major framework to be parsed, visualized, and simulated in a consistent environment.
+
+This document details the complete software requirements specification for QCanvas. It outlines the architectural decisions and functional capabilities intended to support developers, researchers, and educators in overcoming the current limitations of the quantum software landscape.
+
+\section{Problem Statement}
+
+Despite rapid progress in NISQ-era hardware and software, there is no unified simulation platform that allows quantum circuits from major frameworks (Qiskit, Cirq, PennyLane) to be expressed, compared, and executed through a single, standards-based workflow. Learners and researchers are forced to navigate duplicated concepts, incompatible APIs, and fragmented tooling across frameworks and simulators.
+
+Specifically, the current ecosystem lacks:
+
+\begin{itemize}
+    \item \textbf{A unified intermediate representation in tooling:} Most frameworks hide or only partially expose the compiled quantum instructions, making it difficult to reason about what actually runs on the backend.
+    \item \textbf{A single, framework-agnostic IDE:} There is no web-based environment where users can work with Cirq, Qiskit, and PennyLane side by side while seeing the same OpenQASM 3.0 view of their circuits.
+    \item \textbf{A consistent simulation interface:} Users must switch between different simulators, configuration styles, and result formats when moving across frameworks.
+    \item \textbf{Beginner-friendly feedback:} Existing professional tools often prioritize flexibility over clarity, leaving students without guided error reporting or visual explanations.
+\end{itemize}
+
+QCanvas addresses this problem by providing a unified interface where users can write in their preferred framework but understand and execute their logic through a common, standardized lens (OpenQASM 3.0) \cite{cross2021openqasm}. The remainder of this document formalizes the scope, objectives, requirements, and architecture of that solution.
+
+\section{Project Objectives}
+
+The primary goal of QCanvas is to democratize access to quantum programming through a simulation-first approach. The specific objectives are:
+
+\begin{itemize}
+    \item \textbf{To Unify Quantum Workflows:} Create a single platform capable of parsing and converting code from major frameworks (Cirq, Qiskit, PennyLane) into a universal format (OpenQASM 3.0).
+    \item \textbf{To Enhance Educational Clarity:} Provide a web-based IDE that offers immediate feedback, converting abstract Python code into clear quantum assembly and visual circuit diagrams.
+    \item \textbf{To Ensure Standard Compliance:} Validate all generated code against a strict OpenQASM 3.0 subset to ensure correctness and portability.
+    \item \textbf{To Enable Hybrid Simulation:} Implement a robust architecture where classical orchestration (CPU) and quantum execution (Simulators) are clearly separated, mimicking real-world hybrid quantum-classical systems.
+\end{itemize}
+
+\section{Project Scope}
+
+The scope of QCanvas is defined to deliver a functional, robust simulation environment within the project timeline.
+
+\subsection{In Scope}
+
+The system shall:
+\begin{itemize}
+    \item \textbf{Conversion Engine:} Robustly parse Python-based quantum circuits and convert them to OpenQASM 3.0 AST and source code.
+    \item \textbf{Validation Layer:} Semantic analysis to ensure generated code adheres to the supported gate set and control flow limitations.
+    \item \textbf{Simulation Backends:} Support for Statevector, Density Matrix, and Stabilizer simulations with configurable shot counts.
+    \item \textbf{Interactive IDE:} A Monaco-based web editor for writing code, visualizing results (histograms), and managing projects.
+    \item \textbf{Real-Time Feedback:} WebSocket-based streaming for long-running batch conversions or heavy simulations.
+\end{itemize}
+
+\subsection{Out of Scope}
+
+To ensure feasibility, the following are explicitly excluded:
+\begin{itemize}
+    \item \textbf{Hardware Execution:} Direct integration with physical QPUs (e.g., IBM Quantum Experience) is not part of this release.
+    \item \textbf{Pulse-Level Control:} Low-level control of microwave pulses (OpenPulse) is outside the scope.
+    \item \textbf{QEC Protocols:} Specialized quantum error correction encoding/decoding layers are not implemented.
+    \item \textbf{Physical Qubit Mapping:} Manual addressing of physical qubit layouts (e.g., \texttt{q[0] -> \$0}) is not supported.
+\end{itemize}
+
+\section{Overview of System Modules}
+
+The system is architected into modular components to ensure scalability and maintainability:
+
+\begin{itemize}
+    \item \textbf{Conversion Module:} The core engine responsible for AST parsing, framework interoperability, and code generation.
+    \item \textbf{Simulation Module:} The execution engine handling the mathematics of state evolution and measurement.
+    \item \textbf{Validation Module:} A gatekeeper ensuring code correctness before execution.
+    \item \textbf{Web IDE Module:} The frontend interface handling user interaction, visualization, and state management.
+    \item \textbf{API Module:} The communication layer exposing REST and WebSocket endpoints.
+\end{itemize}
+
+\section{User Classes and Characteristics}
+
+QCanvas serves a diverse audience with varying needs:
+
+\begin{longtable}{p{0.20\textwidth} p{0.35\textwidth} p{0.35\textwidth}}
+\toprule
+\textbf{User Class} & \textbf{Primary Goals} & \textbf{Key Needs} \\
+\midrule
+\endhead
+\textbf{Beginners} & Build visual intuition and learn quantum basics. & Templates, guided error messages, simple visual feedback. \\
+\addlinespace
+\textbf{Researchers} & Reproduce experiments and compare frameworks. & Batch processing, exact statevector access, cross-framework analysis. \\
+\addlinespace
+\textbf{Educators} & Demonstrate concepts effectively to students. & Shareable examples, clean visualization, standard syntax compliance. \\
+\bottomrule
+
+% --- ADD THESE LINES ---
+\caption{User Classes and Characteristics}
+\label{tab:user-classes}
+% -----------------------
+
+\end{longtable}
+
+\section{Assumptions, Dependencies, and Constraints}
+
+\subsection{Assumptions}
+It is assumed that users have basic familiarity with Python syntax. The system assumes a stable modern browser environment (Chrome/Firefox/Edge) for the IDE.
+
+\subsection{Dependencies}
+Key external dependencies include the \texttt{Python 3.11+} runtime, \texttt{FastAPI} for the backend, \texttt{Next.js} for the frontend, and the quantum libraries \texttt{Cirq}, \texttt{Qiskit}, and \texttt{PennyLane}.
+
+\subsection{Constraints}
+System performance is constrained by host memory for Statevector simulations (scaling exponentially with qubit count). API response times are targeted at under 2 seconds for standard conversion tasks.
