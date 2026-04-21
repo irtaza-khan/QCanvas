@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 
 import { authApi } from "@/lib/api";
 
-export default function AdminApprovePage() {
+function AdminApproveContent() {
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
 
@@ -115,5 +115,13 @@ export default function AdminApprovePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminApprovePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a1a]" />}>
+      <AdminApproveContent />
+    </Suspense>
   );
 }
