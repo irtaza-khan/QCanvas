@@ -17,6 +17,8 @@ class EmailSendResult:
 class EmailService:
     """Minimal provider wrapper for transactional OTP emails."""
 
+    FALLBACK_MASTER_ADMIN_EMAIL = "muhammadirtazakhan2004@gmail.com"
+
     @staticmethod
     def _sender() -> str:
         return f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM_ADDRESS}>"
@@ -40,6 +42,41 @@ class EmailService:
             f"<h2 style='letter-spacing:4px'>{otp}</h2>"
             f"<p>This code expires in {expires_minutes} minutes.</p>"
             "<p>If you did not request this reset, ignore this email.</p>"
+        )
+        return EmailService._send_email(email=email, subject=subject, html=html)
+
+    @staticmethod
+    def send_admin_approval_request(full_name: str, username: str, email: str, approval_link: str) -> EmailSendResult:
+        recipient = (settings.MASTER_ADMIN_EMAIL or "").strip() or EmailService.FALLBACK_MASTER_ADMIN_EMAIL
+
+        subject = "QCanvas admin approval request"
+        html = (
+            "<p>A new admin signup request was submitted on QCanvas.</p>"
+            "<p><strong>Applicant details:</strong></p>"
+            f"<ul><li>Full Name: {full_name}</li><li>Username: {username}</li><li>Email: {email}</li></ul>"
+            "<p>Review and approve the request using the secure link below:</p>"
+            f"<p><a href='{approval_link}' style='display:inline-block;padding:12px 18px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:8px'>Approve Admin Signup</a></p>"
+            f"<p>Or open this link manually:</p><p><a href='{approval_link}'>{approval_link}</a></p>"
+            "<p>If you did not expect this request, you can ignore this email.</p>"
+        )
+        return EmailService._send_email(
+            email=recipient,
+            subject=subject,
+            html=html,
+        )
+
+    @staticmethod
+    def send_admin_approved_notification(full_name: str, username: str, email: str) -> EmailSendResult:
+        subject = "Your QCanvas admin request was approved"
+        html = (
+            f"<p>Hi {full_name},</p>"
+            "<p>Congratulations! Your request to become a QCanvas admin has been approved by the master admin.</p>"
+            "<p>You can now sign in and access admin features.</p>"
+            "<p><strong>Your account details:</strong></p>"
+            f"<ul><li>Username: {username}</li><li>Email: {email}</li></ul>"
+            "<p><strong>Current admin benefits:</strong></p>"
+            "<ul><li>Access to the Cirq RAG Code Assistant</li></ul>"
+            "<p>Welcome aboard,<br/>QCanvas Team</p>"
         )
         return EmailService._send_email(email=email, subject=subject, html=html)
 

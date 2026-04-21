@@ -141,6 +141,10 @@ class EmailRequest(BaseModel):
     email: str
 
 
+class AdminApprovalRequest(BaseModel):
+    token: str
+
+
 class OtpVerifyRequest(BaseModel):
     email: str
     otp: str

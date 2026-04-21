@@ -1,5 +1,9 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from pathlib import Path
+
+
+ROOT_ENV_FILE = Path(__file__).resolve().parents[3] / ".env"
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "QCanvas"
@@ -36,6 +40,7 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     RESEND_API_BASE_URL: str = "https://api.resend.com"
     FRONTEND_URL: str = "http://localhost:3000"
+    MASTER_ADMIN_EMAIL: str = ""
     
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [
@@ -66,7 +71,7 @@ class Settings(BaseSettings):
 
     class Config:
         case_sensitive = True
-        env_file = ".env"
+        env_file = str(ROOT_ENV_FILE)
         extra = "ignore"
 
 settings = Settings()

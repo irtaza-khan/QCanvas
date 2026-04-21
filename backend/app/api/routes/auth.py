@@ -2,7 +2,8 @@
 Authentication endpoints for QCanvas.
 Handles user registration, login, and authentication.
 """
-from datetime import datetime
+import uuid
+from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -12,6 +13,7 @@ from app.config.settings import settings
 from app.core.middleware import limiter
 from app.models.database_models import User, UserRole, OtpPurpose
 from app.models.schemas import (
+    AdminApprovalRequest,
     UserRegisterRequest,
     UserLoginRequest,
     UserResponse,
@@ -28,6 +30,7 @@ from app.models.schemas import (
     UpdateProfileResponse,
 )
 from app.services.otp_service import OTPService
+from app.services.email_service import EmailService
 from app.utils.jwt_auth import create_access_token, verify_token
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -62,6 +65,51 @@ def _mask_email(email: str) -> str:
     else:
         masked_local = local[:2] + "***"
     return f"{masked_local}@{domain}" if domain else masked_local
+
+
+def _ensure_registration_availability(payload: UserRegisterRequest, db: Session) -> tuple[str, str]:
+    normalized_email = payload.email.strip().lower()
+
+    existing_email = db.query(User).filter(User.email == normalized_email).first()
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+
+    existing_username = db.query(User).filter(User.username == payload.username).first()
+    if existing_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+
+    return normalized_email, payload.username
+
+
+def _create_user_record(
+    db: Session,
+    payload: UserRegisterRequest,
+    role: UserRole,
+    is_active: bool,
+    is_verified: bool,
+) -> User:
+    user = User(
+        id=uuid.uuid4(),
+        email=payload.email.strip().lower(),
+        username=payload.username,
+        full_name=payload.full_name,
+        role=role,
+        is_active=is_active,
+        is_verified=is_verified,
+    )
+    user.set_password(payload.password)
+    db.add(user)
+    return user
+
+
+def _build_admin_approval_link(token: str) -> str:
+    return f"{settings.FRONTEND_URL.rstrip('/')}/admin/approve?token={token}"
 
 
 def _otp_error_to_http(error_code: str) -> HTTPException:
@@ -200,37 +248,20 @@ def register(request: Request, payload: UserRegisterRequest, db: Session = Depen
             detail="Password must be at least 8 characters long"
         )
     
-    normalized_email = payload.email.strip().lower()
-
-    # Check if email already exists
-    existing_email = db.query(User).filter(User.email == normalized_email).first()
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-    
-    # Check if username already exists
-    existing_username = db.query(User).filter(User.username == payload.username).first()
-    if existing_username:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already taken"
-        )
+    _ensure_registration_availability(payload, db)
     
     # Create new user
-    user = User(
-        email=normalized_email,
-        username=payload.username,
-        full_name=payload.full_name,
-        role=UserRole.USER  # Default role
+    user = _create_user_record(
+        db=db,
+        payload=payload,
+        role=UserRole.USER,
+        is_active=True,
+        is_verified=not settings.AUTH_EMAIL_OTP_ENABLED,
     )
-    user.set_password(payload.password)
     if settings.AUTH_EMAIL_OTP_ENABLED:
         user.is_verified = False
     
     # Save to database
-    db.add(user)
     db.commit()
     db.refresh(user)
     
@@ -261,6 +292,115 @@ def register(request: Request, payload: UserRegisterRequest, db: Session = Depen
         token_type="bearer",
         user=user_response,
     )
+
+
+@router.post(
+    "/admin/register",
+    response_model=RegisterResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: {"model": ErrorResponse, "description": "Email or username already exists"},
+        422: {"model": ErrorResponse, "description": "Validation error"},
+        500: {"model": ErrorResponse, "description": "Unable to send admin approval email"},
+    }
+)
+@limiter.limit("5/minute")
+def register_admin(request: Request, payload: UserRegisterRequest, db: Session = Depends(get_db)):
+    """Register a new admin account that must be approved by the master admin."""
+    if len(payload.password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long"
+        )
+
+    _ensure_registration_availability(payload, db)
+
+    user = _create_user_record(
+        db=db,
+        payload=payload,
+        role=UserRole.ADMIN,
+        is_active=False,
+        is_verified=False,
+    )
+
+    approval_token = create_access_token(
+        data={"sub": str(user.id), "intent": "admin_approval"},
+        expires_delta=timedelta(hours=24),
+    )
+    approval_link = _build_admin_approval_link(approval_token)
+
+    email_result = EmailService.send_admin_approval_request(
+        full_name=user.full_name,
+        username=user.username,
+        email=user.email,
+        approval_link=approval_link,
+    )
+
+    if not email_result.success:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=email_result.error or "Unable to send admin approval email",
+        )
+
+    db.commit()
+    db.refresh(user)
+
+    return RegisterResponse(
+        verification_required=True,
+        message="Admin signup request submitted for approval",
+        user=_to_user_response(user),
+    )
+
+
+@router.post(
+    "/admin/approve",
+    response_model=MessageResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid or expired approval token"},
+        404: {"model": ErrorResponse, "description": "User not found"},
+    }
+)
+def approve_admin(payload: AdminApprovalRequest, db: Session = Depends(get_db)):
+    """Activate a pending admin account after master admin approval."""
+    token = payload.token.strip()
+    if not token:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Approval token is required")
+
+    token_payload = verify_token(token)
+    if not token_payload or token_payload.get("intent") != "admin_approval":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired approval token")
+
+    user_id = token_payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid approval token payload")
+
+    user = db.query(User).filter(User.id == user_id, User.deleted_at == None).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Approval token does not belong to an admin account")
+
+    if user.is_active and user.is_verified:
+        return MessageResponse(message="Admin account is already approved")
+
+    user.is_active = True
+    user.is_verified = True
+    user.email_verified_at = datetime.utcnow()
+    db.commit()
+    db.refresh(user)
+
+    # Best-effort notification: approval remains successful even if email delivery fails.
+    approved_email_result = EmailService.send_admin_approved_notification(
+        full_name=user.full_name,
+        username=user.username,
+        email=user.email,
+    )
+    if not approved_email_result.success:
+        print(f"[Auth] Approved admin notification email failed for {user.email}: {approved_email_result.error}")
+
+    return MessageResponse(message="Admin account approved successfully")
 
 
 @router.post(

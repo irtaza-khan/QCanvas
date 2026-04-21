@@ -632,6 +632,10 @@ export interface OtpVerifyResponse {
   expires_in_seconds?: number
 }
 
+export interface AdminApprovalRequest {
+  token: string
+}
+
 // Auth API
 export const authApi = {
   async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
@@ -645,6 +649,20 @@ export const authApi = {
     return apiRequest<RegisterResponse>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
+    })
+  },
+
+  async registerAdmin(data: RegisterRequest): Promise<ApiResponse<RegisterResponse>> {
+    return apiRequest<RegisterResponse>('/api/auth/admin/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
+  async approveAdmin(token: string): Promise<ApiResponse<{ message: string }>> {
+    return apiRequest<{ message: string }>('/api/auth/admin/approve', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
     })
   },
 

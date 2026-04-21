@@ -311,6 +311,14 @@ export default function LoginPage() {
             </p>
             <p className="text-sm text-black dark:text-gray-400 mt-2">
               <a
+                href="/admin/signup"
+                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+              >
+                Request admin access
+              </a>
+            </p>
+            <p className="text-sm text-black dark:text-gray-400 mt-2">
+              <a
                 href="/forgot-password"
                 className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
               >

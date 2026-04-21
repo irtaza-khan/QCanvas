@@ -422,6 +422,14 @@ export default function SignupPage() {
                 Sign In
               </Link>
             </p>
+            <p className="text-sm text-black dark:text-gray-400 mt-2">
+              <Link
+                href="/admin/signup"
+                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+              >
+                Apply for admin access
+              </Link>
+            </p>
           </div>
 
           {/* Demo Login */}
