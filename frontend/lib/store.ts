@@ -1211,7 +1211,7 @@ export const useFileStore = create<FileStore>()(
           await api.updateFile(
             Number.parseInt(fileId, 10),
             {
-              folder_id: folderId ? Number.parseInt(folderId, 10) : null,
+              folder_id: folderId ? Number.parseInt(folderId, 10) : undefined,
             },
             token,
           )
