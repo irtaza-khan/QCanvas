@@ -44,6 +44,8 @@ from .run_history import RunHistoryStore, build_run_history_store
 
 logger = get_logger(__name__)
 
+_ENVIRONMENT = (os.getenv("ENVIRONMENT") or "development").strip().lower()
+
 
 # ---------------------------------------------------------------------------
 # Startup-time configuration
@@ -102,8 +104,7 @@ def _validate_prod_env() -> None:
     time. In production we refuse to start rather than 500-ing the first
     request.
     """
-    env = (os.getenv("ENVIRONMENT") or "development").strip().lower()
-    if env != "production":
+    if _ENVIRONMENT != "production":
         return
 
     missing: List[str] = [k for k in _REQUIRED_PROD_ENV if not os.getenv(k)]
@@ -133,7 +134,11 @@ _validate_prod_env()
 
 _ALLOWED_ORIGINS: List[str] = [
     o.strip()
-    for o in (os.getenv("CIRQ_RAG_ALLOWED_ORIGINS") or "*").split(",")
+    for o in (
+        os.getenv("CIRQ_RAG_ALLOWED_ORIGINS")
+        if os.getenv("CIRQ_RAG_ALLOWED_ORIGINS") is not None
+        else ("*" if _ENVIRONMENT != "production" else "")
+    ).split(",")
     if o.strip()
 ]
 _DISABLE_DOCS = (os.getenv("CIRQ_RAG_DISABLE_DOCS") or "").strip().lower() in (

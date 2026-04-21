@@ -39,18 +39,6 @@ ADMIN_ACCOUNTS = [
         "full_name": "QCanvas Admin 1",
         "password": "Admin123!@#",
     },
-    {
-        "email": "admin2@qcanvas.local",
-        "username": "admin2",
-        "full_name": "QCanvas Admin 2",
-        "password": "Admin123!@#",
-    },
-    {
-        "email": "admin3@qcanvas.local",
-        "username": "admin3",
-        "full_name": "QCanvas Admin 3",
-        "password": "Admin123!@#",
-    },
 ]
 
 
