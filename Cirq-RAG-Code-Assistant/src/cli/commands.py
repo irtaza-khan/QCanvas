@@ -38,7 +38,13 @@ def get_orchestrator() -> Orchestrator:
         
         # Initialize components
         embedding_model = EmbeddingModel()
-        vector_store = VectorStore(embedding_model.get_embedding_dimension())
+
+        # Read vector store type from config (set by CIRQ_RAG_VECTOR_STORE_TYPE env var).
+        vs_type = config.get("rag", {}).get("vector_store", {}).get("type", "faiss")
+        vector_store = VectorStore(
+            embedding_model.get_embedding_dimension(),
+            vector_db_type=vs_type,
+        )
         knowledge_base = KnowledgeBase(
             embedding_model=embedding_model,
             vector_store=vector_store,
