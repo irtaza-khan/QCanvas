@@ -18,8 +18,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        # Add your API domain to the connect-src so the browser allows the fetch
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
+            "connect-src 'self' https://api.qcanvas.codes https://www.qcanvas.codes; " 
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
             "img-src 'self' data: https://fastapi.tiangolo.com"

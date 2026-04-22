@@ -17,6 +17,7 @@ sys.path.insert(0, project_root)
 from app.api.routes import converter, health, simulator, hybrid, auth, projects, files, gamification, shared, folders, cirq_agent_proxy
 from app.services.conversion_service import ConversionService
 from app.services.simulation_service import SimulationService
+from app.config.settings import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -61,7 +62,8 @@ app.add_middleware(AuditLogMiddleware)
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origin_regex=r"^https://([a-zA-Z0-9-]+\.)?qcanvas\.codes$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

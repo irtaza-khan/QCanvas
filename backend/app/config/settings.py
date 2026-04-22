@@ -1,9 +1,20 @@
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from typing import Optional
 from pathlib import Path
+import json
 
 
 ROOT_ENV_FILE = Path(__file__).resolve().parents[3] / ".env"
+
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8000",
+    "https://qcanvas.codes",
+    "https://www.qcanvas.codes",
+]
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "QCanvas"
@@ -43,15 +54,36 @@ class Settings(BaseSettings):
     MASTER_ADMIN_EMAIL: str = ""
     
     # CORS
-    BACKEND_CORS_ORIGINS: list[str] = [
-        "http://localhost:3000", 
-        "http://localhost:8000",
-        "https://qcanvas.codes",
-        "https://www.qcanvas.codes"
-    ]
+    BACKEND_CORS_ORIGINS: list[str] = DEFAULT_CORS_ORIGINS
 
     # Cirq-RAG-Code-Assistant (proxied at /api/cirq-agent/*). Use port 8001 locally to avoid clashing with QCanvas on 8000.
     CIRQ_AGENT_URL: str = "http://127.0.0.1:8001"
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value):
+        if value is None or value == "":
+            return DEFAULT_CORS_ORIGINS
+        if isinstance(value, list):
+            return [str(v).strip() for v in value if str(v).strip()]
+        if isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                return DEFAULT_CORS_ORIGINS
+
+            # Supports JSON arrays in env vars for ECS/Secrets Manager.
+            if raw.startswith("["):
+                try:
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, list):
+                        return [str(v).strip() for v in parsed if str(v).strip()]
+                except json.JSONDecodeError:
+                    pass
+
+            # Fallback: comma-separated origins.
+            return [item.strip() for item in raw.split(",") if item.strip()]
+
+        return DEFAULT_CORS_ORIGINS
 
     def _should_rebuild_database_url(self) -> bool:
         if not self.DATABASE_URL:

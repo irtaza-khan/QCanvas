@@ -63,7 +63,17 @@ async def proxy_cirq_agent(
         )
 
     base = settings.CIRQ_AGENT_URL.rstrip("/")
-    url = f"{base}/{path}"
+    normalized_path = path.lstrip("/")
+
+    # Be tolerant of CIRQ_AGENT_URL values that already include /api/v1.
+    # This prevents forwarding to /api/v1/api/v1/* and resulting 404s.
+    if base.endswith("/api/v1"):
+        if normalized_path == "api/v1":
+            normalized_path = ""
+        elif normalized_path.startswith("api/v1/"):
+            normalized_path = normalized_path[len("api/v1/"):]
+
+    url = f"{base}/{normalized_path}" if normalized_path else base
     q = str(request.query_params)
     if q:
         url = f"{url}?{q}"
