@@ -44,6 +44,12 @@ def _forward_request_headers(request: Request) -> dict[str, str]:
         if lk in _HOP_BY_HOP:
             continue
         out[key] = value
+
+    # Inject the X-API-Key expected by the Cirq agent.
+    api_key = settings.CIRQ_RAG_API_KEY
+    if api_key:
+        out["X-API-Key"] = api_key
+
     return out
 
 

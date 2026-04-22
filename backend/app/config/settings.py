@@ -58,6 +58,8 @@ class Settings(BaseSettings):
 
     # Cirq-RAG-Code-Assistant (proxied at /api/cirq-agent/*). Use port 8001 locally to avoid clashing with QCanvas on 8000.
     CIRQ_AGENT_URL: str = "http://127.0.0.1:8001"
+    # API key the proxy sends as X-API-Key to the Cirq agent. Leave empty to skip.
+    CIRQ_RAG_API_KEY: str = ""
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
