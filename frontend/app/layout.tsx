@@ -23,10 +23,58 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: 'QCanvas - Quantum Code Editor',
-  description: 'A modern quantum circuit code editor with real-time conversion to OpenQASM 3.0 and visualization',
-  keywords: ['quantum', 'qiskit', 'cirq', 'pennylane', 'quantum computing', 'code editor'],
+  title: 'QCanvas: The Quantum Unified Simulator',
+  description:
+    'QCanvas is a Quantum Unified Simulator that converts quantum circuits between Cirq, Qiskit, and PennyLane via a multi-agent RAG architecture. Supports real-time OpenQASM 3.0 cross-framework simulation.',
+  keywords: [
+    'quantum computing',
+    'quantum circuit simulator',
+    'QCanvas',
+    'Qiskit',
+    'Cirq',
+    'PennyLane',
+    'OpenQASM 3.0',
+    'quantum framework conversion',
+    'multi-agent RAG',
+    'quantum code editor',
+    'quantum unified simulator',
+    'Google Quantum AI',
+    'IBM Quantum',
+    'cross-framework simulation',
+  ],
   authors: [{ name: 'QCanvas Team' }],
+  metadataBase: new URL('https://qcanvas.codes'),
+  alternates: {
+    canonical: 'https://qcanvas.codes/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://qcanvas.codes/',
+    title: 'QCanvas: The Quantum Unified Simulator',
+    description:
+      'Convert quantum circuits between Cirq, Qiskit, and PennyLane with real-time OpenQASM 3.0 simulation. Powered by a multi-agent RAG architecture.',
+    siteName: 'QCanvas',
+    images: [
+      {
+        url: 'https://qcanvas.codes/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'QCanvas — Quantum Unified Simulator',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'QCanvas: The Quantum Unified Simulator',
+    description:
+      'Convert quantum circuits between Cirq, Qiskit, and PennyLane with real-time OpenQASM 3.0 simulation.',
+    images: ['https://qcanvas.codes/og-image.png'],
+  },
   icons: {
     icon: '/favicon.svg?v=2',
     shortcut: '/favicon.svg?v=2',
@@ -45,8 +93,42 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'QCanvas',
+    applicationCategory: 'ScientificSoftware',
+    operatingSystem: 'Web',
+    url: 'https://qcanvas.codes/',
+    description:
+      'QCanvas is a Quantum Unified Simulator that enables cross-framework quantum circuit translation and simulation between Cirq, Qiskit, and PennyLane using OpenQASM 3.0 as the universal intermediate format, powered by a multi-agent RAG architecture.',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    author: {
+      '@type': 'Organization',
+      name: 'QCanvas Team',
+      url: 'https://qcanvas.codes/',
+    },
+    featureList: [
+      'Quantum circuit conversion between Cirq, Qiskit, and PennyLane',
+      'Real-time OpenQASM 3.0 simulation',
+      'Multi-agent RAG architecture for AI-assisted circuit generation',
+      'Web-based quantum circuit IDE',
+      'Cross-framework quantum circuit validation',
+    ],
+  }
+
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
         {/* Theme watcher mounts on client to sync html class based on store/localStorage */}
         <ThemeWatcher />

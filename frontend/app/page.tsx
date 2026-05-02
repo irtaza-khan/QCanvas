@@ -206,12 +206,12 @@ def grovers_search():
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-[1.1] tracking-tight">
               <span className="quantum-gradient bg-clip-text text-transparent">
-                Quantum
+                QCanvas:
               </span>
               <br />
-              <span className="text-white">Computing Made</span>
+              <span className="text-white">The Quantum</span>
               <br />
-              <span className="gradient-text">Simple</span>
+              <span className="gradient-text">Unified Simulator</span>
             </h1>
 
             <p className="text-lg md:text-xl text-black dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -284,12 +284,13 @@ def grovers_search():
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               <span className="quantum-gradient bg-clip-text text-transparent">
-                Powerful Features
+                Unified Framework Conversion for Cirq and Qiskit
               </span>
             </h2>
             <p className="text-lg text-black dark:text-gray-400 max-w-2xl mx-auto">
               Everything you need to build, convert, and simulate quantum
-              circuits with professional-grade tools and real-time feedback.
+              circuits across Cirq, Qiskit, and PennyLane — with professional-grade
+              tools and real-time OpenQASM 3.0 feedback.
             </p>
           </div>
 
@@ -307,10 +308,14 @@ def grovers_search():
                 intelligent parsing and OpenQASM 3.0 as the universal
                 intermediate format.
               </p>
-              <div className="flex items-center text-sm text-indigo-400 group-hover:text-indigo-300 transition-colors duration-300 font-medium">
-                <span>Learn more</span>
+              <Link
+                href="/app"
+                className="flex items-center text-sm text-indigo-400 group-hover:text-indigo-300 transition-colors duration-300 font-medium"
+                aria-label="Try framework conversion in QCanvas editor"
+              >
+                <span>Try conversion</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
-              </div>
+              </Link>
             </div>
 
             {/* Feature 2 */}
@@ -326,10 +331,14 @@ def grovers_search():
                 backends, progress tracking, and interactive visualization
                 powered by WebSocket.
               </p>
-              <div className="flex items-center text-sm text-violet-400 group-hover:text-violet-300 transition-colors duration-300 font-medium">
+              <Link
+                href="/app"
+                className="flex items-center text-sm text-violet-400 group-hover:text-violet-300 transition-colors duration-300 font-medium"
+                aria-label="Run real-time quantum simulation in QCanvas"
+              >
                 <span>Try simulation</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
-              </div>
+              </Link>
             </div>
 
             {/* Feature 3 */}
@@ -344,10 +353,14 @@ def grovers_search():
                 Learn quantum computing with guided examples, tutorials, and an
                 intuitive interface designed for both beginners and experts.
               </p>
-              <div className="flex items-center text-sm text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300 font-medium">
+              <Link
+                href="/docs"
+                className="flex items-center text-sm text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300 font-medium"
+                aria-label="Explore quantum computing tutorials and documentation"
+              >
                 <span>Start learning</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
-              </div>
+              </Link>
             </div>
 
             {/* Feature 4 */}
@@ -362,10 +375,14 @@ def grovers_search():
                 Professional code editor with syntax highlighting, IntelliSense,
                 and live preview for quantum circuit development and debugging.
               </p>
-              <div className="flex items-center text-sm text-emerald-400 group-hover:text-emerald-300 transition-colors duration-300 font-medium">
+              <Link
+                href="/app"
+                className="flex items-center text-sm text-emerald-400 group-hover:text-emerald-300 transition-colors duration-300 font-medium"
+                aria-label="Open the QCanvas quantum Web IDE"
+              >
                 <span>Open editor</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
-              </div>
+              </Link>
             </div>
 
             {/* Feature 5 */}
@@ -381,10 +398,14 @@ def grovers_search():
                 GitHub-style repositories, collaboration tools, and public
                 circuit galleries.
               </p>
-              <div className="flex items-center text-sm text-amber-400 group-hover:text-amber-300 transition-colors duration-300 font-medium">
+              <Link
+                href="/about"
+                className="flex items-center text-sm text-amber-400 group-hover:text-amber-300 transition-colors duration-300 font-medium"
+                aria-label="Learn about the QCanvas community"
+              >
                 <span>Join community</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
-              </div>
+              </Link>
             </div>
 
             {/* Feature 6 */}
@@ -400,10 +421,16 @@ def grovers_search():
                 validation, and compatibility across all major quantum
                 platforms.
               </p>
-              <div className="flex items-center text-sm text-pink-400 group-hover:text-pink-300 transition-colors duration-300 font-medium">
+              <a
+                href="https://openqasm.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-sm text-pink-400 group-hover:text-pink-300 transition-colors duration-300 font-medium"
+                aria-label="View OpenQASM 3.0 standard specification"
+              >
                 <span>View standard</span>
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -415,12 +442,12 @@ def grovers_search():
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               <span className="quantum-gradient bg-clip-text text-transparent">
-                Interactive Examples
+                Real-Time OpenQASM 3.0 Simulation
               </span>
             </h2>
             <p className="text-lg text-black dark:text-gray-400 max-w-2xl mx-auto mb-8">
-              Explore quantum computing through hands-on examples and live
-              demonstrations
+              Explore quantum computing through hands-on examples in Cirq, Qiskit,
+              and PennyLane — converted and simulated live via OpenQASM 3.0
             </p>
             <Link
               href="/examples"
@@ -528,10 +555,10 @@ def grovers_search():
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             <span className="quantum-gradient bg-clip-text text-transparent">
-              Ready to Start Your
+              Start Simulating Quantum Circuits
             </span>
             <br />
-            <span className="text-white">Quantum Journey?</span>
+            <span className="text-white">Across Every Framework</span>
           </h2>
           <p className="text-lg text-black dark:text-gray-400 mb-10 max-w-2xl mx-auto">
             Join thousands of researchers, students, and developers building the
@@ -628,6 +655,50 @@ def grovers_search():
                     {link.name}
                   </a>
                 ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-white mb-4 text-sm">
+                Framework Docs
+              </h4>
+              <div className="space-y-2.5">
+                <a
+                  href="https://quantumai.google/cirq"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-gray-900 dark:text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit"
+                  aria-label="Google Quantum AI — Cirq official documentation"
+                >
+                  Google Quantum AI (Cirq)
+                </a>
+                <a
+                  href="https://docs.quantum.ibm.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-gray-900 dark:text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit"
+                  aria-label="IBM Quantum — Qiskit official documentation"
+                >
+                  IBM Quantum (Qiskit)
+                </a>
+                <a
+                  href="https://pennylane.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-gray-900 dark:text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit"
+                  aria-label="PennyLane — quantum machine learning framework documentation"
+                >
+                  PennyLane (Xanadu)
+                </a>
+                <a
+                  href="https://openqasm.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-gray-900 dark:text-gray-500 hover:text-white transition-colors duration-200 text-sm hover-underline w-fit"
+                  aria-label="OpenQASM 3.0 specification"
+                >
+                  OpenQASM 3.0
+                </a>
               </div>
             </div>
           </div>
