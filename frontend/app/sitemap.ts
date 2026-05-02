@@ -2,10 +2,10 @@ import { MetadataRoute } from 'next'
 
 /**
  * Generates /sitemap.xml at build time for QCanvas.
- * Next.js App Router will serve this at https://qcanvas.codes/sitemap.xml
+ * Next.js App Router will serve this at https://www.qcanvas.codes/sitemap.xml
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://qcanvas.codes'
+  const baseUrl = 'https://www.qcanvas.codes'
 
   return [
     {

@@ -1,0 +1,57 @@
+# ============================================================
+# Cloudflare / CDN Edge Cache Headers
+# These headers are sent from the edge to the browser.
+# They complement Next.js's compress:true (origin gzip) by
+# telling Cloudflare to cache per-encoding and serve Brotli.
+# ============================================================
+
+# ── Next.js immutable hashed bundles ──────────────────────
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding
+  X-Content-Type-Options: nosniff
+
+# ── JavaScript files ──────────────────────────────────────
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding
+  Content-Type: application/javascript; charset=utf-8
+
+# ── CSS files ─────────────────────────────────────────────
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding
+  Content-Type: text/css; charset=utf-8
+
+# ── Web fonts ─────────────────────────────────────────────
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding
+  Content-Type: font/woff2
+
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding
+
+# ── SVG / images ──────────────────────────────────────────
+/*.svg
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Vary: Accept-Encoding
+  Content-Type: image/svg+xml
+
+/*.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/*.jpg
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/*.webp
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# ── HTML pages ────────────────────────────────────────────
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+  Vary: Accept-Encoding
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin

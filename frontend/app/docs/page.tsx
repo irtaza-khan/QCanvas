@@ -1967,15 +1967,12 @@ print(f"\\nOne-step result: {result2.counts}")`}
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-editor-text">{getCopyrightText()}</p>
           <div className="flex justify-center space-x-6 mt-4">
-            {config.footer.support.map((link) => (
-              <a
-                key={link.email || link.name}
-                href={link.email ? `mailto:${link.email}` : "#"}
-                className="text-editor-text hover:text-white transition-colors"
-              >
-                {link.name}
-              </a>
-            ))}
+            <Link
+              href="/about"
+              className="text-editor-text hover:text-white transition-colors"
+            >
+              Contact Team
+            </Link>
             <a
               href={config.social.github}
               target="_blank"

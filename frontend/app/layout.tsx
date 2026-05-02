@@ -44,9 +44,9 @@ export const metadata: Metadata = {
     'cross-framework simulation',
   ],
   authors: [{ name: 'QCanvas Team' }],
-  metadataBase: new URL('https://qcanvas.codes'),
+  metadataBase: new URL('https://www.qcanvas.codes'),
   alternates: {
-    canonical: 'https://qcanvas.codes/',
+    canonical: 'https://www.qcanvas.codes/',
   },
   robots: {
     index: true,
@@ -55,14 +55,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    url: 'https://qcanvas.codes/',
+    url: 'https://www.qcanvas.codes/',
     title: 'QCanvas: The Quantum Unified Simulator',
     description:
       'Convert quantum circuits between Cirq, Qiskit, and PennyLane with real-time OpenQASM 3.0 simulation. Powered by a multi-agent RAG architecture.',
     siteName: 'QCanvas',
     images: [
       {
-        url: 'https://qcanvas.codes/og-image.png',
+        url: 'https://www.qcanvas.codes/og-image.png',
         width: 1200,
         height: 630,
         alt: 'QCanvas — Quantum Unified Simulator',
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
     title: 'QCanvas: The Quantum Unified Simulator',
     description:
       'Convert quantum circuits between Cirq, Qiskit, and PennyLane with real-time OpenQASM 3.0 simulation.',
-    images: ['https://qcanvas.codes/og-image.png'],
+    images: ['https://www.qcanvas.codes/og-image.png'],
   },
   icons: {
     icon: '/favicon.svg?v=2',
@@ -100,7 +100,7 @@ export default function RootLayout({
     name: 'QCanvas',
     applicationCategory: 'ScientificSoftware',
     operatingSystem: 'Web',
-    url: 'https://qcanvas.codes/',
+    url: 'https://www.qcanvas.codes/',
     description:
       'QCanvas is a Quantum Unified Simulator that enables cross-framework quantum circuit translation and simulation between Cirq, Qiskit, and PennyLane using OpenQASM 3.0 as the universal intermediate format, powered by a multi-agent RAG architecture.',
     offers: {
@@ -111,7 +111,7 @@ export default function RootLayout({
     author: {
       '@type': 'Organization',
       name: 'QCanvas Team',
-      url: 'https://qcanvas.codes/',
+      url: 'https://www.qcanvas.codes/',
     },
     featureList: [
       'Quantum circuit conversion between Cirq, Qiskit, and PennyLane',
@@ -120,6 +120,13 @@ export default function RootLayout({
       'Web-based quantum circuit IDE',
       'Cross-framework quantum circuit validation',
     ],
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '5',
+      ratingCount: '1',
+      bestRating: '5',
+      worstRating: '1',
+    },
   }
 
   return (

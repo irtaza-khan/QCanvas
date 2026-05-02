@@ -276,13 +276,11 @@ function TeamSpotlightSection({
 
             <div className="mt-8 space-y-4">
               {activeMember.email && (
-                <a
-                  href={`mailto:${activeMember.email}`}
-                  className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-colors ${accent.cardBorder} hover:bg-slate-50 dark:hover:bg-white/5`}
-                >
-                  <Mail className={`w-5 h-5 ${accent.detailIcon}`} />
-                  <span className="truncate">{activeMember.email}</span>
-                </a>
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: `<!--email_off--><a href="mailto:${activeMember.email}" class="flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-colors border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5" aria-label="Email ${activeMember.name}"><span class="truncate">${activeMember.email}</span></a><!--/email_off-->`,
+                  }}
+                />
               )}
 
               <div className="flex flex-wrap gap-3">
@@ -562,12 +560,11 @@ export default function AboutPage() {
                         {supervisor.role}
                       </p>
                       <div className="flex gap-3 mt-3">
-                        <a
-                          href={`mailto:${supervisor.email}`}
-                          className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                        >
-                          <Mail className="w-5 h-5" />
-                        </a>
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html: `<!--email_off--><a href="mailto:${supervisor.email}" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" aria-label="Email ${supervisor.name}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></a><!--/email_off-->`,
+                          }}
+                        />
                         <a
                           href={supervisor.linkedin}
                           target="_blank"

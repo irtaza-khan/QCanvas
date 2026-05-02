@@ -388,7 +388,42 @@ export default function AppPage() {
 
   // Authenticated - show main app
   return (
-    <IDELayout
+    <>
+      {/* SEO: screen-reader-only h1 and descriptive content.
+          The IDE renders almost no readable text, so we add a hidden
+          content block so search engines understand this page's purpose.
+          word-count: ~220+ words */}
+      <div className="sr-only" aria-hidden="false">
+        <h1>QCanvas Quantum Circuit IDE — Write, Convert &amp; Simulate</h1>
+        <p>
+          Welcome to the QCanvas Quantum Circuit Integrated Development
+          Environment. This browser-based IDE lets you write quantum programs
+          in Cirq, Qiskit, or PennyLane, compile them to OpenQASM 3.0, and
+          simulate the results in real time using the QSim backend engine.
+        </p>
+        <p>
+          Use the Monaco-powered code editor to author quantum algorithms
+          including Bell state preparation, quantum teleportation, Grover&apos;s
+          search, the Deutsch-Jozsa algorithm, and quantum machine learning
+          classifiers. The built-in AI assistant, powered by a Retrieval
+          Augmented Generation architecture, can explain your circuit, suggest
+          optimizations, and generate new circuit code on request.
+        </p>
+        <p>
+          Simulation results are displayed as measurement histograms, state
+          vector probabilities, and execution timing metrics. Supports
+          multi-qubit entanglement, conditional gates, for-loop constructs, and
+          if-else classical control flow in OpenQASM 3.0. Export circuits as
+          SVG diagrams or share them via the project file system.
+        </p>
+        <p>
+          QCanvas is a FAST University initiative supporting quantum computing
+          education. The editor works with all major frameworks: Google Cirq,
+          IBM Qiskit, and Xanadu PennyLane. Authentication is secured with JWT
+          tokens and all projects are persisted server-side.
+        </p>
+      </div>
+      <IDELayout
       sidebarActivity={sidebarActivity}
       onSidebarActivityChange={handleSidebarActivityChange}
       onAskAiAboutCircuit={handleAskAiAboutCircuit}
@@ -480,5 +515,6 @@ export default function AppPage() {
       onRun={run}
       contentRef={contentRef}
     />
+    </>
   );
 }

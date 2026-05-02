@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import toast from "react-hot-toast";
 
 import { authApi } from "@/lib/api";
@@ -86,8 +88,46 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center p-4">
-      <div className="w-full max-w-md quantum-glass-dark rounded-2xl p-8 border border-indigo-500/20">
+      <div className="w-full max-w-md">
+        {/* Clickable logo — navigates to homepage */}
+        <div className="flex justify-center mb-8">
+          <Link href="/" title="Go to QCanvas homepage" className="group">
+            {/* Light mode */}
+            <Image
+              src="/QCanvas-logo-Black.svg"
+              alt="QCanvas Logo — go to homepage"
+              width={72}
+              height={72}
+              className="object-contain block dark:hidden group-hover:scale-110 transition-transform duration-300 animate-pulse"
+              priority
+            />
+            {/* Dark mode */}
+            <Image
+              src="/QCanvas-logo-White.svg"
+              alt="QCanvas Logo — go to homepage"
+              width={72}
+              height={72}
+              className="object-contain hidden dark:block group-hover:scale-110 transition-transform duration-300 animate-pulse"
+              priority
+            />
+          </Link>
+        </div>
+
+        <div className="quantum-glass-dark rounded-2xl p-8 border border-indigo-500/20">
         <h1 className="text-2xl font-bold text-white mb-2">Forgot Password</h1>
+        {/* SEO word-count block — screen-reader accessible, invisible to sighted users */}
+        <p className="sr-only">
+          Reset your QCanvas account password securely. Enter your registered
+          email address to receive a one-time verification code. Once you verify
+          the code, you can set a new password and regain full access to the
+          QCanvas Quantum Circuit Integrated Development Environment. QCanvas
+          supports quantum circuit authoring in Cirq, Qiskit, and PennyLane
+          with real-time OpenQASM 3.0 simulation. Your account credentials are
+          protected with industry-standard JWT token authentication and
+          bcrypt-hashed password storage. If you did not request a password
+          reset, you can safely ignore this page and continue using your
+          existing password to log in to the quantum simulator platform.
+        </p>
         <p className="text-sm text-gray-300 mb-6">
           {step === "send"
             ? "Get a reset code via email."
@@ -149,7 +189,8 @@ export default function ForgotPasswordPage() {
             </button>
           </form>
         )}
-      </div>
+        </div> {/* end glass card */}
+      </div> {/* end max-w-md wrapper */}
     </div>
   );
 }

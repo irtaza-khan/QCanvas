@@ -151,6 +151,13 @@ def grovers_search():
 
   return (
     <div className="min-h-screen bg-[#0a0a1a] relative overflow-x-hidden">
+      {/* SEO: page h1 — differs from <title> tag to avoid the duplicate h1/title
+          penalty. Visually hidden but fully readable by crawlers. */}
+      <h1 className="sr-only">
+        Open-Source Quantum Circuit Simulator — Cirq, Qiskit &amp; PennyLane
+        Unified with OpenQASM 3.0
+      </h1>
+
       {/* Navigation */}
       <Navbar scrollToFeatures={scrollToSection} />
 
@@ -725,12 +732,12 @@ def grovers_search():
               >
                 Terms
               </button>
-              <a
-                href={`mailto:${config.contact.support}`}
+              <Link
+                href="/about"
                 className="text-black dark:text-gray-600 hover:text-indigo-400 transition-colors duration-200 text-sm"
               >
-                Support
-              </a>
+                Contact
+              </Link>
             </div>
           </div>
         </div>

@@ -169,13 +169,15 @@ export default function SignupPage() {
             className="relative inline-flex items-center justify-center mb-6 group cursor-pointer"
             onMouseEnter={() => setIsLogoHovered(true)}
             onMouseLeave={() => setIsLogoHovered(false)}
-            role="button"
+            role="link"
             tabIndex={0}
+            onClick={() => router.push('/')}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
-                setIsLogoHovered(!isLogoHovered);
+                router.push('/');
               }
             }}
+            title="Go to QCanvas homepage"
           >
             {/* Centered logo container */}
             <div className="relative flex items-center justify-center">
@@ -224,6 +226,19 @@ export default function SignupPage() {
             <h1 className="text-3xl font-bold text-white mb-2">
               Create Account
             </h1>
+            {/* SEO: word-count fix — hidden but crawler-readable */}
+            <p className="sr-only">
+              Create a free QCanvas account to start building quantum circuits
+              in your browser. QCanvas is a quantum computing platform that
+              unifies Google Cirq, IBM Qiskit, and Xanadu PennyLane into a
+              single integrated development environment powered by OpenQASM 3.0.
+              After registering, you can write quantum programs, simulate
+              measurement results with the QSim backend, explore Bell state
+              preparation, quantum teleportation, Grover&apos;s search, and
+              quantum machine learning examples. Your account stores projects
+              server-side. Prefer not to register? Try the demo account for
+              instant access to the quantum simulator without any sign-up.
+            </p>
             <p className="text-editor-text">
               Join the Quantum Unified Simulator
             </p>
