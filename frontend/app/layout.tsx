@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
+import Script from 'next/script'
 import { Toaster } from 'react-hot-toast'
 import './globals.css'
 import ThemeWatcher from '@/components/ThemeWatcher'
@@ -25,7 +26,7 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: 'QCanvas: The Quantum Unified Simulator',
   description:
-    'QCanvas is a Quantum Unified Simulator that converts quantum circuits between Cirq, Qiskit, and PennyLane via a multi-agent RAG architecture. Supports real-time OpenQASM 3.0 cross-framework simulation.',
+    'QCanvas is a Quantum Unified Simulator for Cirq, Qiskit, and PennyLane. Convert circuits via RAG architecture with real-time OpenQASM 3.0 simulation support.',
   keywords: [
     'quantum computing',
     'quantum circuit simulator',
@@ -124,6 +125,19 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-M23EZDEG9W"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-M23EZDEG9W');
+          `}
+        </Script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -26,6 +26,7 @@ import { config, getCopyrightText } from "@/lib/config";
 import Navbar from "@/components/Navbar";
 
 import { hasValidAuth, useAuthStore } from "@/lib/authStore";
+import FeatureGrid from "@/components/FeatureGrid";
 
 export default function HomePage() {
   const { theme } = useFileStore();
@@ -532,6 +533,9 @@ def grovers_search():
           </div>
         </div>
       </section>
+
+      {/* Explore Features Card Grid — boosts internal links for SEO */}
+      <FeatureGrid />
 
       {/* CTA Section */}
       <section className="py-24 px-4 relative overflow-hidden">

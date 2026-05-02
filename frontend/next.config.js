@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Explicitly enable SWC minification for production builds.
+  // Resolves the "un-minified JavaScript" SEO/performance warning.
+  // SWC is ~17x faster than Terser and is the Next.js 13+ default.
+  swcMinify: true,
   experimental: {
     typedRoutes: true,
   },
