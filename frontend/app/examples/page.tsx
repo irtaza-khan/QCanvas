@@ -673,7 +673,7 @@ print(qft_circuit)`,
     description: 'Implement VQE to find the ground state energy of quantum systems.',
     framework: 'pennylane',
     difficulty: 'advanced',
-    category: 'Variational Algorithms',
+    category: 'Hybrid',
     code: `import pennylane as qml
 import numpy as np
 
@@ -712,7 +712,7 @@ print(f"Energy: {result}")`,
     description: 'Implement QAOA for combinatorial optimization problems.',
     framework: 'pennylane',
     difficulty: 'advanced',
-    category: 'Variational Algorithms',
+    category: 'Hybrid',
     code: `import pennylane as qml
 import numpy as np
 
@@ -851,10 +851,92 @@ error_correction_circuit = create_error_correction_circuit()
 print("3-Qubit Bit-Flip Error Correction Circuit:")
 print(error_correction_circuit)`,
     tags: ['error-correction', 'syndrome', 'ancilla', 'encoding', 'detection']
+  },
+  {
+    id: 'hybrid-cpu-qpu-execution',
+    title: 'Hybrid CPU-QPU Execution (Cirq)',
+    description: 'Run multiple simulations in a loop using QCanvas Hybrid mode.',
+    framework: 'cirq',
+    difficulty: 'intermediate',
+    category: 'Hybrid',
+    code: `# Hybrid CPU-QPU Execution Example
+# Switch to "Hybrid" mode in the toolbar to run this code!
+
+import cirq
+from qcanvas import compile
+import qsim
+
+# Create a Bell state circuit
+q = cirq.LineQubit.range(2)
+circuit = cirq.Circuit([
+    cirq.H(q[0]),
+    cirq.CNOT(q[0], q[1]),
+    cirq.measure(q[0], q[1], key='result')
+])
+
+print("Circuit created:")
+print(circuit)
+print()
+
+# Compile circuit to OpenQASM 3.0
+qasm = compile(circuit, framework="cirq")
+print("Generated QASM:")
+print(qasm)
+print()
+
+# Run multiple simulations in a loop
+print("Running 3 simulations...")
+for i in range(3):
+    result = qsim.run(qasm, shots=100, backend="cirq")
+    print(f"Run {i+1}: {result.counts}")
+    print(f"  Probabilities: {result.probabilities}")
+
+print()
+print("Hybrid execution complete!")`,
+    tags: ['hybrid', 'loop', 'qsim', 'simulation']
+  },
+  {
+    id: 'qrng-hybrid-cirq',
+    title: 'QRNG Hybrid Execution (Cirq)',
+    description: 'Generate random bits inside a loop using hybrid execution.',
+    framework: 'cirq',
+    difficulty: 'intermediate',
+    category: 'Hybrid',
+    code: `import cirq
+
+from qcanvas import compile
+import qsim
+
+print("=== Quantum Random Number Generator (QRNG) ===\\n")
+
+# Create a simple circuit that generates one random bit
+# H gate creates superposition, measurement collapses to 0 or 1
+q = cirq.LineQubit(0)
+circuit = cirq.Circuit([
+    cirq.H(q),
+    cirq.measure(q, key='random_bit')
+])
+
+# Compile to QASM
+qasm = compile(circuit, framework="cirq")
+print(f"QRNG Circuit QASM:\\n{qasm}\\n")
+
+# Generate 10 random bits
+print("Generating 10 random bits:")
+random_bits = []
+for i in range(10):
+    result = qsim.run(qasm, shots=1, backend="cirq")
+    # Extract the bit value (0 or 1)
+    bit = list(result.counts.keys())[0]
+    random_bits.append(bit)
+    print(f"  Bit {i+1}: {bit}")
+
+print(f"\\nRandom bit sequence: {''.join(random_bits)}")`,
+    tags: ['hybrid', 'qrng', 'random', 'loop', 'qsim']
   }
 ]
 
-const categories = ['Basic Circuits', 'Quantum Algorithms', 'Variational Algorithms', 'Error Correction', 'Quantum Machine Learning']
+const categories = ['Basic Circuits', 'Quantum Algorithms', 'Variational Algorithms', 'Error Correction', 'Quantum Machine Learning', 'Hybrid']
 const frameworks = ['qiskit', 'cirq', 'pennylane']
 const difficulties = ['beginner', 'intermediate', 'advanced']
 

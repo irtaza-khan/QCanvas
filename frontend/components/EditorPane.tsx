@@ -1294,20 +1294,36 @@ export default function EditorPane({
               </button>
 
               {showCircuitVisualization && (
-                <div className="flex items-center bg-editor-bg border border-editor-border rounded-md p-0.5 shadow-sm">
-                  <button
-                    onClick={() => setIs3DMode(false)}
-                    className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? "text-editor-text hover:bg-editor-border/70 hover:bg-editor-bg/10" : "bg-editor-accent text-white shadow-sm"}`}
-                  >
-                    2D
-                  </button>
-                  <button
-                    onClick={() => setIs3DMode(true)}
-                    className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? "bg-editor-accent text-white shadow-sm" : "text-editor-text hover:bg-editor-border/70 hover:bg-editor-bg/10"}`}
-                  >
-                    3D
-                  </button>
-                </div>
+                <>
+                  <div className="flex items-center bg-editor-bg border border-editor-border rounded-md p-0.5 shadow-sm">
+                    <button
+                      onClick={() => setIs3DMode(false)}
+                      className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? "text-editor-text hover:bg-editor-border/70 hover:bg-editor-bg/10" : "bg-editor-accent text-white shadow-sm"}`}
+                    >
+                      2D
+                    </button>
+                    <button
+                      onClick={() => setIs3DMode(true)}
+                      className={`px-2 py-1 text-[11px] rounded transition-colors ${is3DMode ? "bg-editor-accent text-white shadow-sm" : "text-editor-text hover:bg-editor-border/70 hover:bg-editor-bg/10"}`}
+                    >
+                      3D
+                    </button>
+                  </div>
+                  {!is3DMode && (
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('download-circuit-svg'))}
+                      className="px-2 py-1.5 text-[11px] bg-editor-bg border border-editor-border rounded-md text-editor-text hover:bg-editor-border/70 hover:text-quantum-blue-light shadow-sm transition-colors flex items-center gap-1.5"
+                      title="Download Circuit Diagram"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      SVG
+                    </button>
+                  )}
+                </>
               )}
             </>
           )}

@@ -642,6 +642,34 @@ export default function CircuitVisualization({ gates, qubits, className = '' }: 
     }
   }, [gates, qubits, selectedGate, hoveredGate, isDarkMode, colors])
 
+  useEffect(() => {
+    const handleDownload = () => {
+      if (!svgRef.current) return;
+      
+      const svgElement = svgRef.current;
+      const serializer = new XMLSerializer();
+      let svgString = serializer.serializeToString(svgElement);
+      
+      if (!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+        svgString = svgString.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
+
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'circuit-diagram.svg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+
+    window.addEventListener('download-circuit-svg', handleDownload);
+    return () => window.removeEventListener('download-circuit-svg', handleDownload);
+  }, []);
+
   if (gates.length === 0) {
     return (
       <div className={`flex items-center justify-center h-32 border-2 border-dashed border-gray-600 rounded-lg ${className}`}>

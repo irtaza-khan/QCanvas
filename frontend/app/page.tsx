@@ -472,8 +472,10 @@ def grovers_search():
               onClick={() => handleTryExample(getExampleCode("bell-state"))}
               className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
             >
-              <div className="w-full h-32 bg-gradient-to-br from-indigo-500/20 via-indigo-400/10 to-violet-500/20 rounded-xl mb-4 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300 border border-indigo-500/10">
-                <Code className="w-12 h-12 text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
+              <div className="w-full h-32 bg-gradient-to-br from-indigo-500/20 via-indigo-400/10 to-violet-500/20 rounded-xl mb-4 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300 border border-indigo-500/10 overflow-hidden relative">
+                <div className="relative w-full h-full p-2">
+                  <Image src="/icons/Circuit-Diagrams/bell.svg" alt="Bell State Circuit Diagram" fill className="object-contain group-hover:scale-110 transition-transform duration-300 drop-shadow-md opacity-90 group-hover:opacity-100 p-2" />
+                </div>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-indigo-400 transition-colors duration-300">
                 Bell State (Cirq)
@@ -497,8 +499,10 @@ def grovers_search():
               }
               className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
             >
-              <div className="w-full h-32 bg-gradient-to-br from-violet-500/20 via-purple-400/10 to-pink-500/20 rounded-xl mb-4 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300 border border-violet-500/10">
-                <Play className="w-12 h-12 text-violet-400 group-hover:scale-110 transition-transform duration-300" />
+              <div className="w-full h-32 bg-gradient-to-br from-violet-500/20 via-purple-400/10 to-pink-500/20 rounded-xl mb-4 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300 border border-violet-500/10 overflow-hidden relative">
+                <div className="relative w-full h-full p-2">
+                  <Image src="/icons/Circuit-Diagrams/teleportation.svg" alt="Quantum Teleportation Circuit Diagram" fill className="object-contain group-hover:scale-110 transition-transform duration-300 drop-shadow-md opacity-90 group-hover:opacity-100 p-2" />
+                </div>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-violet-400 transition-colors duration-300">
                 Teleportation (Qiskit)
@@ -520,8 +524,10 @@ def grovers_search():
               onClick={() => handleTryExample(getExampleCode("grovers-search"))}
               className="quantum-glass-dark rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer feature-card opacity-0 animate-fade-in"
             >
-              <div className="w-full h-32 bg-gradient-to-br from-cyan-500/20 via-teal-400/10 to-emerald-500/20 rounded-xl mb-4 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300 border border-cyan-500/10">
-                <Atom className="w-12 h-12 text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
+              <div className="w-full h-32 bg-gradient-to-br from-cyan-500/20 via-teal-400/10 to-emerald-500/20 rounded-xl mb-4 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300 border border-cyan-500/10 overflow-hidden relative">
+                <div className="relative w-full h-full p-2">
+                  <Image src="/icons/Circuit-Diagrams/grover.svg" alt="Grover's Search Circuit Diagram" fill className="object-contain group-hover:scale-110 transition-transform duration-300 drop-shadow-md opacity-90 group-hover:opacity-100 p-2" />
+                </div>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors duration-300">
                 Grover&apos;s Search (PennyLane)
