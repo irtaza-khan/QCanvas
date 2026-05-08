@@ -507,6 +507,18 @@ export default function ExplorerView() {
                   <button
                     type="button"
                     className="p-1 rounded-md hover:bg-editor-border/70 text-editor-text"
+                    title="New folder in folder"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startCreateFolder(node.folder.id);
+                      setExpanded((p) => ({ ...p, [node.folder.id]: true }));
+                    }}
+                  >
+                    <FolderPlus className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    className="p-1 rounded-md hover:bg-editor-border/70 text-editor-text"
                     title="Rename folder"
                     onClick={(e) => {
                       e.stopPropagation();

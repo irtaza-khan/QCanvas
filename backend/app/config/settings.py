@@ -3,6 +3,7 @@ from pydantic import field_validator
 from typing import Optional
 from pathlib import Path
 import json
+from urllib.parse import urlparse
 
 
 ROOT_ENV_FILE = Path(__file__).resolve().parents[3] / ".env"
@@ -102,6 +103,22 @@ class Settings(BaseSettings):
             self.DATABASE_URL = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         if self.REDIS_URL is None:
             self.REDIS_URL = f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+        # Ensure FRONTEND_URL (if set) is included in CORS origins to allow browser requests
+        try:
+            parsed = urlparse(self.FRONTEND_URL or "")
+            origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else None
+        except Exception:
+            origin = None
+
+        if origin:
+            # BACKEND_CORS_ORIGINS may be a list; ensure we don't duplicate
+            if isinstance(self.BACKEND_CORS_ORIGINS, list):
+                if origin not in self.BACKEND_CORS_ORIGINS:
+                    self.BACKEND_CORS_ORIGINS.append(origin)
+            else:
+                # If somehow parsed as a string, rebuild as list
+                self.BACKEND_CORS_ORIGINS = [origin]
 
     class Config:
         case_sensitive = True
