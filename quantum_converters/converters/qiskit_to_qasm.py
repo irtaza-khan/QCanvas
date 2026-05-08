@@ -57,7 +57,15 @@ Version: 2.0.0 - Integrated with QASM3Builder
 
 import inspect
 from typing import Dict, Any, Optional, Union, List
-from qiskit import QuantumCircuit
+# Qiskit exposes QuantumCircuit from different import locations depending on
+# the installed version and packaging layout.
+try:
+    from qiskit import QuantumCircuit
+except Exception:
+    try:
+        from qiskit.circuit import QuantumCircuit
+    except Exception:
+        QuantumCircuit = 'QuantumCircuit'
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
 from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
