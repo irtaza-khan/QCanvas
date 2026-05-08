@@ -301,7 +301,7 @@ export const foldersApi = {
 
   async createFolder(data: CreateFolderRequest, token?: string): Promise<ApiResponse<any>> {
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {}
-    return apiRequest('/api/folders', {
+    return apiRequest('/api/folders/', {
       method: 'POST',
       body: JSON.stringify(data),
       headers,
