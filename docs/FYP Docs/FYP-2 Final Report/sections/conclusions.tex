@@ -3,81 +3,72 @@
 
 \section{Conclusion}
 
-This final report has presented the complete development of QCanvas and QSim---a unified quantum circuit simulation and education platform---across four iterative sprints. From a standards-centered design document to a fully deployed, community-accessible pair of Python packages on PyPI, the project has achieved every major objective set out in its original specification.
+This final report has presented the complete development of QCanvas and QSim across four iterative sprints, from initial prototype to production-ready, community-accessible platform. Every major objective set out in the original FYP specification has been achieved.
 
-\textbf{Sprint 1} established the foundational architecture: a FastAPI backend, a Next.js frontend with Monaco editor, and the core Qiskit/Cirq/PennyLane to OpenQASM 3.0 conversion pipeline. The system demonstrated that a single, standards-based intermediate representation could serve as the universal translator for disparate quantum frameworks.
+\textbf{Iteration 1} established the foundational architecture: a FastAPI backend, a Next.js frontend with Monaco editor, and the core Qiskit/Cirq/PennyLane to OpenQASM 3.0 conversion pipeline. The key insight demonstrated here was that a single, standards-based intermediate representation could serve as a universal translator for disparate quantum frameworks.
 
-\textbf{Sprint 2} deepened the platform with advanced language features (complex control flow, subroutines, bitwise operations), expanded PennyLane gate coverage, a secure database layer (PostgreSQL, Redis, Alembic migrations), and the hybrid CPU--QPU execution model that cleanly separates classical orchestration from QSim-powered quantum execution.
+\textbf{Iteration 2} deepened the platform with advanced language features (complex control flow, subroutines, bitwise operations), expanded PennyLane gate coverage, a secure database layer (PostgreSQL, Redis, Alembic), and the hybrid CPU--QPU execution model. Security properties (AES-256 confidentiality, Bcrypt integrity, RBAC availability) were formally implemented.
 
-\textbf{Sprint 3} transformed QCanvas from a functional tool into an intelligent, community-driven learning ecosystem. The addition of real-time D3.js circuit visualization, the ``Quantum Explain It'' hover system, a gamification engine with 44 unique achievements and an XP progression system, and the recipe-sharing community platform collectively elevated the platform's educational value.
+\textbf{Iteration 3} transformed QCanvas from a functional tool into an intelligent, community-driven learning ecosystem through real-time D3.js circuit visualisation, the ``Quantum Explain It'' hover system, a gamification engine with 44 unique achievements, and the recipe-sharing community platform.
 
-\textbf{Sprint 4} brought the project to its conclusion. Both the QCanvas converter SDK and the QSim simulation SDK were packaged and deployed to PyPI, making the FYP's core contributions accessible to the global quantum computing community. A rigorous cross-framework benchmarking study across 12 standard algorithms confirmed that Qiskit and Cirq produce structurally equivalent, constant-depth circuits and are statistically equivalent in output distribution (QPack $\approx 58.8$ each), while PennyLane's default transpiler exhibits super-linear growth for algorithms like Grover's (QPack $= 9.3$), limiting its scalability on NISQ devices. The benchmarking pipeline itself---built on top of QCanvas and QSim---serves as a reusable, reproducible research tool for the quantum computing community.
+\textbf{Iteration 4} completed the project. Both the QCanvas converter SDK (\texttt{pip install qcanvas-sdk}) and the QSim simulation SDK (\texttt{pip install qsim-sdk}) were packaged and deployed to PyPI---work produced in this FYP is now accessible to the global quantum computing community. Previous Iterations 1--3 had proposed hardware integration, noise-aware simulation, and an expanded community platform as future directions; Iteration 4 instead prioritised SDK deployment and a rigorous benchmarking study, which were assessed as higher-impact deliverables for a final submission.
 
-The work demonstrates that the NISQ ecosystem does not require researchers to choose between frameworks: by compiling all circuits to a common OpenQASM 3.0 intermediate representation and executing them on a shared simulation backend, QCanvas enables fair, apples-to-apples comparison and seamless framework interoperability. This result is validated both theoretically through the standards-compliance architecture and empirically through the JSD-based statistical equivalence study.
+The benchmarking study confirmed that Qiskit and Cirq are statistically equivalent (QPack $\approx 58.8$ each; JSD $\approx 0$) and produce constant-depth circuits regardless of qubit count, while PennyLane exhibits super-linear depth growth for oracle algorithms (QPack $= 9.28$; scaling exponent $a = 2.21$ for Grover's). The Quantum Volume analysis confirmed all three frameworks achieve QV = 2048 on ideal simulation, demonstrating that the divergence is entirely a compiler-level artefact, not a semantic one.
 
 In summary, QCanvas successfully delivers:
 \begin{itemize}
     \item A unified quantum IDE supporting Qiskit, Cirq, and PennyLane via a single OpenQASM 3.0 pipeline.
-    \item A production-ready QSim quantum simulator SDK published on PyPI.
-    \item An educational platform with hover explanations, gamification, and community sharing.
-    \item A rigorous 12-algorithm, 3-framework benchmarking study with reproducible results.
-    \item A complete software system with 304 passing tests, Docker deployment, and AWS-compatible infrastructure.
+    \item A production-ready QSim quantum simulator SDK published on PyPI with statevector, density matrix, and stabilizer backends.
+    \item An educational platform with hover explanations, 44-achievement gamification, and community circuit sharing.
+    \item A rigorous 12-algorithm, 3-framework, 136-configuration benchmarking study with full compilation time, structural, statistical equivalence (JSD), Quantum Volume, and QPack results.
+    \item A complete software system with 304 passing tests, Docker Compose deployment, and AWS-compatible infrastructure.
 \end{itemize}
 
 \section{Future Work}
 
-Although the project has reached its FYP completion milestone, the modular architecture of QCanvas and QSim positions the platform for continued community-driven growth. The following directions represent the highest-value extensions for future contributors.
+\subsection{Near-Term Engineering Goals}
 
-\subsection{Hardware Backend Integration}
-
-The most natural next step is connecting QCanvas to real quantum hardware. The current architecture's pluggable QPU endpoint design means this can be achieved without structural changes to the core pipeline:
+\subsubsection{Hardware Backend Integration}
+The pluggable QPU endpoint design allows real hardware execution without structural changes:
 \begin{itemize}
-    \item \textbf{IBM Quantum Network:} Integrate Qiskit's \texttt{IBMProvider} to dispatch compiled QASM jobs to real IBM QPUs, using the same \texttt{/simulate} API endpoint.
-    \item \textbf{AWS Braket:} Leverage Amazon Braket's OpenQASM support to run circuits on IonQ, Rigetti, and OQC hardware without changing the compilation pipeline.
-    \item \textbf{Google Quantum Computing Service:} Target Sycamore processors via Cirq's GCS backend.
+    \item \textbf{IBM Quantum:} Integrate Qiskit's \texttt{IBMProvider} to dispatch compiled QASM to real QPUs.
+    \item \textbf{AWS Braket:} Use Braket's OpenQASM support to target IonQ, Rigetti, and OQC backends.
 \end{itemize}
 
-\subsection{Noise-Aware Simulation and Error Mitigation}
-
+\subsubsection{Noise-Aware Simulation}
 \begin{itemize}
-    \item \textbf{Noise Model Integration:} Extend QSim to support realistic noise models (depolarizing, amplitude damping, phase damping) for hardware-accurate simulation.
-    \item \textbf{Error Mitigation Techniques:} Implement zero-noise extrapolation and measurement error mitigation within the QSim execution pipeline.
-    \item \textbf{Noise-Aware Compilation:} Select gate decompositions and circuit layouts that minimize expected error rates based on a user-specified noise model.
+    \item Extend QSim with depolarising, amplitude damping, and phase damping noise models.
+    \item Implement zero-noise extrapolation and measurement error mitigation in the execution pipeline.
 \end{itemize}
 
-\subsection{Expanded Framework Support}
-
-The plug-in architecture of the converter layer enables straightforward addition of new quantum frameworks:
+\subsubsection{Expanded Framework Support}
 \begin{itemize}
-    \item \textbf{Q\# (Microsoft):} Convert Microsoft Q\# programs to OpenQASM 3.0 via Q\#'s Python interop layer.
-    \item \textbf{PyQuil (Rigetti):} Support Quil-based circuits from Rigetti's Forest SDK.
-    \item \textbf{Amazon Braket SDK:} Parse Braket circuit objects and compile them to OpenQASM 3.0.
-    \item \textbf{TKET (Pytket):} Leverage pytket's built-in OpenQASM export for t$|$ket$\rangle$ circuit support \cite{sivarajah2020tket}.
+    \item \textbf{Q\# (Microsoft):} OpenQASM 3.0 export via Q\#'s Python interop layer.
+    \item \textbf{PyQuil (Rigetti):} Quil-based circuit support.
+    \item \textbf{TKET (Pytket):} Leverage pytket's built-in OpenQASM export \cite{sivarajah2020tket}.
 \end{itemize}
 
-\subsection{Advanced Visualization and Analytics}
-
+\subsubsection{Production Infrastructure}
 \begin{itemize}
-    \item \textbf{Bloch Sphere Animation:} Animated Bloch sphere visualization showing qubit state evolution gate by gate.
-    \item \textbf{Entanglement Graph:} Graph-based representation of qubit entanglement relationships throughout circuit execution.
-    \item \textbf{Probability Heatmaps:} Visual representation of full measurement probability distributions across all possible bitstring outcomes.
-    \item \textbf{AI-Powered Optimization Suggestions:} Circuit simplification recommendations powered by LLM-based gate analysis.
+    \item Migrate from Docker Compose to a Kubernetes cluster with horizontal pod autoscaling.
+    \item Replace REST-based QCanvas--QSim communication with gRPC for lower latency.
+    \item Add end-to-end distributed tracing via OpenTelemetry.
+    \item TOTP-based multi-factor authentication.
 \end{itemize}
 
-\subsection{Community and Research Collaboration}
+\subsection{Long-Term Research Directions}
 
+\subsubsection{Advanced Visualisation and Analytics}
 \begin{itemize}
-    \item \textbf{GitHub-Style Circuit Repository:} Git-like versioning for circuits, forking, merging, and community review threads.
-    \item \textbf{Research Reproducibility Tools:} Circuit versioning with full execution environment snapshots; automated experiment documentation and LaTeX export.
-    \item \textbf{Adaptive Learning System:} Machine learning-based personalization that adjusts content difficulty and example recommendations based on individual learning history.
-    \item \textbf{Public REST API with OAuth 2.0:} Tiered rate-limited API access for external applications and CI/CD quantum testing pipelines.
+    \item Animated Bloch sphere showing qubit state evolution gate by gate.
+    \item Entanglement graph showing qubit correlation relationships.
+    \item AI-powered circuit optimisation suggestions via LLM gate analysis.
 \end{itemize}
 
-\subsection{Production Infrastructure Hardening}
-
+\subsubsection{Community and Research Collaboration}
 \begin{itemize}
-    \item \textbf{Kubernetes Deployment:} Migration from Docker Compose to a Kubernetes cluster with horizontal pod autoscaling.
-    \item \textbf{gRPC Communication:} Replace REST-based QCanvas--QSim communication with optimized gRPC endpoints for lower-latency execution.
-    \item \textbf{Distributed Tracing:} End-to-end request tracing across frontend, backend, and QSim services using OpenTelemetry.
-    \item \textbf{Multi-Factor Authentication:} TOTP-based MFA support to strengthen the authentication system.
+    \item Git-style circuit versioning with forking and community review.
+    \item Research reproducibility tools: circuit versioning with full execution environment snapshots and LaTeX export.
+    \item Machine learning-based adaptive learning system that personalises content difficulty based on user history.
+    \item Tiered rate-limited public REST API with OAuth 2.0 for CI/CD quantum testing pipelines.
 \end{itemize}

@@ -1,20 +1,20 @@
 \chapter{System Overview}
 \label{ch:system-overview}
 
-The system architecture of QCanvas follows a modular layered design separating conversion, validation, simulation, and UI concerns. This design ensures scalability, maintainability, and flexibility while supporting the hybrid CPU--QPU execution model \cite{peruzzo2014variational}. The QSim SDK operates as an independently deployable execution kernel that is integrated into the QCanvas backend while also being accessible directly via PyPI.
+By the conclusion of Iteration 4, QCanvas has evolved into a multi-layer platform in which the QCanvas Web IDE, the QCanvas conversion SDK, and the QSim simulation SDK each operate as distinct, independently deployable components connected by a FastAPI API layer. This chapter describes the final architecture, design models, and data design of the completed system.
 
 \section{Architectural Design}
 
-QCanvas employs a hybrid architecture where the Next.js frontend handles UI and simple operations, while the FastAPI backend manages complex quantum computations. QCanvas orchestrates compilation and validation; QSim executes circuits on simulation backends. Both the \texttt{qcanvas-sdk} and \texttt{qsim-sdk} are published on PyPI, making their capabilities accessible to the broader Python community beyond the Web IDE.
+QCanvas employs a layered hybrid architecture in which the Next.js frontend handles the user interface and lightweight operations, the FastAPI backend manages compilation and validation, and the QSim SDK executes circuits on simulation backends. Both the \texttt{qcanvas-sdk} and \texttt{qsim-sdk} are published on PyPI, making their capabilities accessible to the broader Python community beyond the Web IDE.
 
 \subsection{Layered Responsibilities}
 \begin{itemize}
-    \item \textbf{Presentation Layer (Next.js)}: Monaco editor UI, D3.js circuit visualization, Chart.js results dashboards, gamification and community UI, and client-side state management via Zustand.
-    \item \textbf{API Layer (FastAPI)}: REST endpoints for conversion/validation/simulation, WebSocket for progress streams, structured error handling, request validation, authentication, and rate limiting.
-    \item \textbf{Conversion Layer (QCanvas SDK)}: AST parsing, intelligent gate mapping, OpenQASM 3.0 generation via \texttt{QASM3Builder}, validation, conversion analytics, and logging.
-    \item \textbf{Execution Layer (QSim SDK)}: Simulation backends (statevector, density matrix, stabilizer), job scheduling, result aggregation, caching, and metrics. Independently installable via \texttt{pip install qsim-sdk}.
-    \item \textbf{Persistence Layer}: PostgreSQL for user accounts, projects, and conversion history; Redis for caching and session management.
-    \item \textbf{Observability Layer}: Health checks, Prometheus metrics, execution time histograms, and structured logging.
+    \item \textbf{Presentation Layer (Next.js)}: Monaco editor UI, D3.js circuit visualisation, Chart.js results dashboards, gamification achievement panels, community recipe library, and client-side state management via Zustand.
+    \item \textbf{API Layer (FastAPI)}: REST endpoints for conversion, validation, and simulation; WebSocket progress streams; structured error handling; JWT authentication; and rate limiting.
+    \item \textbf{Conversion Layer (QCanvas SDK)}: AST parsing, intelligent gate mapping, OpenQASM 3.0 generation via \texttt{QASM3Builder}, validation, conversion analytics, and structured logging.
+    \item \textbf{Execution Layer (QSim SDK)}: Simulation backends (statevector, density matrix, stabilizer), job scheduling, result aggregation, caching, and performance metrics. Independently installable via \texttt{pip install qsim-sdk} \cite{qsim_sdk_2026}.
+    \item \textbf{Persistence Layer}: PostgreSQL for user accounts, projects, files, conversion history, and achievements; Redis for caching and session management.
+    \item \textbf{Observability Layer}: Health checks, Prometheus metrics, execution time histograms, and structured logging via Python's \texttt{logging} framework.
 \end{itemize}
 
 \subsection{Technology Stack}
@@ -22,23 +22,23 @@ QCanvas employs a hybrid architecture where the Next.js frontend handles UI and 
 \subsubsection{Frontend Technologies}
 \begin{itemize}
     \item Next.js 14 with App Router for server-side rendering and routing.
-    \item React 18 with TypeScript for type-safe UI development.
-    \item Tailwind CSS for styling with a custom quantum-themed design.
-    \item Monaco Editor for code editing with custom syntax highlighting.
-    \item D3.js for 2D circuit visualization; \texttt{@react-three/fiber} for 3D rendering.
+    \item React 18 with TypeScript for type-safe UI component development.
+    \item Tailwind CSS for styling with a custom quantum-themed design system.
+    \item Monaco Editor for in-browser code editing with custom syntax highlighting and hover providers.
+    \item D3.js for 2D circuit visualisation; \texttt{@react-three/fiber} for 3D rendering.
     \item Zustand for lightweight client-side state management.
-    \item Chart.js for measurement histogram visualization.
+    \item Chart.js for measurement histogram visualisation.
 \end{itemize}
 
 \subsubsection{Backend Technologies}
 \begin{itemize}
-    \item Python 3.11+ for backend logic and quantum libraries.
-    \item FastAPI for high-performance async API framework.
+    \item Python 3.11+ for backend logic and quantum library integration.
+    \item FastAPI for the high-performance async API framework.
     \item Uvicorn ASGI server for production deployment.
-    \item Pydantic for data validation and serialization.
+    \item Pydantic for data validation and serialisation.
     \item SQLAlchemy ORM with PostgreSQL.
     \item Redis for caching and session management.
-    \item Alembic for database migrations.
+    \item Alembic for schema migrations.
 \end{itemize}
 
 \subsubsection{Quantum Computing Stack}
@@ -47,8 +47,7 @@ QCanvas employs a hybrid architecture where the Next.js frontend handles UI and 
     \item Qiskit 0.44+ for IBM quantum framework support \cite{qiskit}.
     \item PennyLane 0.33+ for Xanadu quantum framework support \cite{bergholm2018pennylane}.
     \item Custom OpenQASM 3.0 generator (\texttt{QASM3Builder}) \cite{cross2021openqasm}.
-    \item QSim SDK: Custom simulation backends (statevector, density matrix, stabilizer) \cite{nielsen2010quantum}.
-    \item Both SDKs deployed to PyPI for community access.
+    \item QSim SDK: Custom statevector, density matrix, and stabilizer backends \cite{qsim_sdk_2026, nielsen2010quantum}.
 \end{itemize}
 
 \subsection{Hybrid CPU--QPU Execution Model}
@@ -56,19 +55,19 @@ QCanvas employs a hybrid architecture where the Next.js frontend handles UI and 
 \subsubsection{Orchestration Boundary}
 \begin{itemize}
     \item \textbf{CPU Responsibilities}: Circuit construction, parameter preparation, AST parsing, OpenQASM generation, validation, pre/post-processing, and result aggregation.
-    \item \textbf{QSim/Simulator Responsibilities}: Gate-level circuit execution, statevector/density matrix evolution, measurement sampling, and state snapshot generation.
+    \item \textbf{QSim Responsibilities}: Gate-level circuit execution, statevector/density matrix evolution, measurement sampling, and state snapshot generation.
 \end{itemize}
 
 \subsubsection{Data Flow}
 \begin{enumerate}
     \item User writes circuit in source framework (Qiskit/Cirq/PennyLane) in the Monaco editor.
     \item Frontend sends code to FastAPI backend via REST API.
-    \item Backend parses code using AST or runtime execution.
-    \item QCanvas SDK generates OpenQASM 3.0 intermediate representation.
-    \item Validation layer checks conformance to supported subset.
+    \item Backend parses code using AST or runtime execution (detection by import inspection).
+    \item QCanvas SDK generates OpenQASM 3.0 intermediate representation via \texttt{QASM3Builder}.
+    \item Validation layer checks conformance to the supported gate subset and control flow.
     \item QSim SDK executes circuit on selected backend (statevector/density/stabilizer).
-    \item Results aggregated and returned via REST/WebSocket.
-    \item Frontend visualizes results (histograms, circuit diagrams, statistics).
+    \item Results are aggregated and returned to frontend via REST response and WebSocket push.
+    \item Frontend visualises results: histograms, circuit diagrams, execution statistics.
 \end{enumerate}
 
 \section{Design Models}
@@ -76,7 +75,7 @@ QCanvas employs a hybrid architecture where the Next.js frontend handles UI and 
 \subsection{Activity Diagrams}
 
 \subsubsection{Activity Diagram: Circuit Conversion and Execution}
-This diagram presents the end-to-end flow from code input in the Monaco editor, through FastAPI conversion and validation services, into QSim execution and results visualization.
+This diagram presents the end-to-end flow from code input in the Monaco editor, through FastAPI conversion and validation services, into QSim execution and results visualisation.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.65\linewidth]{FYP-Activity-2.png}
@@ -85,7 +84,7 @@ This diagram presents the end-to-end flow from code input in the Monaco editor, 
 \end{figure}
 
 \subsubsection{Activity Diagram: User Registration}
-This diagram captures the user registration and onboarding flow: a new user submits credentials, FastAPI validates and hashes the password, a PostgreSQL record is created, and a JWT session token is issued.
+This diagram captures the user registration flow: a new user submits credentials, FastAPI validates and hashes the password using Bcrypt, a PostgreSQL record is created, and a JWT session token is issued.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.55\linewidth]{FYP-ActivityRegistration.png}
@@ -95,15 +94,16 @@ This diagram captures the user registration and onboarding flow: a new user subm
 \subsection{Sequence Diagrams}
 
 \subsubsection{Sequence Diagram: Unified Execution Flow}
-This diagram shows the interaction flow across concrete system components: the user browser, Next.js app, FastAPI routes, ConversionService/SimulationService layer, and the QSim backends.
+This diagram shows the complete interaction across system components: user browser, Next.js frontend, FastAPI routes, ConversionService, SimulationService, and QSim backends.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{FYP-SequenceUnified.png}
-    \caption{Sequence Diagram --- Unified Flow}
+    \caption{Sequence Diagram --- Unified Execution Flow}
     \label{fig:seq_unified}
 \end{figure}
 
 \subsubsection{Sequence Diagram: Authentication}
+This diagram shows the JWT-based authentication handshake between client, FastAPI, and PostgreSQL.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\linewidth]{FYP-SequenceAuth.png}
@@ -112,21 +112,21 @@ This diagram shows the interaction flow across concrete system components: the u
 
 \subsubsection{System Sequence Diagrams (SSD)}
 
-\textbf{SSD: Authentication}
+\textbf{SSD: Authentication} --- illustrates the system boundary interactions for user login, token issuance, and session validation.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\linewidth]{FYP-Ssd-Auth.png}
     \caption{SSD --- Authentication}
 \end{figure}
 
-\textbf{SSD: Conversion}
+\textbf{SSD: Conversion} --- shows the external interactions for the circuit compilation flow from the user's perspective.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.92\linewidth]{FYP-Ssd-Conversion.png}
     \caption{SSD --- Conversion}
 \end{figure}
 
-\textbf{SSD: Simulation}
+\textbf{SSD: Simulation} --- depicts the execution handoff from the user action through the API to QSim and back.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\linewidth]{FYP-Ssd-Simulation.png}
@@ -135,7 +135,7 @@ This diagram shows the interaction flow across concrete system components: the u
 
 \clearpage
 \subsection{Architecture Diagram}
-This diagram provides a high-level view of the deployed QCanvas stack: the Next.js IDE, FastAPI API layer, \texttt{quantum\_converters} and \texttt{quantum\_simulator} (QSim) packages, PostgreSQL/Redis persistence, and WebSocket/REST communication channels.
+This diagram provides a high-level view of the deployed QCanvas stack, showing the Next.js IDE, FastAPI API layer, \texttt{quantum\_converters} (QCanvas SDK) and \texttt{quantum\_simulator} (QSim SDK) packages, PostgreSQL/Redis persistence, and WebSocket/REST communication channels.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\linewidth]{FYP-SystemArchitecture.png}
@@ -145,7 +145,7 @@ This diagram provides a high-level view of the deployed QCanvas stack: the Next.
 
 \clearpage
 \subsection{Component Diagram}
-This diagram depicts concrete module boundaries: editor and results components in the frontend, API routes and services in the backend, conversion/validation modules, QSim simulation backends, and shared utilities.
+This diagram depicts concrete module boundaries: editor and results components in the frontend, API routes and services in the backend, conversion and validation modules in the QCanvas SDK, QSim simulation backends, and shared utilities.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\linewidth]{FYP-Component.png}
@@ -155,17 +155,17 @@ This diagram depicts concrete module boundaries: editor and results components i
 
 \clearpage
 \subsection{Package Diagram}
-This diagram outlines the actual package organization across the frontend (Next.js \texttt{app}, \texttt{components}, \texttt{lib}), backend (\texttt{app/api}, \texttt{core}, \texttt{services}, \texttt{models}), \texttt{quantum\_converters} (parsers, converters, optimizers), and \texttt{quantum\_simulator} (QSim) libraries.
+This diagram outlines the package organisation across the frontend (Next.js \texttt{app}, \texttt{components}, \texttt{lib}), backend (\texttt{app/api}, \texttt{core}, \texttt{services}, \texttt{models}), \texttt{quantum\_converters} (parsers, converters, optimizers), and \texttt{quantum\_simulator} (QSim) libraries.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.95\linewidth]{Package Diagram.jpeg}
+    \includegraphics[width=0.95\linewidth]{PackageDiagram.jpeg}
     \caption{Package Diagram}
     \label{fig:package}
 \end{figure}
 
 \clearpage
 \subsection{Deployment Diagram}
-This diagram shows the deployment view for production: an Nginx HTTP reverse proxy, the FastAPI backend service, the Next.js frontend, PostgreSQL/Redis containers, and containerization via Docker Compose.
+This diagram shows the production deployment topology: Nginx as the HTTP reverse proxy, the FastAPI backend service, Next.js frontend, PostgreSQL and Redis containers, and containerisation via Docker Compose.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\linewidth]{FYP-Deployment.png}
@@ -177,6 +177,7 @@ This diagram shows the deployment view for production: an Nginx HTTP reverse pro
 \subsection{State Diagrams}
 
 \subsubsection{State Diagram: Conversion Process}
+This diagram shows the state machine for a conversion request: Idle $\rightarrow$ Parsing $\rightarrow$ Mapping $\rightarrow$ Generating $\rightarrow$ Validating $\rightarrow$ Success/Error.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{FYP-StateConversion.png}
@@ -184,6 +185,7 @@ This diagram shows the deployment view for production: an Nginx HTTP reverse pro
 \end{figure}
 
 \subsubsection{State Diagram: Simulation Job}
+This diagram shows the simulation job lifecycle: Queued $\rightarrow$ Dispatched $\rightarrow$ Running $\rightarrow$ Completed/Failed/Timeout.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{FYP-StateJob.png}
@@ -202,6 +204,7 @@ At the context level, the DFD shows QCanvas as a single system interacting with 
 \end{figure}
 
 \subsubsection{DFD Level 1}
+The Level 1 DFD decomposes the QCanvas system into its major processes: User Authentication, Circuit Compilation (Conversion + Validation), Job Execution (QSim dispatch), and Results Persistence. It shows all data stores (User DB, Job Queue, Results Cache) and the data flows between processes and the external user entity.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.98\linewidth]{FYP-DFD-lvl1.png}
@@ -211,17 +214,29 @@ At the context level, the DFD shows QCanvas as a single system interacting with 
 \section{Data Design}
 
 \subsection{Core Entities}
-\begin{itemize}
-    \item \textbf{Circuit}: Framework source code, parsed AST, OpenQASM 3.0 representation, metadata, and statistics.
-    \item \textbf{ConversionRequest}: Source framework, target framework or QASM, source code, optimization options, validation flags.
-    \item \textbf{ConversionResult}: Generated OpenQASM 3.0 code, conversion statistics, warnings, errors, execution time.
-    \item \textbf{SimulationJob}: OpenQASM code, selected backend, shots, seed, execution status, progress percentage.
-    \item \textbf{SimulationResult}: Measurement counts, statevector/density matrix (optional), execution time, metadata.
-    \item \textbf{Project}: Files collection, active file reference, project settings, theme preferences.
-    \item \textbf{User}: Authentication credentials, profile data, XP, level, achievement set.
-    \item \textbf{Achievement}: Criteria type, threshold value, XP reward, unlock state.
-    \item \textbf{Recipe}: Circuit snippet, framework tag, difficulty label, community tags, upvote count.
-\end{itemize}
+
+\begin{longtable}{p{0.22\textwidth} p{0.70\textwidth}}
+\toprule
+\textbf{Entity} & \textbf{Key Attributes} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Entity} & \textbf{Key Attributes} \\
+\midrule
+\endhead
+Circuit & id, framework, source\_code, qasm\_code, qubit\_count, gate\_count, depth, metadata \\
+ConversionRequest & id, source\_framework, source\_code, style, validate, timestamp \\
+ConversionResult & id, qasm\_code, stats (JSON), warnings, errors, execution\_time\_ms \\
+SimulationJob & id, qasm\_code, backend, shots, seed, status, progress\_pct, created\_at \\
+SimulationResult & id, job\_id, counts (JSON), statevector (optional), execution\_time\_ms \\
+Project & id, user\_id, name, files (FK), active\_file, settings (JSON) \\
+User & id, email, password\_hash, xp, level, created\_at, roles \\
+Achievement & id, name, criteria\_type, threshold, xp\_reward, category, is\_hidden \\
+Recipe & id, user\_id, title, code, framework, difficulty, tags, upvote\_count, created\_at \\
+\bottomrule
+\caption{Core Data Entities and Key Attributes}
+\label{tab:core-entities}
+\end{longtable}
 
 \subsection{Entity Relationship Diagram}
 \begin{figure}[H]
@@ -231,7 +246,7 @@ At the context level, the DFD shows QCanvas as a single system interacting with 
     \label{fig:erd}
 \end{figure}
 
-\subsection{Data Organization and Processing}
+\subsection{Data Organisation and Processing}
 
 \begin{longtable}{p{0.22\textwidth} p{0.70\textwidth}}
 \toprule
@@ -251,13 +266,13 @@ Results Layer & Measurement counts, histograms, statevector arrays, execution me
 Rendering Layer & Circuit diagrams (SVG/D3), charts (Chart.js), formatted statistics \\
 Persistence Layer & Project files, conversion history, results cache, user sessions, achievements, recipes \\
 \bottomrule
-\caption{Data Organization and Processing}
+\caption{Data Organisation and Processing}
 \label{tab:data-organization}
 \end{longtable}
 
 \subsection{API Data Models}
 
-All API endpoints use Pydantic models for validation:
+All API endpoints use Pydantic models for validation and serialisation:
 
 \subsubsection{Request Models}
 \begin{itemize}
