@@ -68,7 +68,7 @@ except Exception:
         QuantumCircuit = 'QuantumCircuit'
 from quantum_converters.base.ConversionResult import ConversionResult, ConversionStats
 from quantum_converters.base.qasm3_builder import QASM3Builder
-from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
+from quantum_converters.config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
 from quantum_converters.base.circuit_ast import GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
 import time
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary

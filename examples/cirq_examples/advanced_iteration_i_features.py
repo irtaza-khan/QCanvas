@@ -123,7 +123,7 @@ if (c[0] == 1) {
 }
 
 // For loop example
-for loop_index in [0:2] {
+for int loop_index in [0:3] {
     // Conditional operations
     ry(temp_angle) q[loop_index];
 }

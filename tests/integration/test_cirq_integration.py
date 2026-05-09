@@ -98,7 +98,7 @@ def get_circuit():
         
         # Should have control flow examples
         assert "if (c[0] == 1)" in qasm
-        assert "for loop_index in [0:2]" in qasm
+        assert "for int loop_index in [0:1]" in qasm
         
     def test_inverse_modifier(self):
         """Test inverse gate modifier"""

@@ -1,3 +1,50 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel", "build"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "qcanvas-sdk"
+version = "1.0.6"
+description = "A package for compiling quantum circuit code from Cirq, Qiskit, and PennyLane to OpenQASM 3.0."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+  {name = "QCanvas Team"},
+]
+
+# Minimal dependencies required for core conversions
+dependencies = [
+    "antlr4-python3-runtime>=4.13.2",
+    "numpy>=1.24.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+cirq = [
+    "cirq>=1.5.0",
+]
+qiskit = [
+    "qiskit>=2.1.2",
+    "qiskit-aer>=0.17.2",
+]
+pennylane = [
+    "pennylane>=0.42.3",
+    "pennylane-lightning>=0.42.0",
+]
+qsim = [
+    "qsim",
+]
+all = [
+    "cirq>=1.5.0",
+    "qiskit>=2.1.2",
+    "qiskit-aer>=0.17.2",
+    "pennylane>=0.42.3",
+    "pennylane-lightning>=0.42.0",
+    "openqasm3>=1.0.1",
+    "pyqasm>=0.5.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["qcanvas*", "quantum_converters*"]

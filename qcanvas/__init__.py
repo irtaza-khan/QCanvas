@@ -147,4 +147,4 @@ __all__ = [
     "HybridExecutionResult",
 ]
 
-
+__version__ = "1.0.5"
