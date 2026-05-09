@@ -5,7 +5,16 @@ By the conclusion of Iteration 4, QCanvas has evolved into a multi-layer platfor
 
 \section{Architectural Design}
 
-QCanvas employs a layered hybrid architecture in which the Next.js frontend handles the user interface and lightweight operations, the FastAPI backend manages compilation and validation, and the QSim SDK executes circuits on simulation backends. Both the \texttt{qcanvas-sdk} and \texttt{qsim-sdk} are published on PyPI, making their capabilities accessible to the broader Python community beyond the Web IDE.
+QCanvas employs a layered hybrid architecture in which the Next.js frontend handles the user interface and lightweight operations, the FastAPI backend manages compilation and validation, and the QSim SDK executes circuits on simulation backends. Both the \texttt{qcanvas-sdk} and \texttt{qsim-sdk} are packaged as installable Python tools, making their capabilities accessible beyond the Web IDE.
+
+Figure~\ref{fig:box-line-architecture} presents a simplified box-and-line view of the major QCanvas subsystems before the more detailed architecture, component, and deployment models discussed later in this chapter.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\linewidth]{box-line-diagram.png}
+    \caption{Simplified Box-and-Line Architecture of QCanvas}
+    \label{fig:box-line-architecture}
+\end{figure}
 
 \subsection{Layered Responsibilities}
 \begin{itemize}
@@ -78,7 +87,7 @@ QCanvas employs a layered hybrid architecture in which the Next.js frontend hand
 This diagram presents the end-to-end flow from code input in the Monaco editor, through FastAPI conversion and validation services, into QSim execution and results visualisation.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.65\linewidth]{FYP-Activity-2.png}
+    \includegraphics[width=0.75\linewidth]{FYP-Activity-2.png}
     \caption{Activity Diagram --- Circuit Conversion and Execution}
     \label{fig:activity_convert_run}
 \end{figure}
@@ -87,7 +96,7 @@ This diagram presents the end-to-end flow from code input in the Monaco editor, 
 This diagram captures the user registration flow: a new user submits credentials, FastAPI validates and hashes the password using Bcrypt, a PostgreSQL record is created, and a JWT session token is issued.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\linewidth]{FYP-ActivityRegistration.png}
+    \includegraphics[width=0.65\linewidth]{FYP-ActivityRegistration.png}
     \caption{Activity Diagram --- User Registration}
 \end{figure}
 
@@ -109,23 +118,24 @@ This diagram shows the JWT-based authentication handshake between client, FastAP
     \includegraphics[width=0.95\linewidth]{FYP-SequenceAuth.png}
     \caption{Sequence Diagram --- Authentication}
 \end{figure}
-
+\clearpage
 \subsubsection{System Sequence Diagrams (SSD)}
 
 \textbf{SSD: Authentication} --- illustrates the system boundary interactions for user login, token issuance, and session validation.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.95\linewidth]{FYP-Ssd-Auth.png}
+    \includegraphics[width=1.00\linewidth]{FYP-Ssd-Auth.png}
     \caption{SSD --- Authentication}
 \end{figure}
 
+\clearpage
 \textbf{SSD: Conversion} --- shows the external interactions for the circuit compilation flow from the user's perspective.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.92\linewidth]{FYP-Ssd-Conversion.png}
+    \includegraphics[width=1.00\linewidth]{FYP-Ssd-Conversion.png}
     \caption{SSD --- Conversion}
 \end{figure}
-
+\clearpage
 \textbf{SSD: Simulation} --- depicts the execution handoff from the user action through the API to QSim and back.
 \begin{figure}[H]
     \centering
@@ -180,10 +190,10 @@ This diagram shows the production deployment topology: Nginx as the HTTP reverse
 This diagram shows the state machine for a conversion request: Idle $\rightarrow$ Parsing $\rightarrow$ Mapping $\rightarrow$ Generating $\rightarrow$ Validating $\rightarrow$ Success/Error.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{FYP-StateConversion.png}
+    \includegraphics[width=0.9\linewidth]{FYP-StateConversion.png}
     \caption{State Diagram --- Conversion}
 \end{figure}
-
+\clearpage
 \subsubsection{State Diagram: Simulation Job}
 This diagram shows the simulation job lifecycle: Queued $\rightarrow$ Dispatched $\rightarrow$ Running $\rightarrow$ Completed/Failed/Timeout.
 \begin{figure}[H]
@@ -199,7 +209,7 @@ This diagram shows the simulation job lifecycle: Queued $\rightarrow$ Dispatched
 At the context level, the DFD shows QCanvas as a single system interacting with external entities: the User, Authentication Provider, and QSim backend.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{FYP-DFD-lvl0.png}
+    \includegraphics[width=0.65\linewidth]{FYP-DFD-lvl0.png}
     \caption{DFD Level 0}
 \end{figure}
 
@@ -207,7 +217,7 @@ At the context level, the DFD shows QCanvas as a single system interacting with 
 The Level 1 DFD decomposes the QCanvas system into its major processes: User Authentication, Circuit Compilation (Conversion + Validation), Job Execution (QSim dispatch), and Results Persistence. It shows all data stores (User DB, Job Queue, Results Cache) and the data flows between processes and the external user entity.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.98\linewidth]{FYP-DFD-lvl1.png}
+    \includegraphics[width=0.78\linewidth]{FYP-DFD-lvl1.png}
     \caption{DFD Level 1}
 \end{figure}
 
@@ -215,7 +225,7 @@ The Level 1 DFD decomposes the QCanvas system into its major processes: User Aut
 
 \subsection{Core Entities}
 
-\begin{longtable}{p{0.22\textwidth} p{0.70\textwidth}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.24\textwidth} >{\raggedright\arraybackslash}p{0.68\textwidth}}
 \toprule
 \textbf{Entity} & \textbf{Key Attributes} \\
 \midrule
@@ -225,13 +235,21 @@ The Level 1 DFD decomposes the QCanvas system into its major processes: User Aut
 \midrule
 \endhead
 Circuit & id, framework, source\_code, qasm\_code, qubit\_count, gate\_count, depth, metadata \\
+\addlinespace
 ConversionRequest & id, source\_framework, source\_code, style, validate, timestamp \\
+\addlinespace
 ConversionResult & id, qasm\_code, stats (JSON), warnings, errors, execution\_time\_ms \\
+\addlinespace
 SimulationJob & id, qasm\_code, backend, shots, seed, status, progress\_pct, created\_at \\
+\addlinespace
 SimulationResult & id, job\_id, counts (JSON), statevector (optional), execution\_time\_ms \\
+\addlinespace
 Project & id, user\_id, name, files (FK), active\_file, settings (JSON) \\
+\addlinespace
 User & id, email, password\_hash, xp, level, created\_at, roles \\
+\addlinespace
 Achievement & id, name, criteria\_type, threshold, xp\_reward, category, is\_hidden \\
+\addlinespace
 Recipe & id, user\_id, title, code, framework, difficulty, tags, upvote\_count, created\_at \\
 \bottomrule
 \caption{Core Data Entities and Key Attributes}
@@ -248,7 +266,7 @@ Recipe & id, user\_id, title, code, framework, difficulty, tags, upvote\_count, 
 
 \subsection{Data Organisation and Processing}
 
-\begin{longtable}{p{0.22\textwidth} p{0.70\textwidth}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.24\textwidth} >{\raggedright\arraybackslash}p{0.68\textwidth}}
 \toprule
 \textbf{Layer} & \textbf{Data Handled / Description} \\
 \midrule
@@ -258,12 +276,19 @@ Recipe & id, user\_id, title, code, framework, difficulty, tags, upvote\_count, 
 \midrule
 \endhead
 Input Layer & Source code (Python/QASM), examples, editor configuration (JSON), user preferences \\
+\addlinespace
 Parsing Layer & Python AST, circuit operations, gate definitions, qubit mappings \\
+\addlinespace
 Conversion Layer & CircuitAST intermediate format, gate mappings, OpenQASM 3.0 text, diagnostics \\
+\addlinespace
 Validation Layer & Syntax errors, semantic errors, unsupported feature warnings, subset conformance checks \\
+\addlinespace
 Simulation Layer & Backend selection, shots configuration, execution parameters, caching keys \\
+\addlinespace
 Results Layer & Measurement counts, histograms, statevector arrays, execution metadata \\
+\addlinespace
 Rendering Layer & Circuit diagrams (SVG/D3), charts (Chart.js), formatted statistics \\
+\addlinespace
 Persistence Layer & Project files, conversion history, results cache, user sessions, achievements, recipes \\
 \bottomrule
 \caption{Data Organisation and Processing}

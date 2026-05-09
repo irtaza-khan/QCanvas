@@ -17,7 +17,7 @@ The conversion module requirements define how source circuits are parsed, normal
 \end{itemize}
 
 \subsection{Simulation Module (QSim SDK)}
-The simulation module requirements capture the execution behaviour of the QSim backends. The QSim SDK is published on PyPI and operates independently of the QCanvas Web IDE.
+The simulation module requirements capture the execution behaviour of the QSim backends. The QSim SDK is packaged as an installable Python library and operates independently of the QCanvas Web IDE.
 \begin{itemize}
     \item FR-S1: The system shall support statevector, density matrix, and stabilizer simulation backends \cite{nielsen2010quantum}.
     \item FR-S2: The system shall allow configurable shots (1--10,000) and return counts and metadata.
@@ -109,7 +109,7 @@ The hybrid module requirements describe how QCanvas separates classical orchestr
     \item \textbf{NFR-S2: Data Integrity Protection} \\
     The system shall sanitise 100\% of user inputs via ORM parameterisation to prevent SQL injection vulnerabilities.
     \item \textbf{NFR-S3: Security Properties} \\
-    \textit{Confidentiality:} Sensitive API keys shall be encrypted at rest using AES-256. \textit{Integrity:} User passwords shall be hashed using Bcrypt with per-user salts, and all state transitions shall be validated server-side. \textit{Availability:} Role-Based Access Control (RBAC) shall ensure each role can only access permitted resources, limiting the blast radius of any single compromised account.
+    \textit{Confidentiality:} Sensitive API keys shall be encrypted at rest using AES-256, and Role-Based Access Control (RBAC) shall ensure each role can only access permitted resources. \textit{Integrity:} User passwords shall be hashed using Bcrypt with per-user salts, and all state transitions shall be validated server-side. \textit{Availability:} The system shall use rate limiting, health checks, and resource controls to reduce service disruption during abnormal traffic conditions.
 \end{itemize}
 
 \clearpage
@@ -158,6 +158,37 @@ The hybrid module requirements describe how QCanvas separates classical orchestr
     \item Endpoint: \texttt{/ws}
     \item Use cases: Progress updates, real-time simulation notifications.
 \end{itemize}
+
+Table~\ref{tab:event_response} summarises the principal runtime events exchanged between the user interface and the backend services that implement QCanvas.
+
+\begin{table}[H]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\caption{QCanvas Event-Response Matrix}
+\label{tab:event_response}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{p{0.06\textwidth} p{0.20\textwidth} p{0.11\textwidth} p{0.20\textwidth} p{0.29\textwidth} p{0.10\textwidth}}
+\toprule
+\textbf{ID} & \textbf{Event / Trigger} & \textbf{Source} & \textbf{Handling Subsystem} & \textbf{System Response} & \textbf{Destination} \\
+\midrule
+\textbf{E-1} & Submit login credentials & User Browser & FastAPI Auth Service & Verify credentials; generate JWT authentication token & Next.js Client \\
+\addlinespace
+\textbf{E-2} & Save active quantum code & User Browser & File/Project Service & Persist current workspace file state & PostgreSQL \\
+\addlinespace
+\textbf{E-3} & Initiate circuit conversion & User Browser & QCanvas SDK (Converters) & Parse AST; map gates; generate target syntax (OpenQASM) & Monaco Editor \\
+\addlinespace
+\textbf{E-4} & Execute simulation job & User Browser & QSim SDK (Simulator) & Dispatch QASM to selected backend; cache output metrics & Chart.js Visuals \\
+\addlinespace
+\textbf{E-5} & Simulation progress update & Simulation Engine & WebSocket Service & Stream job state and elapsed time indicators & Progress Bar \\
+\addlinespace
+\textbf{E-6} & Request hover explanation & User Browser & Explain-It Service & Retrieve contextual gate explanation and educational metadata & Monaco Hover Panel \\
+\addlinespace
+\textbf{E-7} & Unlock milestone/goal & Core Engine & Gamification Service & Grant user XP; recalculate user levels & Achievement Panel \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
 
 \clearpage
 \section{Use Cases}

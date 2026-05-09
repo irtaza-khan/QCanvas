@@ -1,13 +1,13 @@
 \chapter{Introduction}
 \label{ch:introduction}
 
-QCanvas and its companion simulation library QSim represent the complete software deliverable of this Final Year Project. Both packages are now fully developed, rigorously tested, and publicly deployed as installable Python packages on the Python Package Index (PyPI). This report documents the entire development lifecycle across four iterative sprints---from a foundational conversion prototype to a production-ready, community-accessible quantum computing platform.
+QCanvas and its companion simulation library QSim represent the complete software deliverable of this Final Year Project. Both packages are fully developed, rigorously tested, and packaged for distribution as installable Python tools. This report documents the entire development lifecycle across four iterative project phases---from a foundational conversion prototype to a production-ready, community-accessible quantum computing platform.
 
 The broader context motivating QCanvas is the persistent fragmentation of the quantum software ecosystem. As hardware vendors such as IBM, Google, and Rigetti advance NISQ-era devices \cite{preskill2018quantum}, the accompanying software landscape has grown without standardisation. Researchers and students face a ``Tower of Babel'' scenario in which Qiskit, Cirq, and PennyLane each enforce unique syntax, compilation targets, and simulation APIs \cite{qiskit, cirq_developers_2023, bergholm2018pennylane}. The absence of a unified intermediate representation in educational tooling obscures the critical translation step where high-level Python code becomes executable quantum instructions.
 
 QCanvas resolves this by centering its architecture on OpenQASM 3.0 \cite{cross2021openqasm} as the universal intermediate representation. Every circuit---regardless of source framework---is compiled to this standard before execution, enabling transparent, consistent, and comparable simulation. The QSim SDK \cite{qsim_sdk_2026} provides the execution kernel, operating independently of the Web IDE and directly installable for programmatic use in research scripts and Jupyter notebooks.
 
-This report presents the architecture, requirements, system design, benchmarking results, and technical achievements of the completed project, concluding with the Sprint 4 integration milestone that brought both SDKs to PyPI.
+This report presents the architecture, requirements, system design, benchmarking results, and technical achievements of the completed project, concluding with the Iteration 4 integration milestone that packaged both SDKs for distribution.
 
 \section{Existing Solutions}
 
@@ -17,14 +17,16 @@ The quantum software landscape currently offers several frameworks and platforms
 \centering
 \caption{Comparison of Existing Solutions}
 \label{tab:existing-solutions}
-\begin{tabular}{|p{2.5cm}|p{5.5cm}|p{5.5cm}|}
-\hline
-\textbf{System} & \textbf{Overview} & \textbf{Limitations} \\ \hline
-IBM Quantum Experience & Cloud-based access to real quantum hardware and simulators via Qiskit. Provides circuit composition and execution. & Locked to IBM's Qiskit ecosystem. No cross-framework support. Requires internet access and an IBM account. No offline or SDK-level simulation. \\ \hline
-Google Cirq / Colab & Google's framework for writing circuits targeting superconducting processors, typically used in Jupyter environments. & Cirq-only; no support for Qiskit or PennyLane. No unified IDE. Circuit visualisation is text-based ASCII. \\ \hline
-Quirk & Browser-based drag-and-drop quantum circuit simulator for education. & No code-based interaction. Cannot parse real-world quantum programs. No OpenQASM support. Not extensible. \\ \hline
-Quantum Katas (Microsoft) & Interactive Q\# learning exercises. & Tied exclusively to Q\# and the Microsoft ecosystem. Incompatible with Python-based frameworks used in research. \\ \hline
-t$|$ket$\rangle$ (TKET) & High-performance, retargetable compiler for NISQ devices supporting multiple backends \cite{sivarajah2020tket}. & Compilation-focused; no educational IDE. No beginner-friendly feedback. Not accessible as a unified web platform. \\ \hline
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{5.3cm} >{\raggedright\arraybackslash}p{5.3cm}}
+\toprule
+\textbf{System} & \textbf{Overview} & \textbf{Limitations} \\
+\midrule
+IBM Quantum Experience & Cloud-based access to real quantum hardware and simulators via Qiskit. Provides circuit composition and execution. & Locked to IBM's Qiskit ecosystem. No cross-framework support. Requires internet access and an IBM account. No offline or SDK-level simulation. \\
+Google Cirq / Colab & Google's framework for writing circuits targeting superconducting processors, typically used in Jupyter environments. & Cirq-only; no support for Qiskit or PennyLane. No unified IDE. Circuit visualisation is text-based ASCII. \\
+Quirk & Browser-based drag-and-drop quantum circuit simulator for education. & No code-based interaction. Cannot parse real-world quantum programs. No OpenQASM support. Not extensible. \\
+Quantum Katas (Microsoft) & Interactive Q\# learning exercises. & Tied exclusively to Q\# and the Microsoft ecosystem. Incompatible with Python-based frameworks used in research. \\
+t$|$ket$\rangle$ (TKET) & High-performance, retargetable compiler for NISQ devices supporting multiple backends \cite{sivarajah2020tket}. & Compilation-focused; no educational IDE. No beginner-friendly feedback. Not accessible as a unified web platform. \\
+\bottomrule
 \end{tabular}
 \end{table}
 
@@ -46,7 +48,7 @@ QCanvas and QSim together address this problem by providing a unified interface 
 
 \section{Scope}
 
-The scope of QCanvas is defined to deliver a functional, robust simulation and education environment across four development sprints.
+The scope of QCanvas is defined to deliver a functional, robust simulation and education environment across four development iterations.
 
 \subsection{In Scope}
 
@@ -58,7 +60,7 @@ The system was designed and built to include the following capabilities:
     \item \textbf{Interactive Web IDE:} A Monaco-based web editor for writing code, visualising circuits in real time, and managing projects.
     \item \textbf{Educational Features:} Gamified learning paths, hover-based quantum gate explanations, and community circuit sharing.
     \item \textbf{Cross-Framework Benchmarking:} Systematic performance comparison of Qiskit, Cirq, and PennyLane across 12 standard algorithms using QCanvas as the unified compilation platform.
-    \item \textbf{PyPI Deployment:} Both the QCanvas converter SDK and QSim simulator SDK published as installable Python packages (\texttt{pip install qcanvas-sdk}, \texttt{pip install qsim-sdk}).
+    \item \textbf{SDK Packaging:} Both the QCanvas converter SDK and QSim simulator SDK packaged as installable Python packages (\texttt{pip install qcanvas-sdk}, \texttt{pip install qsim-sdk}).
     \item \textbf{Real-Time Feedback:} WebSocket-based streaming for long-running simulations with live progress updates.
 \end{itemize}
 
@@ -86,7 +88,7 @@ This module is the core translation engine of the system. It accepts Python sour
 \end{enumerate}
 
 \subsection{Simulation Module (QSim SDK)}
-The QSim module is the quantum execution kernel. Distributed as a standalone Python package on PyPI, it serves as the computation backend for all circuit executions within QCanvas while remaining independently usable in research workflows.
+The QSim module is the quantum execution kernel. Distributed as a standalone Python package, it serves as the computation backend for all circuit executions within QCanvas while remaining independently usable in research workflows.
 \begin{enumerate}
     \item Statevector, Density Matrix, and Stabilizer simulation backends.
     \item Configurable shot counts (1--10,000) with deterministic seed support.
@@ -106,7 +108,7 @@ This module acts as a gatekeeper before any circuit reaches the simulation engin
 The Web IDE is the user-facing interface built on Next.js and Monaco Editor. It provides a complete quantum development environment accessible in any modern browser without installation.
 \begin{enumerate}
     \item Monaco-based code editor with custom syntax highlighting for Qiskit, Cirq, PennyLane, and OpenQASM 3.0.
-    \item Real-time D3.js circuit visualisation updated continuously as the user types.
+    \item Real-time D3.js circuit visualisation refreshed as the user types, with debounced updates to preserve responsiveness.
     \item Interactive results panel with Chart.js histograms, statevector tables, and execution statistics.
     \item Example library with over 40 categorised quantum algorithm implementations.
 \end{enumerate}
@@ -132,12 +134,14 @@ The benchmarking module provides a systematic, reproducible pipeline for compari
 
 \begin{table}[H]
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{p{0.20\textwidth} p{0.80\textwidth}}
-\hline
-\textbf{Team Member} & \textbf{Responsibilities} \\ \hline
-Umer Farooq (22I-0891) & QCanvas Conversion Engine (AST parsing, gate mapping, OpenQASM 3.0 generator), Validation Module, FastAPI backend architecture, benchmarking suite design and analysis, PyPI packaging and deployment for the QCanvas SDK. \\ \hline
-Hussan Waseem Syed (22I-0893) & QSim Simulation SDK (statevector, density matrix, stabilizer backends), hybrid CPU--QPU execution model, job scheduling, result caching, QSim PyPI packaging and deployment. \\ \hline
-Muhammad Irtaza Khan (22I-0911) & Next.js Web IDE (Monaco editor, D3.js circuit visualisation, Chart.js histograms, results panel), Educational Intelligence Module (gamification service, hover explanation system, recipe-sharing platform), frontend state management with Zustand. \\ \hline
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.76\textwidth}}
+\toprule
+\textbf{Team Member} & \textbf{Responsibilities} \\
+\midrule
+Umer Farooq (22I-0891) & QCanvas Conversion Engine (AST parsing, gate mapping, OpenQASM 3.0 generator), Validation Module, FastAPI backend architecture, benchmarking suite design and analysis, SDK packaging for the QCanvas converter. \\
+Hussan Waseem Syed (22I-0893) & QSim Simulation SDK (statevector, density matrix, stabilizer backends), hybrid CPU--QPU execution model, job scheduling, result caching, and SDK packaging for QSim. \\
+Muhammad Irtaza Khan (22I-0911) & Next.js Web IDE (Monaco editor, D3.js circuit visualisation, Chart.js histograms, results panel), Educational Intelligence Module (gamification service, hover explanation system, recipe-sharing platform), frontend state management with Zustand. \\
+\bottomrule
 \end{tabular}%
 }
 \caption{Work Division}
@@ -169,7 +173,7 @@ Muhammad Irtaza Khan (22I-0911) & Next.js Web IDE (Monaco editor, D3.js circuit 
 Users are assumed to have basic familiarity with Python syntax. The Web IDE assumes a stable modern browser environment (Chrome/Firefox/Edge). SDK users are assumed to have Python 3.11+ installed.
 
 \subsection{Dependencies}
-Key external dependencies include \texttt{Python 3.11+} for the backend, \texttt{FastAPI} for the API layer, \texttt{Next.js 14} for the frontend, and the quantum libraries \texttt{Cirq 1.0+}, \texttt{Qiskit 0.44+}, and \texttt{PennyLane 0.33+}. Both the \texttt{qcanvas-sdk} and \texttt{qsim-sdk} packages are published on PyPI.
+Key external dependencies include \texttt{Python 3.11+} for the backend, \texttt{FastAPI} for the API layer, \texttt{Next.js 14} for the frontend, and the quantum libraries \texttt{Cirq 1.0+}, \texttt{Qiskit 0.44+}, and \texttt{PennyLane 0.33+}. Both the \texttt{qcanvas-sdk} and \texttt{qsim-sdk} packages are prepared as installable Python distributions.
 
 \subsection{Constraints}
 System performance is constrained by host memory for statevector simulations, which scale exponentially with qubit count ($2^n$ complex amplitudes for $n$ qubits). API response times are targeted at under 2 seconds for standard conversion tasks involving fewer than 100 gates. The stabilizer backend is limited to Clifford circuits by the Gottesman--Knill theorem.

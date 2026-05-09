@@ -196,7 +196,7 @@
 	\begin{center}
 		{ \setstretch{1}
 		\par{\fontsize{24}{24}\selectfont \textbf{\@title}}\par
-		\vspace{1.5cm}
+		\vspace{1.3cm}
 		\par{\fontsize{14}{14}\selectfont Project Team}\\~\\
 		{\fontsize{19}{19}\selectfont
 		\begin{tabular}{lr}
@@ -210,23 +210,23 @@
 			\ifx\@authorfourroll\undefined ~ \else \@authorfourroll \fi
 		\end{tabular}
 		}\par
-		\vspace{0.25cm}
+		\vspace{0.23cm}
 		\par{\fontsize{16}{16}\selectfont Session
 		}{\fontsize{16}{16}\selectfont\@sessionduration}\par
-		\vspace{0.75cm}
+		\vspace{0.7cm}
 		\ifx\@cosupervisor\undefined
-			\vspace{2.5cm}
+			\vspace{2.4cm}
 			\par{\fontsize{14}{14}\selectfont Supervised by}\\~\\
 			{\fontsize{19}{19}\selectfont \@supervisor}\par
 		\else
-			\vspace{0.5cm}
+			\vspace{0.4cm}
 			\par{\fontsize{14}{14}\selectfont Supervised by}\\~\\
 			{\fontsize{19}{19}\selectfont \@supervisor}\par
-			\vspace{0.5cm}
+			\vspace{0.4cm}
 			\par{\fontsize{14}{14}\selectfont Co-Supervised by}\\~\\
 			{\fontsize{19}{19}\selectfont \@cosupervisor}\par
 		\fi
-		\vspace{.5cm}
+		\vspace{.4cm}
 		%\par{\fontsize{21}{21}\selectfont \textbf{Bachelors of \@degreename}}\par
 		%\vspace{1cm}
 		%\par{\fontsize{16}{16}\selectfont A thesis submitted in partial fulfillment\\of the
@@ -237,12 +237,12 @@
 		\begin{figure}[h]\centering
 			\includegraphics[width=.30\columnwidth]{ThesisFigs/FASTLogo}
 		\end{figure}		
-		\vspace{0.5cm}
+		\vspace{0.4cm}
 		\par{\fontsize{17}{17}\selectfont \textbf{\@department}}\par
-		\vspace{0.5cm}
+		\vspace{0.4cm}
 		\par{\fontsize{17}{17}\selectfont \textbf{National University of
 		Computer and Emerging Sciences\\\@campuscity, Pakistan}}\par
-		\vspace{0.5cm}
+		\vspace{0.4cm}
 		\par{\fontsize{17}{17}\selectfont \textbf{\@degreemonth, \@degreeyear}}\par
 	}
 	\end{center}

@@ -3,25 +3,25 @@
 
 \section{Conclusion}
 
-This final report has presented the complete development of QCanvas and QSim across four iterative sprints, from initial prototype to production-ready, community-accessible platform. Every major objective set out in the original FYP specification has been achieved.
+This final report has presented the complete development of QCanvas and QSim across four iterative project phases, from initial prototype to a production-ready, community-accessible platform. Every major objective set out in the original FYP specification has been achieved.
 
 \textbf{Iteration 1} established the foundational architecture: a FastAPI backend, a Next.js frontend with Monaco editor, and the core Qiskit/Cirq/PennyLane to OpenQASM 3.0 conversion pipeline. The key insight demonstrated here was that a single, standards-based intermediate representation could serve as a universal translator for disparate quantum frameworks.
 
-\textbf{Iteration 2} deepened the platform with advanced language features (complex control flow, subroutines, bitwise operations), expanded PennyLane gate coverage, a secure database layer (PostgreSQL, Redis, Alembic), and the hybrid CPU--QPU execution model. Security properties (AES-256 confidentiality, Bcrypt integrity, RBAC availability) were formally implemented.
+\textbf{Iteration 2} deepened the platform with advanced language features (complex control flow, subroutines, bitwise operations), expanded PennyLane gate coverage, a secure database layer (PostgreSQL, Redis, Alembic), and the hybrid CPU--QPU execution model. Security properties covering confidentiality, integrity, and availability were formally implemented through encryption, password hashing, access control, and service protection mechanisms.
 
 \textbf{Iteration 3} transformed QCanvas from a functional tool into an intelligent, community-driven learning ecosystem through real-time D3.js circuit visualisation, the ``Quantum Explain It'' hover system, a gamification engine with 44 unique achievements, and the recipe-sharing community platform.
 
-\textbf{Iteration 4} completed the project. Both the QCanvas converter SDK (\texttt{pip install qcanvas-sdk}) and the QSim simulation SDK (\texttt{pip install qsim-sdk}) were packaged and deployed to PyPI---work produced in this FYP is now accessible to the global quantum computing community. Previous Iterations 1--3 had proposed hardware integration, noise-aware simulation, and an expanded community platform as future directions; Iteration 4 instead prioritised SDK deployment and a rigorous benchmarking study, which were assessed as higher-impact deliverables for a final submission.
+\textbf{Iteration 4} completed the project. Both the QCanvas converter SDK and the QSim simulation SDK were packaged for distribution and accompanied by a rigorous benchmarking study. Previous Iterations 1--3 had proposed hardware integration, noise-aware simulation, and an expanded community platform as future directions; Iteration 4 instead prioritised SDK packaging and final evaluation, which were assessed as higher-impact deliverables for the final submission.
 
-The benchmarking study confirmed that Qiskit and Cirq are statistically equivalent (QPack $\approx 58.8$ each; JSD $\approx 0$) and produce constant-depth circuits regardless of qubit count, while PennyLane exhibits super-linear depth growth for oracle algorithms (QPack $= 9.28$; scaling exponent $a = 2.21$ for Grover's). The Quantum Volume analysis confirmed all three frameworks achieve QV = 2048 on ideal simulation, demonstrating that the divergence is entirely a compiler-level artefact, not a semantic one.
+The benchmarking study confirmed that Qiskit and Cirq are statistically equivalent (QPack $\approx 58.8$ each; JSD $\approx 0$) and, for the representative algorithms evaluated in this report, exhibit constant-depth scaling with qubit count. PennyLane, by contrast, exhibits super-linear depth growth for oracle algorithms (QPack $= 9.28$; scaling exponent $a = 2.21$ for Grover's). Under the report's ideal simulation setup, all three framework pipelines achieve the same effective QV figure of 2048, indicating that the observed divergence is attributable primarily to compilation strategy rather than simulator behaviour.
 
 In summary, QCanvas successfully delivers:
 \begin{itemize}
     \item A unified quantum IDE supporting Qiskit, Cirq, and PennyLane via a single OpenQASM 3.0 pipeline.
-    \item A production-ready QSim quantum simulator SDK published on PyPI with statevector, density matrix, and stabilizer backends.
+    \item A production-ready QSim quantum simulator SDK with statevector, density matrix, and stabilizer backends.
     \item An educational platform with hover explanations, 44-achievement gamification, and community circuit sharing.
     \item A rigorous 12-algorithm, 3-framework, 136-configuration benchmarking study with full compilation time, structural, statistical equivalence (JSD), Quantum Volume, and QPack results.
-    \item A complete software system with 304 passing tests, Docker Compose deployment, and AWS-compatible infrastructure.
+    \item A complete software system with 304 automated passing tests, supplementary manual validation of selected user-facing features, Docker Compose deployment, and AWS-compatible infrastructure.
 \end{itemize}
 
 \section{Future Work}

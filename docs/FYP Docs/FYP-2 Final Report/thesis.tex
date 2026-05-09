@@ -1,10 +1,7 @@
 \documentclass{fast-nuces-bs}
 
-\usepackage{blindtext}
 \usepackage{mathptmx}% Times Roman font
 \usepackage[T1]{fontenc}
-\usepackage{lipsum} 
-\usepackage{sectsty}
 \usepackage{ragged2e}
 \usepackage{tikz-uml}
 \usepackage{graphicx}
@@ -12,6 +9,8 @@
 \usepackage{float}
 \usepackage{needspace}
 \usepackage{etoolbox}
+\usepackage{array}
+\usepackage{tabularx}
 \usepackage{placeins}
 \usepackage{titlesec}
 \usepackage{booktabs}
@@ -24,6 +23,9 @@
 \titleformat{\section}[hang]{\normalfont\bfseries\Large\raggedright}{\thesection}{1em}{}
 \titleformat{\subsection}[hang]{\normalfont\bfseries\large\raggedright}{\thesubsection}{1em}{}
 \titleformat{\subsubsection}[hang]{\normalfont\bfseries\raggedright}{\thesubsubsection}{1em}{}
+\setlength{\headheight}{14pt}
+\renewcommand{\arraystretch}{1.15}
+\emergencystretch=2em
 
 % Information about the Thesis 
 % -----------------------------------------------------------------------------
@@ -82,17 +84,21 @@
 \renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
 \renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
 
-\begin{acknowledgements}
-% TODO (User Action Required): Write your personal acknowledgements here.
-% Suggested content: Thank your supervisor Dr. Imran Ashraf and co-supervisor
-% Dr. Muhammad Nouman Noor for their guidance. Thank your teammates. Thank your
-% family. Acknowledge any institutional or laboratory support received.
-% Approximately 150--200 words.
-\end{acknowledgements}
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
 
-\begin{abstract}
-The fragmentation of the quantum computing software ecosystem across competing frameworks---Qiskit, Cirq, and PennyLane---presents a significant barrier to educational accessibility and cross-framework research reproducibility. This project presents \textbf{QCanvas}, a unified quantum circuit simulation and education platform, and \textbf{QSim}, its companion simulation SDK, both deployed as installable Python packages on PyPI. QCanvas employs OpenQASM 3.0 as a common intermediate representation, enabling framework-agnostic circuit compilation, validation, and execution through a FastAPI backend and a Monaco-based Web IDE. A comprehensive cross-framework benchmarking study across 12 standard quantum algorithms confirms that Qiskit and Cirq produce structurally equivalent, constant-depth circuits (QPack score $\approx 58.8$ each), while PennyLane exhibits super-linear circuit growth for algorithms like Grover's (QPack $= 9.3$), with Jensen--Shannon divergence near zero between Qiskit and Cirq output distributions. The platform additionally delivers an educational layer comprising hover-based gate explanations, a gamification engine with 44 unique achievements, and a community circuit-sharing library. A test suite of 304 passing tests validates the system's correctness and reliability across all supported frameworks and backends.
-\end{abstract}
+We express our sincere gratitude to our supervisor, Dr. Imran Ashraf, for his continuous guidance, valuable feedback, and encouragement throughout this Final Year Project. His direction helped us refine both the technical depth and the research focus of QCanvas and QSim. We are equally thankful to our co-supervisor, Dr. Muhammad Nouman Noor, for his support, insightful suggestions, and constructive reviews during the development and evaluation phases of the project.
+
+We also thank our teammates for their commitment, collaboration, and consistency across all four iterations of the project. The successful completion of this work was only possible through shared effort, open communication, and mutual support.
+
+We are deeply grateful to our families for their patience, motivation, and unwavering support during our undergraduate studies. Their trust and encouragement enabled us to stay focused through demanding academic and development milestones.
+
+Finally, we acknowledge the Department of Computer Science at FAST National University of Computer and Emerging Sciences, Islamabad, for providing the academic environment and resources that made this project possible.
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+The fragmentation of the quantum computing software ecosystem across competing frameworks---Qiskit, Cirq, and PennyLane---presents a significant barrier to educational accessibility and cross-framework research reproducibility. This project presents \textbf{QCanvas}, a unified quantum circuit simulation and education platform, and \textbf{QSim}, its companion simulation SDK, both packaged as installable Python tools. QCanvas employs OpenQASM 3.0 as a common intermediate representation, enabling framework-agnostic circuit compilation, validation, and execution through a FastAPI backend and a Monaco-based Web IDE. A comprehensive cross-framework benchmarking study across 12 standard quantum algorithms confirms that Qiskit and Cirq produce structurally equivalent, constant-depth circuits (QPack score $\approx 58.8$ each), while PennyLane exhibits super-linear circuit growth for algorithms like Grover's (QPack $= 9.3$), with Jensen--Shannon divergence near zero between Qiskit and Cirq output distributions. The platform additionally delivers an educational layer comprising hover-based gate explanations, a gamification engine with 44 unique achievements, and a community circuit-sharing library. An automated suite of 304 passing tests, supplemented by manual validation of selected user-facing features, supports the system's correctness and reliability across all supported frameworks and backends.
 
 \include{sections/chapter1}
 \include{sections/chapter2}
@@ -103,8 +109,8 @@ The fragmentation of the quantum computing software ecosystem across competing f
 \appendix
 \include{sections/appendix}
 
+\addcontentsline{toc}{chapter}{References}
 \bibliographystyle{plain}
 \bibliography{references}
-\addcontentsline{toc}{chapter}{References}
 
 \end{document}
