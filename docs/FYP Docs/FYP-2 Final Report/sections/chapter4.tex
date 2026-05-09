@@ -1,0 +1,363 @@
+\chapter{Implementation and Testing}
+\label{ch:implementation}
+
+This chapter details the complete implementation progress achieved across all four sprints of QCanvas development. It covers the core infrastructure, quantum computing modules, the QSim SDK integration and PyPI deployment, educational features, cross-framework benchmarking results, and the comprehensive testing strategy employed throughout the project.
+
+\section{Algorithm Design}
+
+The core algorithmic pillar of QCanvas is its multi-stage quantum circuit compilation pipeline. The system accepts Python source code in any supported framework and produces validated, executable OpenQASM 3.0 output through the following sequential algorithm:
+
+\begin{enumerate}
+    \item \textbf{Detection Phase:} Identify the source framework by inspecting import statements and class usage patterns using Python's \texttt{ast} module. Fall back to runtime execution if AST detection is ambiguous.
+    \item \textbf{Parsing Phase:} Traverse the source AST, extracting circuit operations, qubit registers, gate parameters, and measurement instructions.
+    \item \textbf{Gate Mapping Phase:} Map detected gate operations to the canonical OpenQASM 3.0 gate set using a lookup table that handles parameter substitution, qubit broadcasting, and controlled-gate modifiers (\texttt{ctrl}, \texttt{inv}, \texttt{pow}).
+    \item \textbf{QASM Generation Phase:} The \texttt{QASM3Builder} assembles the final QASM string, emitting header declarations, qubit/register definitions, gate instructions, and measurement blocks.
+    \item \textbf{Validation Phase:} The validator performs semantic analysis on the generated QASM, checking against the supported gate subset, identifying unsupported constructs, and emitting line-precise diagnostics.
+    \item \textbf{Dispatch Phase:} Validated QASM is dispatched to QSim, which selects the appropriate backend (statevector, density matrix, or stabilizer) and executes the circuit for the requested shot count.
+    \item \textbf{Result Aggregation Phase:} Measurement counts, execution time, backend metadata, and optional state snapshots are assembled into a structured response and returned to the frontend.
+\end{enumerate}
+
+\section{External APIs and SDKs}
+
+\begin{table}[!h]
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|p{3cm}|p{4cm}|p{4cm}|p{4cm}|}
+\hline
+\textbf{API / SDK} & \textbf{Description} & \textbf{Purpose of Usage} & \textbf{Key Interface Used} \\ \hline
+Qiskit (v0.44+) & IBM quantum framework for circuit construction & Parsing and converting Qiskit circuits to OpenQASM 3.0 & \texttt{QuantumCircuit}, \texttt{qiskit.transpiler} \cite{qiskit} \\ \hline
+Cirq (v1.0+) & Google quantum framework for superconducting processors & Parsing and converting Cirq circuits to OpenQASM 3.0 & \texttt{cirq.Circuit}, \texttt{cirq.ops} \cite{cirq_developers_2023} \\ \hline
+PennyLane (v0.33+) & Xanadu framework for variational and QML circuits & Parsing and converting PennyLane QNodes to OpenQASM 3.0 & \texttt{qml.QNode}, \texttt{qml.device} \cite{bergholm2018pennylane} \\ \hline
+QSim SDK (PyPI) & Custom quantum simulation kernel (this project) & Executing OpenQASM 3.0 circuits via statevector, density matrix, or stabilizer backends & \texttt{StatevectorBackend.run()}, \texttt{StabilizerBackend.run()} \\ \hline
+FastAPI (v0.110+) & High-performance async Python web framework & REST and WebSocket API serving the QCanvas backend & \texttt{APIRouter}, \texttt{WebSocket} \\ \hline
+Monaco Editor & Microsoft's code editor used in VS Code & Providing an in-browser IDE with syntax highlighting, hover providers, and diagnostics & \texttt{editor.create()}, \texttt{languages.registerHoverProvider()} \\ \hline
+D3.js (v7) & Data-driven SVG/DOM manipulation library & Real-time 2D quantum circuit diagram rendering & \texttt{d3.select}, \texttt{d3.join()}, \texttt{d3.hierarchy} \\ \hline
+PostgreSQL / SQLAlchemy & Relational database with Python ORM & Persistent storage for users, projects, files, jobs, and achievements & \texttt{Session}, \texttt{Base.metadata.create\_all()} \\ \hline
+\end{tabular}%
+}
+\caption{External APIs and SDKs Used}
+\label{tab:external-apis}
+\end{table}
+
+\section{Sprint-by-Sprint Implementation Progress}
+
+\subsection{Sprint 1: Core Infrastructure and Basic Features}
+
+Sprint 1 established the foundational architecture and implemented essential quantum computing features.
+
+\subsubsection{Core Infrastructure}
+\begin{itemize}
+    \item \textbf{Backend:} FastAPI application with Pydantic for data validation and SQLAlchemy for ORM.
+    \item \textbf{Frontend:} Next.js 14 application with TypeScript and Tailwind CSS.
+    \item \textbf{DevOps:} Docker and Docker Compose configuration for consistent development and production environments.
+\end{itemize}
+
+\subsubsection{Quantum Features}
+\begin{itemize}
+    \item \textbf{Framework Support:} Initial support for parsing and converting Cirq, Qiskit, and PennyLane circuits \cite{qiskit, cirq_developers_2023, bergholm2018pennylane}.
+    \item \textbf{Standard Gates:} Implementation of all standard quantum gates and modifiers (controls, inverses) \cite{nielsen2010quantum}.
+    \item \textbf{Type System:} Complete type system support within the OpenQASM 3.0 intermediate representation \cite{cross2021openqasm}.
+    \item \textbf{Control Flow:} Implementation of classical control flow constructs (if-else).
+\end{itemize}
+
+\subsection{Sprint 2: Advanced Features and Hybrid Execution}
+
+Sprint 2 expanded the system's capabilities with advanced language features, a secure database layer, and the hybrid CPU--QPU execution model.
+
+\subsubsection{Advanced Language Features}
+\begin{itemize}
+    \item \textbf{Advanced Control Flow:} Support for \texttt{while} loops, \texttt{break}, and \texttt{continue} statements.
+    \item \textbf{Complex Types:} Support for complex number types and operations.
+    \item \textbf{Bitwise Operations:} Implementation of bitwise operators (\&, |, \textasciicircum, \textasciitilde, <<, >>).
+    \item \textbf{Subroutines:} Support for defining and calling functions with return values.
+\end{itemize}
+
+\subsubsection{PennyLane Integration Expansion}
+\begin{itemize}
+    \item Controlled gates: CY, CH, CRX, CRY, CRZ, CP, CSWAP, CCZ.
+    \item GlobalPhase gate support.
+    \item Advanced modifiers: \texttt{negctrl}, \texttt{ctrl(n)}, \texttt{pow(k)}.
+\end{itemize}
+
+\subsubsection{User Management and Security (CIA Compliance)}
+\begin{itemize}
+    \item \textbf{Confidentiality:} Sensitive API keys encrypted at rest using AES-256.
+    \item \textbf{Integrity:} User passwords hashed using Bcrypt with per-user salts.
+    \item \textbf{Availability:} Role-Based Access Control (RBAC) for User and Admin roles.
+\end{itemize}
+
+\subsubsection{Persistence and Database Layer}
+\begin{itemize}
+    \item \textbf{ORM Models:} Comprehensive models for Users, Projects, Files, Jobs, Simulations, and Achievements.
+    \item \textbf{Migrations:} Alembic integration for schema evolution.
+    \item \textbf{Data Integrity:} Foreign key constraints and cascade delete policies.
+\end{itemize}
+
+\subsection{Sprint 3: Educational Intelligence and Community Features}
+
+Sprint 3 transformed QCanvas from a conversion-and-simulation tool into an intelligent, community-oriented learning environment.
+
+\subsubsection{Interactive Circuit Visualization}
+The visualization pipeline in the editor reacts to source changes through a debounced asynchronous parser (500ms debounce) which keeps the interface responsive. The implementation combines the Monaco editor, \texttt{parseCircuitWithCountAsync}, and the D3-based \texttt{CircuitVisualization.tsx} renderer so the circuit diagram updates continuously without blocking typing. A separate 3D path in \texttt{CircuitVisualization3D.tsx} supports richer spatial rendering using \texttt{@react-three/fiber}.
+
+\subsubsection{Quantum Explain It Mode}
+The hover-based explanation layer uses \texttt{getHoverForSymbol} in \texttt{lib/quantumHoverSymbols.ts} to feed Monaco hover providers. When a user hovers over a symbol such as \texttt{H}, \texttt{CNOT}, or \texttt{VQE}, the system provides a markdown-rendered popover with the gate matrix, Bloch-sphere implications, and a brief textbook explanation---reducing context switching for learners.
+
+\subsubsection{Gamified Learning and Community Features}
+The gamification subsystem in \texttt{gamification\_service.py} implements an event-driven \texttt{Activity Log $\rightarrow$ Achievement Check} architecture. The system features:
+\begin{itemize}
+    \item \textbf{44 unique achievements} across 6 logic constraint types (\texttt{activity\_count}, \texttt{level\_reached}, \texttt{streak\_days}, \texttt{distinct\_activity\_count}, and hidden Easter Eggs).
+    \item Achievement categories: Getting Started \& Social, Mastery, Algorithms, and Hidden.
+    \item XP progression system with dynamic level thresholds scaling to Level 50+.
+\end{itemize}
+
+The community recipe-sharing workflow is facilitated by \texttt{ShareModal.tsx} and the shared API layer. Users publish circuit snippets annotated with titles, difficulty levels (Beginner/Intermediate/Advanced), framework, and tags with smart auto-completion.
+
+\subsubsection{Extensibility and New Framework Onboarding}
+Sprint 3 reinforced the plug-in style design by keeping language support data-driven. New syntax rules, reserved keywords, and framework dictionaries can be added without rewriting the editor pipeline. Monarch tokenizer injection allows bespoke language configurations for \texttt{qasm} (OpenQASM) and \texttt{pythonq} (Quantum Python wrappers).
+
+\subsection{Sprint 4: QSim SDK Integration, Benchmarking, and PyPI Deployment}
+
+Sprint 4 marks the final delivery of the QCanvas FYP project. The sprint focused on production readiness, QSim SDK finalization, comprehensive cross-framework benchmarking, and the public deployment of both SDKs to PyPI.
+
+\subsubsection{QSim SDK and QCanvas SDK -- PyPI Deployment}
+Both the QCanvas converter SDK and the QSim simulation SDK have been finalized, packaged, and deployed to the Python Package Index (PyPI). This represents a major milestone: the work produced in this FYP is now accessible to the global quantum computing community.
+
+\begin{itemize}
+    \item \texttt{pip install qsim-sdk}: Installs the standalone quantum simulation engine with statevector, density matrix, and stabilizer backends.
+    \item \texttt{pip install qcanvas-sdk}: Installs the quantum circuit conversion library, enabling programmatic Qiskit/Cirq/PennyLane to OpenQASM 3.0 conversion.
+\end{itemize}
+
+The integration between QCanvas and QSim is seamless: the QCanvas Web IDE uses QSim as its execution backend, while QSim is independently usable as a Python library in scripts, Jupyter notebooks, and research workflows.
+
+\subsubsection{Enhanced Example Library}
+The examples page was expanded to include over 40 categorized quantum algorithm implementations across multiple frameworks and categories:
+\begin{itemize}
+    \item \textbf{Foundational}: Bell State, GHZ State, Quantum Teleportation.
+    \item \textbf{Oracle-Based}: Deutsch--Jozsa, Bernstein--Vazirani.
+    \item \textbf{Search}: Grover's Algorithm.
+    \item \textbf{Variational}: VQE, QAOA.
+    \item \textbf{Quantum ML}: XOR Classifier, QRNG.
+    \item \textbf{Error Correction}: Bit-Flip Code, Phase-Flip Code.
+\end{itemize}
+
+\subsubsection{Production Deployment and Infrastructure}
+The QCanvas platform is deployed using Docker Compose with Nginx as the reverse proxy, FastAPI backend, Next.js frontend, PostgreSQL, and Redis containers. The deployment configuration supports horizontal scaling and is AWS-compatible.
+
+\section{User Interface Implementation}
+
+The QCanvas Web IDE represents the culmination of four sprints of UI development:
+
+\begin{itemize}
+    \item \textbf{Monaco Editor:} Custom syntax highlighting for Qiskit, Cirq, PennyLane, and OpenQASM 3.0 with hover-based quantum explanations.
+    \item \textbf{Real-Time Circuit Visualization:} D3.js 2D circuit diagram with debounced asynchronous updates; 3D visualization via \texttt{@react-three/fiber}.
+    \item \textbf{Results Visualization:} Interactive Chart.js measurement histograms, statevector tables, and execution statistics.
+    \item \textbf{Statistics Panel:} Performance metrics (timing, memory, CPU) and conversion statistics.
+    \item \textbf{Example Library:} 40+ categorized examples across all frameworks with modal explanations.
+    \item \textbf{Achievement Dashboard:} Progress tracking, level display, XP bar, and badge collection.
+    \item \textbf{Community Library:} Recipe browsing, forking, and sharing with metadata filtering.
+    \item \textbf{Theme Support:} Fully implemented dark and light modes.
+\end{itemize}
+
+\section{Testing and Validation}
+
+\subsection{Testing Strategy}
+The verification approach combines three layers: (1) backend regression tests covering the converter, simulator, database layer, and authentication flows; (2) targeted feature checks for Sprint 3 and 4 UI additions; and (3) manual exploratory testing for behavior best evaluated visually, especially circuit diagram rendering and gamification progression.
+
+\subsection{Unit Testing}
+Unit testing was employed throughout all sprints to validate individual components in isolation. The testing suite covers:
+\begin{itemize}
+    \item Conversion correctness for all supported gate types across Cirq, Qiskit, and PennyLane.
+    \item OpenQASM 3.0 output validity against the supported subset.
+    \item QSim simulation correctness against known quantum state distributions.
+    \item Authentication and RBAC logic.
+    \item Gamification achievement criteria evaluation.
+\end{itemize}
+
+\subsection{Test Coverage}
+\begin{itemize}
+    \item \textbf{Total Tests:} 304 passing tests with 100\% pass rate.
+    \item \textbf{Sprint 1 Tests:} 73 passed tests (110 collected, 33 skipped) covering basic features.
+    \item \textbf{Sprint 2 Tests:} 151 tests covering advanced features, database models, and authentication.
+    \item \textbf{Integration Tests:} 80 tests covering end-to-end framework conversion and hybrid execution flows.
+    \item \textbf{Scope Coverage:} Comprehensive coverage across Cirq, Qiskit, PennyLane, and OpenQASM 3.0 semantics.
+\end{itemize}
+
+\section{Evaluation and Benchmarking}
+
+Sprint 4 delivered a comprehensive, reproducible benchmarking study titled \textit{``Cross-Framework Quantum Algorithm Benchmarking via Unified Compilation to OpenQASM 3.0''}, using QCanvas as the unified compilation platform and QSim as the simulation engine. Every algorithm was implemented idiomatically in all three frameworks, compiled to OpenQASM 3.0, and simulated on QSim for a controlled, apples-to-apples comparison.
+
+\subsection{Benchmark Setup}
+\begin{itemize}
+    \item \textbf{Algorithm Suite:} 12 standard quantum algorithms (Bell State, GHZ State, Quantum Teleportation, Deutsch--Jozsa, Bernstein--Vazirani, Grover's Algorithm, QRNG, VQE, QAOA, QML XOR Classifier, Bit-Flip Code, Phase-Flip Code).
+    \item \textbf{Frameworks:} Qiskit, Cirq, PennyLane -- each with idiomatic, native-style implementations.
+    \item \textbf{Qubit Range:} 2--8 qubits per algorithm, totaling 136 distinct benchmark configurations.
+    \item \textbf{Shots:} 4,096 shots per simulation run; 10 runs per configuration for statistical robustness.
+\end{itemize}
+
+\subsection{Structural Benchmark Results}
+
+Table~\ref{tab:structural-summary} summarizes the structural metrics for selected algorithms at representative qubit sizes.
+
+\begin{table}[H]
+\centering
+\caption{Structural Benchmark Summary (Selected Algorithms, Representative Qubit Size)}
+\label{tab:structural-summary}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|r|r|r|r|}
+\hline
+\textbf{Algorithm} & \textbf{Framework} & \textbf{Qubits} & \textbf{Total Gates} & \textbf{Circuit Depth} & \textbf{Multi-Qubit Ratio} \\ \hline
+Bell State & Qiskit/Cirq/PennyLane & 2 & 4 & 3 & 0.25 \\ \hline
+\multirow{3}{*}{GHZ State} & Qiskit & 8 & 6 & 4 & 0.33 \\
+ & Cirq & 8 & 6 & 4 & 0.33 \\
+ & PennyLane & 8 & 16 & 9 & 0.44 \\ \hline
+\multirow{3}{*}{Grover's Algorithm} & Qiskit & 6 & 18 & 12 & 0.11 \\
+ & Cirq & 6 & 18 & 12 & 0.11 \\
+ & PennyLane & 6 & 216 & 62 & 0.00 \\ \hline
+\multirow{3}{*}{Bernstein--Vazirani} & Qiskit & 8 & 13 & 6 & 0.15 \\
+ & Cirq & 8 & 13 & 6 & 0.15 \\
+ & PennyLane & 8 & 31 & 4 & 0.16 \\ \hline
+\multirow{3}{*}{VQE} & Qiskit & 6 & 5 & 2 & 0.20 \\
+ & Cirq & 6 & 5 & 3 & 0.20 \\
+ & PennyLane & 6 & 17 & 7 & 0.29 \\ \hline
+\end{tabular}%
+}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\linewidth]{fig02_gate_counts.png}
+    \caption{Gate Count Comparison Across Frameworks}
+    \label{fig:gate-counts}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\linewidth]{fig03_circuit_depth.png}
+    \caption{Circuit Depth Comparison Across Frameworks}
+    \label{fig:circuit-depth}
+\end{figure}
+
+\textbf{Key Finding:} Qiskit and Cirq consistently produce structurally equivalent, more compact circuits than PennyLane. PennyLane's transpiler generates significantly more gates and deeper circuits for algorithms like Grover's (216 gates at 6 qubits vs.\ 18 for Qiskit/Cirq) due to its default full-decomposition strategy for multi-qubit gates.
+
+\subsection{Scaling Behavior Analysis}
+
+Table~\ref{tab:scaling} shows the power-law fits ($y = c \cdot n^a$) for circuit depth as a function of qubit count. An exponent $a = 0$ indicates constant-depth scaling, which is optimal for NISQ execution.
+
+\begin{table}[H]
+\centering
+\caption{Scaling Behavior (Power-Law Fit: Circuit Depth vs.\ Qubits)}
+\label{tab:scaling}
+\begin{tabular}{|l|l|r|l|}
+\hline
+\textbf{Algorithm} & \textbf{Framework} & \textbf{Exponent ($a$)} & \textbf{Scaling Class} \\ \hline
+GHZ State & Qiskit & 0.00 & Constant-depth \\
+GHZ State & Cirq & 0.00 & Constant-depth \\
+GHZ State & PennyLane & 1.00 & Linear \\ \hline
+Deutsch--Jozsa & Qiskit & 0.00 & Constant-depth \\
+Deutsch--Jozsa & Cirq & 0.00 & Constant-depth \\
+Deutsch--Jozsa & PennyLane & 0.91 & Linear \\ \hline
+Grover's Algorithm & Qiskit & 0.00 & Constant-depth \\
+Grover's Algorithm & Cirq & 0.00 & Constant-depth \\
+Grover's Algorithm & PennyLane & 2.21 & Super-linear \\ \hline
+Bernstein--Vazirani & Qiskit & 0.00 & Constant-depth \\
+Bernstein--Vazirani & Cirq & 0.00 & Constant-depth \\
+Bernstein--Vazirani & PennyLane & 0.87 & Sub-linear \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.80\linewidth]{fig05_ghz_scaling.png}
+    \caption{GHZ State Depth Scaling Across Frameworks}
+    \label{fig:ghz-scaling}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.80\linewidth]{fig14_grovers_scaling.png}
+    \caption{Grover's Algorithm Depth Scaling -- PennyLane Super-Linear vs.\ Qiskit/Cirq Constant}
+    \label{fig:grovers-scaling}
+\end{figure}
+
+\textbf{Key Finding:} Qiskit and Cirq achieve constant-depth scaling for all tested algorithms, meaning their compiled circuit depth does not grow with qubit count. PennyLane's Grover implementation exhibits super-linear ($a = 2.21$) depth growth, which severely limits its applicability to larger problem sizes on NISQ devices.
+
+\subsection{Statistical Equivalence Analysis}
+
+To validate that all three frameworks produce equivalent quantum computation (despite structural differences), Jensen--Shannon Divergence (JSD) was computed between pairwise output distributions.
+
+\begin{table}[H]
+\centering
+\caption{Statistical Equivalence Summary (JSD, 4096 Shots)}
+\label{tab:jsd}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|r|r|r|r|r|r|}
+\hline
+\textbf{Algorithm} & \textbf{Qubits} & \textbf{JSD (Qiskit-Cirq)} & \textbf{JSD (Qiskit-PL)} & \textbf{JSD (Cirq-PL)} & \textbf{Qiskit=Cirq?} & \textbf{All Equiv.?} \\ \hline
+Bell State & 2 & 0.0035 & 0.0002 & 0.0037 & \checkmark & \checkmark \\ \hline
+GHZ State & 3 & 0.0005 & 0.0021 & 0.0017 & \checkmark & \checkmark \\ \hline
+QML XOR Classifier & 2 & 0.0018 & 0.0049 & 0.0067 & \checkmark & \checkmark \\ \hline
+QML XOR Classifier & 4 & 0.0010 & 0.0017 & 0.0007 & \checkmark & \checkmark \\ \hline
+VQE & 2 & 0.0033 & 0.0029 & 0.0053 & \checkmark & \checkmark \\ \hline
+QAOA & 2 & 0.0035 & 0.0035 & 0.0049 & \checkmark & \checkmark \\ \hline
+Grovers & 2 & 0.0000 & 0.0000 & 0.0000 & \checkmark & \checkmark \\ \hline
+\end{tabular}%
+}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{fig09_jsd_heatmap.png}
+    \caption{Jensen--Shannon Divergence Heatmap (Pairwise Framework Equivalence)}
+    \label{fig:jsd-heatmap}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{fig10_equivalence_summary.png}
+    \caption{Statistical Equivalence Summary Across All Algorithms}
+    \label{fig:equivalence-summary}
+\end{figure}
+
+\textbf{Key Finding:} Qiskit and Cirq are statistically equivalent (JSD $\approx 0$) across all tested algorithms, confirming that QCanvas's unified compilation pipeline preserves quantum semantics. PennyLane diverges for multi-qubit algorithms due to different measurement convention and transpilation strategies, but produces equivalent results for 2-qubit and variational circuits.
+
+\subsection{Holistic QPack Scores}
+
+The QPack scoring system provides a normalized, aggregated view of each framework's overall capability, combining compilation speed, scalability, accuracy, and maximum supported problem size.
+
+\begin{table}[H]
+\centering
+\caption{QPack Holistic Benchmark Scores}
+\label{tab:qpack}
+\begin{tabular}{|l|r|r|r|r|r|}
+\hline
+\textbf{Framework} & \textbf{$S_\text{compile}$} & \textbf{$S_\text{scale}$} & \textbf{$S_\text{accuracy}$} & \textbf{$S_\text{capacity}$} & \textbf{$S_\text{overall}$} \\ \hline
+Qiskit   & 2.84 & 3.91 & 9.41 & 8 & \textbf{58.80} \\ \hline
+Cirq     & 2.84 & 3.91 & 9.41 & 8 & \textbf{58.79} \\ \hline
+PennyLane & 2.56 & $-$0.90 & 9.18 & 2 & 9.28 \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.80\linewidth]{fig15_qpack_radar.png}
+    \caption{QPack Radar Chart -- Framework Holistic Score Comparison}
+    \label{fig:qpack-radar}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.70\linewidth]{fig13_bell_state_distribution.png}
+    \caption{Bell State Measurement Distribution -- All Three Frameworks Agree}
+    \label{fig:bell-distribution}
+\end{figure}
+
+\textbf{Key Finding:} Qiskit and Cirq are near-equivalent in overall capability (QPack $\approx 58.8$), both substantially outperforming PennyLane (QPack $= 9.3$). The negative scalability score for PennyLane ($S_\text{scale} = -0.90$) reflects its super-linear circuit growth for algorithms like Grover's, rendering it unsuitable for larger quantum problem sizes in its default configuration.
+
+\subsection{Performance Evaluation}
+\begin{itemize}
+    \item \textbf{Conversion Latency:} The average conversion time for a 50-gate Qiskit circuit to OpenQASM 3.0 was measured at \textbf{145ms}, well within the 1500ms target (NFR-P1).
+    \item \textbf{Simulation Throughput:} The QSim stabilizer backend simulated 1000 shots of a 20-qubit Clifford circuit in under \textbf{1.2 seconds} (NFR-P2).
+    \item \textbf{Visualization Render Time:} D3.js circuit diagram updates averaged \textbf{sub-200ms} for circuits up to 50 gates (NFR-P3).
+    \item \textbf{API Scalability:} Load testing on the \texttt{/compile} endpoint showed stable performance up to 50 concurrent requests per second.
+    \item \textbf{Round-Trip Accuracy:} Converting standard gates to OpenQASM 3.0 and back preserved all gate parameters with $10^{-10}$ numerical precision.
+\end{itemize}
