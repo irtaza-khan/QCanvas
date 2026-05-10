@@ -3,11 +3,15 @@ import os
 import uuid
 import traceback
 
+# Setup directory references relative to this file
+_self_dir = os.path.dirname(os.path.abspath(__file__))
+
 # Add the backend directory to sys.path to allow imports from app
-sys.path.append(os.path.join(os.getcwd(), "backend"))
+if _self_dir not in sys.path:
+    sys.path.append(_self_dir)
 
 # Setup logging to file
-log_file = os.path.join(os.getcwd(), "backend", "test_db_output.txt")
+log_file = os.path.join(_self_dir, "test_db_output.txt")
 
 def log(message):
     with open(log_file, "a") as f:
