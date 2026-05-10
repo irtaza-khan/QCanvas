@@ -55,7 +55,7 @@ Version: 1.0.0
 
 import ast
 import logging
-from config.config import VERBOSE, vprint
+from quantum_converters.config.config import VERBOSE, vprint
 from typing import List, Set, Any, Optional, Dict, Tuple, Union
 from quantum_converters.base.circuit_ast import (
     CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode

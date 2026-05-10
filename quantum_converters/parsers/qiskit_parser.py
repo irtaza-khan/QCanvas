@@ -56,7 +56,7 @@ import ast
 import re
 import numpy as np
 import logging
-from config.config import VERBOSE, vprint
+from quantum_converters.config.config import VERBOSE, vprint
 from typing import List, Dict, Any, Optional, Set, Tuple, Union
 from quantum_converters.base.circuit_ast import (
     CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode

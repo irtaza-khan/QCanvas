@@ -57,7 +57,7 @@ Version: 1.0.0
 
 import ast
 import numpy as np
-from config.config import VERBOSE, vprint
+from quantum_converters.config.config import VERBOSE, vprint
 from quantum_converters.config import get_pl_inverse_qasm_map
 from typing import List, Any, Set, Optional, Tuple, Dict, Union
 

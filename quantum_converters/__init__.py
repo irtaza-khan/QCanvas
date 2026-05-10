@@ -1,7 +1,7 @@
 # Quantum Converters Package
 # This package provides converters for various quantum computing frameworks to OpenQASM 3.0
 
-__version__ = "1.0.0"
+__version__ = "1.0.5"
 __author__ = "QCanvas Team"
 
 # Make key components available at package level

@@ -62,7 +62,7 @@ from quantum_converters.base.qasm3_builder import QASM3Builder
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
 from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
 from quantum_converters.parsers.cirq_parser import CirqASTParser
-from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
+from quantum_converters.config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
 import time
 from quantum_converters.config import get_cirq_inverse_qasm_map, CIRQ_TO_QASM_REGISTRY
 
@@ -788,7 +788,7 @@ class CirqToQASM3Converter:
                 builder.add_section_comment("Classical control flow examples")
                 builder.add_if_statement("c[0] == 1", ["x q[1];"], else_body=None)
                 builder.add_blank_line()
-                builder.add_for_loop("loop_index", "[0:2]", ["ry(pi_4) q[loop_index];"])
+                builder.add_for_loop("int loop_index", f"[0:{circuit_ast.qubits - 1}]", ["ry(pi_4) q[loop_index];"])
         except Exception:
             pass
         return builder.get_code()

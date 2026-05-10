@@ -62,7 +62,7 @@ from quantum_converters.base.qasm3_builder import QASM3Builder
 from quantum_converters.base.qasm3_gates import QASM3GateLibrary, GateModifier
 from quantum_converters.base.circuit_ast import CircuitAST, GateNode, MeasurementNode, ResetNode, BarrierNode, ForLoopNode, IfStatementNode
 from quantum_converters.parsers.pennylane_parser import PennyLaneASTParser
-from config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
+from quantum_converters.config.config import VERBOSE, vprint, INCLUDE_VARS, INCLUDE_CONSTANTS
 from quantum_converters.config import get_pl_inverse_qasm_map
 import time
 
@@ -667,7 +667,7 @@ class PennyLaneToQASM3Converter:
 
             builder = self._initialize_builder(circuit_info)
             stats = self._process_operations(builder, circuit_info, loop_info)
-            self._add_control_flow_examples(builder, stats.has_measurements)
+            self._add_control_flow_examples(builder, stats.has_measurements, stats.n_qubits)
 
             code = builder.get_code()
             if VERBOSE:
@@ -795,7 +795,7 @@ class PennyLaneToQASM3Converter:
             return expanded_lines
 
 
-    def _add_control_flow_examples(self, builder: QASM3Builder, has_measurements: bool):
+    def _add_control_flow_examples(self, builder: QASM3Builder, has_measurements: bool, num_qubits: int = 2):
         """Add example control flow if measurements exist."""
         if has_measurements:
             builder.add_blank_line()
@@ -807,8 +807,8 @@ class PennyLaneToQASM3Converter:
             )
             builder.add_blank_line()
             builder.add_for_loop(
-                "loop_index",
-                "[0:2]",
+                "int loop_index",
+                f"[0:{num_qubits - 1}]",
                 ["ry(temp_angle) q[loop_index];"]
             )
 

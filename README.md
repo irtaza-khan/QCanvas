@@ -1,3 +1,94 @@
+# qcanvas-sdk
+
+**QCanvas Python SDK** — Compile quantum circuits from Cirq, Qiskit, or PennyLane to OpenQASM 3.0.
+
+## Installation
+
+```bash
+pip install qcanvas-sdk
+```
+
+### Optional frameworks (install specific ones you need):
+
+```bash
+# Cirq support
+pip install qcanvas[cirq]
+
+# Qiskit support
+pip install qcanvas[qiskit]
+
+# PennyLane support
+pip install qcanvas[pennylane]
+
+# All frameworks
+pip install qcanvas[all]
+```
+
+## Quick Start
+
+### Compile a Cirq circuit to OpenQASM 3.0
+
+```python
+import cirq
+from qcanvas import compile
+
+# Create a simple circuit
+q0, q1 = cirq.LineQubit.range(2)
+circuit = cirq.Circuit(
+    cirq.H(q0),
+    cirq.CNOT(q0, q1),
+    cirq.measure(q0, q1, key="m")
+)
+
+# Compile to OpenQASM 3.0
+qasm_string = compile(circuit, framework="cirq")
+print(qasm_string)
+```
+
+### Compile Qiskit or PennyLane
+
+```python
+from qcanvas import compile
+
+# Qiskit
+from qiskit import QuantumCircuit
+circuit = QuantumCircuit(2)
+circuit.h(0)
+circuit.cx(0, 1)
+qasm = compile(circuit, framework="qiskit")
+
+# PennyLane
+import pennylane as pl
+# ... define your QNode
+qasm = compile(qnode, framework="pennylane")
+```
+
+## Public API
+
+- **`compile(circuit, framework=None, **kwargs) -> str`**  
+  Compile a framework circuit object to OpenQASM 3.0 string. Auto-detects framework if not specified.
+
+- **`compile_and_execute(...)`**  
+  Optional: available when the runtime package is also installed (separate distribution).
+
+- **`SimulationResult`, `HybridExecutionResult`**  
+  Result dataclasses returned by execution functions (when runtime is present).
+
+## How it works
+
+The SDK includes:
+- **`qcanvas` facade** — the main import and public API
+- **`quantum_converters`** — compilation engines for Cirq/Qiskit/PennyLane → OpenQASM 3.0
+
+The backend runtime (server-side execution, FastAPI app, database) is a separate distribution and not included in the basic `pip install qcanvas`.
+
+## Development
+
+This distribution is built from the QCanvas monorepo. The `quantum_converters` package is included in the wheel without moving files on disk; the build config handles the packaging automatically.
+
+## License
+
+MIT
 # Quantum Unified Simulator (QCanvas)
 
 A comprehensive quantum computing platform that provides unified simulation, circuit conversion, and visualization capabilities across multiple quantum frameworks using a hybrid Next.js and FastAPI architecture.

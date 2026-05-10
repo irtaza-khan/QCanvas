@@ -26,8 +26,8 @@ if project_root not in sys.path:
 
 # Import sandbox execution
 try:
-    from qcanvas_runtime.sandbox import execute_sandboxed, validate_code
-    from qcanvas_runtime.result import HybridExecutionResult
+    from qcanvas.sandbox import execute_sandboxed, validate_code
+    from qcanvas.result import HybridExecutionResult
     SANDBOX_AVAILABLE = True
     print("✓ Sandbox module imported successfully")
 except ImportError as e:
