@@ -13,6 +13,7 @@ without worrying about the internal package layout.
 import sys
 import os
 from importlib import import_module
+from typing import Optional
 
 __version__ = "0.0.0"
 
@@ -80,7 +81,7 @@ def _detect_framework(obj):
     return None
 
 
-def compile(obj, framework: str | None = None, **kwargs) -> str:
+def compile(obj, framework: Optional[str] = None, **kwargs) -> str:
     """Compile a framework object or source string to OpenQASM 3.0.
 
     - If `quantum_converters` is available, use it to perform conversion.

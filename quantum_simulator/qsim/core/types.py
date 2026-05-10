@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 from pathlib import Path
 
 
 @dataclass
 class RunArgs:
     """Arguments for run_qasm orchestration."""
-    qasm_input: str | Path  # QASM3 code or .qasm file path
+    qasm_input: Union[str, Path]  # QASM3 code or .qasm file path
     backend: str = 'cirq'  # e.g., 'cirq', 'qiskit', 'pennylane'
     shots: int = 1024  # 0 for exact statevector/probs
 
