@@ -62,6 +62,14 @@ class Settings(BaseSettings):
     # API key the proxy sends as X-API-Key to the Cirq agent. Leave empty to skip.
     CIRQ_RAG_API_KEY: str = ""
 
+    # FastQSim Online Mode settings
+    FASTQSIM_ONLINE_MODE: bool = False
+    FASTQUBIT_USER_ID: str = ""
+    FASTQSIM_API_TOKEN: str = ""
+    FASTQUBIT_ENDPOINT: str = "https://fastqubit.dev/api"
+    FASTQSIM_EXECUTION_MODE: str = "cloud"
+
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, value):

@@ -1172,13 +1172,23 @@ class CirqASTVisitor(ast.NodeVisitor):
     def _handle_subscript_node(self, node: ast.Subscript) -> Union[int, str]:
         """Handle subscript/array access nodes."""
         # Handle array access like qubits[0]
-        if isinstance(node.value, ast.Name) and isinstance(node.slice, ast.Index):
+        if isinstance(node.value, ast.Name):
             base_name = node.value.id
-            if isinstance(node.slice.value, ast.Num):
-                index = node.slice.value.n
-                key = f"{base_name}[{index}]"
-                if key in self.qubit_vars:
-                    return self.qubit_vars[key]
+            index_node = node.slice
+            
+            # Python < 3.9 wraps index in ast.Index
+            if hasattr(ast, 'Index') and isinstance(index_node, ast.Index):
+                index_node = index_node.value
+                
+            if isinstance(index_node, (ast.Num, ast.Constant)):
+                index = index_node.n if isinstance(index_node, ast.Num) else index_node.value
+                if isinstance(index, int):
+                    key = f"{base_name}[{index}]"
+                    if key in self.qubit_vars:
+                        return self.qubit_vars[key]
+                    return index
+            elif isinstance(index_node, ast.Name):
+                return index_node.id
         return 0
 
     def _handle_call_qubit_node(self, node: ast.Call) -> Union[int, str]:

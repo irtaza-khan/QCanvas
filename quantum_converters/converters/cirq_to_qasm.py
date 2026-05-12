@@ -105,6 +105,13 @@ class CirqToQASM3Converter:
         """
         self._ensure_cirq_available()
 
+        try:
+            import cirq as _cirq
+            if isinstance(source, _cirq.Circuit):
+                return source
+        except Exception:
+            pass
+
         namespace = self._execute_source_code(source)
 
         # Try different strategies to extract the circuit
@@ -825,6 +832,16 @@ class CirqToQASM3Converter:
             >>> result = converter.convert(source)
             >>> print(f"Circuit has {result.stats.n_qubits} qubits and {result.stats.depth} moments")
         """
+        # Direct object conversion bypass
+        try:
+            import cirq as _cirq
+            if isinstance(cirq_source, _cirq.Circuit):
+                stats = self._analyze_cirq_circuit(cirq_source)
+                qasm3_program = self._convert_to_qasm3(cirq_source)
+                return ConversionResult(qasm_code=qasm3_program, stats=stats)
+        except Exception:
+            pass
+
         # Try AST-based path first (secure, no execution)
         try:
             if VERBOSE:

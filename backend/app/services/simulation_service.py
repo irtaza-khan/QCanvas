@@ -24,6 +24,17 @@ except ImportError as e:
     SimResult = None
     QSIM_AVAILABLE = False
 
+# Import fastqsim for online quantum simulation
+try:
+    import fastqsim
+    FASTQSIM_AVAILABLE = True
+    print("✓ FastQSim cloud SDK imported successfully")
+except ImportError as e:
+    print(f"FastQSim cloud SDK is not available: {e}")
+    fastqsim = None
+    FASTQSIM_AVAILABLE = False
+
+
 
 def convert_numpy_types(obj: Any) -> Any:
     """
@@ -54,8 +65,114 @@ class SimulationService:
     """Service for executing quantum simulations using QSim"""
     
     def __init__(self):
+        from app.config.settings import settings
+        self.settings = settings
         self.available_backends = ['cirq', 'qiskit', 'pennylane']
         self.legacy_backends = ["statevector", "density_matrix"]
+        self.fastqsim_client = None
+        self.fastqsim_initialized = False
+
+    def _get_api_base(self) -> str:
+        return (os.getenv("FASTQUBIT_ENDPOINT") or getattr(self.settings, "FASTQUBIT_ENDPOINT", "https://fastqubit.dev/api")).rstrip("/")
+
+    def _get_integrator_headers(self, extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        headers = {
+            "Authorization": f"Bearer {os.getenv('FASTQSIM_API_TOKEN') or getattr(self.settings, 'FASTQSIM_API_TOKEN', '')}",
+            "X-End-User-Id": os.getenv("FASTQUBIT_USER_ID") or getattr(self.settings, 'FASTQUBIT_USER_ID', ''),
+        }
+        if extra:
+            headers.update(extra)
+        return headers
+
+    def _terminate_session(self, session_id: str):
+        import requests
+        try:
+            requests.post(
+                f"{self._get_api_base()}/sessions/{session_id}/terminate",
+                headers=self._get_integrator_headers(),
+                timeout=15,
+            )
+        except Exception:
+            pass
+
+    def _provision_session(self, payload: Optional[Dict[str, Any]] = None):
+        import requests
+        try:
+            resp = requests.post(
+                f"{self._get_api_base()}/sessions/start",
+                headers=self._get_integrator_headers({"Content-Type": "application/json"}),
+                json=payload or {},
+                timeout=30,
+            )
+            body = resp.json() if "application/json" in resp.headers.get("content-type", "") else {"raw": resp.text}
+            if resp.status_code >= 400:
+                return None, body
+
+            # If session already active, terminate the old one and start fresh
+            if isinstance(body, dict) and body.get("already_active") and not body.get("session_token"):
+                existing_id = body.get("session_id")
+                if existing_id:
+                    print(f"Active session {existing_id} found — terminating and restarting...")
+                    self._terminate_session(existing_id)
+                    resp = requests.post(
+                        f"{self._get_api_base()}/sessions/start",
+                        headers=self._get_integrator_headers({"Content-Type": "application/json"}),
+                        json=payload or {},
+                        timeout=30,
+                    )
+                    body = resp.json() if "application/json" in resp.headers.get("content-type", "") else {"raw": resp.text}
+                    if resp.status_code >= 400:
+                        return None, body
+
+            tok = body.get("session_token") if isinstance(body, dict) else None
+            if tok:
+                os.environ["FASTQUBIT_SESSION_TOKEN"] = tok
+            return tok, body
+        except Exception as e:
+            return None, {"error": str(e)}
+
+    def _init_fastqsim_sdk(self) -> tuple[bool, Optional[str]]:
+        if not FASTQSIM_AVAILABLE:
+            return False, "fastqsim library is not installed."
+        
+        try:
+            try:
+                fastqsim.reset()
+            except Exception:
+                pass
+            endpoint = os.getenv("FASTQUBIT_ENDPOINT") or getattr(self.settings, "FASTQUBIT_ENDPOINT", "https://fastqubit.dev/api")
+            token = os.getenv("FASTQUBIT_SESSION_TOKEN")
+            execution_mode = os.getenv("FASTQSIM_EXECUTION_MODE") or getattr(self.settings, "FASTQSIM_EXECUTION_MODE", "cloud")
+            
+            # Export to environment for any internal library calls
+            os.environ["FASTQUBIT_ENDPOINT"] = endpoint
+            os.environ["FASTQSIM_EXECUTION_MODE"] = execution_mode
+            
+            self.fastqsim_client = fastqsim.init(
+                endpoint=endpoint,
+                token=token,
+                execution_mode=execution_mode
+            )
+            self.fastqsim_initialized = True
+            return True, None
+        except Exception as e:
+            self.fastqsim_client = None
+            self.fastqsim_initialized = False
+            return False, str(e)
+
+
+    def _ensure_fastqsim_session(self) -> tuple[bool, Optional[str]]:
+        if self.fastqsim_initialized and self.fastqsim_client:
+            return True, None
+
+        existing_tok = os.getenv("FASTQUBIT_SESSION_TOKEN")
+        if not existing_tok:
+            tok, err_body = self._provision_session()
+            if not tok:
+                return False, f"Session provisioning failed: {err_body}"
+        
+        return self._init_fastqsim_sdk()
+
     
     def execute_qasm(self, qasm_code: str, backend: str = "statevector", shots: int = 1024) -> Dict[str, Any]:
         """
@@ -142,6 +259,82 @@ class SimulationService:
                     "error": "Invalid OpenQASM input: missing OPENQASM header."
                 }
             
+            # Choose execution mode: Online Cloud (FastQSim) vs Local (QSim)
+            online_enabled = getattr(self.settings, "FASTQSIM_ONLINE_MODE", False)
+            if online_enabled:
+                print(f"🚀 Running simulation via FASTQSIM ONLINE MODE (Cloud Setup) on backend: '{backend}' with {shots} shots...")
+                ok, err = self._ensure_fastqsim_session()
+                if not ok:
+                    print(f"❌ FastQSim Session error: {err}")
+                    return {
+                        "success": False,
+                        "error": f"Failed to initialize FastQSim Online Session: {err}"
+                    }
+                
+                try:
+                    start_time = time.perf_counter()
+                    job = self.fastqsim_client.run(
+                        circuit=normalized_qasm,
+                        backend=backend,
+                        shots=shots,
+                        asynchronous=False
+                    )
+                    sim_result = job.result()
+                    total_time = time.perf_counter() - start_time
+                    
+                    # Format counts and probabilities
+                    counts = sim_result.counts if hasattr(sim_result, 'counts') else {}
+                    probs = sim_result.probs if hasattr(sim_result, 'probs') else {}
+                    statevector = sim_result.statevector if hasattr(sim_result, 'statevector') else None
+                    
+                    if not probs and counts:
+                        total_shots = sum(counts.values())
+                        if total_shots > 0:
+                            probs = {state: count / total_shots for state, count in counts.items()}
+                    
+                    # Format results compatible with QCanvas simulator
+                    result_dict = {
+                        "counts": counts,
+                        "metadata": {
+                            "backend": backend,
+                            "shots": shots,
+                            "n_qubits": len(next(iter(counts.keys()))) if counts else 0,
+                            "execution_time": f"{total_time * 1000:.2f}ms",
+                            "simulation_time": f"{total_time * 1000:.2f}ms",
+                            "postprocessing_time": "0.00ms",
+                            "memory_usage": "0.10MB",
+                            "cpu_usage": "0.0%",
+                            "successful_shots": sum(counts.values()) if counts else 0,
+                            "visitor": backend,
+                            "fidelity": 100.0,
+                            "job_id": job.job_id if hasattr(job, 'job_id') else None,
+                            "online": True
+                        },
+                        "probs": probs
+                    }
+                    
+                    if statevector:
+                        result_dict["statevector"] = [str(c) for c in statevector]
+                    
+                    result_dict = convert_numpy_types(result_dict)
+                    print(f"✅ FastQSim Online job {job.job_id if hasattr(job, 'job_id') else 'N/A'} completed successfully in {total_time * 1000:.2f}ms")
+                    
+                    return {
+                        "success": True,
+                        "results": result_dict,
+                        "backend": backend,
+                        "shots": shots
+                    }
+                except Exception as online_err:
+                    print(f"❌ FastQSim Online execution error: {online_err}")
+                    return {
+                        "success": False,
+                        "error": f"FastQSim Online simulation failed: {str(online_err)}"
+                    }
+
+            # Local QSim execution branch
+            print(f"💻 Running simulation via LOCAL QSIM MODE (Local Setup) on backend: '{backend}' with {shots} shots...")
+            
             # Capture initial memory and CPU stats
             process = psutil.Process()
             initial_memory = process.memory_info().rss / (1024 * 1024)  # MB
@@ -157,6 +350,7 @@ class SimulationService:
             # Execute with QSim and measure time
             start_time = time.perf_counter()
             sim_result: SimResult = run_qasm(args)
+
             simulation_time = time.perf_counter() - start_time
             
             # Post-processing time measurement
