@@ -186,13 +186,45 @@ async def execute_hybrid(request: HybridExecuteRequest):
         )
     
     try:
+        # Pre-provision FastQSim session if the code uses fastqsim
+        if "fastqsim" in request.code:
+            try:
+                from app.services.simulation_service import SimulationService
+                sim_service = SimulationService()
+                ok, err = sim_service._ensure_fastqsim_session()
+                if not ok:
+                    print(f"⚠️ FastQSim session pre-provisioning warning: {err}")
+            except Exception as e:
+                print(f"⚠️ Failed to pre-provision FastQSim session: {e}")
+
+        # Use the larger of request.timeout or HYBRID_MAX_EXECUTION_TIME to honor server-side increases
+        exec_timeout = request.timeout
+        if exec_timeout is None or exec_timeout < HYBRID_MAX_EXECUTION_TIME:
+            exec_timeout = HYBRID_MAX_EXECUTION_TIME
+
         # Execute in sandbox
         result = execute_sandboxed(
             code=request.code,
-            timeout=request.timeout,
+            timeout=exec_timeout,
             framework_hint=request.framework
         )
         
+        # Print captured simulation results to terminal
+        if result.simulation_results:
+            print("\n" + "="*70)
+            print("📊 [API] RETURNING CAPTURED SIMULATION RESULTS TO FRONTEND")
+            print("="*70)
+            for idx, sim in enumerate(result.simulation_results):
+                print(f"Simulation #{idx+1}:")
+                print(f"  Backend: {sim.get('backend')}")
+                print(f"  Shots: {sim.get('shots')}")
+                print(f"  Qubits: {sim.get('n_qubits')}")
+                print(f"  Execution Time: {sim.get('execution_time')}")
+                print(f"  Counts: {sim.get('counts')}")
+            print("="*70 + "\n")
+        else:
+            print("\nℹ️ [API] No sandboxed simulation results were captured from this execution.\n")
+
         # Convert to response model
         return HybridExecuteResponse(
             success=result.success,

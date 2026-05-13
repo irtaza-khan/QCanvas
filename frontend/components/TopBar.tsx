@@ -290,7 +290,7 @@ export default function TopBar({
       const result = await quantumApi.executeHybrid(
         activeFile.content,
         detected || inputLanguage || undefined,
-        30  // timeout
+        180  // timeout
       );
 
       // Handle API-level errors (404, network errors, etc.)

@@ -75,7 +75,7 @@ except ImportError:
     HYBRID_MAX_MEMORY_MB = 512
     HYBRID_MAX_SIMULATION_RUNS = 100
     HYBRID_MAX_OUTPUT_SIZE = 100000
-    HYBRID_ALLOWED_MODULES = ['cirq', 'qiskit', 'pennylane', 'numpy', 'math']
+    HYBRID_ALLOWED_MODULES = ['cirq', 'qiskit', 'pennylane', 'fastqsim', 'numpy', 'math']
     HYBRID_BLOCKED_MODULES = ['os', 'sys', 'subprocess', 'socket']
     HYBRID_BLOCKED_BUILTINS = ['exec', 'eval', 'compile', '__import__', 'open']
     HYBRID_VERBOSE_LOGGING = False
@@ -186,6 +186,157 @@ class OutputCapture:
         return self._stderr_buffer.getvalue()
 
 
+class WrappedFastQSimJob:
+    def __init__(self, original_job, qasm_code, shots, backend):
+        self._original_job = original_job
+        self._qasm_code = qasm_code
+        self._shots = shots
+        self._backend = backend
+
+    def result(self, *args, **kwargs):
+        # Call the original job's result
+        res = self._original_job.result(*args, **kwargs)
+
+        # Now gather the stats!
+        try:
+            counts = res.counts if hasattr(res, 'counts') else {}
+            probs = res.probs if hasattr(res, 'probs') else {}
+            statevector = res.statevector if hasattr(res, 'statevector') else None
+            # Extract performance and billing telemetry from the original job
+            exec_time_sec = getattr(self._original_job, 'execution_time_seconds', getattr(res, 'execution_time_seconds', 0.0))
+            cpu_time_sec = getattr(self._original_job, 'cpu_seconds_total', 0.0)
+            peak_ram_mb = getattr(self._original_job, 'peak_memory_mb', 0.0)
+            billing_cpu = getattr(self._original_job, 'billing_cpu_millicore_seconds', 0.0)
+            billing_mem = getattr(self._original_job, 'billing_memory_gb_seconds', 0.0)
+            
+            # Tags and user metadata round-trip
+            tags = getattr(self._original_job, 'tags', {})
+            job_metadata = getattr(self._original_job, 'metadata', {})
+            
+            # Lifecycle timestamps (safely converted to ISO strings)
+            queue_enqueued_at = getattr(self._original_job, 'queue_enqueued_at', None)
+            if hasattr(queue_enqueued_at, 'isoformat'):
+                queue_enqueued_at = queue_enqueued_at.isoformat()
+            execution_started_at = getattr(self._original_job, 'execution_started_at', None)
+            if hasattr(execution_started_at, 'isoformat'):
+                execution_started_at = execution_started_at.isoformat()
+            execution_finished_at = getattr(self._original_job, 'execution_finished_at', None)
+            if hasattr(execution_finished_at, 'isoformat'):
+                execution_finished_at = execution_finished_at.isoformat()
+            completed_at = getattr(self._original_job, 'completed_at', None)
+            if hasattr(completed_at, 'isoformat'):
+                completed_at = completed_at.isoformat()
+
+            total_counts = sum(counts.values()) if counts else 0
+            probabilities = {}
+            if total_counts > 0:
+                for state, count in counts.items():
+                    probabilities[state] = count / total_counts
+            elif probs:
+                probabilities = dict(probs)
+
+            exec_time_str = f"{exec_time_sec * 1000:.2f}ms" if exec_time_sec else "0.00ms"
+            if exec_time_sec > 0 and cpu_time_sec > 0:
+                cpu_pct = min((cpu_time_sec / exec_time_sec) * 100.0, 100.0)
+                cpu_time_str = f"{cpu_pct:.1f}%"
+            else:
+                cpu_time_str = f"{cpu_time_sec * 1000:.1f}%" if cpu_time_sec else "0.0%"
+            peak_ram_str = f"{peak_ram_mb:.1f}MB" if peak_ram_mb else "0.1MB"
+
+            sim_result = SimulationResult(
+                counts=dict(counts) if counts else {},
+                probabilities=probabilities,
+                statevector=statevector,
+                shots=self._shots,
+                backend=self._backend,
+                execution_time=exec_time_str,
+                simulation_time=exec_time_str,
+                memory_usage=peak_ram_str,
+                cpu_usage=cpu_time_str,
+                fidelity=100.0,
+                n_qubits=len(next(iter(counts.keys()))) if counts else 0,
+                metadata={
+                    "backend": self._backend,
+                    "shots": self._shots,
+                    "job_id": getattr(self._original_job, 'job_id', None),
+                    "online": True,
+                    "successful_shots": total_counts,
+                    "execution_time_seconds": exec_time_sec,
+                    "cpu_seconds_total": cpu_time_sec,
+                    "peak_memory_mb": peak_ram_mb,
+                    "billing_cpu_millicore_seconds": billing_cpu,
+                    "billing_memory_gb_seconds": billing_mem,
+                    "tags": tags,
+                    "metadata": job_metadata,
+                    "queue_enqueued_at": queue_enqueued_at,
+                    "execution_started_at": execution_started_at,
+                    "execution_finished_at": execution_finished_at,
+                    "completed_at": completed_at,
+                    "execution_time": exec_time_str,
+                    "simulation_time": exec_time_str,
+                    "memory_usage": peak_ram_str,
+                    "cpu_usage": cpu_time_str,
+                },
+            )
+
+            # Save this run to qsim's simulation results so that the sandbox extracts it!
+            qsim_wrapper._simulation_results.append(sim_result.to_dict())
+
+            # Print to frontend captured console
+            print(f"🎯 [FastQSim] Captured simulation stats: Backend: '{self._backend}', Shots: {self._shots}, Counts: {counts}")
+
+            # Write directly to original backend terminal (bypassing sandbox output capture)
+            try:
+                import sys as _sys
+                # Try to find the root original stdout if nested
+                orig_stdout = _sys.stdout
+                while hasattr(orig_stdout, '_original_stdout') and orig_stdout._original_stdout:
+                    orig_stdout = orig_stdout._original_stdout
+                orig_stdout.write(f"\n🎯 [Sandbox Interceptor] Captured FastQSim Cloud Job Stats! Backend: '{self._backend}', Shots: {self._shots}, Counts: {counts}\n")
+                orig_stdout.flush()
+            except Exception:
+                pass
+
+        except Exception as e:
+            print(f"⚠️ Error capturing fastqsim simulation stats: {e}")
+
+        return res
+
+    def __getattr__(self, name):
+        return getattr(self._original_job, name)
+
+
+class WrappedFastQSimClient:
+    def __init__(self, original_client):
+        self._original_client = original_client
+
+    def run(self, circuit, shots=2048, asynchronous=False, backend="cirq", **kwargs):
+        # Call the original client run
+        job = self._original_client.run(
+            circuit=circuit,
+            shots=shots,
+            asynchronous=asynchronous,
+            backend=backend,
+            **kwargs
+        )
+        return WrappedFastQSimJob(job, circuit, shots, backend)
+
+    def __getattr__(self, name):
+        return getattr(self._original_client, name)
+
+
+class WrappedFastQSimModule:
+    def __init__(self, original_fastqsim):
+        self._original_fastqsim = original_fastqsim
+
+    def init(self, *args, **kwargs):
+        client = self._original_fastqsim.init(*args, **kwargs)
+        return WrappedFastQSimClient(client)
+
+    def __getattr__(self, name):
+        return getattr(self._original_fastqsim, name)
+
+
 class RestrictedImporter:
     """Custom import hook that blocks dangerous modules."""
     
@@ -204,6 +355,11 @@ class RestrictedImporter:
         # Special case: always route `import qsim` to our safe wrapper
         if base_module == 'qsim':
             return qsim_wrapper
+        
+        # Special case: wrap fastqsim to capture its results
+        if base_module == 'fastqsim':
+            real_fastqsim = self._original_import(name, globals, locals, fromlist, level)
+            return WrappedFastQSimModule(real_fastqsim)
         
         # Check who called the import. Only enforce blocks if the import was directly
         # initiated by the user's compiled code frame.

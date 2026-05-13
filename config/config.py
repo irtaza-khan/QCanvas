@@ -181,13 +181,13 @@ HYBRID_BLOCK_CODE_EXECUTION: bool = True
 # HYBRID EXECUTION LIMITS
 # =============================================================================
 # Maximum execution time in seconds (0 = no limit)
-HYBRID_MAX_EXECUTION_TIME: int = 30
+HYBRID_MAX_EXECUTION_TIME: int = 180
 
 # Maximum memory usage in MB (0 = no limit)
 HYBRID_MAX_MEMORY_MB: int = 512
 
 # Maximum number of simulation runs per execution (0 = no limit)
-HYBRID_MAX_SIMULATION_RUNS: int = 100
+HYBRID_MAX_SIMULATION_RUNS: int = 10000
 
 # Maximum output size in characters (0 = no limit)
 HYBRID_MAX_OUTPUT_SIZE: int = 100000
@@ -200,6 +200,7 @@ HYBRID_ALLOWED_MODULES: list = [
     'cirq',
     'qiskit', 
     'pennylane',
+    'fastqsim',
     'qml',
     'numpy',
     'math',

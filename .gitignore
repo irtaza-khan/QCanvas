@@ -330,3 +330,15 @@ examples/temp/
 test_results/
 benchmark_results/
 test-frontend/
+
+# Additional workspace & scratch ignores
+scratch/
+temp/
+tmp/
+*.tmp
+*.temp
+*.scratch
+.gemini/
+backend/app/cache/
+backend/app/temp/
+frontend/.next/

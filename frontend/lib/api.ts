@@ -499,7 +499,7 @@ export const quantumApi = {
       body: JSON.stringify({
         code,
         framework,
-        timeout: timeout ?? 30,
+        timeout: timeout ?? 180,
       }),
     })
   },

@@ -128,7 +128,7 @@ export function useExecutionActions({
     try {
       toast.loading('Running hybrid Python code...', { id: 'hybrid-execution' })
       const detected = detectFramework(activeFile.content, activeFile.name)
-      const result = await quantumApi.executeHybrid(activeFile.content, detected || inputLanguage || undefined, 30)
+      const result = await quantumApi.executeHybrid(activeFile.content, detected || inputLanguage || undefined, 180)
 
       if (!result.success) {
         let errorMsg = result.error || 'Hybrid execution failed'
