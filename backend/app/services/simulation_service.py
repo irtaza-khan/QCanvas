@@ -161,12 +161,12 @@ class SimulationService:
             return False, str(e)
 
 
-    def _ensure_fastqsim_session(self) -> tuple[bool, Optional[str]]:
-        if self.fastqsim_initialized and self.fastqsim_client:
+    def _ensure_fastqsim_session(self, force_refresh: bool = False) -> tuple[bool, Optional[str]]:
+        if not force_refresh and self.fastqsim_initialized and self.fastqsim_client:
             return True, None
 
         existing_tok = os.getenv("FASTQUBIT_SESSION_TOKEN")
-        if not existing_tok:
+        if force_refresh or not existing_tok:
             tok, err_body = self._provision_session()
             if not tok:
                 return False, f"Session provisioning failed: {err_body}"
@@ -219,6 +219,32 @@ class SimulationService:
                 "error": f"Simulation failed: {str(e)}"
             }
     
+    def _get_online_mode(self) -> bool:
+        # Ultra-fast short-circuit: if explicitly set in environment, bypass Boto3 entirely!
+        val = os.getenv("FASTQSIM_ONLINE_MODE")
+        if val:
+            return val.lower() in ('true', '1', 'yes')
+
+        # 1. First check if an AWS SSM Parameter exists for instant runtime toggling
+        ssm_param_name = os.getenv("SSM_FASTQSIM_ONLINE_MODE_PARAM", "/qcanvas/production/fastqsim_online_mode")
+        try:
+            import boto3
+            # Use short timeouts/retries so local dev doesn't hang if AWS credentials aren't configured
+            config = boto3.session.Config(connect_timeout=1, read_timeout=1, retries={'max_attempts': 1})
+            ssm = boto3.client('ssm', config=config)
+            response = ssm.get_parameter(Name=ssm_param_name, WithDecryption=False)
+            val = response['Parameter']['Value'].strip().lower()
+            if val in ('true', '1', 'yes'):
+                return True
+            if val in ('false', '0', 'no'):
+                return False
+        except Exception:
+            # Silently fall through to local settings if SSM parameter isn't found or AWS isn't configured
+            pass
+
+        # 2. Fallback to standard environment / settings variable
+        return getattr(self.settings, "FASTQSIM_ONLINE_MODE", False)
+
     def execute_qasm_with_qsim(self, qasm_code: str, backend: str = "cirq", shots: int = 1024) -> Dict[str, Any]:
         """
         Execute OpenQASM code using QSim
@@ -260,7 +286,7 @@ class SimulationService:
                 }
             
             # Choose execution mode: Online Cloud (FastQSim) vs Local (QSim)
-            online_enabled = getattr(self.settings, "FASTQSIM_ONLINE_MODE", False)
+            online_enabled = self._get_online_mode()
             if online_enabled:
                 print(f"🚀 Running simulation via FASTQSIM ONLINE MODE (Cloud Setup) on backend: '{backend}' with {shots} shots...")
                 ok, err = self._ensure_fastqsim_session()
@@ -281,6 +307,24 @@ class SimulationService:
                     )
                     sim_result = job.result()
                     total_time = time.perf_counter() - start_time
+                except Exception as e:
+                    if "Session is no longer active" in str(e) or "Authentication failed" in str(e):
+                        print("🔄 FastQSim session expired. Provisioning a fresh session token...")
+                        ok, err = self._ensure_fastqsim_session(force_refresh=True)
+                        if not ok:
+                            return {"success": False, "error": f"Failed to refresh FastQSim Session: {err}"}
+                        start_time = time.perf_counter()
+                        job = self.fastqsim_client.run(
+                            circuit=normalized_qasm,
+                            backend=backend,
+                            shots=shots,
+                            asynchronous=False
+                        )
+                        sim_result = job.result()
+                        total_time = time.perf_counter() - start_time
+                    else:
+                        raise e
+                    
                     
                     # Format counts and probabilities
                     counts = sim_result.counts if hasattr(sim_result, 'counts') else {}
@@ -292,6 +336,28 @@ class SimulationService:
                         if total_shots > 0:
                             probs = {state: count / total_shots for state, count in counts.items()}
                     
+                    exec_time_sec = getattr(job, 'execution_time_seconds', getattr(sim_result, 'execution_time_seconds', 0.0))
+                    cpu_time_sec = getattr(job, 'cpu_seconds_total', 0.0)
+                    peak_ram_mb = getattr(job, 'peak_memory_mb', 0.0)
+                    billing_cpu = getattr(job, 'billing_cpu_millicore_seconds', 0.0)
+                    billing_mem = getattr(job, 'billing_memory_gb_seconds', 0.0)
+                    
+                    tags = getattr(job, 'tags', {})
+                    job_metadata = getattr(job, 'metadata', {})
+                    
+                    def _iso(val):
+                        return val.isoformat() if hasattr(val, 'isoformat') else None
+                    
+                    if exec_time_sec > 0:
+                        exec_time_str = f"{exec_time_sec * 1000:.2f}ms"
+                        cpu_pct = min((cpu_time_sec / exec_time_sec) * 100.0, 100.0) if cpu_time_sec > 0 else 0.0
+                        cpu_usage_str = f"{cpu_pct:.1f}%"
+                    else:
+                        exec_time_str = f"{total_time * 1000:.2f}ms"
+                        cpu_usage_str = "0.0%"
+                    
+                    memory_usage_str = f"{peak_ram_mb:.1f}MB" if peak_ram_mb > 0 else "0.10MB"
+
                     # Format results compatible with QCanvas simulator
                     result_dict = {
                         "counts": counts,
@@ -299,16 +365,27 @@ class SimulationService:
                             "backend": backend,
                             "shots": shots,
                             "n_qubits": len(next(iter(counts.keys()))) if counts else 0,
-                            "execution_time": f"{total_time * 1000:.2f}ms",
-                            "simulation_time": f"{total_time * 1000:.2f}ms",
+                            "execution_time": exec_time_str,
+                            "simulation_time": exec_time_str,
                             "postprocessing_time": "0.00ms",
-                            "memory_usage": "0.10MB",
-                            "cpu_usage": "0.0%",
+                            "memory_usage": memory_usage_str,
+                            "cpu_usage": cpu_usage_str,
                             "successful_shots": sum(counts.values()) if counts else 0,
                             "visitor": backend,
                             "fidelity": 100.0,
                             "job_id": job.job_id if hasattr(job, 'job_id') else None,
-                            "online": True
+                            "online": True,
+                            "execution_time_seconds": exec_time_sec if exec_time_sec > 0 else total_time,
+                            "cpu_seconds_total": cpu_time_sec,
+                            "peak_memory_mb": peak_ram_mb if peak_ram_mb > 0 else 0.1,
+                            "billing_cpu_millicore_seconds": billing_cpu,
+                            "billing_memory_gb_seconds": billing_mem,
+                            "tags": tags,
+                            "metadata": job_metadata,
+                            "queue_enqueued_at": _iso(getattr(job, 'queue_enqueued_at', None)),
+                            "execution_started_at": _iso(getattr(job, 'execution_started_at', None)),
+                            "execution_finished_at": _iso(getattr(job, 'execution_finished_at', None)),
+                            "completed_at": _iso(getattr(job, 'completed_at', None)),
                         },
                         "probs": probs
                     }

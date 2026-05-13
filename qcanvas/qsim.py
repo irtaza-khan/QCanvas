@@ -102,6 +102,97 @@ def run(
         raise ValueError(f"Shots must be non-negative, got: {shots}")
     
     try:
+        # Check if online mode is enabled for cloud forwarding
+        online_mode = False
+        try:
+            import os
+            val = os.getenv("FASTQSIM_ONLINE_MODE", "false").lower()
+            if val in ("true", "1", "yes"):
+                online_mode = True
+            else:
+                ssm_param = os.getenv("SSM_FASTQSIM_ONLINE_MODE_PARAM", "/qcanvas/production/fastqsim_online_mode")
+                import boto3
+                config = boto3.session.Config(connect_timeout=1, read_timeout=1, retries={'max_attempts': 1})
+                ssm = boto3.client('ssm', config=config)
+                resp = ssm.get_parameter(Name=ssm_param, WithDecryption=False)
+                if resp['Parameter']['Value'].strip().lower() in ("true", "1", "yes"):
+                    online_mode = True
+        except Exception:
+            pass
+
+        if online_mode:
+            print(f"🚀 [QSim Wrapper] Forwarding simulation to FastQSim Online Cloud on backend '{backend}'...")
+            import fastqsim
+            client = fastqsim.init()
+            job = client.run(circuit=qasm_code, backend=backend, shots=shots, asynchronous=False)
+            res = job.result()
+            
+            counts = res.counts if hasattr(res, 'counts') else {}
+            probs = res.probs if hasattr(res, 'probs') else {}
+            statevector = res.statevector if hasattr(res, 'statevector') else None
+            exec_time_sec = getattr(job, 'execution_time_seconds', getattr(res, 'execution_time_seconds', 0.0))
+            cpu_time_sec = getattr(job, 'cpu_seconds_total', 0.0)
+            peak_ram_mb = getattr(job, 'peak_memory_mb', 0.0)
+            billing_cpu = getattr(job, 'billing_cpu_millicore_seconds', 0.0)
+            billing_mem = getattr(job, 'billing_memory_gb_seconds', 0.0)
+            tags = getattr(job, 'tags', {})
+            job_metadata = getattr(job, 'metadata', {})
+            
+            def _iso(val):
+                return val.isoformat() if hasattr(val, 'isoformat') else None
+            
+            total_counts = sum(counts.values()) if counts else 0
+            probabilities = {}
+            if total_counts > 0:
+                for state, count in counts.items():
+                    probabilities[state] = count / total_counts
+            elif probs:
+                probabilities = dict(probs)
+                
+            exec_time_str = f"{exec_time_sec * 1000:.2f}ms" if exec_time_sec > 0 else "10.00ms"
+            cpu_pct = min((cpu_time_sec / exec_time_sec) * 100.0, 100.0) if exec_time_sec > 0 and cpu_time_sec > 0 else 0.0
+            cpu_usage_str = f"{cpu_pct:.1f}%"
+            memory_usage_str = f"{peak_ram_mb:.1f}MB" if peak_ram_mb > 0 else "0.10MB"
+            
+            result = SimulationResult(
+                counts=dict(counts) if counts else {},
+                probabilities=probabilities,
+                statevector=statevector,
+                shots=shots,
+                backend=backend,
+                execution_time=exec_time_str,
+                simulation_time=exec_time_str,
+                memory_usage=memory_usage_str,
+                cpu_usage=cpu_usage_str,
+                fidelity=100.0,
+                n_qubits=len(next(iter(counts.keys()))) if counts else 0,
+                metadata={
+                    "backend": backend,
+                    "shots": shots,
+                    "job_id": getattr(job, 'job_id', None),
+                    "online": True,
+                    "successful_shots": total_counts,
+                    "execution_time_seconds": exec_time_sec,
+                    "cpu_seconds_total": cpu_time_sec,
+                    "peak_memory_mb": peak_ram_mb,
+                    "billing_cpu_millicore_seconds": billing_cpu,
+                    "billing_memory_gb_seconds": billing_mem,
+                    "tags": tags,
+                    "metadata": job_metadata,
+                    "queue_enqueued_at": _iso(getattr(job, 'queue_enqueued_at', None)),
+                    "execution_started_at": _iso(getattr(job, 'execution_started_at', None)),
+                    "execution_finished_at": _iso(getattr(job, 'execution_finished_at', None)),
+                    "completed_at": _iso(getattr(job, 'completed_at', None)),
+                    "execution_time": exec_time_str,
+                    "simulation_time": exec_time_str,
+                    "memory_usage": memory_usage_str,
+                    "cpu_usage": cpu_usage_str,
+                },
+            )
+            _simulation_results.append(result.to_dict())
+            return result
+
+        # Fallback to local QSim execution
         # Create run arguments
         args = _RunArgs(
             qasm_input=qasm_code,
