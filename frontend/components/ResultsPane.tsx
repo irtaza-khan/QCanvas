@@ -1549,13 +1549,13 @@ print(result.counts)`}
                           {executionStats.execution.backend}
                         </span>
                       </div>
-                      {quantumResults?.metadata?.visitor && (
+                      {(quantumResults?.metadata as any)?.visitor && (
                         <div className="flex items-center">
                           <span className="text-xs text-black dark:text-gray-400 mr-2">
                             Visitor:
                           </span>
                           <span className="px-2 py-1 rounded-md bg-violet-500/20 text-violet-800 dark:text-violet-300 text-xs font-mono">
-                            {quantumResults.metadata.visitor}
+                            {(quantumResults?.metadata as any)?.visitor}
                           </span>
                         </div>
                       )}
@@ -1603,7 +1603,7 @@ print(result.counts)`}
                       </div>
                       <div className="text-center p-3 rounded-lg bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20">
                         <div className="text-xl font-bold text-pink-400">
-                          {quantumResults.metadata.n_qubits}
+                          {(quantumResults.metadata as any).n_qubits}
                         </div>
                         <div className="text-xs text-black dark:text-gray-400">
                           Qubits
@@ -1650,7 +1650,7 @@ print(result.counts)`}
               )}
 
               {/* Cloud Execution & Billing Telemetry - Premium Card */}
-              {quantumResults?.metadata?.job_id && (
+              {(quantumResults?.metadata as any)?.job_id && (
                 <div className="rounded-xl border border-quantum-blue/30 overflow-hidden bg-gradient-to-br from-quantum-blue-dark/20 to-gray-900 shadow-lg">
                   <div className="px-4 py-3 border-b border-quantum-blue/20 bg-quantum-blue-dark/40 flex items-center justify-between">
                     <h4 className="text-sm font-semibold text-white flex items-center">
@@ -1658,7 +1658,7 @@ print(result.counts)`}
                       FastQSim Cloud Job Telemetry
                     </h4>
                     <span className="px-2 py-0.5 text-xs font-mono bg-cyan-500/20 text-cyan-300 rounded border border-cyan-500/30">
-                      ID: {(quantumResults.metadata as any).job_id}
+                      ID: {(quantumResults?.metadata as any)?.job_id}
                     </span>
                   </div>
                   <div className="p-4 space-y-4">
@@ -1667,31 +1667,31 @@ print(result.counts)`}
                       <div className="bg-black/30 p-3 rounded-lg border border-white/5">
                         <div className="text-xs text-black dark:text-gray-400">Queue Time</div>
                         <div className="text-sm font-mono text-white mt-1">
-                          {(quantumResults.metadata as any).queue_enqueued_at ? new Date((quantumResults.metadata as any).queue_enqueued_at).toLocaleTimeString() : "<1s"}
+                          {(quantumResults?.metadata as any)?.queue_enqueued_at ? new Date((quantumResults?.metadata as any)?.queue_enqueued_at).toLocaleTimeString() : "<1s"}
                         </div>
                       </div>
                       <div className="bg-black/30 p-3 rounded-lg border border-white/5">
                         <div className="text-xs text-black dark:text-gray-400">Execution Start</div>
                         <div className="text-sm font-mono text-white mt-1">
-                          {(quantumResults.metadata as any).execution_started_at ? new Date((quantumResults.metadata as any).execution_started_at).toLocaleTimeString() : "N/A"}
+                          {(quantumResults?.metadata as any)?.execution_started_at ? new Date((quantumResults?.metadata as any)?.execution_started_at).toLocaleTimeString() : "N/A"}
                         </div>
                       </div>
                       <div className="bg-black/30 p-3 rounded-lg border border-white/5">
                         <div className="text-xs text-black dark:text-gray-400">Wall Time</div>
                         <div className="text-sm font-mono text-cyan-400 mt-1">
-                          {typeof (quantumResults.metadata as any).peak_memory_mb !== 'undefined' && (quantumResults.metadata as any).execution_time_seconds ? `${(quantumResults.metadata as any).execution_time_seconds.toFixed(3)}s` : (quantumResults.metadata as any).execution_time || "N/A"}
+                          {typeof (quantumResults?.metadata as any)?.peak_memory_mb !== 'undefined' && (quantumResults?.metadata as any)?.execution_time_seconds ? `${(quantumResults?.metadata as any)?.execution_time_seconds.toFixed(3)}s` : (quantumResults?.metadata as any)?.execution_time || "N/A"}
                         </div>
                       </div>
                       <div className="bg-black/30 p-3 rounded-lg border border-white/5">
                         <div className="text-xs text-black dark:text-gray-400">Peak RAM</div>
                         <div className="text-sm font-mono text-emerald-400 mt-1">
-                          {typeof (quantumResults.metadata as any).peak_memory_mb !== 'undefined' ? `${(quantumResults.metadata as any).peak_memory_mb.toFixed(1)} MB` : (quantumResults.metadata as any).memory_usage || "N/A"}
+                          {typeof (quantumResults?.metadata as any)?.peak_memory_mb !== 'undefined' ? `${(quantumResults?.metadata as any)?.peak_memory_mb.toFixed(1)} MB` : (quantumResults?.metadata as any)?.memory_usage || "N/A"}
                         </div>
                       </div>
                       <div className="bg-black/30 p-3 rounded-lg border border-white/5">
                         <div className="text-xs text-black dark:text-gray-400">CPU Compute</div>
                         <div className="text-sm font-mono text-yellow-400 mt-1">
-                          {typeof (quantumResults.metadata as any).cpu_seconds_total !== 'undefined' ? `${(quantumResults.metadata as any).cpu_seconds_total.toFixed(3)}s` : "N/A"}
+                          {typeof (quantumResults?.metadata as any)?.cpu_seconds_total !== 'undefined' ? `${(quantumResults?.metadata as any)?.cpu_seconds_total.toFixed(3)}s` : "N/A"}
                         </div>
                       </div>
                     </div>
@@ -1706,35 +1706,35 @@ print(result.counts)`}
                         <div>
                           <div className="text-xs text-black dark:text-gray-400">CPU Millicore-Seconds</div>
                           <div className="text-base font-mono font-bold text-yellow-400">
-                            {typeof (quantumResults.metadata as any).billing_cpu_millicore_seconds !== 'undefined' ? (quantumResults.metadata as any).billing_cpu_millicore_seconds.toFixed(2) : "0.00"}
+                            {typeof (quantumResults?.metadata as any)?.billing_cpu_millicore_seconds !== 'undefined' ? (quantumResults?.metadata as any)?.billing_cpu_millicore_seconds.toFixed(2) : "0.00"}
                           </div>
                         </div>
                         <div>
                           <div className="text-xs text-black dark:text-gray-400">Memory GB-Seconds</div>
                           <div className="text-base font-mono font-bold text-amber-400">
-                            {typeof (quantumResults.metadata as any).billing_memory_gb_seconds !== 'undefined' ? (quantumResults.metadata as any).billing_memory_gb_seconds.toFixed(4) : "0.0000"}
+                            {typeof (quantumResults?.metadata as any)?.billing_memory_gb_seconds !== 'undefined' ? (quantumResults?.metadata as any)?.billing_memory_gb_seconds.toFixed(4) : "0.0000"}
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Tags and metadata pills */}
-                    {((quantumResults.metadata as any).tags || (quantumResults.metadata as any).metadata) && (
+                    {((quantumResults?.metadata as any)?.tags || (quantumResults?.metadata as any)?.metadata) && (
                       <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
-                        {(quantumResults.metadata as any).tags && Object.keys((quantumResults.metadata as any).tags).length > 0 && (
+                        {(quantumResults?.metadata as any)?.tags && Object.keys((quantumResults?.metadata as any)?.tags).length > 0 && (
                           <>
                             <span className="text-xs text-black dark:text-gray-400 mr-1">Tags:</span>
-                            {Object.entries((quantumResults.metadata as any).tags).map(([k, v]) => (
+                            {Object.entries((quantumResults?.metadata as any)?.tags).map(([k, v]) => (
                               <span key={k} className="px-2 py-0.5 text-xs bg-purple-500/20 text-purple-300 rounded-full border border-purple-500/30">
                                 {k}: {String(v)}
                               </span>
                             ))}
                           </>
                         )}
-                        {(quantumResults.metadata as any).metadata && Object.keys((quantumResults.metadata as any).metadata).length > 0 && (
+                        {(quantumResults?.metadata as any)?.metadata && Object.keys((quantumResults?.metadata as any)?.metadata).length > 0 && (
                           <>
                             <span className="text-xs text-black dark:text-gray-400 ml-2 mr-1">Meta:</span>
-                            {Object.entries((quantumResults.metadata as any).metadata).filter(([k]) => k !== 'tags').map(([k, v]) => (
+                            {Object.entries((quantumResults?.metadata as any)?.metadata).filter(([k]) => k !== 'tags').map(([k, v]) => (
                               <span key={k} className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded-full border border-blue-500/30">
                                 {k}: {String(v)}
                               </span>
