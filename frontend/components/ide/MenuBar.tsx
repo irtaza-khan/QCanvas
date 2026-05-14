@@ -10,7 +10,7 @@ import ProfileDropdown from "@/components/ProfileDropdown";
 import ShareModal from "@/components/ShareModal";
 import AddNewLanguage from "@/components/AddNewLanguage";
 import { FILE_TEMPLATES_PRESETS } from "@/lib/fileTemplates";
-import { Code, FileText } from "@/components/Icons";
+import { Code, FileText, Zap } from "@/components/Icons";
 import { Check, X } from "lucide-react";
 
 type MenuId =
@@ -57,6 +57,19 @@ export default function MenuBar({
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const barRef = useRef<HTMLDivElement>(null);
+
+  const isHybrid = useMemo(() => {
+    if (!activeFile) return false;
+    if (activeFile.name.endsWith(".qasm") || activeFile.content.trim().startsWith("OPENQASM")) return false;
+    const content = activeFile.content;
+    return (
+      content.includes("from qcanvas") ||
+      content.includes("import qcanvas") ||
+      content.includes("import qsim") ||
+      content.includes("qcanvas.") ||
+      content.includes("qsim.")
+    );
+  }, [activeFile]);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -365,6 +378,21 @@ export default function MenuBar({
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          {activeFile && (
+            <div className="flex items-center mr-1">
+              {isHybrid ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)] animate-fade-in group cursor-default" title="This file contains Hybrid Quantum-Classical code (utilizing qcanvas/qsim APIs)">
+                  <Zap className="w-3 h-3 text-emerald-400 animate-pulse" />
+                  <span>Hybrid Code</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-quantum-blue-light border border-quantum-blue-light/30 shadow-[0_0_12px_rgba(59,130,246,0.15)] animate-fade-in group cursor-default" title="This file contains Pure Quantum Circuit code">
+                  <Code className="w-3 h-3 text-quantum-blue-light" />
+                  <span>Circuit Code</span>
+                </span>
+              )}
+            </div>
+          )}
           <button
             type="button"
             className="text-xs text-editor-text hover:text-white px-2 py-1 rounded-md hover:bg-editor-bg/10 hidden sm:inline-flex"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image"; // <-- Add this line
 import Link from "next/link";
 import { Play, Save, Moon, Sun, Settings, Zap, HelpCircle, Book, Code, FileText, Download, Search, Lightbulb } from '@/components/Icons';
@@ -75,6 +75,19 @@ export default function TopBar({
   const { executionMode, setExecutionMode, setHybridResult } = useFileStore();
 
   const activeFile = getActiveFile();
+
+  const isHybrid = useMemo(() => {
+    if (!activeFile) return false;
+    if (activeFile.name.endsWith(".qasm") || activeFile.content.trim().startsWith("OPENQASM")) return false;
+    const content = activeFile.content;
+    return (
+      content.includes("from qcanvas") ||
+      content.includes("import qcanvas") ||
+      content.includes("import qsim") ||
+      content.includes("qcanvas.") ||
+      content.includes("qsim.")
+    );
+  }, [activeFile]);
 
   // File navigation functions
   const navigateToNextFile = () => {
@@ -964,6 +977,23 @@ export default function TopBar({
 
           {/* Center - Compile/Run and Options */}
           <div className="flex items-center space-x-1 md:space-x-2">
+            {/* Code Type Tag */}
+            {activeFile && (
+              <div className="flex items-center">
+                {isHybrid ? (
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)] animate-fade-in group cursor-default" title="This file contains Hybrid Quantum-Classical code (utilizing qcanvas/qsim APIs)">
+                    <Zap className="w-3 h-3 text-emerald-400 animate-pulse" />
+                    <span>Hybrid Code</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-quantum-blue-light border border-quantum-blue-light/30 shadow-[0_0_12px_rgba(59,130,246,0.15)] animate-fade-in group cursor-default" title="This file contains Pure Quantum Circuit code">
+                    <Code className="w-3 h-3 text-quantum-blue-light" />
+                    <span>Circuit Code</span>
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Execution Mode Toggle */}
             <div className="hidden md:flex items-center space-x-1 bg-editor-bg rounded-lg p-0.5 border border-editor-border">
               <button
