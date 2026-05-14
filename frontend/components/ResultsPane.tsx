@@ -138,9 +138,9 @@ export default function ResultsPane() {
             shots: hybridResult.simulation_results[0].shots,
             n_qubits: hybridResult.simulation_results[0].n_qubits || hybridResult.simulation_results[0].metadata?.n_qubits || 0,
             execution_time: hybridResult.simulation_results[0].execution_time || hybridResult.simulation_results[0].metadata?.execution_time || "N/A",
-            simulation_time: hybridResult.simulation_results[0].simulation_time || hybridResult.simulation_results[0].metadata?.simulation_time || "N/A",
-            memory_usage: hybridResult.simulation_results[0].memory_usage || hybridResult.simulation_results[0].metadata?.memory_usage || "N/A",
-            cpu_usage: hybridResult.simulation_results[0].cpu_usage || hybridResult.simulation_results[0].metadata?.cpu_usage || "N/A",
+            simulation_time: (hybridResult.simulation_results[0] as any).simulation_time || hybridResult.simulation_results[0].metadata?.simulation_time || "N/A",
+            memory_usage: (hybridResult.simulation_results[0] as any).memory_usage || hybridResult.simulation_results[0].metadata?.memory_usage || "N/A",
+            cpu_usage: (hybridResult.simulation_results[0] as any).cpu_usage || hybridResult.simulation_results[0].metadata?.cpu_usage || "N/A",
           },
           probs: hybridResult.simulation_results[0].probabilities || null,
         }
