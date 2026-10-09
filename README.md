@@ -1,6 +1,6 @@
 # qcanvas-sdk
 
-**QCanvas Python SDK** — Compile quantum circuits from Cirq, Qiskit, or PennyLane to OpenQASM 3.0.
+**QCanvas Python SDK** — Compile quantum circuits from Cirq, Qiskit, or PennyLane to OpenQASM 3.0
 
 ## Installation
 
