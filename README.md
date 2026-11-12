@@ -8,7 +8,7 @@ under *Open Quantum Workbench*, a FAST University initiative.
 - **Compile:** framework source code to OpenQASM 3.0 (`quantum_converters`).
 - **Simulate:** OpenQASM 3.0 on Cirq, Qiskit (Aer) or PennyLane backends (`quantum_simulator`, the `qsim` package).
 - **Hybrid mode:** run Python that calls `compile(...)` and `qsim.run(...)` in a loop, sandboxed on the server.
-- **Accounts:** email sign-up, or **Try demo** for a private, temporary guest workspace.
+- **Accounts:** email sign-up, or **Try demo** for a private, temporary guest workspaces.
 - **Extras:** XP, achievements and a leaderboard, plus an optional Cirq AI assistant (admin only).
 
 ---
